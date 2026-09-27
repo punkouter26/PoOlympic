@@ -288,3 +288,183 @@ def rung1_verdict(results: list[DashResult]) -> dict:
     per = [bool(r.finished and not r.fell and r.vel_rms_err < 0.15 and r.lateral_drift_m < 0.5
            and r.joint_vel_over_fraction <= JOINT_VEL_MAX_FRACTION) for r in results]
     return {"rung": 1, "seeds": len(results), "passed_seeds": int(sum(per)), "PASS": all(per), "per_seed_pass": per}
+
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# Rung 2 — omnidirectional + yaw (DESIGN §1): per seed, four drills in fresh episodes
+#   tracking   5 × 5 s command segments from the event envelope, 0.3 m/s shoves every 3–5 s; per segment (after a
+#              1.5 s transition) RMS |v_xy − cmd| < 0.2 m/s and RMS |wz − cmd| < 0.3 rad/s.
+#              Envelope (independent extremes like vx 4 + wz 2.5 are not physical): sprint/back vx ∈ [−1.5, 4] with
+#              |wz| ≤ 0.5 · crab vx ∈ ±0.5, vy ∈ ±1 · turn vx ∈ [0, 1.5], wz ∈ ±2 · stop (all zero)
+#   turntable  from standing, cmd wz = ±2.2 (sign by seed): 360° in < 3 s, pelvis drift < 0.3 m
+#   brake      5 s at 3 m/s (lane keeping), then zero command: stopping distance < 2 m, no fall within 4 s
+#   backward   20 m at −1.5 m/s (lane keeping), 0.3 m/s shoves, no fall
+# ---------------------------------------------------------------------------------------------------------------
+RUNG2_LIN_TOL = 0.2
+RUNG2_YAW_TOL = 0.3
+TURNTABLE_WZ = 2.2
+TURNTABLE_MAX_S = 3.0
+TURNTABLE_MAX_DRIFT = 0.3
+BRAKE_MAX_M = 2.0
+BACKWARD_M = 20.0
+
+
+@dataclass
+class Rung2Result:
+    seed: int
+    fell: str | None
+    segments: list[dict]
+    turntable_s: float | None
+    turntable_drift_m: float
+    brake_m: float | None
+    backward_m: float
+    joint_vel_over_fraction: float
+
+
+def _root_quat(sim: Sim) -> np.ndarray:
+    return sim.d.qpos[sim.ath.root_qposadr + 3: sim.ath.root_qposadr + 7]
+
+
+def _vel_heading(sim: Sim) -> tuple[float, float, float]:
+    """(vx, vy) in the heading frame and body-frame yaw rate — the quantities the training rewards track."""
+    v = sim.d.qvel[sim.ath.root_dofadr: sim.ath.root_dofadr + 6]
+    yaw = C.yaw_of(_root_quat(sim))
+    c, s = math.cos(yaw), math.sin(yaw)
+    return c * v[0] + s * v[1], -s * v[0] + c * v[1], float(v[5])
+
+
+def _envelope_command(rng: np.random.Generator) -> tuple[str, np.ndarray]:
+    kind = str(rng.choice(["sprint", "crab", "turn", "stop"], p=[0.35, 0.25, 0.25, 0.15]))
+    if kind == "sprint":
+        return kind, np.array([rng.uniform(-1.5, 4.0), 0.0, rng.uniform(-0.5, 0.5)])
+    if kind == "crab":
+        return kind, np.array([rng.uniform(-0.5, 0.5), rng.uniform(-1.0, 1.0), 0.0])
+    if kind == "turn":
+        return kind, np.array([rng.uniform(0.0, 1.5), 0.0, rng.uniform(-2.0, 2.0)])
+    return kind, np.zeros(3)
+
+
+def _shover(rng: np.random.Generator, dv: float):
+    state = {"next": rng.uniform(3, 5)}
+
+    def pre(s: Sim):
+        now = s.tick * C.DECIMATION * s.m.opt.timestep
+        if dv > 0 and now >= state["next"]:
+            a = rng.uniform(0, 2 * math.pi)
+            s.d.qvel[s.ath.root_dofadr: s.ath.root_dofadr + 2] += dv * np.array([math.cos(a), math.sin(a)])
+            state["next"] = now + rng.uniform(3, 5)
+    return pre
+
+
+def rung2_episode(onnx_path: Path, seed: int, sim: Sim | None = None, shove_dv: float = 0.3) -> Rung2Result:
+    rng = np.random.default_rng(seed)
+    sim = sim or Sim(onnx_path)
+    dt = C.DECIMATION * sim.m.opt.timestep
+    fell, jv, ticks = None, 0, 0
+
+    def tick(cmd, pre=None) -> bool:
+        nonlocal fell, jv, ticks
+        sim.control_tick(cmd, pre)
+        ticks += 1
+        jv += int(np.abs(sim.d.qvel[sim.ath.joint_dofadr]).max() > JOINT_VEL_LIMIT)
+        if fell is None:
+            fell = sim.fell()
+        return fell is None
+
+    def steer(vx: float, lane_y: float) -> np.ndarray:
+        return np.array([vx, 0.0, C.steer_yaw_rate(_root_quat(sim), sim.pelvis()[1] - lane_y, vx)])
+
+    # --- tracking
+    sim.reset()
+    shove = _shover(rng, shove_dv)
+    segments = []
+    for _ in range(5):
+        kind, cmd = _envelope_command(rng)
+        lin, yaw = [], []
+        for k in range(int(5.0 / dt)):
+            if not tick(cmd, shove):
+                break
+            if k * dt >= 1.5:
+                vx, vy, wz = _vel_heading(sim)
+                lin.append(math.hypot(vx - cmd[0], vy - cmd[1]))
+                yaw.append(wz - cmd[2])
+        segments.append({"kind": kind, "cmd": cmd.round(3).tolist(),
+                         "lin_rms": float(np.sqrt(np.mean(np.square(lin)))) if lin else None,
+                         "yaw_rms": float(np.sqrt(np.mean(np.square(yaw)))) if yaw else None})
+        if fell:
+            break
+
+    # --- turntable
+    turntable_s, drift = None, 0.0
+    if fell is None:
+        sim.reset()
+        for _ in range(int(1.0 / dt)):
+            tick(np.zeros(3))
+        wz = TURNTABLE_WZ * (1 if seed % 2 == 0 else -1)
+        start, prev, turned = sim.pelvis()[:2], C.yaw_of(_root_quat(sim)), 0.0
+        for k in range(int(6.0 / dt)):
+            if not tick(np.array([0.0, 0.0, wz])):
+                break
+            y = C.yaw_of(_root_quat(sim))
+            turned += ((y - prev + math.pi) % (2 * math.pi) - math.pi) * math.copysign(1.0, wz)
+            prev = y
+            drift = max(drift, float(np.linalg.norm(sim.pelvis()[:2] - start)))
+            if turned >= 2 * math.pi:
+                turntable_s = (k + 1) * dt
+                break
+
+    # --- emergency brake
+    brake = None
+    if fell is None:
+        sim.reset()
+        lane = sim.pelvis()[1]
+        for _ in range(int(5.0 / dt)):
+            if not tick(steer(3.0, lane)):
+                break
+        if fell is None:
+            p0 = sim.pelvis()[:2].copy()
+            for _ in range(int(4.0 / dt)):
+                if not tick(np.zeros(3)):
+                    break
+                vx, vy, _ = _vel_heading(sim)
+                if brake is None and math.hypot(vx, vy) < 0.1:
+                    brake = float(np.linalg.norm(sim.pelvis()[:2] - p0))
+
+    # --- backward
+    back = 0.0
+    if fell is None:
+        sim.reset()
+        start = sim.pelvis()[:2].copy()
+        shove = _shover(rng, shove_dv)
+        for _ in range(int((BACKWARD_M / 1.5 + 8.0) / dt)):
+            if not tick(steer(-1.5, start[1]), shove):
+                break
+            back = float(start[0] - sim.pelvis()[0])
+            if back >= BACKWARD_M:
+                break
+
+    return Rung2Result(seed=seed, fell=fell, segments=segments, turntable_s=turntable_s, turntable_drift_m=drift,
+                       brake_m=brake, backward_m=back, joint_vel_over_fraction=jv / max(1, ticks))
+
+
+def rung2_checks(r: Rung2Result) -> dict[str, bool]:
+    return {
+        "no_fall": r.fell is None,
+        "tracking_lin": bool(r.segments) and all(s["lin_rms"] is not None and s["lin_rms"] < RUNG2_LIN_TOL
+                                                 for s in r.segments),
+        "tracking_yaw": bool(r.segments) and all(s["yaw_rms"] is not None and s["yaw_rms"] < RUNG2_YAW_TOL
+                                                 for s in r.segments),
+        "turntable": bool(r.turntable_s is not None and r.turntable_s < TURNTABLE_MAX_S
+                          and r.turntable_drift_m < TURNTABLE_MAX_DRIFT),
+        "brake": r.brake_m is not None and r.brake_m < BRAKE_MAX_M,
+        "backward": r.backward_m >= BACKWARD_M,
+        "joint_vel": r.joint_vel_over_fraction <= JOINT_VEL_MAX_FRACTION,
+    }
+
+
+def rung2_verdict(results: list[Rung2Result]) -> dict:
+    checks = [rung2_checks(r) for r in results]
+    per = [all(c.values()) for c in checks]
+    return {"rung": 2, "seeds": len(results), "passed_seeds": int(sum(per)), "PASS": all(per), "per_seed_pass": per,
+            "per_seed_checks": checks}

@@ -27,8 +27,9 @@ GAIT_HZ_BASE = 0.8  # stride frequency (Hz) = GAIT_HZ_BASE + GAIT_HZ_PER_MPS * s
 GAIT_HZ_PER_MPS = 0.2  # 1.4 Hz @ 3 m/s); speed = |(vx, vy)| + 0.5·|wz|. Advanced only while commanded to move.
 PHASE_CMD_THRESHOLD = 0.1  # |(vx, vy, wz)| below this => phase frozen at 0
 # Lane-keeping steering (outside the policy; Python evaluator and Unity PolicyRunner use the same law):
-#   heading_target = atan(-LANE_GAIN * lane_offset_y);  wz = clip(HEADING_GAIN * wrap(target - yaw), ±STEER_WZ_LIMIT)
-# Lane direction is world +x. Keeps wz within the trained ±0.5 rad/s. (Rung 1 G1: heading-only hold at gain 0.5 let a
+#   heading_target = atan(-LANE_GAIN * lane_offset_y * dir);  wz = clip(HEADING_GAIN * wrap(target - yaw), ±STEER_WZ_LIMIT)
+# Lane direction is world +x; dir = -1 when running backwards (vx command < 0: yawing the other way moves the athlete
+# back towards the centre line), else +1. Keeps wz within the trained ±0.5 rad/s. (Rung 1 G1: heading-only hold at gain 0.5 let a
 # 5° gait heading bias and shove displacements accumulate to 1-3 m over 30 m — see rl_optimization_log.md.)
 HEADING_GAIN = 2.0
 LANE_GAIN = 0.3
@@ -102,9 +103,11 @@ def yaw_of(q: np.ndarray) -> float:
     return math.atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
 
 
-def steer_yaw_rate(quat: np.ndarray, lane_offset_y: float) -> float:
-    """Lane-keeping yaw-rate command from the pelvis quaternion and the lateral offset from the lane centre line."""
-    target = math.atan(-LANE_GAIN * lane_offset_y)
+def steer_yaw_rate(quat: np.ndarray, lane_offset_y: float, vx_command: float = 1.0) -> float:
+    """Lane-keeping yaw-rate command from the pelvis quaternion, the lateral offset from the lane centre line and the
+    sign of the forward-speed command (facing +x, running forwards or backwards)."""
+    direction = -1.0 if vx_command < 0 else 1.0
+    target = math.atan(-LANE_GAIN * lane_offset_y * direction)
     err = (target - yaw_of(quat) + math.pi) % (2 * math.pi) - math.pi
     return float(np.clip(HEADING_GAIN * err, -STEER_WZ_LIMIT, STEER_WZ_LIMIT))
 
@@ -173,7 +176,7 @@ def export_contract(fingerprint_sha256: str | None = None) -> dict:
         "gait_hz_per_mps": GAIT_HZ_PER_MPS,
         "phase_cmd_threshold": PHASE_CMD_THRESHOLD,
         "steering": {"heading_gain": HEADING_GAIN, "lane_gain": LANE_GAIN, "wz_limit": STEER_WZ_LIMIT,
-                     "law": "wz = clip(heading_gain * wrap(atan(-lane_gain * lane_offset_y) - yaw), +-wz_limit)"},
+                     "law": "wz = clip(heading_gain * wrap(atan(-lane_gain * lane_offset_y * dir) - yaw), +-wz_limit); dir = -1 if vx_cmd < 0 else 1"},
         "obs_dim": OBS_DIM,
         "num_actions": NUM_ACTIONS,
         "obs_layout": offsets,

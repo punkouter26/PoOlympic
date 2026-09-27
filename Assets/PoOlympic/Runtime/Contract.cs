@@ -74,11 +74,12 @@ namespace PoOlympic
         }
 
         /// <summary>Lane-keeping yaw-rate command (contract.py::steer_yaw_rate): steer the pelvis heading (yaw of its
-        /// x-axis) towards atan(-lane_gain · lane offset) along world +x.</summary>
-        public double SteerYawRate(double w, double x, double y, double z, double laneOffsetY)
+        /// x-axis) towards atan(-lane_gain · lane offset · dir) along world +x; dir = -1 when running backwards.</summary>
+        public double SteerYawRate(double w, double x, double y, double z, double laneOffsetY, double vxCommand)
         {
             double yaw = Math.Atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z));
-            double target = Math.Atan(-steering.lane_gain * laneOffsetY);
+            double dir = vxCommand < 0 ? -1.0 : 1.0;
+            double target = Math.Atan(-steering.lane_gain * laneOffsetY * dir);
             double err = target - yaw + Math.PI;
             err = err - 2 * Math.PI * Math.Floor(err / (2 * Math.PI)) - Math.PI;
             return Math.Clamp(steering.heading_gain * err, -steering.wz_limit, steering.wz_limit);

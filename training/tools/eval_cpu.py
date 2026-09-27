@@ -1,6 +1,6 @@
 """C2 — Gate G1: CPU-MuJoCo evaluation of an exported brain against a rung's pass bar (10 seeds).
 
-Usage: uv run python tools/eval_cpu.py <brain.onnx> --rung 0 [--seeds 10] [--out parity/eval_<name>.json]
+Usage: uv run python tools/eval_cpu.py <brain.onnx> --rung 0|1|2 [--seeds 10] [--out parity/eval_<name>.json]
 """
 
 from __future__ import annotations
@@ -25,6 +25,23 @@ def main() -> int:
     ap.add_argument("--out", type=Path, default=None)
     a = ap.parse_args()
     sim = E.Sim(a.onnx)
+    if a.rung == 2:
+        results = []
+        for s in range(a.first_seed, a.first_seed + a.seeds):
+            r = E.rung2_episode(a.onnx, s, sim=sim)
+            results.append(r)
+            fails = [k for k, v in E.rung2_checks(r).items() if not v]
+            seg = " ".join(f"{x['kind'][:2]}:{x['lin_rms'] or float('nan'):.2f}/{x['yaw_rms'] or float('nan'):.2f}"
+                           for x in r.segments)
+            print(f"seed {s}: fell={r.fell} | lin/yaw {seg} | turn {r.turntable_s} s drift {r.turntable_drift_m:.2f} m"
+                  f" | brake {r.brake_m} m | back {r.backward_m:.1f} m | fails {fails}")
+        verdict = E.rung2_verdict(results)
+        report = {"onnx": str(a.onnx), **verdict, "episodes": [dataclasses.asdict(r) for r in results]}
+        out = a.out or ROOT.parent / "parity" / f"eval_rung2_{a.onnx.stem}.json"
+        out.write_text(json.dumps(report, indent=1))
+        print(f"G1 rung 2: {verdict['passed_seeds']}/{verdict['seeds']} seeds pass -> "
+              f"{'PASS' if verdict['PASS'] else 'FAIL'}  ({out.name})")
+        return 0 if verdict["PASS"] else 1
     if a.rung == 1:
         results = []
         for s in range(a.first_seed, a.first_seed + a.seeds):

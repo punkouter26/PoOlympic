@@ -200,7 +200,7 @@ namespace PoOlympic
             {
                 int r = Binding.RootQposAdr;
                 command.z = (float)Contract.SteerYawRate(d->qpos[r + 3], d->qpos[r + 4], d->qpos[r + 5], d->qpos[r + 6],
-                                                         d->qpos[r + 1] - laneOriginY);
+                                                         d->qpos[r + 1] - laneOriginY, command.x);
             }
             _phase = Contract.AdvancePhase(_phase, command);
             ObservationBuilder.Build(Contract, Binding, d->qpos, d->qvel, command, _phase, _lastAction, _obs);

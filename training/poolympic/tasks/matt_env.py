@@ -316,3 +316,39 @@ def matt_rung1_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     if play:
         cmd.ranges.lin_vel_x = (0.5, 4.0)
     return cfg
+
+
+# Rung 2 command envelope (DESIGN §1/§5). wz reaches 2.5 so the 360° Turntable bar (< 3 s ⇒ wz ≥ 2.1) is in-distribution.
+RUNG2_STAGES = [
+    {"step": 0, "lin_vel_x": (-1.0, 3.0), "lin_vel_y": (-0.5, 0.5), "ang_vel_z": (-1.0, 1.0)},
+    {"step": 500 * 24, "lin_vel_x": (-1.5, 3.5), "lin_vel_y": (-1.0, 1.0), "ang_vel_z": (-2.0, 2.0)},
+    {"step": 1000 * 24, "lin_vel_x": (-1.5, 4.0), "lin_vel_y": (-1.0, 1.0), "ang_vel_z": (-2.5, 2.5)},
+]
+
+
+def matt_rung2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """Rung 2 — omnidirectional + yaw (Inverted Sprint, Crab Shuffle, Slalom, 360 Turntable, Emergency Brake).
+    Warm-started from the Rung 1 brain (tools/warm_start.py re-seeds the command normalizer)."""
+    cfg = matt_rung1_env_cfg(play=play)
+    cmd = cfg.commands["athlete"]
+    cmd.heading_command = False  # direct yaw-rate commands; races steer with contract.steer_yaw_rate
+    cmd.rel_heading_envs = 0.0
+    cmd.rel_standing_envs = 0.15  # zero-command stops (Emergency Brake) at every resample
+    cmd.resampling_time_range = (3.0, 8.0)  # more transitions: brakes, reversals, turn-in / turn-out
+    s0 = RUNG2_STAGES[0]
+    cmd.ranges = mdp.AthleteCommandCfg.Ranges(lin_vel_x=s0["lin_vel_x"], lin_vel_y=s0["lin_vel_y"],
+                                              ang_vel_z=s0["ang_vel_z"], heading=None)
+    # yaw tracking is a primary objective now: tighter kernel (Rung 1: std √0.5 was nearly flat for small yaw-rate
+    # errors → heading bias) + a wide one for the fast turntable
+    cfg.rewards["track_ang"] = RewardTermCfg(func=vel_mdp.track_angular_velocity, weight=1.5,
+                                             params={"command_name": "athlete", "std": 0.5})
+    cfg.rewards["track_ang_coarse"] = RewardTermCfg(func=vel_mdp.track_angular_velocity, weight=0.5,
+                                                    params={"command_name": "athlete", "std": 1.5})
+    cfg.curriculum = {
+        "command_vel": CurriculumTermCfg(func=vel_mdp.commands_vel, params={
+            "command_name": "athlete", "velocity_stages": RUNG2_STAGES}),
+    }
+    if play:
+        last = RUNG2_STAGES[-1]
+        cmd.ranges.lin_vel_x, cmd.ranges.lin_vel_y, cmd.ranges.ang_vel_z = last["lin_vel_x"], last["lin_vel_y"], last["ang_vel_z"]
+    return cfg
