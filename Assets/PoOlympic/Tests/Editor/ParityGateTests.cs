@@ -1,16 +1,25 @@
+using System.Collections.Generic;
+using System.IO;
 using NUnit.Framework;
 using PoOlympic.Editor;
+using UnityEngine;
 
 namespace PoOlympic.Tests
 {
-    /// <summary>Phase B parity gates G2–G4 against the golden CPU-MuJoCo references (parity/reference_trajectory_*.json).</summary>
+    /// <summary>Parity gates G2–G4 against every golden CPU-MuJoCo reference in parity/ (reference_trajectory_*.json).</summary>
     public class ParityGateTests
     {
+        public static IEnumerable<string> References()
+        {
+            var dir = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "parity"));
+            foreach (var f in Directory.GetFiles(dir, "reference_trajectory_*.json"))
+                yield return Path.GetFileNameWithoutExtension(f).Substring("reference_trajectory_".Length);
+        }
+
         [OneTimeSetUp]
         public void Sync() => ParityHarness.SyncArtifacts();
 
-        [TestCase("zero")]
-        [TestCase("random")]
+        [TestCaseSource(nameof(References))]
         public void Gates_G2_G3_G4(string reference)
         {
             var r = ParityHarness.Run(reference);

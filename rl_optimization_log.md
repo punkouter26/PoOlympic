@@ -90,3 +90,9 @@ One entry per run or decision. Newest at the bottom.
 - **Checks (`tools/check_task.py`):** compiled options identical to scene_matt.xml (timestep, iterations 20, ls 50, implicitfast, pyramidal, Newton, multiccd disabled, tolerances); ground/athlete/cube contact bits + friction identical; **training obs vs contract.build_obs max |Δ| = 2.4e-7** over 16 envs × 30 random steps.
 - **C2:** `poolympic/evaluate.py` + `tools/eval_cpu.py` (G1): CPU MuJoCo, contract tick order, Rung 0 protocol (20 s, independent 3–5 s shove and cube-drop schedules, fall/recovery/foot-box/joint-velocity metrics, 10 seeds). Zero brain: 0/10 (tips over at 2.34 s) — expected.
 - **Smoke train:** 4096 envs, ~2.0 s/iteration (~50 k policy-steps/s), episode length rising 75 → 110 ticks in 25 iterations.
+
+## 2026-09-27 · r0_v1 — ABORTED at iter ~260: action wiring scrambled in training (G1 caught it)
+- **Symptom:** training episode length 955/1000 ticks by iter 256, but the exported it-200 brain fell on 10/10 CPU seeds at 4–9 s (slow sink, `pelvis_low`).
+- **Root cause:** mjlab's `XmlActuator` pairs per-joint targets (joint-tree order) with ctrl slots in actuator *declaration* order. `matt.xml` declared actuators limb-grouped (abdomen, L arm, L leg, R arm, R leg) ≠ tree order (abdomen, L arm, R arm, L leg, R leg) → 10/23 channels cross-wired in training (e.g. action "hip_flex_l" drove shoulder_elev_r). Observations were verified (2.4e-7) but the action→ctrl path was only printed, not asserted.
+- **Fix:** `build_mjcf.py` declares actuators in joint-tree (DFS) order; `test_model.py::test_actuators_declared_in_joint_order`; `check_task.py` now asserts per-channel wiring (action[i] moves exactly contract actuator i's ctrl) → 0 mismatches. Contract actuator order changed accordingly (brains/refs/contract regenerated; Unity re-sync + G0/G2–G4 rerun at C4).
+- **Lesson:** every link of the obs→policy→ctrl chain gets an assertion, not a print.

@@ -340,6 +340,10 @@ def compose_model(skin, geoms, inertials, with_scene: bool, n_cubes: int, defaul
         ET.SubElement(wb, "geom", {"name": "ground", "type": "plane", "size": "0 0 0.05", "contype": str(ALL_BITS),
                                    "conaffinity": str(ALL_BITS), "condim": "3", "friction": vec(GROUND_FRICTION)})
     pelvis, actuators, joints = build_robot(skin, geoms, inertials)
+    # Declare actuators in joint-tree (depth-first) order == MuJoCo joint id order. mjlab's XmlActuator pairs joint
+    # targets (joint order) with ctrl slots (declaration order); any other order silently scrambles the action wiring.
+    tree_order = [j.get("name") for j in pelvis.iter("joint")]
+    actuators = sorted(actuators, key=lambda a: tree_order.index(a[0]))
     wb.append(pelvis)
     if with_scene:
         inertia = CUBE_MASS * (2 * CUBE_HALF) ** 2 / 6.0

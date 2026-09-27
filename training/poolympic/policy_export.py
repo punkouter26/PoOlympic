@@ -34,9 +34,10 @@ def make_mlp(obs_dim: int = C.OBS_DIM, act_dim: int = C.NUM_ACTIONS) -> nn.Seque
 
 
 class ExportedPolicy(nn.Module):
-    def __init__(self, mlp: nn.Module, obs_mean, obs_std, default_pos, range_lo, range_hi):
+    def __init__(self, mlp: nn.Module, obs_mean, obs_std, default_pos, range_lo, range_hi, clip_obs: float | None = CLIP_OBS):
         super().__init__()
         self.mlp = mlp
+        self.clip_obs = clip_obs
         f = lambda x: torch.as_tensor(np.asarray(x), dtype=torch.float32).reshape(1, -1)  # noqa: E731
         self.register_buffer("obs_mean", f(obs_mean))
         self.register_buffer("obs_std", f(obs_std))
@@ -45,7 +46,9 @@ class ExportedPolicy(nn.Module):
         self.register_buffer("range_hi", f(range_hi))
 
     def forward(self, obs: torch.Tensor):
-        x = torch.clamp((obs - self.obs_mean) / self.obs_std, -CLIP_OBS, CLIP_OBS)
+        x = (obs - self.obs_mean) / self.obs_std
+        if self.clip_obs is not None:
+            x = torch.clamp(x, -self.clip_obs, self.clip_obs)
         action_raw = self.mlp(x)
         ctrl = torch.minimum(torch.maximum(self.default_pos + C.ACTION_SCALE * action_raw, self.range_lo), self.range_hi)
         return ctrl, action_raw

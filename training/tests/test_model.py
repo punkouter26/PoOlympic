@@ -174,3 +174,9 @@ def test_contacts_only_feet_on_ground_at_rest(scene):
             continue
         name = scene.geom(other).name
         assert name.startswith(("foot", "toe", "cube")), f"unexpected ground contact: {name}"
+
+
+def test_actuators_declared_in_joint_order(robot):
+    """ctrl order must follow joint id order (mjlab XmlActuator pairing; see build_mjcf.compose_model)."""
+    joint_ids = [int(robot.actuator_trnid[i, 0]) for i in range(robot.nu)]
+    assert joint_ids == sorted(joint_ids)

@@ -72,6 +72,34 @@ def main() -> int:
     ok &= worst_obs < 1e-3
     print(f"actuator order: {ath_names[:4]} …")
     env.close()
+
+    # 3. wiring: action index i must move exactly ctrl of contract actuator i (no delay, no DR)
+    cfg = matt_rung0_env_cfg()
+    cfg.scene.num_envs = 1
+    for k in list(cfg.events):
+        if k.startswith("dr_") or k in ("push_robot", "drop_cube"):
+            cfg.events.pop(k)
+    cfg.scene.entities["robot"].articulation.actuators[0].delay_max_lag = 0
+    env = ManagerBasedRlEnv(cfg=cfg, device="cuda:0")
+    env.reset()
+    m = env.sim.mj_model
+    ath = C.Athlete.bind(m, prefix="robot/")
+    zero = torch.zeros(1, C.NUM_ACTIONS, device=env.device)
+    env.step(zero)
+    c0 = env.sim.data.ctrl[0].cpu().numpy().copy()
+    bad = 0
+    for i in range(C.NUM_ACTIONS):
+        a = zero.clone()
+        a[0, i] = 1.0
+        env.step(a)
+        moved = list(np.nonzero(np.abs(env.sim.data.ctrl[0].cpu().numpy() - c0) > 1e-4)[0])
+        if moved != [int(ath.actuator_ids[i])]:
+            bad += 1
+            print(f"  WIRING action[{i}] ({ath.actuator_names[i]}) moved {[m.actuator(j).name for j in moved]}")
+        env.step(zero)
+    print(f"action->ctrl wiring mismatches: {bad}")
+    ok &= bad == 0
+    env.close()
     print("C1 CHECKS", "PASS" if ok else "FAIL")
     return 0 if ok else 1
 
