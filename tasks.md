@@ -42,7 +42,7 @@ Legend: `[ ]` todo · `[x]` done · **GATE** = blocking check, work stops until 
   - L/R symmetry of masses, ranges, gains
   - passive PD hold at default pose on ground: no explosion, penetration < 5 mm, settles within 1 s
   - *Accept: all tests green.*
-- [ ] **A8 Visual check.** MuJoCo viewer screenshot of geoms overlaid with MATT mesh (non-colliding visual mesh) at T-pose and default pose → saved to `parity/`. *Accept: user eyeball sign-off.*
+- [x] **A8 Visual check.** MuJoCo viewer screenshot of geoms overlaid with MATT mesh (non-colliding visual mesh) at T-pose and default pose → saved to `parity/`. *Accept: user eyeball sign-off.*
 - [x] **A9 Contract module.** `training/poolympic/contract.py` — actuator order, default pose, action scale, obs layout (DESIGN §3); exports `contract.json` consumed by C#. Obs builder implemented here once.
 - [x] **A10 Fingerprint.** `fingerprint.py` → `parity/fingerprint_python.json` + SHA-256.
 - [x] **A11 Zero-brain ONNX.** Export (opset 17, batch 1) two graphs with baked normalization + metadata: `zero_brain.onnx` (ctrl = default pose) and `random_brain.onnx` (random weights, seeded — exercises the full math). *Accept: onnxruntime output == torch output < 1e-6.*
