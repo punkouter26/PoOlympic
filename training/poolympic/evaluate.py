@@ -294,6 +294,6 @@ def rung1_episode(onnx_path: Path, seed: int, speed: float | None = None, distan
 
 
 def rung1_verdict(results: list[DashResult]) -> dict:
-    per = [r.finished and not r.fell and r.vel_rms_err < 0.15 and r.lateral_drift_m < 0.5
-           and r.joint_vel_over_fraction <= JOINT_VEL_MAX_FRACTION for r in results]
+    per = [bool(r.finished and not r.fell and r.vel_rms_err < 0.15 and r.lateral_drift_m < 0.5
+           and r.joint_vel_over_fraction <= JOINT_VEL_MAX_FRACTION) for r in results]
     return {"rung": 1, "seeds": len(results), "passed_seeds": int(sum(per)), "PASS": all(per), "per_seed_pass": per}

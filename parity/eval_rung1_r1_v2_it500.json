@@ -1,0 +1,67 @@
+{
+ "onnx": "..\\parity\\brains\\r1_v2_it500.onnx",
+ "rung": 1,
+ "seeds": 4,
+ "passed_seeds": 0,
+ "PASS": false,
+ "per_seed_pass": [
+  false,
+  false,
+  false,
+  false
+ ],
+ "episodes": [
+  {
+   "seed": 1000,
+   "speed_cmd": 1.8034643449376568,
+   "fell": true,
+   "fall_time": 1.48,
+   "fall_reason": "pelvis_low",
+   "distance_m": 1.5902940043973115,
+   "finished": false,
+   "time_s": 1.5,
+   "vel_rms_err": NaN,
+   "lateral_drift_m": 0.31503943697397524,
+   "joint_vel_over_fraction": 0.0
+  },
+  {
+   "seed": 1001,
+   "speed_cmd": 2.031487321424877,
+   "fell": true,
+   "fall_time": 1.34,
+   "fall_reason": "pelvis_low",
+   "distance_m": 1.2249660807486038,
+   "finished": false,
+   "time_s": 1.36,
+   "vel_rms_err": NaN,
+   "lateral_drift_m": 0.23558518420572963,
+   "joint_vel_over_fraction": 0.0
+  },
+  {
+   "seed": 1002,
+   "speed_cmd": 1.4520528987077896,
+   "fell": false,
+   "fall_time": null,
+   "fall_reason": null,
+   "distance_m": 30.013636052588204,
+   "finished": true,
+   "time_s": 23.76,
+   "vel_rms_err": 0.2004599417712382,
+   "lateral_drift_m": 1.4472254633854393,
+   "joint_vel_over_fraction": 0.0
+  },
+  {
+   "seed": 1003,
+   "speed_cmd": 0.9693934206715835,
+   "fell": false,
+   "fall_time": null,
+   "fall_reason": null,
+   "distance_m": 30.007995724124815,
+   "finished": true,
+   "time_s": 33.0,
+   "vel_rms_err": 0.07194307798462492,
+   "lateral_drift_m": 2.743687381530335,
+   "joint_vel_over_fraction": 0.0
+  }
+ ]
+}
