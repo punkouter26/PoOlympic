@@ -9,6 +9,12 @@
  "gait_hz_base": 0.8,
  "gait_hz_per_mps": 0.2,
  "phase_cmd_threshold": 0.1,
+ "steering": {
+  "heading_gain": 2.0,
+  "lane_gain": 0.3,
+  "wz_limit": 0.5,
+  "law": "wz = clip(heading_gain * wrap(atan(-lane_gain * lane_offset_y) - yaw), +-wz_limit)"
+ },
  "obs_dim": 84,
  "num_actions": 23,
  "obs_layout": {

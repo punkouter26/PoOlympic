@@ -29,6 +29,9 @@ namespace PoOlympic
         [Header("Athlete")]
         public string athletePrefix = "";
         public Vector3 command;
+        [Tooltip("Race steering: overwrite command.z every control tick with the contract's lane-keeping yaw rate " +
+                 "(heading along +x, back to this lane's centre line). Off for parity runs (fixed commands).")]
+        public bool laneKeeping;
 
         [Header("Lane (meet scenes; solo = no prefix, origin 0, cube slots 0..3)")]
         [Tooltip("MuJoCo world x/y of this lane's origin: root position = contract default + origin.")]
@@ -193,6 +196,12 @@ namespace PoOlympic
         void ControlStep(MujocoLib.mjModel_* m, MujocoLib.mjData_* d)
         {
             if (_rec != null && _recFrames < recordTicks) RecordStateHead(m, d);
+            if (laneKeeping)
+            {
+                int r = Binding.RootQposAdr;
+                command.z = (float)Contract.SteerYawRate(d->qpos[r + 3], d->qpos[r + 4], d->qpos[r + 5], d->qpos[r + 6],
+                                                         d->qpos[r + 1] - laneOriginY);
+            }
             _phase = Contract.AdvancePhase(_phase, command);
             ObservationBuilder.Build(Contract, Binding, d->qpos, d->qvel, command, _phase, _lastAction, _obs);
             if (holdDefaultPose)

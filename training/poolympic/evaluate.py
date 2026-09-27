@@ -214,21 +214,12 @@ def rung0_verdict(results: list[EpisodeResult], foot_box_half_m: float = 0.5) ->
 
 
 # ---------------------------------------------------------------------------------------------------------------
-# Rung 1 — forward velocity: 30 m dash with heading hold and 0.3 m/s shoves
+# Rung 1 — forward velocity: 30 m dash with lane keeping (contract.steer_yaw_rate) and 0.3 m/s shoves
 # ---------------------------------------------------------------------------------------------------------------
-HEADING_STIFFNESS = 0.5
-HEADING_WZ_LIMIT = 0.5
-
-
 def heading_yaw(q: np.ndarray) -> float:
-    """mjlab heading: yaw of the pelvis x-axis. Unity's heading controller uses exactly this."""
+    """mjlab heading: yaw of the pelvis x-axis (== contract.yaw_of)."""
     w, x, y, z = q
     return math.atan2(2.0 * (x * y + w * z), 1.0 - 2.0 * (y * y + z * z))
-
-
-def heading_command(yaw: float, target: float) -> float:
-    err = (target - yaw + math.pi) % (2 * math.pi) - math.pi
-    return float(np.clip(HEADING_STIFFNESS * err, -HEADING_WZ_LIMIT, HEADING_WZ_LIMIT))
 
 
 @dataclass
@@ -262,7 +253,7 @@ def rung1_episode(onnx_path: Path, seed: int, speed: float | None = None, distan
     for k in range(max_ticks):
         now = k * dt
         q = sim.d.qpos[sim.ath.root_qposadr + 3: sim.ath.root_qposadr + 7]
-        cmd = np.array([speed, 0.0, heading_command(heading_yaw(q), 0.0)])
+        cmd = np.array([speed, 0.0, C.steer_yaw_rate(q, sim.pelvis()[1] - start[1])])
 
         def pre(s: Sim, now=now):
             nonlocal next_shove

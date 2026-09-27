@@ -21,6 +21,14 @@ namespace PoOlympic
         }
 
         [Serializable]
+        public class Steering
+        {
+            public double heading_gain;
+            public double lane_gain;
+            public double wz_limit;
+        }
+
+        [Serializable]
         public class JointQpos
         {
             public string joint;
@@ -36,6 +44,7 @@ namespace PoOlympic
         public double gait_hz_base;
         public double gait_hz_per_mps;
         public double phase_cmd_threshold;
+        public Steering steering;
         public int obs_dim;
         public int num_actions;
         public string root_joint;
@@ -62,6 +71,17 @@ namespace PoOlympic
             if (n < phase_cmd_threshold) return 0.0;
             double p = phase + GaitHz(command) * decimation * timestep;
             return p - Math.Floor(p);
+        }
+
+        /// <summary>Lane-keeping yaw-rate command (contract.py::steer_yaw_rate): steer the pelvis heading (yaw of its
+        /// x-axis) towards atan(-lane_gain · lane offset) along world +x.</summary>
+        public double SteerYawRate(double w, double x, double y, double z, double laneOffsetY)
+        {
+            double yaw = Math.Atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z));
+            double target = Math.Atan(-steering.lane_gain * laneOffsetY);
+            double err = target - yaw + Math.PI;
+            err = err - 2 * Math.PI * Math.Floor(err / (2 * Math.PI)) - Math.PI;
+            return Math.Clamp(steering.heading_gain * err, -steering.wz_limit, steering.wz_limit);
         }
 
         public double GaitHz(Vector3 command)

@@ -73,15 +73,16 @@ In-editor authoring runs through the Unity CLI (`unity command …`, com.unity.p
 - [x] **C2 CPU evaluator (G1).** `eval_cpu.py`: rung bars, 10 seeds, CPU MuJoCo, JSON report + optional video.
 - [x] **C3 Rung 0 — train** stand + shove recovery to bar. **GATE G1.** Log all runs.
 - [x] **C4 Rung 0 — Unity spot-check.** Export ONNX + reference; G0, G2–G5 in `Testbed_ZeroBrain` with Rung 0 brain.
-- [ ] **C5 Rung 1 — train** forward velocity to bar. **GATE G1.**
-  - r1_v1 (warm start from Rung 0) FAILED — collapsed into standing still (warm-start obs normalizer + narrow tracking kernel; see log). r1_v2 = from scratch + coarse tracking term + walking-speed curriculum start: running since 16:31 (`runs/matt_rung1/2026-09-27_16-31-44_r1_v2`); it 350 track_lin 86 % of max, per-step vel error ≈ 0.14 m/s at 0.3–1.0 m/s.
+- [x] **C5 Rung 1 — train** forward velocity to bar. **GATE G1.**
+  - r1_v1 (warm start) failed — standing collapse. r1_v2 (from scratch + coarse tracking) → **Rung 1 brain = `r1_v2_it2000` (`parity/brains/rung1.onnx`)**: G1 10/10 + margin 30/30, 0 falls, lane drift ≤ 0.42 m, vel RMS ≤ 0.121 m/s. G1 uses the contract's lane-keeping steering (user decision 2026-09-27); later checkpoints (2500/2999) regress on slow-speed lane drift.
 - [ ] **C6 Rung 1 — Early Verification Gate (HALT POINT).**
   - export `rung1.onnx` (opset 17, batch 1) + `reference_trajectory_rung1.json` (5 s, CPU MuJoCo)
   - `Testbed_Rung1.unity`: **GATES G0, G2, G3, G4, G5, G6** (8 lanes + cube pool)
   - any divergence → stop training; fix solver config / decimation / friction / gain mapping; re-run gates; log root cause
   - [x] infrastructure: `scene_meet8.xml` (8 lane-isolated athletes `L<k>_`, 1.22 m lanes, 16-cube pool) · lane-safe `PolicyRunner` (per-lane reset, lane origin, cube-slot remap, per-lane recording) · `Testbed_Rung1.unity` (MenuItem *Build Testbed_Rung1*) · `tools/make_g6.py` (lane plan + solo refs + CPU meet pre-check) · `tools/compare_g6.py` (G0 per lane, G6)
   - [x] G0 meet8 PASS (8/8 lanes, each == solo athlete except bits/origin) · G6 harness dry run PASS (interim brain) · solo G5 re-verified (zero/random/rung0, contract v2 brains)
-  - [ ] with the G1-passing Rung 1 brain: `make_g6.py` → G2–G4 (auto-discovered refs) → G5 solo → `MeetTestbed.ConfigureG6` + play 250 ticks → `compare_g6.py g6`
+  - [x] `make_g6.py rung1` → plan + 8 solo refs; CPU meet pre-check PASS (5 s drift ≤ 2e-7)
+  - [ ] Unity: G2–G4 (EditMode, auto-discovered `rung1_L*` refs) → G5 solo → `MeetTestbed.ConfigureG6("rung1")` + play 250 ticks → `compare_g6.py g6 rung1` · SteeringTests (C# lane keeping == Python)
 - [ ] **C7 Rung 2 — train** omnidirectional + yaw to bar. **GATE G1.**
 - [ ] **C8 Rung 2 — Unity spot-check.** G3, G5, G6 with rung2 brain; commands switchable from HUD.
 
