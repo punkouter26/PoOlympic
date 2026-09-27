@@ -33,7 +33,8 @@ namespace PoOlympic
         public int decimation;
         public double action_scale;
         public double joint_vel_scale;
-        public double gait_hz;
+        public double gait_hz_base;
+        public double gait_hz_per_mps;
         public double phase_cmd_threshold;
         public int obs_dim;
         public int num_actions;
@@ -53,13 +54,20 @@ namespace PoOlympic
             return c;
         }
 
-        /// <summary>Phase clock update, called once per control tick before building the observation.</summary>
+        /// <summary>Phase clock update, called once per control tick before building the observation
+        /// (contract.py::advance_phase / gait_hz).</summary>
         public double AdvancePhase(double phase, Vector3 command)
         {
             double n = Math.Sqrt((double)command.x * command.x + (double)command.y * command.y + (double)command.z * command.z);
             if (n < phase_cmd_threshold) return 0.0;
-            double p = phase + gait_hz * decimation * timestep;
+            double p = phase + GaitHz(command) * decimation * timestep;
             return p - Math.Floor(p);
+        }
+
+        public double GaitHz(Vector3 command)
+        {
+            double speed = Math.Sqrt((double)command.x * command.x + (double)command.y * command.y) + 0.5 * Math.Abs((double)command.z);
+            return gait_hz_base + gait_hz_per_mps * speed;
         }
     }
 

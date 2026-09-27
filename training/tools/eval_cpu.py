@@ -24,9 +24,20 @@ def main() -> int:
     ap.add_argument("--first-seed", type=int, default=1000)
     ap.add_argument("--out", type=Path, default=None)
     a = ap.parse_args()
-    if a.rung != 0:
-        raise SystemExit("only rung 0 is implemented so far")
     sim = E.Sim(a.onnx)
+    if a.rung == 1:
+        results = []
+        for s in range(a.first_seed, a.first_seed + a.seeds):
+            r = E.rung1_episode(a.onnx, s, sim=sim)
+            results.append(r)
+            print(f"seed {s}: v_cmd={r.speed_cmd:.2f} finished={r.finished} fell={r.fell} ({r.fall_reason} @ {r.fall_time}) "
+                  f"dist={r.distance_m:.1f} m vel_rms_err={r.vel_rms_err:.3f} lateral={r.lateral_drift_m:.2f} m jv_over={r.joint_vel_over_fraction:.3f}")
+        verdict = E.rung1_verdict(results)
+        report = {"onnx": str(a.onnx), **verdict, "episodes": [dataclasses.asdict(r) for r in results]}
+        out = a.out or ROOT.parent / "parity" / f"eval_rung1_{a.onnx.stem}.json"
+        out.write_text(json.dumps(report, indent=1))
+        print(f"G1 rung 1: {verdict['passed_seeds']}/{verdict['seeds']} seeds pass -> {'PASS' if verdict['PASS'] else 'FAIL'}  ({out.name})")
+        return 0 if verdict["PASS"] else 1
     results = []
     for s in range(a.first_seed, a.first_seed + a.seeds):
         r = E.rung0_episode(a.onnx, s, sim=sim)

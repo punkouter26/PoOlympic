@@ -19,11 +19,12 @@ ROOT = Path(__file__).resolve().parents[1]
 SCENE_XML = ROOT / "assets" / "scene_matt.xml"
 CONTRACT_JSON = ROOT.parent / "parity" / "contract.json"
 
-CONTRACT_VERSION = 1
+CONTRACT_VERSION = 2
 DECIMATION = 4
 ACTION_SCALE = 0.25  # rad per unit action
 JOINT_VEL_SCALE = 0.05
-GAIT_HZ = 1.8  # stride frequency of the phase clock (advanced only while commanded to move)
+GAIT_HZ_BASE = 0.8  # stride frequency (Hz) = GAIT_HZ_BASE + GAIT_HZ_PER_MPS * speed  (human-like: 0.9 Hz @ 0.5 m/s,
+GAIT_HZ_PER_MPS = 0.2  # 1.4 Hz @ 3 m/s); speed = |(vx, vy)| + 0.5·|wz|. Advanced only while commanded to move.
 PHASE_CMD_THRESHOLD = 0.1  # |(vx, vy, wz)| below this => phase frozen at 0
 
 OBS_LAYOUT = [  # (name, size) — order is the contract
@@ -98,7 +99,12 @@ def advance_phase(phase: float, command: np.ndarray) -> float:
     """Phase clock update, called once per control tick BEFORE building the observation."""
     if float(np.linalg.norm(command)) < PHASE_CMD_THRESHOLD:
         return 0.0
-    return (phase + GAIT_HZ * DECIMATION * 0.005) % 1.0
+    return (phase + gait_hz(command) * DECIMATION * 0.005) % 1.0
+
+
+def gait_hz(command: np.ndarray) -> float:
+    speed = math.hypot(float(command[0]), float(command[1])) + 0.5 * abs(float(command[2]))
+    return GAIT_HZ_BASE + GAIT_HZ_PER_MPS * speed
 
 
 def build_obs(ath: Athlete, qpos: np.ndarray, qvel: np.ndarray, command: np.ndarray, phase: float,
@@ -149,7 +155,8 @@ def export_contract(fingerprint_sha256: str | None = None) -> dict:
         "control_hz": 1.0 / (m.opt.timestep * DECIMATION),
         "action_scale": ACTION_SCALE,
         "joint_vel_scale": JOINT_VEL_SCALE,
-        "gait_hz": GAIT_HZ,
+        "gait_hz_base": GAIT_HZ_BASE,
+        "gait_hz_per_mps": GAIT_HZ_PER_MPS,
         "phase_cmd_threshold": PHASE_CMD_THRESHOLD,
         "obs_dim": OBS_DIM,
         "num_actions": NUM_ACTIONS,

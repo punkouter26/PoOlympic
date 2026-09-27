@@ -142,7 +142,10 @@ class AthleteCommand(UniformVelocityCommand):
         super().compute(dt, env_ids)
         if env_ids is None:  # per-step path: contract.advance_phase with the current command
             moving = torch.linalg.norm(self.command, dim=-1) >= C.PHASE_CMD_THRESHOLD
-            adv = torch.remainder(self.phase + C.GAIT_HZ * C.DECIMATION * 0.005, 1.0)
+            cmd = self.command
+            speed = torch.linalg.norm(cmd[:, :2], dim=-1) + 0.5 * cmd[:, 2].abs()
+            hz = C.GAIT_HZ_BASE + C.GAIT_HZ_PER_MPS * speed
+            adv = torch.remainder(self.phase + hz * C.DECIMATION * 0.005, 1.0)
             self.phase = torch.where(moving, adv, torch.zeros_like(self.phase))
 
 
@@ -233,3 +236,41 @@ def drop_cube_on_athlete(env, env_ids, cube_names: tuple[str, ...], height_above
 
 def robot_cfg(name: str = "robot") -> SceneEntityCfg:
     return SceneEntityCfg(name)
+
+
+# ---- Rung 1+ (locomotion) ------------------------------------------------------------------------------------
+FOOT_SENSOR = "feet_ground"
+
+
+def _foot_contact(env) -> torch.Tensor:
+    """[N, 2] bool, order (foot_l, foot_r) — subtree contact (foot + toe) with the ground."""
+    return env.scene[FOOT_SENSOR].data.found > 0
+
+
+def phase_contact(env, command_name: str = "athlete") -> torch.Tensor:
+    """Gait phase ↔ stance: left foot planted for phase ∈ [0, 0.5), right for [0.5, 1); both planted when standing."""
+    term = env.command_manager.get_term(command_name)
+    contact = _foot_contact(env).float()
+    moving = torch.linalg.norm(term.command, dim=-1) >= C.PHASE_CMD_THRESHOLD
+    left_stance = (term.phase < 0.5).float()
+    want = torch.stack([left_stance, 1.0 - left_stance], dim=-1)
+    want = torch.where(moving[:, None], want, torch.ones_like(want))
+    return (contact == want).float().mean(-1)
+
+
+def foot_slip(env) -> torch.Tensor:
+    ent = env.scene["robot"]
+    ids = getattr(env, "_poolympic_foot_ids", None)
+    if ids is None:
+        ids = torch.as_tensor(ent.find_bodies(("foot_l", "foot_r"), preserve_order=True)[0], device=env.device)
+        env._poolympic_foot_ids = ids
+    v = ent.data.body_link_lin_vel_w[:, ids, :2]
+    return ((v**2).sum(-1) * _foot_contact(env).float()).sum(-1)
+
+
+def heading_yaw(qpos_quat: torch.Tensor) -> torch.Tensor:
+    """mjlab heading: yaw of the pelvis x-axis (EntityData.heading_w). Unity's heading controller uses the same."""
+    w, x, y, z = qpos_quat.unbind(-1)
+    fx = 1.0 - 2.0 * (y * y + z * z)
+    fy = 2.0 * (x * y + w * z)
+    return torch.atan2(fy, fx)

@@ -211,3 +211,89 @@ def rung0_verdict(results: list[EpisodeResult], foot_box_half_m: float = 0.5) ->
         per_seed.append(ok)
     return {"rung": 0, "seeds": len(results), "passed_seeds": int(sum(per_seed)), "PASS": all(per_seed),
             "per_seed_pass": per_seed}
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# Rung 1 — forward velocity: 30 m dash with heading hold and 0.3 m/s shoves
+# ---------------------------------------------------------------------------------------------------------------
+HEADING_STIFFNESS = 0.5
+HEADING_WZ_LIMIT = 0.5
+
+
+def heading_yaw(q: np.ndarray) -> float:
+    """mjlab heading: yaw of the pelvis x-axis. Unity's heading controller uses exactly this."""
+    w, x, y, z = q
+    return math.atan2(2.0 * (x * y + w * z), 1.0 - 2.0 * (y * y + z * z))
+
+
+def heading_command(yaw: float, target: float) -> float:
+    err = (target - yaw + math.pi) % (2 * math.pi) - math.pi
+    return float(np.clip(HEADING_STIFFNESS * err, -HEADING_WZ_LIMIT, HEADING_WZ_LIMIT))
+
+
+@dataclass
+class DashResult:
+    seed: int
+    speed_cmd: float
+    fell: bool
+    fall_time: float | None
+    fall_reason: str | None
+    distance_m: float
+    finished: bool
+    time_s: float
+    vel_rms_err: float
+    lateral_drift_m: float
+    joint_vel_over_fraction: float
+
+
+def rung1_episode(onnx_path: Path, seed: int, speed: float | None = None, distance: float = 30.0,
+                  shove_dv: float = 0.3, warmup_s: float = 2.0, sim: Sim | None = None) -> DashResult:
+    rng = np.random.default_rng(seed)
+    speed = float(rng.uniform(0.5, 3.0)) if speed is None else speed
+    sim = sim or Sim(onnx_path)
+    sim.reset()
+    dt = C.DECIMATION * sim.m.opt.timestep
+    max_ticks = int((distance / speed + 12.0) / dt)
+    start = sim.pelvis()[:2].copy()
+    next_shove = rng.uniform(3, 5)
+    vel_err, joint_over, lat = [], 0, 0.0
+    fell_at, reason = None, None
+    k = 0
+    for k in range(max_ticks):
+        now = k * dt
+        q = sim.d.qpos[sim.ath.root_qposadr + 3: sim.ath.root_qposadr + 7]
+        cmd = np.array([speed, 0.0, heading_command(heading_yaw(q), 0.0)])
+
+        def pre(s: Sim, now=now):
+            nonlocal next_shove
+            if now >= next_shove:
+                a = rng.uniform(0, 2 * math.pi)
+                s.d.qvel[s.ath.root_dofadr: s.ath.root_dofadr + 2] += shove_dv * np.array([math.cos(a), math.sin(a)])
+                next_shove = now + rng.uniform(3, 5)
+
+        sim.control_tick(cmd, pre)
+        p = sim.pelvis()
+        lat = max(lat, abs(p[1] - start[1]))
+        if now >= warmup_s:
+            qv = sim.d.qvel
+            yaw = heading_yaw(sim.d.qpos[sim.ath.root_qposadr + 3: sim.ath.root_qposadr + 7])
+            vx_h = math.cos(yaw) * qv[sim.ath.root_dofadr] + math.sin(yaw) * qv[sim.ath.root_dofadr + 1]
+            vel_err.append(vx_h - speed)
+        joint_over += int(np.abs(sim.d.qvel[sim.ath.joint_dofadr]).max() > JOINT_VEL_LIMIT)
+        why = sim.fell()
+        if why:
+            fell_at, reason = now, why
+            break
+        if p[0] - start[0] >= distance:
+            break
+    d = float(sim.pelvis()[0] - start[0])
+    return DashResult(seed=seed, speed_cmd=speed, fell=fell_at is not None, fall_time=fell_at, fall_reason=reason,
+                      distance_m=d, finished=d >= distance and fell_at is None, time_s=(k + 1) * dt,
+                      vel_rms_err=float(np.sqrt(np.mean(np.square(vel_err)))) if vel_err else float("nan"),
+                      lateral_drift_m=lat, joint_vel_over_fraction=joint_over / max(1, k + 1))
+
+
+def rung1_verdict(results: list[DashResult]) -> dict:
+    per = [r.finished and not r.fell and r.vel_rms_err < 0.15 and r.lateral_drift_m < 0.5
+           and r.joint_vel_over_fraction <= JOINT_VEL_MAX_FRACTION for r in results]
+    return {"rung": 1, "seeds": len(results), "passed_seeds": int(sum(per)), "PASS": all(per), "per_seed_pass": per}

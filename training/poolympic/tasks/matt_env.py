@@ -17,6 +17,7 @@ from mjlab.envs import ManagerBasedRlEnvCfg
 from mjlab.envs import mdp as envs_mdp
 from mjlab.envs.mdp import dr
 from mjlab.envs.mdp.actions import JointPositionActionCfg
+from mjlab.managers.curriculum_manager import CurriculumTermCfg
 from mjlab.managers.event_manager import EventTermCfg
 from mjlab.managers.observation_manager import ObservationGroupCfg, ObservationTermCfg
 from mjlab.managers.reward_manager import RewardTermCfg
@@ -251,3 +252,62 @@ def matt_ppo_cfg(experiment: str, max_iterations: int) -> RslRlOnPolicyRunnerCfg
         num_steps_per_env=24,
         max_iterations=max_iterations,
     )
+
+
+def matt_rung1_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """Rung 1 — forward walk/run at a commanded speed with heading hold (30m Dash, Terminal Velocity)."""
+    cfg = matt_rung0_env_cfg(play=play)
+    cfg.scene.sensors = cfg.scene.sensors + (
+        ContactSensorCfg(
+            name=mdp.FOOT_SENSOR,
+            primary=ContactMatch(mode="subtree", pattern=r"^(foot_l|foot_r)$", entity="robot"),
+            secondary=ContactMatch(mode="body", pattern="terrain"),
+            fields=("found", "force"),
+            reduce="netforce",
+            num_slots=1,
+            track_air_time=True,
+        ),
+    )
+    cmd = cfg.commands["athlete"]
+    cmd.resampling_time_range = (5.0, 10.0)
+    cmd.rel_standing_envs = 0.1
+    cmd.heading_command = True
+    cmd.rel_heading_envs = 1.0
+    cmd.heading_control_stiffness = 0.5
+    cmd.ranges = mdp.AthleteCommandCfg.Ranges(lin_vel_x=(0.5, 2.0), lin_vel_y=(0.0, 0.0), ang_vel_z=(-0.5, 0.5),
+                                              heading=(-math.pi, math.pi))
+
+    cfg.events["push_robot"].params["velocity_range"] = {"x": (-0.5, 0.5), "y": (-0.5, 0.5)}
+    cfg.events["drop_cube"].interval_range_s = (5.0, 8.0)
+
+    for k in ("near_origin", "still_lin", "still_ang", "posture", "height"):
+        cfg.rewards.pop(k)
+    cfg.rewards.update({
+        "track_lin": RewardTermCfg(func=vel_mdp.track_linear_velocity, weight=2.0,
+                                   params={"command_name": "athlete", "std": 0.5}),
+        "track_ang": RewardTermCfg(func=vel_mdp.track_angular_velocity, weight=1.0,
+                                   params={"command_name": "athlete", "std": math.sqrt(0.5)}),
+        "height": RewardTermCfg(func=mdp.base_height_tracking, weight=0.5,
+                                params={"target": DEFAULT_ROOT_Z, "std": 0.15}),
+        "posture": RewardTermCfg(func=vel_mdp.variable_posture, weight=0.5, params={
+            "asset_cfg": SceneEntityCfg("robot", joint_names=(".*",)), "command_name": "athlete",
+            "std_standing": {".*": 0.2}, "std_walking": {".*": 0.5}, "std_running": {".*": 0.8},
+            "walking_threshold": 0.1, "running_threshold": 1.8}),
+        "phase_contact": RewardTermCfg(func=mdp.phase_contact, weight=0.5),
+        "air_time": RewardTermCfg(func=vel_mdp.feet_air_time, weight=0.5, params={
+            "sensor_name": mdp.FOOT_SENSOR, "threshold_min": 0.1, "threshold_max": 0.6,
+            "command_name": "athlete", "command_threshold": 0.3}),
+        "foot_slip": RewardTermCfg(func=mdp.foot_slip, weight=-0.1),
+    })
+    cfg.curriculum = {
+        "command_vel": CurriculumTermCfg(func=vel_mdp.commands_vel, params={
+            "command_name": "athlete",
+            "velocity_stages": [
+                {"step": 0, "lin_vel_x": (0.5, 2.0)},
+                {"step": 800 * 24, "lin_vel_x": (0.5, 3.0)},
+                {"step": 1800 * 24, "lin_vel_x": (0.5, 4.0)},
+            ]}),
+    }
+    if play:
+        cmd.ranges.lin_vel_x = (0.5, 4.0)
+    return cfg

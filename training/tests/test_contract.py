@@ -70,7 +70,8 @@ def test_projected_gravity_pitch(ath, model):
 def test_phase_clock():
     assert C.advance_phase(0.3, np.zeros(3)) == 0.0
     p = C.advance_phase(0.0, np.array([1.0, 0, 0]))
-    assert p == pytest.approx(C.GAIT_HZ * 0.02)
+    assert p == pytest.approx((C.GAIT_HZ_BASE + C.GAIT_HZ_PER_MPS * 1.0) * 0.02)
+    assert C.gait_hz(np.array([3.0, 0, 0])) == pytest.approx(1.4)
     assert 0.0 <= C.advance_phase(0.99, np.array([1.0, 0, 0])) < 1.0
 
 

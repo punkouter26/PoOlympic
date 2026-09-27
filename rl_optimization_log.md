@@ -104,3 +104,14 @@ One entry per run or decision. Newest at the bottom.
 - **Brain:** `parity/brains/r0_v2_it1000.onnx` (export verified vs rsl_rl math 7.8e-7).
 - **C4 (Unity, new actuator order):** re-import → **G0 PASS (0 mismatches)**; EditMode 8/8; rung0 reference: **G2 2.2e-16, G3 5.8e-7 / 1.5e-7, G4 1 s 4.0e-7, 5 s 8.7e-4**; Play-mode **G5 PASS**: stands through shove + cube, 5 s qpos drift 1.2e-5, torque ratio 1.0000001. Captures `parity/c4/`.
 - **Follow-ups:** pedestal-drift margin is thin (0.48 m worst of the official seeds) — evaluate later checkpoints of r0_v2 (training continues to 3000); if drift persists, strengthen the stay-on-pedestal term in a fine-tune. Cube renderers got a URP material (plug-in default rendered magenta).
+
+## 2026-09-27 · r0_v2 stopped at it ~1210 · Rung 0 brain = `r0_v2_it1000`
+- it 1200 also G1 10/10 (0 falls in 40 seeds) but pedestal-drift margin not improving (worst 0.57 m on the 30-seed margin set; bar 0.5 m). Cause is reward design (weak `near_origin`, pelvis-based), not training time → stop and free the GPU.
+- **Follow-up (Iron Pedestal event):** fine-tune with a foot-based pedestal term (+ termination when a foot leaves the 1 m box) before Phase D.
+- Contract v2: stride frequency now speed-dependent `gait_hz = 0.8 + 0.2·(|v_xy| + 0.5|wz|)` (was fixed 1.8 Hz — too fast for walking). C# `Contract.GaitHz` mirrors it. Rung 0 brains unaffected (command 0 ⇒ phase ≡ 0) but must be re-exported under contract v2.
+
+## 2026-09-27 · r1_v1 — Rung 1 started (warm start from r0_v2 it 1000)
+- **Task `PoOlympic-Matt-Rung1-Run`:** heading-hold commands (stiffness 0.5, |wz| ≤ 0.5, random heading targets), vx curriculum (0.5–2.0) → (0.5–3.0) @ it 800 → (0.5–4.0) @ it 1800, 10 % standing envs; shoves ±0.5 m/s every 3–5 s, cube drops every 5–8 s; rewards track_lin (2.0, std 0.5), track_ang (1.0), upright, height (std 0.15), variable posture (0.2/0.5/0.8), phase↔stance contact (0.5), feet air time (0.5, 0.1–0.6 s), foot slip (−0.1) + Rung 0 penalties. `feet_ground` subtree contact sensor (foot + toe) with air-time tracking.
+- **Checks:** `check_task.py rung1` — obs vs contract 3.5e-7, phase clock vs `contract.advance_phase` 2.1e-7 with moving commands, wiring 0 mismatches.
+- **G1 evaluator (rung 1):** 30 m dash at U(0.5, 3.0) m/s, heading hold with mjlab's heading definition (yaw of pelvis x-axis) and the same P-controller, 0.3 m/s shoves every 3–5 s; bars: finish, no fall, forward-velocity RMS error < 0.15 m/s (after 2 s warm-up), lateral drift < 0.5 m, joint-vel violations ≤ 5 %.
+- **Warm start:** checkpoint copied to `runs/matt_rung1/r0_init/model_0.pt` with `iter = 0` and env_state cleared so the command curriculum starts at stage 0.

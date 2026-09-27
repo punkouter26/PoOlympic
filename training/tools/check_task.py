@@ -21,11 +21,14 @@ sys.path.insert(0, str(ROOT))
 from mjlab.envs import ManagerBasedRlEnv  # noqa: E402
 
 from poolympic import contract as C  # noqa: E402
-from poolympic.tasks.matt_env import matt_rung0_env_cfg  # noqa: E402
+from poolympic.tasks.matt_env import matt_rung0_env_cfg, matt_rung1_env_cfg  # noqa: E402
+
+TASKS = {"rung0": matt_rung0_env_cfg, "rung1": matt_rung1_env_cfg}
 
 
-def main() -> int:
-    cfg = matt_rung0_env_cfg()
+def main(task: str = "rung0") -> int:
+    make = TASKS[task]
+    cfg = make()
     cfg.scene.num_envs = 16
     cfg.observations["actor"].enable_corruption = False
     env = ManagerBasedRlEnv(cfg=cfg, device="cuda:0")
@@ -51,6 +54,8 @@ def main() -> int:
     ath = C.Athlete.bind(m, prefix="robot/")
     worst_obs = 0.0
     worst_ctrl = 0.0
+    worst_phase = 0.0
+    py_phase = np.zeros(env.num_envs)
     torch.manual_seed(0)
     for step in range(30):
         a = torch.randn(env.num_envs, C.NUM_ACTIONS, device=env.device) * 1.5
@@ -61,7 +66,11 @@ def main() -> int:
         term = env.command_manager.get_term("athlete")
         last = env.action_manager.action.cpu().numpy().astype(np.float64)
         policy_obs = obs["actor"].cpu().numpy()
+        cmds = term.command.cpu().numpy().astype(np.float64)
+        ep = env.episode_length_buf.cpu().numpy()
         for e in range(env.num_envs):
+            py_phase[e] = C.advance_phase(0.0 if ep[e] == 0 else py_phase[e], cmds[e])
+            worst_phase = max(worst_phase, abs(py_phase[e] - float(term.phase[e])) % 1.0)
             ref_obs = C.build_obs(ath, qpos[e], qvel[e], term.command[e].cpu().numpy().astype(np.float64),
                                   float(term.phase[e]), last[e])
             worst_obs = max(worst_obs, float(np.abs(policy_obs[e] - ref_obs).max()))
@@ -70,11 +79,13 @@ def main() -> int:
             worst_ctrl = max(worst_ctrl, float(np.abs(ctrl[e][ath.actuator_ids] - want).min()))
     print(f"obs max |train - contract| = {worst_obs:.2e}   (float32 Warp vs float64 reference)")
     ok &= worst_obs < 1e-3
+    print(f"phase clock max |train - contract.advance_phase| = {worst_phase:.2e}  (commands nonzero: {bool(np.abs(cmds).sum() > 0)})")
+    ok &= worst_phase < 1e-4
     print(f"actuator order: {ath_names[:4]} …")
     env.close()
 
     # 3. wiring: action index i must move exactly ctrl of contract actuator i (no delay, no DR)
-    cfg = matt_rung0_env_cfg()
+    cfg = make()
     cfg.scene.num_envs = 1
     for k in list(cfg.events):
         if k.startswith("dr_") or k in ("push_robot", "drop_cube"):
@@ -105,4 +116,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(main(sys.argv[1] if len(sys.argv) > 1 else "rung0"))

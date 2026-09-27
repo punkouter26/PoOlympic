@@ -1,0 +1,39 @@
+{
+ "onnx": "..\\parity\\brains\\r0_v2_it1000.onnx",
+ "rung": 1,
+ "seeds": 2,
+ "passed_seeds": 0,
+ "PASS": false,
+ "per_seed_pass": [
+  false,
+  false
+ ],
+ "episodes": [
+  {
+   "seed": 1000,
+   "speed_cmd": 1.8034643449376568,
+   "fell": true,
+   "fall_time": 1.6400000000000001,
+   "fall_reason": "tilt",
+   "distance_m": 0.7253454685782103,
+   "finished": false,
+   "time_s": 1.6600000000000001,
+   "vel_rms_err": NaN,
+   "lateral_drift_m": 0.07354517013711213,
+   "joint_vel_over_fraction": 0.0
+  },
+  {
+   "seed": 1001,
+   "speed_cmd": 2.031487321424877,
+   "fell": true,
+   "fall_time": 1.68,
+   "fall_reason": "tilt",
+   "distance_m": 0.7016152748096955,
+   "finished": false,
+   "time_s": 1.7,
+   "vel_rms_err": NaN,
+   "lateral_drift_m": 0.0673583798213158,
+   "joint_vel_over_fraction": 0.0
+  }
+ ]
+}
