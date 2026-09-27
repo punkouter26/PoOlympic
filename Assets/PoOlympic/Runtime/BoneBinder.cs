@@ -35,12 +35,14 @@ namespace PoOlympic
             { "RightUpLeg", "thigh_r" }, { "RightLeg", "shin_r" }, { "RightFoot", "foot_r" }, { "RightToeBase", "toe_r" },
         };
 
-        /// <summary>Capture offsets. Must be called while the MjBody transforms show qpos = 0 (Edit mode after import).</summary>
-        public void Capture(Transform physicsRoot)
+        /// <summary>Capture offsets. Must be called while the MjBody transforms show qpos = 0 (Edit mode after import).
+        /// `prefix` selects one athlete of a meet scene (bodies named L&lt;k&gt;_pelvis, …).</summary>
+        public void Capture(Transform physicsRoot, string prefix = "")
         {
             bindings.Clear();
             var bodies = new Dictionary<string, MjBody>();
-            foreach (var b in physicsRoot.GetComponentsInChildren<MjBody>(true)) bodies[b.name] = b;
+            foreach (var b in physicsRoot.GetComponentsInChildren<MjBody>(true))
+                if (b.name.StartsWith(prefix)) bodies[b.name.Substring(prefix.Length)] = b;
             foreach (var bone in GetComponentsInChildren<Transform>(true)) // depth-first: parents before children
             {
                 if (!PivotBones.TryGetValue(bone.name, out var bodyName)) continue;

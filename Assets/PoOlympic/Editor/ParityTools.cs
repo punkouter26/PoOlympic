@@ -12,7 +12,10 @@ namespace PoOlympic.Editor
 
         /// <summary>G0 — compile the open scene's MuJoCo model and write parity/fingerprint_unity.json.</summary>
         [MenuItem("PoOlympic/Parity/G0 Dump Unity Fingerprint")]
-        public static unsafe string DumpFingerprint()
+        public static string DumpFingerprint() => DumpFingerprint("fingerprint_unity.json", "", "cube0");
+
+        /// <summary>G0 for one lane of a meet scene: athlete `prefix` + pool cube `cube` → parity/&lt;file&gt;.</summary>
+        public static unsafe string DumpFingerprint(string file, string prefix, string cube)
         {
             // The plug-in's MjScene singleton only registers itself in Awake (Play mode). In Edit mode we use a
             // temporary instance and remove it afterwards so it never gets saved into the scene.
@@ -22,9 +25,9 @@ namespace PoOlympic.Editor
             scene.CreateScene();
             try
             {
-                var json = ModelFingerprint.Dump(scene.Model);
+                var json = ModelFingerprint.Dump(scene.Model, prefix, cube);
                 Directory.CreateDirectory(ParityDir);
-                var path = Path.Combine(ParityDir, "fingerprint_unity.json");
+                var path = Path.Combine(ParityDir, file);
                 File.WriteAllText(path, json);
                 Debug.Log($"[Parity] wrote {path}");
                 return path;

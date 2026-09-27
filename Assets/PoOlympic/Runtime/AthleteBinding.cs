@@ -16,6 +16,8 @@ namespace PoOlympic
         public readonly double[] DefaultPos;
         public readonly int RootQposAdr;
         public readonly int RootDofAdr;
+        /// <summary>Every joint of this athlete (root, actuated and passive): joints whose body hangs under its pelvis.</summary>
+        public readonly int[] OwnJoints;
         public readonly string Prefix;
 
         public AthleteBinding(MujocoLib.mjModel_* m, Contract c, string prefix = "")
@@ -42,7 +44,15 @@ namespace PoOlympic
             if (!joints.TryGetValue(prefix + c.root_joint, out var root)) throw new KeyNotFoundException($"root joint '{prefix + c.root_joint}' not in model");
             RootQposAdr = m->jnt_qposadr[root];
             RootDofAdr = m->jnt_dofadr[root];
+            int pelvis = m->jnt_bodyid[root];
+            var own = new List<int>();
+            for (int j = 0; j < (int)m->njnt; j++)
+                if (m->body_rootid[m->jnt_bodyid[j]] == pelvis) own.Add(j);
+            OwnJoints = own.ToArray();
         }
+
+        public static int QposDim(int jntType) => jntType == 0 ? 7 : jntType == 1 ? 4 : 1;
+        public static int DofDim(int jntType) => jntType == 0 ? 6 : jntType == 1 ? 3 : 1;
 
         public static Dictionary<string, int> NameIndex(MujocoLib.mjModel_* m, int objType, int count)
         {

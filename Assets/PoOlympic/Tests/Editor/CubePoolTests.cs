@@ -37,7 +37,7 @@ namespace PoOlympic.Tests
                 // fire cube0 from 1.5 m in front of the chest, straight at it (MuJoCo frame: +x forward)
                 new Disturbance { kind = "cube", target = "cube0_free",
                                   qpos = new[] { 1.5, 0.0, 1.3, 1, 0, 0, 0 }, qvel = new[] { -8.0, 0, 0, 0, 0, 0 } }
-                    .Apply(m, d, joints, "");
+                    .Apply(m, d, joints);
 
                 bool hitAthlete = false;
                 double minPelvisVx = 0;

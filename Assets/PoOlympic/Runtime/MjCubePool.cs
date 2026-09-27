@@ -25,11 +25,14 @@ namespace PoOlympic
             Fire(fromMj, dir * launchSpeed);
         }
 
-        public void Fire(Vector3 posMj, Vector3 velMj)
+        public void Fire(Vector3 posMj, Vector3 velMj) => Fire(runner, posMj, velMj);
+
+        /// <summary>Teleport the next pooled cube; applied at `via`'s next control tick (every lane ticks together).</summary>
+        public void Fire(PolicyRunner via, Vector3 posMj, Vector3 velMj)
         {
             int i = _next;
             _next = (_next + 1) % poolSize;
-            runner.Request(new Disturbance
+            via.Request(new Disturbance
             {
                 kind = "cube", target = JointName(i),
                 qpos = new double[] { posMj.x, posMj.y, posMj.z, 1, 0, 0, 0 },
@@ -38,17 +41,21 @@ namespace PoOlympic
         }
 
         /// <summary>Drop a cube from `height` metres above the athlete's pelvis (2 kg, as in the robustness curriculum).</summary>
-        public unsafe void DropOnAthlete(float height = 1.5f)
+        public void DropOnAthlete(float height = 1.5f) => DropOnAthlete(runner, height);
+
+        public unsafe void DropOnAthlete(PolicyRunner athlete, float height = 1.5f)
         {
-            if (!runner.Initialized) return;
+            if (!athlete.Initialized) return;
             var d = MjScene.Instance.Data;
-            int r = runner.Binding.RootQposAdr;
+            int r = athlete.Binding.RootQposAdr;
             var p = new Vector3((float)d->qpos[r], (float)d->qpos[r + 1] + 0.2f, (float)d->qpos[r + 2] + 0.6f + height);
-            Fire(p, Vector3.zero);
+            Fire(athlete, p, Vector3.zero);
         }
 
         /// <summary>Horizontal shove: instantaneous Δv on the pelvis free joint (MuJoCo world frame).</summary>
-        public void Shove(Vector2 dvXY) =>
-            runner.Request(new Disturbance { kind = "shove", target = "root", dqvel = new double[] { dvXY.x, dvXY.y, 0 } });
+        public void Shove(Vector2 dvXY) => Shove(runner, dvXY);
+
+        public void Shove(PolicyRunner athlete, Vector2 dvXY) =>
+            athlete.Request(new Disturbance { kind = "shove", target = "root", dqvel = new double[] { dvXY.x, dvXY.y, 0 } });
     }
 }

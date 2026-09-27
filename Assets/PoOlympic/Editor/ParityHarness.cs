@@ -133,7 +133,7 @@ namespace PoOlympic.Editor
                     report.g4MaxAbs5s = Math.Max(report.g4MaxAbs5s, drift);
                     if (drift >= G4Tol && report.g4FirstTickOver < 0) report.g4FirstTickOver = k;
                     for (int i = 0; i < n; i++) d->ctrl[bind.ActuatorIds[i]] = frames[k].ctrl[i];
-                    if (byTick.TryGetValue(k, out var list)) foreach (var dist in list) dist.Apply(m, d, joints, "");
+                    if (byTick.TryGetValue(k, out var list)) foreach (var dist in list) dist.Apply(m, d, joints);
                     for (int s = 0; s < contract.decimation; s++) MujocoLib.mj_step(m, d);
                 }
             }

@@ -3,6 +3,8 @@
 Inputs : assets/derived/skeleton_matt.json, assets/derived/skin_matt.npz  (from extract_skeleton.py)
 Outputs: assets/matt.xml         robot only (for mjlab)
          assets/scene_matt.xml   flattened: options + ground + robot + cube pool + keyframe (CPU eval, Unity import)
+         assets/scene_meet8.xml  8 lane-isolated athletes (names prefixed L<k>_) + 16-cube pool (G6, events)
+         assets/meet8_layout.json lane table (prefix, origin, cube slots) shared by Python and Unity
          assets/derived/body_report.json
 
 Conventions (DESIGN §2):
@@ -39,7 +41,19 @@ CUBE_FRICTION = 0.8
 GROUND_FRICTION = (1.0, 0.005, 0.0001)
 BODY_FRICTION = (1.0, 0.005, 0.0001)
 ALL_BITS = 0xFFFF  # ground + cubes collide with every lane
-LANE = 0  # training scene is always lane 0; Unity re-assigns bits per lane
+LANE = 0  # training scene is always lane 0; the meet scene gives lane k its own bits
+N_LANES = 8
+N_CUBES_MEET = 16  # 2 per lane for scripted disturbances; the HUD pool cycles through all of them
+LANE_WIDTH = 1.22  # m (World Athletics lane width)
+
+
+def lane_prefix(lane: int) -> str:
+    return f"L{lane}_"
+
+
+def lane_origin(lane: int) -> np.ndarray:
+    """World origin of lane k: lanes side by side along y (lane 0 leftmost, +y), running along +x."""
+    return np.array([0.0, (0.5 * (N_LANES - 1) - lane) * LANE_WIDTH, 0.0])
 
 
 def f(x: float) -> str:
@@ -365,6 +379,53 @@ def compose_model(skin, geoms, inertials, with_scene: bool, n_cubes: int, defaul
     return indent(root)
 
 
+def compose_meet(skin, geoms, inertials, default_qpos: np.ndarray, n_lanes: int = N_LANES,
+                 n_cubes: int = N_CUBES_MEET) -> tuple[str, dict]:
+    """Multi-athlete scene (G6 / events): lane k = the training athlete with every name prefixed `L<k>_`, its own
+    collision bits (lane isolation) and its pelvis shifted to lane_origin(k). Ground + cube pool as in the solo
+    scene. Returns (xml, layout) — layout is the lane table Unity and the evaluators share."""
+    root = ET.Element("mujoco", {"model": f"meet{n_lanes}"})
+    option_block(root)
+    wb = ET.SubElement(root, "worldbody")
+    ET.SubElement(wb, "light", {"name": "sun", "pos": "0 0 5", "dir": "0 0 -1", "directional": "true"})
+    ET.SubElement(wb, "geom", {"name": "ground", "type": "plane", "size": "0 0 0.05", "contype": str(ALL_BITS),
+                               "conaffinity": str(ALL_BITS), "condim": "3", "friction": vec(GROUND_FRICTION)})
+    contact = ET.Element("contact")
+    all_actuators, key_qpos, lanes = [], [], []
+    for k in range(n_lanes):
+        p, o = lane_prefix(k), lane_origin(k)
+        pelvis, actuators, _ = build_robot(skin, geoms, inertials, lane=k)
+        tree_order = [j.get("name") for j in pelvis.iter("joint")]
+        actuators = sorted(actuators, key=lambda a: tree_order.index(a[0]))
+        for el in pelvis.iter():
+            if "name" in el.attrib:
+                el.set("name", p + el.get("name"))
+        pelvis.set("pos", vec(np.array([float(x) for x in pelvis.get("pos").split()]) + o))
+        wb.append(pelvis)
+        ET.SubElement(contact, "exclude", {"body1": p + "thigh_l", "body2": p + "thigh_r"})
+        all_actuators += [(p + j, g) for j, g in actuators]
+        q = default_qpos.copy()
+        q[0:3] += o
+        key_qpos.append(q)
+        lanes.append({"lane": k, "prefix": p, "origin": o.tolist(), "cubes": [2 * k, 2 * k + 1]})
+    inertia = CUBE_MASS * (2 * CUBE_HALF) ** 2 / 6.0
+    for i in range(n_cubes):
+        cb = ET.SubElement(wb, "body", {"name": f"cube{i}", "pos": vec(cube_park_pos(i))})
+        ET.SubElement(cb, "inertial", {"pos": "0 0 0", "mass": f(CUBE_MASS), "diaginertia": vec([inertia] * 3)})
+        ET.SubElement(cb, "freejoint", {"name": f"cube{i}_free"})
+        ET.SubElement(cb, "geom", {"name": f"cube{i}_geom", "type": "box", "size": vec([CUBE_HALF] * 3),
+                                   "contype": str(ALL_BITS), "conaffinity": str(ALL_BITS), "condim": "3",
+                                   "friction": f"{f(CUBE_FRICTION)} 0.005 0.0001"})
+        key_qpos.append(np.concatenate([cube_park_pos(i), [1, 0, 0, 0]]))
+    root.append(contact)
+    actuator_block(root, all_actuators)
+    kf = ET.SubElement(root, "keyframe")
+    ET.SubElement(kf, "key", {"name": "default", "qpos": vec(np.concatenate(key_qpos))})
+    layout = {"n_lanes": n_lanes, "lane_width": LANE_WIDTH, "n_cubes": n_cubes, "lanes": lanes,
+              "note": "lane k: names prefixed L<k>_, pelvis shifted by origin; solo-scene cube i -> meet cube cubes[i]"}
+    return indent(root), layout
+
+
 def cube_entity_xml() -> str:
     """One pooled cube as a standalone model (mjlab entity for training) — identical to the scene's cube bodies."""
     root = ET.Element("mujoco", {"model": "cube"})
@@ -457,6 +518,9 @@ def main() -> int:
     (ASSETS / "cube.xml").write_text(header + cube_entity_xml() + "\n")
     (ASSETS / "matt.xml").write_text(header + robot_xml + "\n")
     (ASSETS / "scene_matt.xml").write_text(header + scene_xml + "\n")
+    meet_xml, meet_layout = compose_meet(skin, geoms, inertials, qdef)
+    (ASSETS / f"scene_meet{N_LANES}.xml").write_text(header + meet_xml + "\n")
+    (ASSETS / f"meet{N_LANES}_layout.json").write_text(json.dumps(meet_layout, indent=1) + "\n")
 
     m = mujoco.MjModel.from_xml_string(scene_xml)
     report = {
@@ -474,6 +538,8 @@ def main() -> int:
     print(f"matt.xml + scene_matt.xml written. nq={m.nq} nv={m.nv} nu={m.nu} bodies={m.nbody} geoms={m.ngeom}")
     print(f"robot mass={report['total_mass']:.3f} kg (uniform-density geoms would give {geom_mass:.1f} kg)")
     print(f"default standing root height z={qdef[2]:.4f} m")
+    mm = mujoco.MjModel.from_xml_string(meet_xml)
+    print(f"scene_meet{N_LANES}.xml written. nq={mm.nq} nv={mm.nv} nu={mm.nu} bodies={mm.nbody} geoms={mm.ngeom}")
     return 0
 
 

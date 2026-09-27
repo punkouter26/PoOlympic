@@ -180,3 +180,60 @@ def test_actuators_declared_in_joint_order(robot):
     """ctrl order must follow joint id order (mjlab XmlActuator pairing; see build_mjcf.compose_model)."""
     joint_ids = [int(robot.actuator_trnid[i, 0]) for i in range(robot.nu)]
     assert joint_ids == sorted(joint_ids)
+
+
+# ---------------------------------------------------------------- C6: 8-lane meet scene
+MEET = ROOT / "assets" / "scene_meet8.xml"
+
+
+@pytest.fixture(scope="module")
+def meet():
+    return mujoco.MjModel.from_xml_path(str(MEET))
+
+
+def _lane_of(m, g) -> int | None:
+    name = m.body(m.body_rootid[m.geom_bodyid[g]]).name
+    return int(name[1:name.index("_")]) if name.startswith("L") else None
+
+
+def test_meet_lanes_never_collide(meet):
+    """Lane isolation by construction: no geom of lane a can ever touch a geom of lane b != a; every athlete geom
+    still touches the ground and the cubes."""
+    lanes = [_lane_of(meet, g) for g in range(meet.ngeom)]
+    ct, ca = meet.geom_contype, meet.geom_conaffinity
+    shared = [g for g in range(meet.ngeom) if lanes[g] is None]
+    for a in range(meet.ngeom):
+        for b in range(a + 1, meet.ngeom):
+            can = bool((ct[a] & ca[b]) | (ct[b] & ca[a]))
+            if lanes[a] is not None and lanes[b] is not None and lanes[a] != lanes[b]:
+                assert not can, (meet.geom(a).name, meet.geom(b).name)
+    for a in range(meet.ngeom):
+        if lanes[a] is not None:
+            assert all((ct[a] & ca[s]) | (ct[s] & ca[a]) for s in shared), meet.geom(a).name
+
+
+def test_meet_lane_is_the_training_athlete(meet, scene):
+    """Each lane's athlete matches the solo scene body-for-body (masses, inertias, joints, actuators); only names,
+    collision bits and the pelvis origin differ."""
+    from poolympic.meet import load_layout
+
+    for lane in load_layout():
+        for i in range(1, scene.nbody):
+            name = scene.body(i).name
+            if name.startswith("cube"):
+                continue
+            j = meet.body(lane.prefix + name).id
+            assert meet.body_mass[j] == scene.body_mass[i]
+            np.testing.assert_array_equal(meet.body_inertia[j], scene.body_inertia[i])
+            if name != "pelvis":
+                np.testing.assert_array_equal(meet.body_pos[j], scene.body_pos[i])
+        np.testing.assert_allclose(meet.body_pos[meet.body(lane.prefix + "pelvis").id],
+                                   scene.body_pos[scene.body("pelvis").id] + lane.origin, atol=1e-6)
+        for a in range(scene.nu):
+            b = meet.actuator(lane.prefix + scene.actuator(a).name).id
+            np.testing.assert_array_equal(meet.actuator_gainprm[b], scene.actuator_gainprm[a])
+            np.testing.assert_array_equal(meet.actuator_forcerange[b], scene.actuator_forcerange[a])
+        k0 = meet.key("default").qpos
+        ks = scene.key("default").qpos
+        ra = meet.jnt_qposadr[meet.joint(lane.prefix + "root").id]
+        np.testing.assert_allclose(k0[ra:ra + 32] - np.r_[lane.origin, np.zeros(29)], ks[:32], atol=1e-6)

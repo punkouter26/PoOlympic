@@ -30,6 +30,12 @@ namespace PoOlympic
         public string athletePrefix = "";
         public Vector3 command;
 
+        [Header("Lane (meet scenes; solo = no prefix, origin 0, cube slots 0..3)")]
+        [Tooltip("MuJoCo world x/y of this lane's origin: root position = contract default + origin.")]
+        public double laneOriginX, laneOriginY;
+        [Tooltip("Pool cube slots this lane owns: a lane-local script's cube<i> is cube<cubeSlots[i]> in the scene.")]
+        public int[] cubeSlots = { 0, 1, 2, 3 };
+
         [Header("Disturbances")]
         public bool useStandardParityScript = true;
         public List<Disturbance> disturbances = new();
@@ -64,8 +70,9 @@ namespace PoOlympic
             scene.postInitEvent += OnPostInit;
             scene.preUpdateEvent += OnPreStep;
             var list = useStandardParityScript ? Disturbance.StandardParityScript() : disturbances;
-            foreach (var d in list)
+            foreach (var local in list)
             {
+                var d = local.InLane(athletePrefix, cubeSlots, laneOriginX, laneOriginY);
                 if (!_byTick.TryGetValue(d.tick, out var l)) _byTick[d.tick] = l = new List<Disturbance>();
                 l.Add(d);
             }
@@ -111,25 +118,46 @@ namespace PoOlympic
             Initialized = true;
         }
 
-        /// <summary>mj_resetData, then the contract's default state by joint name, then mj_forward.</summary>
+        /// <summary>
+        /// This athlete only (other lanes keep running): the contract's default state by joint name with the root
+        /// shifted to the lane origin, zero velocity and solver warm start on its own dofs, then mj_forward.
+        /// Mirrors training/poolympic/meet.py::reset_lane. At scene init mjData is fresh from mj_makeData, so this
+        /// equals the solo reference's mj_resetDataKeyframe. Cubes are not touched (see <see cref="RequestReset"/>).
+        /// </summary>
         public void ResetToDefault(MujocoLib.mjModel_* m, MujocoLib.mjData_* d)
         {
-            MujocoLib.mj_resetData(m, d);
             foreach (var jq in Contract.default_joint_qpos)
             {
-                var name = jq.joint == Contract.root_joint || !jq.joint.StartsWith("cube") ? athletePrefix + jq.joint : jq.joint;
-                if (!_jointIndex.TryGetValue(name, out var j)) continue;
+                if (jq.joint.StartsWith("cube")) continue;
+                if (!_jointIndex.TryGetValue(athletePrefix + jq.joint, out var j)) throw new KeyNotFoundException($"joint '{athletePrefix + jq.joint}'");
                 int qa = m->jnt_qposadr[j];
-                for (int i = 0; i < jq.qpos.Length; i++) d->qpos[qa + i] = jq.qpos[i];
+                bool free = m->jnt_type[j] == 0;
+                for (int i = 0; i < jq.qpos.Length; i++)
+                    d->qpos[qa + i] = jq.qpos[i] + (free && i == 0 ? laneOriginX : free && i == 1 ? laneOriginY : 0.0);
+            }
+            foreach (var j in Binding.OwnJoints)
+            {
+                int da = m->jnt_dofadr[j];
+                for (int i = 0; i < AthleteBinding.DofDim(m->jnt_type[j]); i++) d->qvel[da + i] = d->qacc_warmstart[da + i] = 0;
             }
             MujocoLib.mj_forward(m, d);
         }
 
-        /// <summary>Queue a native-MuJoCo disturbance (shove / pooled cube) for the next control tick.</summary>
-        public void Request(Disturbance d) { lock (_pending) _pending.Add(d); }
+        /// <summary>Queue a native-MuJoCo disturbance for the next control tick. World frame: "root" means this
+        /// athlete's root; cube targets are scene pool slots (MjCubePool).</summary>
+        public void Request(Disturbance d)
+        {
+            if (d.target == "root") { d = d.Clone(); d.target = athletePrefix + "root"; }
+            lock (_pending) _pending.Add(d);
+        }
 
-        /// <summary>Reset the athlete (and cube pool) to the contract default state at the next control tick.</summary>
-        public void RequestReset() => _resetRequested = true;
+        /// <summary>Reset this athlete to the contract default state and park its own cube slots, at the next
+        /// control tick.</summary>
+        public void RequestReset()
+        {
+            _resetRequested = true;
+            foreach (var c in cubeSlots) Request(new Disturbance { kind = "park", target = $"cube{c}_free" });
+        }
 
         public double PelvisHeight(MujocoLib.mjData_* d) => d->qpos[Binding.RootQposAdr + 2];
 
@@ -151,10 +179,10 @@ namespace PoOlympic
             if (_substep % Contract.decimation == 0)
             {
                 if (_byTick.TryGetValue(ControlTick, out var list))
-                    foreach (var dist in list) dist.Apply(m, d, _jointIndex, athletePrefix);
+                    foreach (var dist in list) dist.Apply(m, d, _jointIndex);
                 lock (_pending)
                 {
-                    foreach (var dist in _pending) dist.Apply(m, d, _jointIndex, athletePrefix);
+                    foreach (var dist in _pending) dist.Apply(m, d, _jointIndex);
                     _pending.Clear();
                 }
             }
@@ -183,25 +211,38 @@ namespace PoOlympic
 
         // ---------------------------------------------------------------- recording (G5 closed-loop comparison)
         string _recPath;
-        int _nq, _nv;
+        int[] _recQ, _recV; // recorded qpos / qvel addresses: own joints + own cube slots, in joint order
 
         void BeginRecording(MujocoLib.mjModel_* m)
         {
-            _nq = (int)m->nq;
-            _nv = (int)m->nv;
             _recPath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "parity", $"unity_run_{recordName}.json"));
+            var joints = new List<int>(Binding.OwnJoints);
+            foreach (var c in cubeSlots)
+                if (_jointIndex.TryGetValue($"cube{c}_free", out var cj)) joints.Add(cj);
+            joints.Sort();
+            var q = new List<int>();
+            var v = new List<int>();
+            string R(double x) => x.ToString("R", CultureInfo.InvariantCulture);
             _rec = new StringBuilder();
             _rec.Append("{\"meta\":{\"source\":\"unity\",\"record_name\":\"").Append(recordName)
-                .Append("\",\"timestep\":").Append(m->opt.timestep.ToString("R", CultureInfo.InvariantCulture))
+                .Append("\",\"timestep\":").Append(R(m->opt.timestep))
                 .Append(",\"decimation\":").Append(Contract.decimation)
-                .Append(",\"joints\":[");
-            for (int j = 0; j < (int)m->njnt; j++)
+                .Append(",\"prefix\":\"").Append(athletePrefix)
+                .Append("\",\"origin\":[").Append(R(laneOriginX)).Append(',').Append(R(laneOriginY)).Append(",0]")
+                .Append(",\"cube_slots\":[").Append(string.Join(",", cubeSlots))
+                .Append("],\"joints\":[");
+            for (int k = 0; k < joints.Count; k++)
             {
-                if (j > 0) _rec.Append(',');
+                int j = joints[k], t = m->jnt_type[j];
+                if (k > 0) _rec.Append(',');
                 _rec.Append("{\"name\":\"").Append(ModelFingerprint.Name(m, (int)MujocoLib.mjtObj.mjOBJ_JOINT, j))
-                    .Append("\",\"type\":").Append(m->jnt_type[j]).Append(",\"qposadr\":").Append(m->jnt_qposadr[j])
-                    .Append(",\"dofadr\":").Append(m->jnt_dofadr[j]).Append('}');
+                    .Append("\",\"type\":").Append(t).Append(",\"qposadr\":").Append(q.Count)
+                    .Append(",\"dofadr\":").Append(v.Count).Append('}');
+                for (int i = 0; i < AthleteBinding.QposDim(t); i++) q.Add(m->jnt_qposadr[j] + i);
+                for (int i = 0; i < AthleteBinding.DofDim(t); i++) v.Add(m->jnt_dofadr[j] + i);
             }
+            _recQ = q.ToArray();
+            _recV = v.ToArray();
             _rec.Append("]},\"frames\":[");
             _recFrames = 0;
         }
@@ -212,8 +253,8 @@ namespace PoOlympic
             if (_recFrames > 0) _rec.Append(',');
             _rec.Append("{\"tick\":").Append(ControlTick)
                 .Append(",\"t\":").Append((ControlTick * Contract.timestep * Contract.decimation).ToString("R", CultureInfo.InvariantCulture));
-            AppendArray("qpos", d->qpos, _nq);
-            AppendArray("qvel", d->qvel, _nv);
+            AppendGather("qpos", d->qpos, _recQ);
+            AppendGather("qvel", d->qvel, _recV);
             var f = stackalloc double[Binding.ActuatorIds.Length];
             for (int i = 0; i < Binding.ActuatorIds.Length; i++) f[i] = d->actuator_force[Binding.ActuatorIds[i]];
             AppendArray("actuator_force_prev", f, Binding.ActuatorIds.Length);
@@ -239,6 +280,17 @@ namespace PoOlympic
             {
                 if (i > 0) _rec.Append(',');
                 _rec.Append(p[i].ToString("R", CultureInfo.InvariantCulture));
+            }
+            _rec.Append(']');
+        }
+
+        void AppendGather(string key, double* p, int[] idx)
+        {
+            _rec.Append(",\"").Append(key).Append("\":[");
+            for (int i = 0; i < idx.Length; i++)
+            {
+                if (i > 0) _rec.Append(',');
+                _rec.Append(p[idx[i]].ToString("R", CultureInfo.InvariantCulture));
             }
             _rec.Append(']');
         }

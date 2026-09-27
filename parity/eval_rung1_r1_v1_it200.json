@@ -1,0 +1,53 @@
+{
+ "onnx": "..\\parity\\brains\\r1_v1_it200.onnx",
+ "rung": 1,
+ "seeds": 3,
+ "passed_seeds": 0,
+ "PASS": false,
+ "per_seed_pass": [
+  false,
+  false,
+  false
+ ],
+ "episodes": [
+  {
+   "seed": 1000,
+   "speed_cmd": 1.8034643449376568,
+   "fell": false,
+   "fall_time": null,
+   "fall_reason": null,
+   "distance_m": -0.2607773755478419,
+   "finished": false,
+   "time_s": 28.62,
+   "vel_rms_err": 1.812600941925291,
+   "lateral_drift_m": 0.3956567510617242,
+   "joint_vel_over_fraction": 0.0
+  },
+  {
+   "seed": 1001,
+   "speed_cmd": 2.031487321424877,
+   "fell": false,
+   "fall_time": null,
+   "fall_reason": null,
+   "distance_m": -0.07903805986498738,
+   "finished": false,
+   "time_s": 26.76,
+   "vel_rms_err": 2.0318108432197266,
+   "lateral_drift_m": 0.46228096132789087,
+   "joint_vel_over_fraction": 0.0
+  },
+  {
+   "seed": 1002,
+   "speed_cmd": 1.4520528987077896,
+   "fell": false,
+   "fall_time": null,
+   "fall_reason": null,
+   "distance_m": 0.13680959298007578,
+   "finished": false,
+   "time_s": 32.660000000000004,
+   "vel_rms_err": 1.449604466774869,
+   "lateral_drift_m": 0.47953748118284845,
+   "joint_vel_over_fraction": 0.0
+  }
+ ]
+}

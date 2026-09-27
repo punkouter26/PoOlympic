@@ -4,12 +4,15 @@ using UnityEngine;
 namespace PoOlympic
 {
     /// <summary>
-    /// Minimal testbed HUD (Phase B6): FPS, sim time, control tick, pelvis height, lane state, and native-MuJoCo
-    /// interaction buttons (shove, cube drop, reset). The broadcast HUD proper is Phase D.
+    /// Minimal testbed HUD (Phase B6 / C6): FPS, sim time, control tick, per-lane pelvis height / distance / state, and
+    /// native-MuJoCo interaction buttons (shove, cube drop, reset) acting on the selected lane. The broadcast HUD
+    /// proper is Phase D.
     /// </summary>
     public class TestbedHud : MonoBehaviour
     {
         public PolicyRunner runner;
+        [Tooltip("All lanes of a meet scene (empty in the solo testbed).")]
+        public PolicyRunner[] lanes = new PolicyRunner[0];
         public MjCubePool cubes;
         public string title = "PoOlympics — Testbed";
         public string version = "v0 · zero-brain";
@@ -17,25 +20,37 @@ namespace PoOlympic
 
         void Update() => _fps = Mathf.Lerp(_fps, 1f / Mathf.Max(1e-4f, Time.unscaledDeltaTime), 0.05f);
 
-        unsafe void OnGUI()
+        static unsafe string LaneLine(PolicyRunner r)
+        {
+            if (r == null || !r.Initialized || !MjScene.InstanceExists || MjScene.Instance.Data == null) return "—";
+            var d = MjScene.Instance.Data;
+            double h = r.PelvisHeight(d);
+            double x = d->qpos[r.Binding.RootQposAdr] - r.laneOriginX;
+            return $"{r.command.x:F2} m/s  x {x,5:F1} m  z {h:F2}  {(h < 0.55 ? "FALLEN" : "UP")}";
+        }
+
+        void OnGUI()
         {
             var cam = Camera.main;
             var r = cam != null ? cam.pixelRect : new Rect(0, 0, Screen.width, Screen.height);
             var area = new Rect(r.x, Screen.height - r.yMax, r.width, r.height); // GUI space is y-down
             GUI.Label(new Rect(area.x + 10, area.y + 8, 300, 24), title);
-            string state = "—", z = "—";
-            if (runner != null && runner.Initialized && MjScene.InstanceExists && MjScene.Instance.Data != null)
-            {
-                double h = runner.PelvisHeight(MjScene.Instance.Data);
-                z = h.ToString("F3") + " m";
-                state = h < 0.55 ? "FALLEN" : "STANDING";
-            }
-            GUI.Label(new Rect(area.x + area.width * 0.5f - 110, area.y + 8, 220, 60),
-                $"FPS {_fps:F0}  |  t {Time.fixedTime:F2} s\ntick {(runner ? runner.ControlTick : 0)}  |  pelvis {z}\nlane 0: {state}");
+            GUI.Label(new Rect(area.x + area.width * 0.5f - 110, area.y + 8, 220, 40),
+                $"FPS {_fps:F0}  |  t {Time.fixedTime:F2} s\ntick {(runner ? runner.ControlTick : 0)}");
+            if (lanes.Length == 0)
+                GUI.Label(new Rect(area.x + area.width * 0.5f - 110, area.y + 44, 260, 24), $"lane 0: {LaneLine(runner)}");
+            else
+                for (int i = 0; i < lanes.Length; i++)
+                {
+                    var style = lanes[i] == runner ? GUI.skin.box : GUI.skin.label;
+                    GUI.Label(new Rect(area.x + 10, area.y + 56 + 20 * i, 320, 20), $"L{i}  {LaneLine(lanes[i])}", style);
+                }
             if (runner == null) return;
-            if (GUI.Button(new Rect(area.x + 10, area.yMax - 44, 90, 34), "Reset")) runner.RequestReset();
-            if (GUI.Button(new Rect(area.x + 106, area.yMax - 44, 90, 34), "Shove")) cubes.Shove(Random.insideUnitCircle.normalized * 0.5f);
-            if (GUI.Button(new Rect(area.x + 202, area.yMax - 44, 90, 34), "Drop cube")) cubes.DropOnAthlete();
+            if (GUI.Button(new Rect(area.x + 10, area.yMax - 44, 80, 34), "Reset")) runner.RequestReset();
+            if (GUI.Button(new Rect(area.x + 96, area.yMax - 44, 80, 34), "Shove")) cubes.Shove(runner, Random.insideUnitCircle.normalized * 0.5f);
+            if (GUI.Button(new Rect(area.x + 182, area.yMax - 44, 80, 34), "Drop cube")) cubes.DropOnAthlete(runner);
+            if (lanes.Length > 0 && GUI.Button(new Rect(area.x + 268, area.yMax - 44, 80, 34), $"Lane {System.Array.IndexOf(lanes, runner)} ▸"))
+                runner = lanes[(System.Array.IndexOf(lanes, runner) + 1) % lanes.Length];
             GUI.Label(new Rect(area.xMax - 150, area.yMax - 30, 140, 24), version);
         }
     }

@@ -74,10 +74,14 @@ In-editor authoring runs through the Unity CLI (`unity command …`, com.unity.p
 - [x] **C3 Rung 0 — train** stand + shove recovery to bar. **GATE G1.** Log all runs.
 - [x] **C4 Rung 0 — Unity spot-check.** Export ONNX + reference; G0, G2–G5 in `Testbed_ZeroBrain` with Rung 0 brain.
 - [ ] **C5 Rung 1 — train** forward velocity to bar. **GATE G1.**
+  - r1_v1 (warm start from Rung 0) FAILED — collapsed into standing still (warm-start obs normalizer + narrow tracking kernel; see log). r1_v2 = from scratch + coarse tracking term + walking-speed curriculum start: ready to launch.
 - [ ] **C6 Rung 1 — Early Verification Gate (HALT POINT).**
   - export `rung1.onnx` (opset 17, batch 1) + `reference_trajectory_rung1.json` (5 s, CPU MuJoCo)
   - `Testbed_Rung1.unity`: **GATES G0, G2, G3, G4, G5, G6** (8 lanes + cube pool)
   - any divergence → stop training; fix solver config / decimation / friction / gain mapping; re-run gates; log root cause
+  - [x] infrastructure: `scene_meet8.xml` (8 lane-isolated athletes `L<k>_`, 1.22 m lanes, 16-cube pool) · lane-safe `PolicyRunner` (per-lane reset, lane origin, cube-slot remap, per-lane recording) · `Testbed_Rung1.unity` (MenuItem *Build Testbed_Rung1*) · `tools/make_g6.py` (lane plan + solo refs + CPU meet pre-check) · `tools/compare_g6.py` (G0 per lane, G6)
+  - [x] G0 meet8 PASS (8/8 lanes, each == solo athlete except bits/origin) · G6 harness dry run PASS (interim brain) · solo G5 re-verified (zero/random/rung0, contract v2 brains)
+  - [ ] with the G1-passing Rung 1 brain: `make_g6.py` → G2–G4 (auto-discovered refs) → G5 solo → `MeetTestbed.ConfigureG6` + play 250 ticks → `compare_g6.py g6`
 - [ ] **C7 Rung 2 — train** omnidirectional + yaw to bar. **GATE G1.**
 - [ ] **C8 Rung 2 — Unity spot-check.** G3, G5, G6 with rung2 brain; commands switchable from HUD.
 

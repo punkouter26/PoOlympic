@@ -274,7 +274,7 @@ def matt_rung1_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     cmd.heading_command = True
     cmd.rel_heading_envs = 1.0
     cmd.heading_control_stiffness = 0.5
-    cmd.ranges = mdp.AthleteCommandCfg.Ranges(lin_vel_x=(0.5, 2.0), lin_vel_y=(0.0, 0.0), ang_vel_z=(-0.5, 0.5),
+    cmd.ranges = mdp.AthleteCommandCfg.Ranges(lin_vel_x=(0.3, 1.0), lin_vel_y=(0.0, 0.0), ang_vel_z=(-0.5, 0.5),
                                               heading=(-math.pi, math.pi))
 
     cfg.events["push_robot"].params["velocity_range"] = {"x": (-0.5, 0.5), "y": (-0.5, 0.5)}
@@ -285,6 +285,10 @@ def matt_rung1_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     cfg.rewards.update({
         "track_lin": RewardTermCfg(func=vel_mdp.track_linear_velocity, weight=2.0,
                                    params={"command_name": "athlete", "std": 0.5}),
+        # wide kernel: a policy standing still at a 1-2 m/s command still sees a gradient towards moving
+        # (std 0.5 alone gives exp(-6) there — r1_v1 collapsed into standing)
+        "track_lin_coarse": RewardTermCfg(func=vel_mdp.track_linear_velocity, weight=1.0,
+                                          params={"command_name": "athlete", "std": 1.0}),
         "track_ang": RewardTermCfg(func=vel_mdp.track_angular_velocity, weight=1.0,
                                    params={"command_name": "athlete", "std": math.sqrt(0.5)}),
         "height": RewardTermCfg(func=mdp.base_height_tracking, weight=0.5,
@@ -303,9 +307,10 @@ def matt_rung1_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
         "command_vel": CurriculumTermCfg(func=vel_mdp.commands_vel, params={
             "command_name": "athlete",
             "velocity_stages": [
-                {"step": 0, "lin_vel_x": (0.5, 2.0)},
-                {"step": 800 * 24, "lin_vel_x": (0.5, 3.0)},
-                {"step": 1800 * 24, "lin_vel_x": (0.5, 4.0)},
+                {"step": 0, "lin_vel_x": (0.3, 1.0)},
+                {"step": 600 * 24, "lin_vel_x": (0.5, 2.0)},
+                {"step": 1200 * 24, "lin_vel_x": (0.5, 3.0)},
+                {"step": 2000 * 24, "lin_vel_x": (0.5, 4.0)},
             ]}),
     }
     if play:
