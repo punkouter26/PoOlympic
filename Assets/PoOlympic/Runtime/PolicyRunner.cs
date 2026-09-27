@@ -47,6 +47,8 @@ namespace PoOlympic
         PolicyBrain _brain;
         Dictionary<string, int> _jointIndex;
         readonly Dictionary<int, List<Disturbance>> _byTick = new();
+        readonly List<Disturbance> _pending = new();
+        bool _resetRequested;
         float[] _obs, _ctrlF, _actionRaw, _lastAction;
         double[] _ctrl;
         double _phase;
@@ -123,15 +125,39 @@ namespace PoOlympic
             MujocoLib.mj_forward(m, d);
         }
 
+        /// <summary>Queue a native-MuJoCo disturbance (shove / pooled cube) for the next control tick.</summary>
+        public void Request(Disturbance d) { lock (_pending) _pending.Add(d); }
+
+        /// <summary>Reset the athlete (and cube pool) to the contract default state at the next control tick.</summary>
+        public void RequestReset() => _resetRequested = true;
+
+        public double PelvisHeight(MujocoLib.mjData_* d) => d->qpos[Binding.RootQposAdr + 2];
+
         void OnPreStep(object sender, MjStepArgs args)
         {
             if (!Initialized) return;
             var m = args.model;
             var d = args.data;
+            if (_substep % Contract.decimation == 0 && _resetRequested)
+            {
+                _resetRequested = false;
+                ResetToDefault(m, d);
+                Array.Copy(Binding.DefaultPos, _ctrl, _ctrl.Length);
+                Array.Clear(_lastAction, 0, _lastAction.Length);
+                _phase = 0;
+            }
             if (_substep % Contract.decimation == 0) ControlStep(m, d);
             for (int i = 0; i < _ctrl.Length; i++) d->ctrl[Binding.ActuatorIds[i]] = _ctrl[i];
-            if (_substep % Contract.decimation == 0 && _byTick.TryGetValue(ControlTick, out var list))
-                foreach (var dist in list) dist.Apply(m, d, _jointIndex, athletePrefix);
+            if (_substep % Contract.decimation == 0)
+            {
+                if (_byTick.TryGetValue(ControlTick, out var list))
+                    foreach (var dist in list) dist.Apply(m, d, _jointIndex, athletePrefix);
+                lock (_pending)
+                {
+                    foreach (var dist in _pending) dist.Apply(m, d, _jointIndex, athletePrefix);
+                    _pending.Clear();
+                }
+            }
             _substep++;
             if (_substep % Contract.decimation == 0) ControlTick++;
         }

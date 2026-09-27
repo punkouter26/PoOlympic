@@ -55,5 +55,21 @@ namespace PoOlympic.Editor
             };
             EditorApplication.update += step;
         }
+    
+        /// <summary>Deterministically step Play mode until the first PolicyRunner reaches `tick`, then stay paused.</summary>
+        public static void StepUntilTick(int tick)
+        {
+            if (!Application.isPlaying) { Debug.LogWarning("[Parity] enter Play mode first"); return; }
+            var runner = Object.FindFirstObjectByType<PolicyRunner>();
+            Time.captureDeltaTime = 0.02f;
+            EditorApplication.isPaused = true;
+            EditorApplication.CallbackFunction step = null;
+            step = () =>
+            {
+                if (!Application.isPlaying || runner == null || runner.ControlTick >= tick) { EditorApplication.update -= step; return; }
+                EditorApplication.Step();
+            };
+            EditorApplication.update += step;
+        }
     }
 }
