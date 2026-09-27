@@ -1,0 +1,292 @@
+{
+ "contract_version": 1,
+ "mujoco_version": "3.11.0",
+ "timestep": 0.005,
+ "decimation": 4,
+ "control_hz": 50.0,
+ "action_scale": 0.25,
+ "joint_vel_scale": 0.05,
+ "gait_hz": 1.8,
+ "phase_cmd_threshold": 0.1,
+ "obs_dim": 84,
+ "num_actions": 23,
+ "obs_layout": {
+  "base_lin_vel_heading": {
+   "offset": 0,
+   "size": 3
+  },
+  "base_ang_vel_local": {
+   "offset": 3,
+   "size": 3
+  },
+  "projected_gravity": {
+   "offset": 6,
+   "size": 3
+  },
+  "base_height": {
+   "offset": 9,
+   "size": 1
+  },
+  "command": {
+   "offset": 10,
+   "size": 3
+  },
+  "gait_phase_sincos": {
+   "offset": 13,
+   "size": 2
+  },
+  "joint_pos_rel": {
+   "offset": 15,
+   "size": 23
+  },
+  "joint_vel_scaled": {
+   "offset": 38,
+   "size": 23
+  },
+  "last_action": {
+   "offset": 61,
+   "size": 23
+  }
+ },
+ "root_joint": "root",
+ "actuators": [
+  {
+   "name": "abdomen_flex",
+   "joint": "abdomen_flex",
+   "default_rad": 0.0,
+   "range_lo_rad": -0.5235987755982988,
+   "range_hi_rad": 1.0471975511965976
+  },
+  {
+   "name": "abdomen_lat",
+   "joint": "abdomen_lat",
+   "default_rad": 0.0,
+   "range_lo_rad": -0.6108652381980153,
+   "range_hi_rad": 0.6108652381980153
+  },
+  {
+   "name": "abdomen_twist",
+   "joint": "abdomen_twist",
+   "default_rad": 0.0,
+   "range_lo_rad": -0.7853981633974483,
+   "range_hi_rad": 0.7853981633974483
+  },
+  {
+   "name": "shoulder_elev_l",
+   "joint": "shoulder_elev_l",
+   "default_rad": -1.396263,
+   "range_lo_rad": -1.6580627893946132,
+   "range_hi_rad": 1.3962634015954636
+  },
+  {
+   "name": "shoulder_flex_l",
+   "joint": "shoulder_flex_l",
+   "default_rad": 0.0,
+   "range_lo_rad": -1.0471975511965976,
+   "range_hi_rad": 2.9670597283903604
+  },
+  {
+   "name": "shoulder_twist_l",
+   "joint": "shoulder_twist_l",
+   "default_rad": 0.0,
+   "range_lo_rad": -1.3962634015954636,
+   "range_hi_rad": 1.3962634015954636
+  },
+  {
+   "name": "elbow_l",
+   "joint": "elbow_l",
+   "default_rad": 0.2617994,
+   "range_lo_rad": 0.0,
+   "range_hi_rad": 2.530727415391778
+  },
+  {
+   "name": "hip_flex_l",
+   "joint": "hip_flex_l",
+   "default_rad": 0.1745329,
+   "range_lo_rad": -0.5235987755982988,
+   "range_hi_rad": 2.0943951023931953
+  },
+  {
+   "name": "hip_abd_l",
+   "joint": "hip_abd_l",
+   "default_rad": 0.0,
+   "range_lo_rad": -0.5235987755982988,
+   "range_hi_rad": 0.7853981633974483
+  },
+  {
+   "name": "hip_rot_l",
+   "joint": "hip_rot_l",
+   "default_rad": 0.0,
+   "range_lo_rad": -0.6981317007977318,
+   "range_hi_rad": 0.6981317007977318
+  },
+  {
+   "name": "knee_l",
+   "joint": "knee_l",
+   "default_rad": 0.3490659,
+   "range_lo_rad": 0.0,
+   "range_hi_rad": 2.6179938779914944
+  },
+  {
+   "name": "ankle_dorsi_l",
+   "joint": "ankle_dorsi_l",
+   "default_rad": 0.1745329,
+   "range_lo_rad": -0.8726646259971648,
+   "range_hi_rad": 0.4363323129985824
+  },
+  {
+   "name": "ankle_inv_l",
+   "joint": "ankle_inv_l",
+   "default_rad": 0.0,
+   "range_lo_rad": -0.3490658503988659,
+   "range_hi_rad": 0.5235987755982988
+  },
+  {
+   "name": "shoulder_elev_r",
+   "joint": "shoulder_elev_r",
+   "default_rad": -1.396263,
+   "range_lo_rad": -1.6580627893946132,
+   "range_hi_rad": 1.3962634015954636
+  },
+  {
+   "name": "shoulder_flex_r",
+   "joint": "shoulder_flex_r",
+   "default_rad": 0.0,
+   "range_lo_rad": -1.0471975511965976,
+   "range_hi_rad": 2.9670597283903604
+  },
+  {
+   "name": "shoulder_twist_r",
+   "joint": "shoulder_twist_r",
+   "default_rad": 0.0,
+   "range_lo_rad": -1.3962634015954636,
+   "range_hi_rad": 1.3962634015954636
+  },
+  {
+   "name": "elbow_r",
+   "joint": "elbow_r",
+   "default_rad": 0.2617994,
+   "range_lo_rad": 0.0,
+   "range_hi_rad": 2.530727415391778
+  },
+  {
+   "name": "hip_flex_r",
+   "joint": "hip_flex_r",
+   "default_rad": 0.1745329,
+   "range_lo_rad": -0.5235987755982988,
+   "range_hi_rad": 2.0943951023931953
+  },
+  {
+   "name": "hip_abd_r",
+   "joint": "hip_abd_r",
+   "default_rad": 0.0,
+   "range_lo_rad": -0.5235987755982988,
+   "range_hi_rad": 0.7853981633974483
+  },
+  {
+   "name": "hip_rot_r",
+   "joint": "hip_rot_r",
+   "default_rad": 0.0,
+   "range_lo_rad": -0.6981317007977318,
+   "range_hi_rad": 0.6981317007977318
+  },
+  {
+   "name": "knee_r",
+   "joint": "knee_r",
+   "default_rad": 0.3490659,
+   "range_lo_rad": 0.0,
+   "range_hi_rad": 2.6179938779914944
+  },
+  {
+   "name": "ankle_dorsi_r",
+   "joint": "ankle_dorsi_r",
+   "default_rad": 0.1745329,
+   "range_lo_rad": -0.8726646259971648,
+   "range_hi_rad": 0.4363323129985824
+  },
+  {
+   "name": "ankle_inv_r",
+   "joint": "ankle_inv_r",
+   "default_rad": 0.0,
+   "range_lo_rad": -0.3490658503988659,
+   "range_hi_rad": 0.5235987755982988
+  }
+ ],
+ "default_qpos_scene": [
+  0.0,
+  0.0,
+  0.9549291,
+  1.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  -1.396263,
+  0.0,
+  0.0,
+  0.2617994,
+  -1.396263,
+  0.0,
+  0.0,
+  0.2617994,
+  0.1745329,
+  0.0,
+  0.0,
+  0.3490659,
+  0.1745329,
+  0.0,
+  0.0,
+  0.1745329,
+  0.0,
+  0.0,
+  0.3490659,
+  0.1745329,
+  0.0,
+  0.0,
+  50.0,
+  0.0,
+  0.1,
+  1.0,
+  0.0,
+  0.0,
+  0.0,
+  52.0,
+  0.0,
+  0.1,
+  1.0,
+  0.0,
+  0.0,
+  0.0,
+  54.0,
+  0.0,
+  0.1,
+  1.0,
+  0.0,
+  0.0,
+  0.0,
+  56.0,
+  0.0,
+  0.1,
+  1.0,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "tick_order": [
+  "read_state",
+  "advance_phase",
+  "build_obs",
+  "infer",
+  "write_ctrl",
+  "apply_disturbance",
+  "mj_step x4"
+ ],
+ "frames": {
+  "root_lin_vel": "world (free joint qvel[0:3]) rotated by -yaw into heading frame",
+  "root_ang_vel": "pelvis local (free joint qvel[3:6])",
+  "projected_gravity": "R_pelvis^T @ (0,0,-1)"
+ },
+ "fingerprint_sha256": "d8229623e1405214651f373410b6d8132208081789c33503bfab1d0a9ccd00a4"
+}

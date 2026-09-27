@@ -43,10 +43,10 @@ Legend: `[ ]` todo · `[x]` done · **GATE** = blocking check, work stops until 
   - passive PD hold at default pose on ground: no explosion, penetration < 5 mm, settles within 1 s
   - *Accept: all tests green.*
 - [ ] **A8 Visual check.** MuJoCo viewer screenshot of geoms overlaid with MATT mesh (non-colliding visual mesh) at T-pose and default pose → saved to `parity/`. *Accept: user eyeball sign-off.*
-- [ ] **A9 Contract module.** `training/poolympic/contract.py` — actuator order, default pose, action scale, obs layout (DESIGN §3); exports `contract.json` consumed by C#. Obs builder implemented here once.
-- [ ] **A10 Fingerprint.** `fingerprint.py` → `parity/fingerprint_python.json` + SHA-256.
-- [ ] **A11 Zero-brain ONNX.** Export (opset 17, batch 1) two graphs with baked normalization + metadata: `zero_brain.onnx` (ctrl = default pose) and `random_brain.onnx` (random weights, seeded — exercises the full math). *Accept: onnxruntime output == torch output < 1e-6.*
-- [ ] **A12 CPU reference recorder.** `record_reference.py`: CPU MuJoCo rollout of a given ONNX, 5 s, with scripted disturbances (1 shove + 1 cube drop) → `parity/reference_trajectory_zero.json`, `…_random.json` (schema DESIGN §4). *Accept: re-running with same seed is bit-identical.*
+- [x] **A9 Contract module.** `training/poolympic/contract.py` — actuator order, default pose, action scale, obs layout (DESIGN §3); exports `contract.json` consumed by C#. Obs builder implemented here once.
+- [x] **A10 Fingerprint.** `fingerprint.py` → `parity/fingerprint_python.json` + SHA-256.
+- [x] **A11 Zero-brain ONNX.** Export (opset 17, batch 1) two graphs with baked normalization + metadata: `zero_brain.onnx` (ctrl = default pose) and `random_brain.onnx` (random weights, seeded — exercises the full math). *Accept: onnxruntime output == torch output < 1e-6.*
+- [x] **A12 CPU reference recorder.** `record_reference.py`: CPU MuJoCo rollout of a given ONNX, 5 s, with scripted disturbances (1 shove + 1 cube drop) → `parity/reference_trajectory_zero.json`, `…_random.json` (schema DESIGN §4). *Accept: re-running with same seed is bit-identical.*
 
 ## Phase B — Early Engine Ingestion & Zero-Brain Parity (CRITICAL)
 
@@ -65,7 +65,7 @@ Prerequisite (user): start Unity with the MCP bridge running — UnityMCP was un
   - **GATE G2** obs builder < 1e-5
   - **GATE G3** policy replay < 1e-4 (random_brain)
   - **GATE G4** open-loop ctrl replay, qpos drift < 1e-3 over 1 s (both references)
-- [ ] **B11 Zero-brain milestone.** Play `Testbed_ZeroBrain`: MATT holds default pose, survives the scripted shove/cube the same way as the Python reference; screenshot + gate report committed.
+- [ ] **B11 Zero-brain milestone.** Play `Testbed_ZeroBrain`: MATT (untrained, PD-held default pose) reproduces the Python reference: sags, is shoved at 1.0 s, falls at ~2.1 s, cube lands at 2.0 s+; screenshot + gate report committed.
 
 ## Phase C — Phased Training & Early Verification Loop
 
