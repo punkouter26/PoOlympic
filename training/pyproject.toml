@@ -1,0 +1,27 @@
+[project]
+name = "poolympic-training"
+version = "0.1.0"
+description = "PoOlympics athlete RL training (MuJoCo Warp) + parity tooling"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "mujoco==3.11.0",
+    "mujoco-warp==3.11.0",
+    "mjlab==1.6.0",
+    "torch>=2.13",
+    "onnx",
+    "onnxruntime",
+    "tensorboard",
+    "numpy",
+    "pytest",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu130" }
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true

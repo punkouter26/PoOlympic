@@ -29,9 +29,9 @@ Legend: `[ ]` todo · `[x]` done · **GATE** = blocking check, work stops until 
 
 ## Phase A — Rig & Physics Body Derivation
 
-- [ ] **A1 Version pin.** Determine the MuJoCo version required by the latest `mujoco-warp`; confirm `org.mujoco` Unity package + matching `mujoco.dll` exist for that version and compile on Unity 6000.6. Record the pinned version in DESIGN.md + log. *Accept: one version number used everywhere.*
-- [ ] **A2 Python env.** `training/` uv project (Python 3.11): `mujoco==<pin>`, `mujoco-warp`, `warp-lang`, PyTorch cu128+, onnx, onnxruntime, tensorboard. *Accept: Warp kernel + a 4096-env `mujoco_warp` humanoid step runs on the 5070 Ti (sm_120) without error; steps/s logged.*
-- [ ] **A3 Trainer decision.** Try mjlab on Windows. If blocked → minimal PPO (rsl_rl-style) over `mujoco_warp` directly, or WSL2 fallback. *Accept: decision + reason logged.*
+- [x] **A1 Version pin.** Determine the MuJoCo version required by the latest `mujoco-warp`; confirm `org.mujoco` Unity package + matching `mujoco.dll` exist for that version and compile on Unity 6000.6. Record the pinned version in DESIGN.md + log. *Accept: one version number used everywhere.*
+- [x] **A2 Python env.** `training/` uv project (Python 3.11): `mujoco==<pin>`, `mujoco-warp`, `warp-lang`, PyTorch cu128+, onnx, onnxruntime, tensorboard. *Accept: Warp kernel + a 4096-env `mujoco_warp` humanoid step runs on the 5070 Ti (sm_120) without error; steps/s logged.*
+- [x] **A3 Trainer decision.** Try mjlab on Windows. If blocked → minimal PPO (rsl_rl-style) over `mujoco_warp` directly, or WSL2 fallback. *Accept: decision + reason logged.*
 - [ ] **A4 Skeleton extraction.** `training/tools/extract_skeleton.py`: MATT GLB → joint world positions/orientations in MuJoCo frame (glTF (x,y,z) → MJ (z,x,y)) → `skeleton_matt.json`. *Accept: 52 joints, L/R mirror error < 1 mm, height 1.85 m.*
 - [ ] **A5 Geom fitting.** Fit capsule radius/length per physics body from skin-weighted vertices; box feet from foot/toe vertex hull. *Accept: geoms visually inside the mesh silhouette (overlay render).*
 - [ ] **A6 MJCF generator.** `training/tools/build_mjcf.py` → `training/assets/matt.xml` implementing DESIGN §2 exactly (bodies, masses, inertias, joints/ranges, welded parts, passive toes, 23 position actuators with kp/kv/forcerange/armature, contact excludes, solver options, lane-bit defaults, ground plane, 4-cube pool).

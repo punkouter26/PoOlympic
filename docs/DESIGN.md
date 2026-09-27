@@ -71,7 +71,7 @@ Total 80.0 kg (de Leva 1996 male). 23 actuators, 2 passive joints; nq = 32, nv =
 18 rad/s velocity limit = training penalty + pass criterion (≤ 5 % of frames), not enforced by physics.
 Default pose (action offset): shoulders −80° from T (arms down), elbows 15°, hip flex 10°, knee 20°, ankle dorsi 10°. `target = default + 0.25 rad · action`, clipped to joint range.
 
-**Solver** (identical both sides): timestep 0.005 s, `implicitfast`, Newton, iterations 20, ls_iterations 10, pyramidal cone, condim 3. Ground plane friction (1.0, 0.005, 0.0001). Decimation 4 → policy 50 Hz.
+**Solver** (identical both sides): timestep 0.005 s, `implicitfast`, Newton, iterations 20, ls_iterations = MuJoCo default (Unity plug-in cannot set it), pyramidal cone, condim 3. Ground plane friction (1.0, 0.005, 0.0001). Decimation 4 → policy 50 Hz.
 
 ## 3. Policy Interface
 
@@ -94,7 +94,7 @@ Observation (84, 50 Hz, built only from `mjData` qpos/qvel — never Unity Trans
 - ONNX metadata: actuator name order, default pose, gains, dt, decimation, MuJoCo version, SHA-256 of model fingerprint. Unity refuses to run on mismatch.
 - Obs noise: training only. Unity: per-lane seeded trait noise only.
 
-Tick order (Python and C#): read state → build obs → infer → write ctrl → apply scheduled disturbance → 4 × `mj_step`. Unity: `Time.fixedDeltaTime = 0.005`, one `mj_step` per FixedUpdate, policy every 4th; PolicyRunner ordered before MjScene (or MjScene auto-step disabled and we own the loop).
+Tick order (Python and C#): read state → build obs → infer → write ctrl → apply scheduled disturbance → 4 × `mj_step`. Unity: `Time.fixedDeltaTime = 0.005`, `Physics.gravity = (0, −9.81, 0)`; PolicyRunner subscribes to `MjScene.preUpdateEvent` (fires right before each `mj_step`) and runs inference every 4th event. `ctrlCallback` is never used. Pinned MuJoCo = 3.11.0 everywhere.
 
 ## 4. Parity Contract
 
