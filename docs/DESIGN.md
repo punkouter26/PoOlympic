@@ -40,12 +40,12 @@ UnityMCP must be running for in-editor authoring. Licensing (Avaturn, Hunyuan3D)
 
 ## 2. Body Specification (`matt.xml`)
 
-**Frames**: MuJoCo x-forward, y-left, z-up. glTF (x-left, y-up, z-fwd) → MuJoCo (X,Y,Z) = glTF (z, x, y) (proper rotation). **qpos = 0 ≡ MATT T-pose bind pose** → identity bind offsets in Unity.
+**Frames**: MuJoCo x-forward, y-left, z-up. glTF (x-left, y-up, z-fwd) → MuJoCo (X,Y,Z) = glTF (z, x, y) (proper rotation). **qpos = 0 ≡ MATT T-pose bind pose.** All MjBody frames are world-aligned at qpos = 0; MATT's bones have non-identity bind rotations (Mixamo convention), so Unity bone offsets are constant per bone and computed once at qpos = 0 (`offset = inverse(body_bind) · bone_bind`).
 
 | Body (bone) | kg | Geom | Joints (anatomical range, deg) | Act |
 |---|---|---|---|---|
 | pelvis (`Hips`) | 8.94 | capsule | free | — |
-| torso (`Spine`+`Spine1`) | 6.53 | capsule | abdomen flex +60/−30, lat ±35, twist ±45 | 3 |
+| torso (`Spine`+`Spine1`) | 13.06 | capsule | abdomen flex +60/−30, lat ±35, twist ±45 | 3 |
 | chest (`Spine2`) + 2 clavicles (fixed) | 11.77 + 2×0.5 | capsule | welded | 0 |
 | neck + head | 1.0 + 4.55 | capsule + sphere | welded (R0–2) | 0 |
 | upper arm ×2 | 2.17 | capsule | shoulder flex 180/ext 60, abd 170/add 30, rot ±80 | 3 ea |
