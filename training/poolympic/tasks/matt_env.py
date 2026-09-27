@@ -1,0 +1,253 @@
+"""MATT athlete environments (DESIGN.md §2/§3/§5) on mjlab 1.6 + MuJoCo Warp.
+
+Physics = training/assets/matt.xml (the same MJCF Unity imports) with its own <position> actuators (XmlActuator),
+ground plane with the scene's exact contact bits/friction, and a 4-cube pool per env. Every choice that affects
+the deployed policy's input/output is tied to poolympic/contract.py.
+"""
+
+from __future__ import annotations
+
+import math
+
+import mujoco
+
+from mjlab.actuator import XmlActuatorCfg
+from mjlab.entity import EntityArticulationInfoCfg, EntityCfg
+from mjlab.envs import ManagerBasedRlEnvCfg
+from mjlab.envs import mdp as envs_mdp
+from mjlab.envs.mdp import dr
+from mjlab.envs.mdp.actions import JointPositionActionCfg
+from mjlab.managers.event_manager import EventTermCfg
+from mjlab.managers.observation_manager import ObservationGroupCfg, ObservationTermCfg
+from mjlab.managers.reward_manager import RewardTermCfg
+from mjlab.managers.scene_entity_config import SceneEntityCfg
+from mjlab.managers.termination_manager import TerminationTermCfg
+from mjlab.rl import RslRlModelCfg, RslRlOnPolicyRunnerCfg, RslRlPpoAlgorithmCfg
+from mjlab.scene import SceneCfg
+from mjlab.sensor import ContactMatch, ContactSensorCfg
+from mjlab.sim import MujocoCfg, SimulationCfg
+from mjlab.tasks.velocity import mdp as vel_mdp
+from mjlab.terrains import TerrainEntityCfg
+from mjlab.utils.noise import UniformNoiseCfg as Unoise
+from mjlab.utils.spec_config import CollisionCfg
+from mjlab.viewer import ViewerConfig
+
+from .. import contract as C
+from . import mdp
+
+MATT_XML = C.ROOT / "assets" / "matt.xml"
+CUBE_XML = C.ROOT / "assets" / "cube.xml"
+N_CUBES = 4
+DEFAULT_ROOT_Z = 0.9549291  # scene_matt.xml keyframe "default"
+CUBE_NAMES = tuple(f"cube{i}" for i in range(N_CUBES))
+FOOT_BODIES = ("foot_l", "toe_l", "foot_r", "toe_r")
+ALL_BITS = 0xFFFF
+
+
+def matt_entity_cfg() -> EntityCfg:
+    return EntityCfg(
+        spec_fn=lambda: mujoco.MjSpec.from_file(str(MATT_XML)),
+        init_state=EntityCfg.InitialStateCfg(
+            pos=(0.0, 0.0, DEFAULT_ROOT_Z),
+            joint_pos={n: v for n, v in zip(mdp.CONTRACT_ACTUATORS, mdp.CONTRACT_DEFAULTS)} | {"toe_.*": 0.0},
+            joint_vel={".*": 0.0},
+        ),
+        articulation=EntityArticulationInfoCfg(
+            # Use MATT's own <position kp kv forcerange> actuators — identical to what Unity's MuJoCo steps.
+            actuators=(XmlActuatorCfg(target_names_expr=(".*",), delay_min_lag=0, delay_max_lag=4,
+                                      delay_update_period=4000),),
+            soft_joint_pos_limit_factor=0.95,
+        ),
+    )
+
+
+def cube_entity_cfg(i: int) -> EntityCfg:
+    return EntityCfg(
+        spec_fn=lambda: mujoco.MjSpec.from_file(str(CUBE_XML)),
+        init_state=EntityCfg.InitialStateCfg(pos=(50.0 + 2.0 * i, 0.0, 0.1)),
+    )
+
+
+def matt_rung0_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """Rung 0 — stand + shove/cube recovery (Iron Pedestal, Gust Gauntlet)."""
+    scene = SceneCfg(
+        num_envs=1,
+        env_spacing=3.0,
+        terrain=TerrainEntityCfg(
+            terrain_type="plane",
+            # the scene's ground exactly: contacts every lane's bits, friction (1, 0.005, 0.0001)
+            collisions=(CollisionCfg(geom_names_expr=("terrain",), contype=ALL_BITS, conaffinity=ALL_BITS,
+                                     condim=3, priority=0, friction=(1.0, 0.005, 0.0001)),),
+        ),
+        entities={"robot": matt_entity_cfg(), **{n: cube_entity_cfg(i) for i, n in enumerate(CUBE_NAMES)}},
+        sensors=(
+            ContactSensorCfg(
+                name="nonfoot_ground",
+                primary=ContactMatch(mode="body", pattern=r".*", entity="robot", exclude=FOOT_BODIES),
+                secondary=ContactMatch(mode="body", pattern="terrain"),
+                fields=("found",),
+                reduce="none",
+                num_slots=1,
+            ),
+        ),
+    )
+
+    def term(func, noise=None, **params):
+        return ObservationTermCfg(func=func, params=params, noise=noise)
+
+    # Contract order (poolympic/contract.py OBS_LAYOUT) — do not reorder.
+    actor_terms = {
+        "base_lin_vel_heading": term(mdp.obs_base_lin_vel_heading, Unoise(n_min=-0.1, n_max=0.1)),
+        "base_ang_vel_local": term(mdp.obs_base_ang_vel_local, Unoise(n_min=-0.2, n_max=0.2)),
+        "projected_gravity": term(mdp.obs_projected_gravity, Unoise(n_min=-0.05, n_max=0.05)),
+        "base_height": term(mdp.obs_base_height, Unoise(n_min=-0.02, n_max=0.02)),
+        "command": term(mdp.obs_command),
+        "gait_phase_sincos": term(mdp.obs_gait_phase),
+        "joint_pos_rel": term(mdp.obs_joint_pos_rel, Unoise(n_min=-0.01, n_max=0.01)),
+        "joint_vel_scaled": term(mdp.obs_joint_vel_scaled, Unoise(n_min=-0.05, n_max=0.05)),
+        "last_action": term(mdp.obs_last_action),
+    }
+    critic_terms = {k: ObservationTermCfg(func=v.func, params=v.params) for k, v in actor_terms.items()}
+
+    observations = {
+        "actor": ObservationGroupCfg(terms=actor_terms, concatenate_terms=True, enable_corruption=not play),
+        "critic": ObservationGroupCfg(terms=critic_terms, concatenate_terms=True, enable_corruption=False),
+    }
+
+    actions = {
+        "joint_pos": JointPositionActionCfg(
+            entity_name="robot",
+            actuator_names=tuple(f"^{n}$" for n in mdp.CONTRACT_ACTUATORS),
+            preserve_order=True,  # contract actuator order == ONNX output order
+            scale=C.ACTION_SCALE,
+            use_default_offset=True,
+            # identical to the ONNX graph: clip(default + 0.25·a, joint range)
+            clip={f"^{n}$": (lo, hi) for n, lo, hi in
+                  zip(mdp.CONTRACT_ACTUATORS, mdp.CONTRACT_RANGE_LO, mdp.CONTRACT_RANGE_HI)},
+        )
+    }
+
+    commands = {
+        "athlete": mdp.AthleteCommandCfg(
+            entity_name="robot",
+            resampling_time_range=(1e9, 1e9),
+            rel_standing_envs=1.0,
+            rel_heading_envs=0.0,
+            heading_command=False,
+            ranges=mdp.AthleteCommandCfg.Ranges(lin_vel_x=(0.0, 0.0), lin_vel_y=(0.0, 0.0), ang_vel_z=(0.0, 0.0)),
+        )
+    }
+
+    events = {
+        "reset_scene_to_default": EventTermCfg(func=envs_mdp.reset_scene_to_default, mode="reset"),
+        "reset_base": EventTermCfg(
+            func=envs_mdp.reset_root_state_uniform, mode="reset",
+            params={"pose_range": {"x": (-0.05, 0.05), "y": (-0.05, 0.05), "yaw": (-math.pi, math.pi)},
+                    "velocity_range": {"x": (-0.1, 0.1), "y": (-0.1, 0.1)}},
+        ),
+        "reset_joints": EventTermCfg(
+            func=envs_mdp.reset_joints_by_offset, mode="reset",
+            params={"position_range": (-0.05, 0.05), "velocity_range": (-0.1, 0.1),
+                    "asset_cfg": SceneEntityCfg("robot", joint_names=(".*",))},
+        ),
+        # robustness curriculum (DESIGN §1): shoves + dropped cubes + DR
+        "push_robot": EventTermCfg(
+            func=envs_mdp.push_by_setting_velocity, mode="interval", interval_range_s=(3.0, 5.0),
+            params={"velocity_range": {"x": (-0.6, 0.6), "y": (-0.6, 0.6)}},
+        ),
+        "drop_cube": EventTermCfg(
+            func=mdp.drop_cube_on_athlete, mode="interval", interval_range_s=(3.0, 5.0),
+            params={"cube_names": CUBE_NAMES, "height_above_shoulder": 1.5},
+        ),
+        "dr_mass": EventTermCfg(
+            func=dr.body_mass, mode="startup",
+            params={"asset_cfg": SceneEntityCfg("robot", body_names=(".*",)), "ranges": (0.85, 1.15),
+                    "operation": "scale"},
+        ),
+        "dr_foot_friction": EventTermCfg(
+            func=dr.geom_friction, mode="startup",
+            params={"asset_cfg": SceneEntityCfg("robot", geom_names=(r"(foot|toe)_[lr]_geom0",)), "ranges": (0.8, 1.2),
+                    "operation": "scale", "shared_random": True},
+        ),
+        "dr_pd_gains": EventTermCfg(
+            func=dr.pd_gains, mode="startup",
+            params={"asset_cfg": SceneEntityCfg("robot", actuator_names=(".*",)), "kp_range": (0.85, 1.15),
+                    "kd_range": (0.85, 1.15), "operation": "scale"},
+        ),
+        "dr_strength": EventTermCfg(  # per-lane "athlete trait": strength scale
+            func=dr.effort_limits, mode="startup",
+            params={"asset_cfg": SceneEntityCfg("robot", actuator_names=(".*",)), "effort_limit_range": (0.85, 1.15),
+                    "operation": "scale"},
+        ),
+    }
+
+    torso = SceneEntityCfg("robot", body_names=("torso",))
+    rewards = {
+        "upright": RewardTermCfg(func=mdp.torso_upright, weight=1.0, params={"std": math.radians(20)}),
+        "height": RewardTermCfg(func=mdp.base_height_tracking, weight=1.0,
+                                params={"target": DEFAULT_ROOT_Z, "std": 0.1}),
+        "still_lin": RewardTermCfg(func=vel_mdp.track_linear_velocity, weight=1.0,
+                                   params={"command_name": "athlete", "std": 0.5}),
+        "still_ang": RewardTermCfg(func=vel_mdp.track_angular_velocity, weight=0.5,
+                                   params={"command_name": "athlete", "std": math.sqrt(0.5)}),
+        "near_origin": RewardTermCfg(func=mdp.stay_near_origin, weight=0.5, params={"std": 0.3}),
+        "posture": RewardTermCfg(func=envs_mdp.posture, weight=0.5,
+                                 params={"std": {".*": 0.35}, "asset_cfg": SceneEntityCfg("robot", joint_names=(".*",))}),
+        "torso_ang_vel": RewardTermCfg(func=vel_mdp.body_angular_velocity_penalty, weight=-0.05,
+                                       params={"asset_cfg": torso}),
+        "action_rate": RewardTermCfg(func=envs_mdp.action_rate_l2, weight=-0.05),
+        "joint_limits": RewardTermCfg(func=envs_mdp.joint_pos_limits, weight=-1.0),
+        "torques": RewardTermCfg(func=envs_mdp.joint_torques_l2, weight=-1e-5),
+        "joint_vel_limit": RewardTermCfg(func=mdp.joint_vel_limit_excess, weight=-0.5, params={"limit": 18.0}),
+        "terminated": RewardTermCfg(func=envs_mdp.is_terminated, weight=-200.0),
+    }
+
+    terminations = {
+        "time_out": TerminationTermCfg(func=envs_mdp.time_out, time_out=True),
+        "pelvis_low": TerminationTermCfg(func=mdp.pelvis_below, params={"minimum_height": 0.55}),
+        "torso_tilt": TerminationTermCfg(func=mdp.torso_tilt_exceeds, params={"limit_deg": 60.0}),
+        "nonfoot_contact": TerminationTermCfg(func=mdp.nonfoot_ground_contact, params={"sensor_name": "nonfoot_ground"}),
+    }
+
+    cfg = ManagerBasedRlEnvCfg(
+        decimation=C.DECIMATION,
+        episode_length_s=20.0,
+        scene=scene,
+        observations=observations,
+        actions=actions,
+        commands=commands,
+        events=events,
+        rewards=rewards,
+        terminations=terminations,
+        viewer=ViewerConfig(origin_type=ViewerConfig.OriginType.ASSET_BODY, entity_name="robot", body_name="pelvis",
+                            distance=3.5, elevation=-5.0, azimuth=90.0),
+        sim=SimulationCfg(
+            nconmax=96,
+            njmax=500,
+            mujoco=MujocoCfg(timestep=0.005, integrator="implicitfast", cone="pyramidal", jacobian="auto",
+                             solver="newton", iterations=20, tolerance=1e-8, ls_iterations=50, ls_tolerance=0.01,
+                             impratio=1.0, gravity=(0.0, 0.0, -9.81), disableflags=("multiccd",)),
+        ),
+    )
+    if play:
+        cfg.episode_length_s = int(1e9)
+        for k in ("dr_mass", "dr_foot_friction", "dr_pd_gains", "dr_strength"):
+            cfg.events.pop(k, None)
+    return cfg
+
+
+def matt_ppo_cfg(experiment: str, max_iterations: int) -> RslRlOnPolicyRunnerCfg:
+    return RslRlOnPolicyRunnerCfg(
+        actor=RslRlModelCfg(hidden_dims=(512, 256, 128), activation="elu", obs_normalization=True,
+                            distribution_cfg={"class_name": "GaussianDistribution", "init_std": 0.8, "std_type": "scalar"}),
+        critic=RslRlModelCfg(hidden_dims=(512, 256, 128), activation="elu", obs_normalization=True),
+        algorithm=RslRlPpoAlgorithmCfg(value_loss_coef=1.0, use_clipped_value_loss=True, clip_param=0.2,
+                                       entropy_coef=0.005, num_learning_epochs=5, num_mini_batches=4,
+                                       learning_rate=1.0e-3, schedule="adaptive", gamma=0.99, lam=0.95,
+                                       desired_kl=0.01, max_grad_norm=1.0),
+        experiment_name=experiment,
+        logger="tensorboard",
+        save_interval=100,
+        num_steps_per_env=24,
+        max_iterations=max_iterations,
+    )

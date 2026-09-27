@@ -72,8 +72,13 @@ class Athlete:
         if len(names) != NUM_ACTIONS:
             raise ValueError(f"expected {NUM_ACTIONS} actuators, found {len(names)}")
         root = m.joint(prefix + "root").id
-        key = m.key("default").id if m.nkey else None
-        default = m.key_qpos[key][np.array(qadr)] if key is not None else np.zeros(len(names))
+        key_names = [m.key(k).name for k in range(m.nkey)]
+        if "default" in key_names:
+            default = m.key_qpos[m.key("default").id][np.array(qadr)]
+        else:  # e.g. an mjlab-composed model: take the default pose from the scene MJCF, by actuator name
+            ref = mujoco.MjModel.from_xml_path(str(SCENE_XML))
+            kq = ref.key_qpos[ref.key("default").id]
+            default = np.array([kq[ref.jnt_qposadr[ref.actuator_trnid[ref.actuator(n).id, 0]]] for n in names])
         return Athlete(tuple(names), np.array(aids), np.array(qadr), np.array(dadr), int(m.jnt_qposadr[root]),
                        int(m.jnt_dofadr[root]), np.array(default), np.array(lo), np.array(hi))
 
