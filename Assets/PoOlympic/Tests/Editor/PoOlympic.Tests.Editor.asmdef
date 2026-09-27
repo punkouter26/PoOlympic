@@ -1,0 +1,12 @@
+{
+  "name": "PoOlympic.Tests.Editor",
+  "rootNamespace": "PoOlympic.Tests",
+  "references": ["PoOlympic.Runtime", "PoOlympic.Editor", "Mujoco.Runtime", "Unity.InferenceEngine",
+                 "UnityEngine.TestRunner", "UnityEditor.TestRunner"],
+  "includePlatforms": ["Editor"],
+  "overrideReferences": true,
+  "precompiledReferences": ["nunit.framework.dll"],
+  "defineConstraints": ["UNITY_INCLUDE_TESTS"],
+  "allowUnsafeCode": true,
+  "autoReferenced": false
+}

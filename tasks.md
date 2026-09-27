@@ -52,8 +52,8 @@ Legend: `[ ]` todo · `[x]` done · **GATE** = blocking check, work stops until 
 
 Prerequisite (user): start Unity with the MCP bridge running — UnityMCP was unreachable during planning.
 
-- [ ] **B1 Packages.** Add `org.mujoco` (pinned, git URL / local package) + native `mujoco.dll`, `com.unity.ai.inference`, `com.unity.cloud.gltfast`. *Accept: empty scene with one MjScene + MjBody steps without errors.*
-- [ ] **B2 PhysX isolation.** `Physics.simulationMode = Script` (never simulated); `PhysXGuard` editor validator (menu, play-mode enter, build preprocess) fails on any `Rigidbody`/`Collider`/`CharacterController`/`Joint`/`ArticulationBody` in athlete scenes; EditMode test. *Accept: test injects a BoxCollider → fails; clean scene → passes.*
+- [x] **B1 Packages.** Add `org.mujoco` (pinned, git URL / local package) + native `mujoco.dll`, `com.unity.ai.inference`, `com.unity.cloud.gltfast`. *Accept: empty scene with one MjScene + MjBody steps without errors.*
+- [x] **B2 PhysX isolation.** `Physics.simulationMode = Script` (never simulated); `PhysXGuard` editor validator (menu, play-mode enter, build preprocess) fails on any `Rigidbody`/`Collider`/`CharacterController`/`Joint`/`ArticulationBody` in athlete scenes; EditMode test. *Accept: test injects a BoxCollider → fails; clean scene → passes.*
 - [ ] **B3 MJCF import.** Import `matt.xml` via plug-in importer → `MATT_Physics.prefab` (MjBody/MjGeom/MjHingeJoint/MjActuator hierarchy). Script syncs `training/assets/matt.xml` → `Assets/PoOlympic/Models/` with hash check.
 - [ ] **B4 GATE G0 — Fingerprint.** C# dumps Unity's compiled `mjModel` → `parity/fingerprint_unity.json`; compare script vs Python. *Accept: ints exact, floats ≤ 1e-6 rel.*
 - [ ] **B5 Visual binding.** Import MATT GLB (glTFast) → skinned mesh; `BoneBinder` maps bones → MjBody (merged bones follow parents). *Accept: at qpos = 0 every mapped bone within 1 cm / 1° of its MjBody.*
