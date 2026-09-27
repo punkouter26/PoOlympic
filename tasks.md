@@ -74,7 +74,7 @@ In-editor authoring runs through the Unity CLI (`unity command …`, com.unity.p
 - [x] **C3 Rung 0 — train** stand + shove recovery to bar. **GATE G1.** Log all runs.
 - [x] **C4 Rung 0 — Unity spot-check.** Export ONNX + reference; G0, G2–G5 in `Testbed_ZeroBrain` with Rung 0 brain.
 - [ ] **C5 Rung 1 — train** forward velocity to bar. **GATE G1.**
-  - r1_v1 (warm start from Rung 0) FAILED — collapsed into standing still (warm-start obs normalizer + narrow tracking kernel; see log). r1_v2 = from scratch + coarse tracking term + walking-speed curriculum start: ready to launch.
+  - r1_v1 (warm start from Rung 0) FAILED — collapsed into standing still (warm-start obs normalizer + narrow tracking kernel; see log). r1_v2 = from scratch + coarse tracking term + walking-speed curriculum start: running since 16:31 (`runs/matt_rung1/2026-09-27_16-31-44_r1_v2`); it 350 track_lin 86 % of max, per-step vel error ≈ 0.14 m/s at 0.3–1.0 m/s.
 - [ ] **C6 Rung 1 — Early Verification Gate (HALT POINT).**
   - export `rung1.onnx` (opset 17, batch 1) + `reference_trajectory_rung1.json` (5 s, CPU MuJoCo)
   - `Testbed_Rung1.unity`: **GATES G0, G2, G3, G4, G5, G6** (8 lanes + cube pool)
