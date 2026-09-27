@@ -132,9 +132,41 @@ def write_python_fingerprint(scene_xml: Path | None = None) -> tuple[Path, str]:
     return path, sha
 
 
+def _canonical_quat(q: list) -> list:
+    """q and -q are the same rotation: make the first non-negligible component positive."""
+    for x in q:
+        if abs(x) > 1e-9:
+            return q if x > 0 else [-v for v in q]
+    return q
+
+
+_GEOM_SPHERE, _GEOM_CAPSULE, _GEOM_CYLINDER = 2, 3, 5
+
+
+def normalize_for_compare(fp: dict) -> dict:
+    """Replace representation-dependent geom frames by their physical meaning.
+
+    Capsules/cylinders are symmetric about their axis and about their mid-plane, so only the axis direction up to
+    sign matters (the Unity plug-in rebuilds capsule frames from a Transform + height and picks an equivalent one);
+    sphere orientation is irrelevant.
+    """
+    out = json.loads(json.dumps(fp))
+    for g in out.get("geoms", {}).values():
+        if g["type"] == _GEOM_SPHERE:
+            g["quat"] = None
+        elif g["type"] in (_GEOM_CAPSULE, _GEOM_CYLINDER):
+            mat = np.zeros(9)
+            mujoco.mju_quat2Mat(mat, np.asarray(g.pop("quat"), float))
+            axis = mat.reshape(3, 3)[:, 2]
+            g["axis_unsigned"] = [float(v) for v in _canonical_quat(list(axis))]
+    return out
+
+
 def compare(a: dict, b: dict, path: str = "") -> list[str]:
     """G0 comparison: ints/strings exact, floats within abs 1e-6 + rel 1e-6. Returns list of mismatches."""
     errs: list[str] = []
+    if path.endswith(("/quat", "/iquat")) and isinstance(a, list) and isinstance(b, list):
+        a, b = _canonical_quat(a), _canonical_quat(b)
     if isinstance(a, dict) and isinstance(b, dict):
         for k in sorted(set(a) | set(b)):
             if k not in a or k not in b:
@@ -158,7 +190,8 @@ def compare(a: dict, b: dict, path: str = "") -> list[str]:
 
 def main(argv: list[str]) -> int:
     if len(argv) == 2:
-        errs = compare(json.loads(Path(argv[0]).read_text()), json.loads(Path(argv[1]).read_text()))
+        errs = compare(normalize_for_compare(json.loads(Path(argv[0]).read_text())),
+                       normalize_for_compare(json.loads(Path(argv[1]).read_text())))
         for e in errs[:200]:
             print("MISMATCH", e)
         print(f"G0 {'PASS' if not errs else 'FAIL'} ({len(errs)} mismatches)")

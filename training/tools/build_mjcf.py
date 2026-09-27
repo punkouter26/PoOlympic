@@ -289,8 +289,20 @@ def build_robot(skin: Skin, geoms, inertials=None, lane: int = LANE) -> tuple[ET
             if not inertials:
                 ga["density"] = "1000"
             if "fromto" in g:
+                # Emit capsules as pos/quat/(radius, half-length), NOT fromto: the Unity plug-in rebuilds a fromto
+                # frame in float32 (FromToRotation), which drifts ~3e-6 rad for near-vertical limbs (G0). Computing
+                # the quaternion once here in float64 means both sides parse identical text.
                 ft = np.asarray(g["fromto"], float)
-                ga["fromto"] = vec(np.concatenate([ft[:3] - pivot[s.name], ft[3:] - pivot[s.name]]))
+                a, b = ft[:3] - pivot[s.name], ft[3:] - pivot[s.name]
+                d = b - a
+                half = 0.5 * float(np.linalg.norm(d))
+                q = np.zeros(4)
+                mujoco.mju_quatZ2Vec(q, d / np.linalg.norm(d))
+                if q[0] < 0:
+                    q = -q
+                ga["pos"] = vec(0.5 * (a + b))
+                ga["quat"] = vec(q)
+                ga["size"] = vec([g["size"][0], half])
             else:
                 ga["pos"] = vec(np.asarray(g["pos"]) - pivot[s.name])
             ET.SubElement(el, "geom", ga)
@@ -310,6 +322,8 @@ def option_block(root: ET.Element):
     ET.SubElement(root, "option", {"timestep": f(TIMESTEP), "gravity": "0 0 -9.81", "integrator": "implicitfast",
                                    "solver": "Newton", "iterations": str(SOLVER_ITERATIONS), "cone": "pyramidal",
                                    "jacobian": "auto"})
+    # Explicit: the Unity plug-in (3.11) defaults MultiCCD to "disable" while MuJoCo defaults it on — pin it (G0).
+    ET.SubElement(root.find("option"), "flag", {"multiccd": "disable"})
 
 
 def indent(el: ET.Element) -> str:

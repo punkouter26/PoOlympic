@@ -52,3 +52,15 @@ One entry per run or decision. Newest at the bottom.
 - **Editor tooling decision:** in-editor authoring uses the **Unity CLI** (`unity command …`, via the project's `com.unity.pipeline` package) — the official Unity plug-in the brief asked for. The separate MCP-for-Unity bridge (UnityMCP, 127.0.0.1:8080) was never installed in this project and is not needed.
 - **PhysX isolation:** `Physics.simulationMode = Script`, `autoSyncTransforms = false`; `PhysXGuard` (menu, Play-mode entry, build preprocess) rejects Rigidbody/Collider/CharacterController/Joint/ArticulationBody/2D equivalents in `Assets/PoOlympic/Scenes`. EditMode tests 3/3.
 - **Parity finding:** Unity 6 stores Fixed Timestep as a rational (count / 141 120 000). Setting 0.005 through the float API gave 705 599 ticks = 0.004999993 s, which the MuJoCo plug-in copies into `opt.timestep` (would fail G0 and perturb dynamics). Fixed by writing `m_Count = 705600` → `Time.fixedDeltaTime == 0.005f`, MJCF text "0.005". Runtime will additionally assert `opt.timestep == contract.timestep` in `MjScene.postInitEvent`.
+
+## 2026-09-27 · B3–B4 — MJCF import + GATE G0 PASS
+- **Change:** `AthleteImport` (menu *PoOlympic › Import Athlete Scene*) copies `training/assets/scene_matt.xml` → `Assets/PoOlympic/Models/` (SHA-256 checked, stored in `ModelProvenance`) and imports it with the plug-in importer into `Scenes/Testbed_ZeroBrain.unity` (20 bodies, 22 geoms, 25 hinges, 5 free joints, 23 actuators). `ModelFingerprint.cs` dumps Unity's compiled mjModel in the Python schema; `ParityTools` (menu *PoOlympic › Parity › G0*) writes `parity/fingerprint_unity.json`.
+- **Result:** **G0 PASS — 0 mismatches**, worst float difference 1.4e-7 (float32 floor).
+- **Root causes found and fixed on the way (each would have silently perturbed physics):**
+  1. Plug-in `MultiCCD` default = disable, MuJoCo default = enable → MJCF now pins `<flag multiccd="disable"/>`.
+  2. `MjImporterWithAssets.ImportFile` round-trips through `mj_saveLastXML` (6 significant digits, radians → float degrees): mass 13.05674→13.0567, ranges off 2e-6 rad → import with `ImportString` on the original text.
+  3. Capsule `fromto` rebuilt in float32 `FromToRotation` → 3.2e-6 rad axis error on near-vertical thighs → generator emits capsules as `pos`/`quat`/`size(r, half)` computed once in float64.
+  4. Plug-in suffixes every MuJoCo name with `_<n>`; the C# dump strips it (generated names never end in `_<digits>`).
+  5. Edit-mode `MjScene` singleton must not be saved in the scene (it throws when found without Awake) → parity tool uses a temporary instance.
+- **Compare semantics:** quaternions sign-canonicalised; capsule/cylinder frames compared as unsigned axis (symmetric shapes); sphere orientation ignored.
+- Model sha256 (scene_matt.xml) changed with fixes 1 and 3 → brains, contract and references regenerated (outcomes unchanged: zero-brain falls at 2.12 s).
