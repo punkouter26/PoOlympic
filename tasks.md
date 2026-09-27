@@ -59,9 +59,9 @@ Prerequisite (user): start Unity with the MCP bridge running — UnityMCP was un
 - [ ] **B5 Visual binding.** Import MATT GLB (glTFast) → skinned mesh; `BoneBinder` maps bones → MjBody (merged bones follow parents). *Accept: at qpos = 0 every mapped bone within 1 cm / 1° of its MjBody.*
 - [ ] **B6 Testbed scene** `Testbed_ZeroBrain.unity` authored in-editor via MCP (not procedurally): MuJoCo ground plane, MATT, 9:16 portrait camera (Game view 1080×1920), light, basic HUD (FPS, sim time, tick, lane state).
 - [ ] **B7 Cube pool + shove.** 16 MjBody + MjFreeJoint + MjGeom box cubes authored in-scene, parked resting at `x = 50 + 2i`; `MjCubePool.Fire(pos, vel)` writes qpos/qvel; `Shove.Apply(dv)` adds Δqvel to pelvis free joint. *Accept: no `Instantiate`/`Destroy` in runtime code (grep test); fired cube strikes MATT and collides only via MuJoCo.*
-- [ ] **B8 Timing.** `Time.fixedDeltaTime = 0.005`; tick counter → policy every 4th step; PolicyRunner execution order before MjScene (or own the step loop if the plug-in can't guarantee order). *Accept: 1000 ticks logged → exactly 4 mj_step per policy call, tick order per DESIGN §3.*
-- [ ] **B9 PolicyRunner + ObservationBuilder (C#).** Load ONNX via Inference Engine (CPU backend), validate metadata vs fingerprint hash, build obs from `mjData` qpos/qvel per `contract.json`, write `ctrl`.
-- [ ] **B10 Parity harness.** Unity test runner suite reading `parity/reference_trajectory_*.json`, writing `parity/gate_report_<name>.json`:
+- [x] **B8 Timing.** `Time.fixedDeltaTime = 0.005`; tick counter → policy every 4th step; PolicyRunner execution order before MjScene (or own the step loop if the plug-in can't guarantee order). *Accept: 1000 ticks logged → exactly 4 mj_step per policy call, tick order per DESIGN §3.*
+- [x] **B9 PolicyRunner + ObservationBuilder (C#).** Load ONNX via Inference Engine (CPU backend), validate metadata vs fingerprint hash, build obs from `mjData` qpos/qvel per `contract.json`, write `ctrl`.
+- [x] **B10 Parity harness.** Unity test runner suite reading `parity/reference_trajectory_*.json`, writing `parity/gate_report_<name>.json`:
   - **GATE G2** obs builder < 1e-5
   - **GATE G3** policy replay < 1e-4 (random_brain)
   - **GATE G4** open-loop ctrl replay, qpos drift < 1e-3 over 1 s (both references)

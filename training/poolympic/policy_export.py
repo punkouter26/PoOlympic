@@ -8,6 +8,7 @@ Metadata carries the contract + fingerprint hash; Unity refuses to run on mismat
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -62,6 +63,10 @@ def export(policy: ExportedPolicy, path: Path, metadata: dict[str, str]) -> Path
         entry.key, entry.value = k, v
     onnx.checker.check_model(model)
     onnx.save(model, str(path))
+    # Sidecar for Unity: the Inference Engine does not expose ONNX metadata_props at runtime.
+    sidecar = {k.replace("poolympic.", ""): v for k, v in metadata.items() if k != "poolympic.contract_json"}
+    sidecar["onnx_sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
+    Path(str(path) + ".json").write_text(json.dumps(sidecar, indent=1))
     return path
 
 

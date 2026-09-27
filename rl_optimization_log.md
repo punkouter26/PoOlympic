@@ -64,3 +64,16 @@ One entry per run or decision. Newest at the bottom.
   5. Edit-mode `MjScene` singleton must not be saved in the scene (it throws when found without Awake) → parity tool uses a temporary instance.
 - **Compare semantics:** quaternions sign-canonicalised; capsule/cylinder frames compared as unsigned axis (symmetric shapes); sphere orientation ignored.
 - Model sha256 (scene_matt.xml) changed with fixes 1 and 3 → brains, contract and references regenerated (outcomes unchanged: zero-brain falls at 2.12 s).
+
+## 2026-09-27 · B8–B10 — Runtime policy loop + GATES G2 / G3 / G4 / G5 PASS (zero + random brains)
+- **Change:** runtime `Contract`, `AthleteBinding` (name-resolved indices), `ObservationBuilder` (line-for-line port of `contract.build_obs`), `PolicyBrain` (Inference Engine CPU, batch 1), `Disturbance`, `PolicyRunner` (hooked on `MjScene.postInitEvent` / `preUpdateEvent`, records `parity/unity_run_<name>.json`). Editor `ParityHarness` + EditMode `ParityGateTests` (G2–G4); `tools/compare_closed_loop.py` (G5). References now carry the Python joint address table; contract carries the default state keyed by joint name; brains ship a `.onnx.json` sidecar (Inference Engine exposes no ONNX metadata) that PolicyRunner validates against the contract fingerprint.
+- **Result (edit mode, Unity-compiled model + native lib):**
+  | ref | G2 obs | G3 action / ctrl | G4 qpos 1 s | G4 qpos 5 s |
+  |---|---|---|---|---|
+  | zero | 4.4e-16 | 0 / 0 | 3.9e-7 | 3.3e-3 (post-fall chaos) |
+  | random | 4.4e-16 | 1.6e-7 / 1.2e-7 | 4.0e-7 | 8.2e-4 |
+- **Result (Play mode, real MjScene.FixedUpdate loop, G5):** zero — fall 2.12 s vs 2.12 s, pelvis-height RMS 1.8e-5 m, torque ratio 0.9997, 1 s drift 3.9e-7 (identical to G4 → the play loop adds no error). random — PASS, action diff 7.6e-6, 5 s drift 8.1e-4. Reports: `parity/gate_report_*.json`, `parity/g5_report_*.json`.
+- **Critical parity findings:**
+  1. `MjActuator.OnSyncState` writes its float32 `Control` into `mjData.ctrl` after every `mj_step` → PolicyRunner re-asserts the cached float64 ctrl before **every** substep (not only on control ticks). Without this, substeps 2–4 would run float32-truncated/stale ctrl.
+  2. The Editor does not tick the Play-mode player loop while unfocused (Windows blocks focus stealing) → unattended parity runs use `ParityTools.ArmDeterministicStepping` (pause + `EditorApplication.Step()` from `EditorApplication.update`, `Time.captureDeltaTime = 0.02`). Physics remains one `mj_step` per FixedUpdate; ticks = FixedUpdates / 4 verified.
+- **Decision (B8):** timing verified by construction + G5 (tick = fixed steps / 4, disturbance ticks land identically).

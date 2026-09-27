@@ -35,5 +35,25 @@ namespace PoOlympic.Editor
                 Object.DestroyImmediate(scene.gameObject);
             }
         }
+
+        /// <summary>
+        /// Deterministic Play-mode stepping for unattended parity runs: the Editor does not tick the Play-mode
+        /// player loop while unfocused, so we pause and advance with EditorApplication.Step() from the editor update
+        /// loop, with a fixed capture frame time. Physics still advances exactly one mj_step per FixedUpdate.
+        /// </summary>
+        [MenuItem("PoOlympic/Parity/Drive Play Mode (deterministic stepping)")]
+        public static void ArmDeterministicStepping()
+        {
+            if (!Application.isPlaying) { Debug.LogWarning("[Parity] enter Play mode first"); return; }
+            Time.captureDeltaTime = 0.02f;
+            EditorApplication.isPaused = true;
+            EditorApplication.CallbackFunction step = null;
+            step = () =>
+            {
+                if (!Application.isPlaying) { EditorApplication.update -= step; return; }
+                EditorApplication.Step();
+            };
+            EditorApplication.update += step;
+        }
     }
 }

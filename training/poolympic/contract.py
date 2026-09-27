@@ -155,6 +155,12 @@ def export_contract(fingerprint_sha256: str | None = None) -> dict:
             for n, d, lo, hi in zip(ath.actuator_names, ath.default_pos, ath.range_lo, ath.range_hi)
         ],
         "default_qpos_scene": [float(x) for x in m.key("default").qpos],
+        # default state keyed by joint name (Unity resolves addresses itself; never rely on qpos ordering)
+        "default_joint_qpos": [
+            {"joint": m.joint(j).name,
+             "qpos": [float(x) for x in m.key("default").qpos[m.jnt_qposadr[j]:m.jnt_qposadr[j] + (7 if m.jnt_type[j] == 0 else 4 if m.jnt_type[j] == 1 else 1)]]}
+            for j in range(m.njnt)
+        ],
         "tick_order": ["read_state", "advance_phase", "build_obs", "infer", "write_ctrl", "apply_disturbance",
                        f"mj_step x{DECIMATION}"],
         "frames": {"root_lin_vel": "world (free joint qvel[0:3]) rotated by -yaw into heading frame",

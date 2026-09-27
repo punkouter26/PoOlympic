@@ -100,6 +100,9 @@ def rollout(onnx_path: Path, seconds: float = 5.0, disturbances: list[Disturbanc
             "fingerprint_sha256": fp_sha, "onnx": Path(onnx_path).name, "onnx_sha256": onnx_sha,
             "scene": scene_xml.name, "keyframe": "default", "command": command.tolist(), "seconds": seconds,
             "n_frames": len(frames), "actuators": list(ath.actuator_names),
+            "nq": int(m.nq), "nv": int(m.nv),
+            "joints": [{"name": m.joint(j).name, "type": int(m.jnt_type[j]), "qposadr": int(m.jnt_qposadr[j]),
+                        "dofadr": int(m.jnt_dofadr[j])} for j in range(m.njnt)],
             "note": "qpos/qvel are the full scene state read at the START of each tick (before ctrl/disturbance/steps). "
                     "actuator_force is after the tick's last mj_step.",
         },

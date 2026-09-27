@@ -1,0 +1,24 @@
+{
+ "reference": "zero",
+ "unity_run": "zero_play",
+ "frames": 250,
+ "fall_time_ref": 2.12,
+ "fall_time_unity": 2.12,
+ "pelvis_height_rms_m": 1.8085468702451468e-05,
+ "mean_abs_torque_ref": 6.817837612037472,
+ "mean_abs_torque_unity": 6.815874224591595,
+ "torque_ratio": 0.9997120219697796,
+ "cadence_ref_hz": 1.2626262626262625,
+ "cadence_unity_hz": 1.2626262626262625,
+ "qpos_max_abs_drift_1s": 3.930029866920648e-07,
+ "qpos_max_abs_drift_5s": 0.0033078131964549284,
+ "obs_max_abs_diff": 0.091490613296628,
+ "action_raw_max_abs_diff": 0.0,
+ "checks": {
+  "same_fall_outcome": true,
+  "pelvis_height_rms_lt_3cm": true,
+  "mean_abs_torque_within_10pct": true,
+  "cadence_within_5pct": true
+ },
+ "G5_pass": true
+}
