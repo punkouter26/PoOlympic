@@ -31,6 +31,11 @@ namespace PoOlympic.Editor
             foreach (var rend in physics.GetComponentsInChildren<Renderer>(true))
                 if (rend.GetComponent<MjGeom>() != null && rend.gameObject.name != "ground" && !rend.gameObject.name.StartsWith("cube")) rend.enabled = false;
 
+            var cubeMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/PoOlympic/Materials/PoolCube.mat");
+            if (cubeMat != null)
+                foreach (var rend in physics.GetComponentsInChildren<Renderer>(true))
+                    if (rend.gameObject.name.StartsWith("cube")) rend.sharedMaterial = cubeMat;
+
             var binder = visual.GetComponent<BoneBinder>() ?? visual.AddComponent<BoneBinder>();
             binder.Capture(physics.transform);
             var (p, r) = binder.BindError();

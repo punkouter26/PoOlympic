@@ -1,0 +1,141 @@
+{
+ "onnx": "..\\parity\\brains\\r0_v2_it200.onnx",
+ "rung": 0,
+ "seeds": 10,
+ "passed_seeds": 5,
+ "PASS": false,
+ "per_seed_pass": [
+  true,
+  true,
+  false,
+  true,
+  false,
+  false,
+  false,
+  false,
+  true,
+  true
+ ],
+ "episodes": [
+  {
+   "seed": 1000,
+   "fell": false,
+   "fall_time": null,
+   "fall_reason": null,
+   "hits": 8,
+   "recovered_hits": 8,
+   "worst_recovery_s": 0.0,
+   "max_foot_excursion_m": 0.4128921076366013,
+   "joint_vel_over_fraction": 0.0,
+   "notes": []
+  },
+  {
+   "seed": 1001,
+   "fell": false,
+   "fall_time": null,
+   "fall_reason": null,
+   "hits": 9,
+   "recovered_hits": 9,
+   "worst_recovery_s": 0.0,
+   "max_foot_excursion_m": 0.4341541868866235,
+   "joint_vel_over_fraction": 0.0,
+   "notes": []
+  },
+  {
+   "seed": 1002,
+   "fell": false,
+   "fall_time": null,
+   "fall_reason": null,
+   "hits": 8,
+   "recovered_hits": 8,
+   "worst_recovery_s": 0.0,
+   "max_foot_excursion_m": 0.8209567554341148,
+   "joint_vel_over_fraction": 0.0,
+   "notes": []
+  },
+  {
+   "seed": 1003,
+   "fell": false,
+   "fall_time": null,
+   "fall_reason": null,
+   "hits": 8,
+   "recovered_hits": 8,
+   "worst_recovery_s": 0.0,
+   "max_foot_excursion_m": 0.3766517876564368,
+   "joint_vel_over_fraction": 0.0,
+   "notes": []
+  },
+  {
+   "seed": 1004,
+   "fell": true,
+   "fall_time": 10.98,
+   "fall_reason": "pelvis_low",
+   "hits": 5,
+   "recovered_hits": 5,
+   "worst_recovery_s": 0.0,
+   "max_foot_excursion_m": 0.4664867504298963,
+   "joint_vel_over_fraction": 0.0,
+   "notes": []
+  },
+  {
+   "seed": 1005,
+   "fell": false,
+   "fall_time": null,
+   "fall_reason": null,
+   "hits": 8,
+   "recovered_hits": 8,
+   "worst_recovery_s": 0.0,
+   "max_foot_excursion_m": 0.5736082235202244,
+   "joint_vel_over_fraction": 0.0,
+   "notes": []
+  },
+  {
+   "seed": 1006,
+   "fell": false,
+   "fall_time": null,
+   "fall_reason": null,
+   "hits": 8,
+   "recovered_hits": 8,
+   "worst_recovery_s": 0.0,
+   "max_foot_excursion_m": 0.7911767190452039,
+   "joint_vel_over_fraction": 0.0,
+   "notes": []
+  },
+  {
+   "seed": 1007,
+   "fell": false,
+   "fall_time": null,
+   "fall_reason": null,
+   "hits": 8,
+   "recovered_hits": 8,
+   "worst_recovery_s": 0.0,
+   "max_foot_excursion_m": 0.6183011944855039,
+   "joint_vel_over_fraction": 0.0,
+   "notes": []
+  },
+  {
+   "seed": 1008,
+   "fell": false,
+   "fall_time": null,
+   "fall_reason": null,
+   "hits": 8,
+   "recovered_hits": 8,
+   "worst_recovery_s": 0.0,
+   "max_foot_excursion_m": 0.37836495160310196,
+   "joint_vel_over_fraction": 0.0,
+   "notes": []
+  },
+  {
+   "seed": 1009,
+   "fell": false,
+   "fall_time": null,
+   "fall_reason": null,
+   "hits": 9,
+   "recovered_hits": 9,
+   "worst_recovery_s": 0.0,
+   "max_foot_excursion_m": 0.42205281302840963,
+   "joint_vel_over_fraction": 0.0,
+   "notes": []
+  }
+ ]
+}

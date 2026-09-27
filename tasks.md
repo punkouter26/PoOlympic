@@ -71,8 +71,8 @@ In-editor authoring runs through the Unity CLI (`unity command …`, com.unity.p
 
 - [x] **C1 Env implementation.** Warp env per DESIGN §3/§5: obs, actions, rewards, terminations, DR, shove + cube pool per env, per-lane trait randomization, command sampling, TensorBoard, checkpoints. *Accept: 10-min smoke run, reward rising, no NaNs.*
 - [x] **C2 CPU evaluator (G1).** `eval_cpu.py`: rung bars, 10 seeds, CPU MuJoCo, JSON report + optional video.
-- [ ] **C3 Rung 0 — train** stand + shove recovery to bar. **GATE G1.** Log all runs.
-- [ ] **C4 Rung 0 — Unity spot-check.** Export ONNX + reference; G0, G2–G5 in `Testbed_ZeroBrain` with Rung 0 brain.
+- [x] **C3 Rung 0 — train** stand + shove recovery to bar. **GATE G1.** Log all runs.
+- [x] **C4 Rung 0 — Unity spot-check.** Export ONNX + reference; G0, G2–G5 in `Testbed_ZeroBrain` with Rung 0 brain.
 - [ ] **C5 Rung 1 — train** forward velocity to bar. **GATE G1.**
 - [ ] **C6 Rung 1 — Early Verification Gate (HALT POINT).**
   - export `rung1.onnx` (opset 17, batch 1) + `reference_trajectory_rung1.json` (5 s, CPU MuJoCo)

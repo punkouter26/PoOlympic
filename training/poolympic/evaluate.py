@@ -36,6 +36,7 @@ class EpisodeResult:
     worst_recovery_s: float | None
     max_foot_excursion_m: float
     joint_vel_over_fraction: float
+    max_tilt_after_hit_deg: float = 0.0
     notes: list[str] = field(default_factory=list)
 
 
@@ -176,23 +177,30 @@ def rung0_episode(onnx_path: Path, seed: int, seconds: float = 20.0, shove_dv: f
             fell_at, reason = now, why
             break
 
-    rec = [recovery_time(np.array(tilt_log), h, dt) for h in hit_times]
+    tl = np.array(tilt_log)
+    hs = sorted(hit_times)
+    rec = [recovery_time(tl, h, dt, hs[i + 1] if i + 1 < len(hs) else None) for i, h in enumerate(hs)]
+    peak = max((float(tl[int(round(h / dt)): int(round((h + RECOVER_WINDOW_S) / dt))].max(initial=0.0)) for h in hit_times), default=0.0)
     ok = [r for r in rec if r is not None and r <= RECOVER_WINDOW_S]
     return EpisodeResult(seed=seed, fell=fell_at is not None, fall_time=fell_at, fall_reason=reason,
                          hits=len(hit_times), recovered_hits=len(ok),
                          worst_recovery_s=max((r for r in rec if r is not None), default=None) if all(r is not None for r in rec) else None,
-                         max_foot_excursion_m=max_exc, joint_vel_over_fraction=joint_over / max(1, len(tilt_log)))
+                         max_foot_excursion_m=max_exc, joint_vel_over_fraction=joint_over / max(1, len(tilt_log)),
+                         max_tilt_after_hit_deg=peak)
 
 
-def recovery_time(tilt: np.ndarray, hit_t: float, dt: float, settle_s: float = 0.5) -> float | None:
-    """Seconds from the hit until torso tilt is < 10° and stays there for `settle_s`; None if never (in the log)."""
+def recovery_time(tilt: np.ndarray, hit_t: float, dt: float, next_hit_t: float | None = None) -> float | None:
+    """Seconds from the hit until the LAST tick with torso tilt >= 10° before the next hit (0 if never exceeded).
+    None if the athlete is still above 10° when the log ends (or the next hit arrives)."""
     start = int(round(hit_t / dt))
-    need = int(round(settle_s / dt))
-    below = tilt < RECOVER_TILT_DEG
-    for k in range(start, len(tilt) - need + 1):
-        if below[k : k + need].all():
-            return (k - start) * dt
-    return None
+    end = len(tilt) if next_hit_t is None else min(len(tilt), int(round(next_hit_t / dt)))
+    seg = tilt[start:end]
+    over = np.nonzero(seg >= RECOVER_TILT_DEG)[0]
+    if len(over) == 0:
+        return 0.0
+    if over[-1] == len(seg) - 1:
+        return None
+    return float((over[-1] + 1) * dt)
 
 
 def rung0_verdict(results: list[EpisodeResult], foot_box_half_m: float = 0.5) -> dict:

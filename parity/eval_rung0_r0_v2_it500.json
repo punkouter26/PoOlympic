@@ -1,0 +1,53 @@
+{
+ "onnx": "..\\parity\\brains\\r0_v2_it500.onnx",
+ "rung": 0,
+ "seeds": 3,
+ "passed_seeds": 2,
+ "PASS": false,
+ "per_seed_pass": [
+  false,
+  true,
+  true
+ ],
+ "episodes": [
+  {
+   "seed": 1000,
+   "fell": false,
+   "fall_time": null,
+   "fall_reason": null,
+   "hits": 8,
+   "recovered_hits": 8,
+   "worst_recovery_s": 0.0,
+   "max_foot_excursion_m": 0.5028118269531999,
+   "joint_vel_over_fraction": 0.0,
+   "max_tilt_after_hit_deg": 4.508959921209056,
+   "notes": []
+  },
+  {
+   "seed": 1001,
+   "fell": false,
+   "fall_time": null,
+   "fall_reason": null,
+   "hits": 9,
+   "recovered_hits": 9,
+   "worst_recovery_s": 0.0,
+   "max_foot_excursion_m": 0.4325840562007343,
+   "joint_vel_over_fraction": 0.0,
+   "max_tilt_after_hit_deg": 4.706729476103495,
+   "notes": []
+  },
+  {
+   "seed": 1002,
+   "fell": false,
+   "fall_time": null,
+   "fall_reason": null,
+   "hits": 8,
+   "recovered_hits": 8,
+   "worst_recovery_s": 0.0,
+   "max_foot_excursion_m": 0.3477319881527812,
+   "joint_vel_over_fraction": 0.0,
+   "max_tilt_after_hit_deg": 5.1795779610389205,
+   "notes": []
+  }
+ ]
+}

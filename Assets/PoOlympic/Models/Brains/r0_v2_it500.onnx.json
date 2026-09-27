@@ -1,10 +1,11 @@
 {
- "name": "random_brain",
+ "name": "r0_v2_it500",
  "contract_version": "1",
  "fingerprint_sha256": "bfd287b0ce43147ad430d90787f724d9ef7a25a4cc281730278aa3ed0bb024e8",
  "mujoco_version": "3.11.0",
  "timestep": "0.005",
  "decimation": "4",
  "actuators": "[\"abdomen_flex\", \"abdomen_lat\", \"abdomen_twist\", \"shoulder_elev_l\", \"shoulder_flex_l\", \"shoulder_twist_l\", \"elbow_l\", \"shoulder_elev_r\", \"shoulder_flex_r\", \"shoulder_twist_r\", \"elbow_r\", \"hip_flex_l\", \"hip_abd_l\", \"hip_rot_l\", \"knee_l\", \"ankle_dorsi_l\", \"ankle_inv_l\", \"hip_flex_r\", \"hip_abd_r\", \"hip_rot_r\", \"knee_r\", \"ankle_dorsi_r\", \"ankle_inv_r\"]",
- "onnx_sha256": "2d49c9f8504b191832d3666d95db7fc3aa9ac37ea65ac580650e4450123a4994"
+ "checkpoint": "runs\\matt_rung0\\2026-09-27_15-26-01_r0_v2\\model_500.pt",
+ "onnx_sha256": "947b28d979abf7b7dc35e5ce62afb2039551c3fc4a86d99638ca215f828e3695"
 }

@@ -32,7 +32,7 @@ def main() -> int:
         r = E.rung0_episode(a.onnx, s, sim=sim)
         results.append(r)
         print(f"seed {s}: fell={r.fell} ({r.fall_reason} @ {r.fall_time}) hits {r.recovered_hits}/{r.hits} "
-              f"worst_recovery={r.worst_recovery_s} foot_exc={r.max_foot_excursion_m:.3f} m jv_over={r.joint_vel_over_fraction:.3f}")
+              f"worst_recovery={r.worst_recovery_s} peak_tilt={r.max_tilt_after_hit_deg:.1f}deg foot_exc={r.max_foot_excursion_m:.3f} m jv_over={r.joint_vel_over_fraction:.3f}")
     verdict = E.rung0_verdict(results)
     report = {"onnx": str(a.onnx), **verdict, "episodes": [dataclasses.asdict(r) for r in results]}
     out = a.out or ROOT.parent / "parity" / f"eval_rung{a.rung}_{a.onnx.stem}.json"

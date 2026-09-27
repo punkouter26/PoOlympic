@@ -1,0 +1,24 @@
+{
+ "reference": "rung0",
+ "unity_run": "rung0_play",
+ "frames": 250,
+ "fall_time_ref": null,
+ "fall_time_unity": null,
+ "pelvis_height_rms_m": 2.1327876613385094e-08,
+ "mean_abs_torque_ref": 5.360446464562936,
+ "mean_abs_torque_unity": 5.360446987128275,
+ "torque_ratio": 1.0000000974854133,
+ "cadence_ref_hz": null,
+ "cadence_unity_hz": null,
+ "qpos_max_abs_drift_1s": 3.910439043451966e-07,
+ "qpos_max_abs_drift_5s": 1.2105937223672036e-05,
+ "obs_max_abs_diff": 1.385807991027832e-05,
+ "action_raw_max_abs_diff": 1.385807991027832e-05,
+ "checks": {
+  "same_fall_outcome": true,
+  "pelvis_height_rms_lt_3cm": true,
+  "mean_abs_torque_within_10pct": true,
+  "cadence_within_5pct": true
+ },
+ "G5_pass": true
+}
