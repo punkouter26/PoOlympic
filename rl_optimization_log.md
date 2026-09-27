@@ -146,3 +146,9 @@ One entry per run or decision. Newest at the bottom.
 - **G1 (lane keeping):** it 1500 10/10, margin 26/30 (misses at 2.7–3.0 m/s) · **it 2000 10/10, margin 30/30**, 0 falls, lateral ≤ 0.42 m, vel RMS ≤ 0.121 · it 2500 8/10 · it 2999 6/10 — the late misses are all lateral drift 0.62–0.68 m on the slowest (0.5–0.7 m/s, 43–58 s) dashes; speed tracking stays ≤ 0.07. Regression starts once the curriculum widens to 4 m/s (it 2000). Selected **r1_v2_it2000 → `parity/brains/rung1.onnx`**.
 - **G6 prep:** `make_g6.py rung1`: all lanes run (x after 5 s: 2.1 m @ 0.5 … 12.2 m @ 3.0 m/s, no falls); CPU meet vs solo PASS, 5 s drift ≤ 2e-7.
 - **Evaluator fix:** rung-1 verdict produced numpy bools (JSON crash once a dash finished).
+
+## 2026-09-27 · C6 — Rung 1 Early Verification Gate PASSED (HALT POINT cleared)
+- **Brain:** `rung1.onnx` (r1_v2 it 2000). **Unity EditMode 18/18** (G2–G4 on 8 lane references, steering C#==Python, PhysX guard, runtime rules).
+- **G2** ≤ 4.4e-16 · **G3** action ≤ 2.4e-6, ctrl ≤ 5.4e-7 · **G4** 1 s ≤ 1.8e-6 (5 s open-loop replay of a runner diverges, 0.02–0.99 m — expected, not gated) · **G0 meet8** 8/8 (model unchanged since).
+- **G6 (Testbed_Rung1, 8 lanes running 0–3 m/s + yaw lane, staggered shoves + cube drops, 250 ticks):** every lane vs its solo CPU-MuJoCo run PASS — drift 1 s 5.4e-7…2.0e-6, 5 s 5.5e-7…1.6e-5, height RMS ≤ 7.8e-8 m, torque ratio 1.0000, no falls either side. Unity's multi-athlete scene reproduces training physics to float32 precision while running.
+- **Next:** C7 Rung 2 (omnidirectional + yaw). Before Phase D: Iron Pedestal fine-tune (Rung 0 foot-based pedestal term); consider a Rung 1 fine-tune on slow-speed lane drift if later rungs regress it.

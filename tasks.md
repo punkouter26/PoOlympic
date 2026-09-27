@@ -75,14 +75,14 @@ In-editor authoring runs through the Unity CLI (`unity command …`, com.unity.p
 - [x] **C4 Rung 0 — Unity spot-check.** Export ONNX + reference; G0, G2–G5 in `Testbed_ZeroBrain` with Rung 0 brain.
 - [x] **C5 Rung 1 — train** forward velocity to bar. **GATE G1.**
   - r1_v1 (warm start) failed — standing collapse. r1_v2 (from scratch + coarse tracking) → **Rung 1 brain = `r1_v2_it2000` (`parity/brains/rung1.onnx`)**: G1 10/10 + margin 30/30, 0 falls, lane drift ≤ 0.42 m, vel RMS ≤ 0.121 m/s. G1 uses the contract's lane-keeping steering (user decision 2026-09-27); later checkpoints (2500/2999) regress on slow-speed lane drift.
-- [ ] **C6 Rung 1 — Early Verification Gate (HALT POINT).**
+- [x] **C6 Rung 1 — Early Verification Gate (HALT POINT).** PASSED 2026-09-27 — brain `rung1.onnx` (r1_v2_it2000).
   - export `rung1.onnx` (opset 17, batch 1) + `reference_trajectory_rung1.json` (5 s, CPU MuJoCo)
   - `Testbed_Rung1.unity`: **GATES G0, G2, G3, G4, G5, G6** (8 lanes + cube pool)
   - any divergence → stop training; fix solver config / decimation / friction / gain mapping; re-run gates; log root cause
   - [x] infrastructure: `scene_meet8.xml` (8 lane-isolated athletes `L<k>_`, 1.22 m lanes, 16-cube pool) · lane-safe `PolicyRunner` (per-lane reset, lane origin, cube-slot remap, per-lane recording) · `Testbed_Rung1.unity` (MenuItem *Build Testbed_Rung1*) · `tools/make_g6.py` (lane plan + solo refs + CPU meet pre-check) · `tools/compare_g6.py` (G0 per lane, G6)
   - [x] G0 meet8 PASS (8/8 lanes, each == solo athlete except bits/origin) · G6 harness dry run PASS (interim brain) · solo G5 re-verified (zero/random/rung0, contract v2 brains)
   - [x] `make_g6.py rung1` → plan + 8 solo refs; CPU meet pre-check PASS (5 s drift ≤ 2e-7)
-  - [ ] Unity: G2–G4 (EditMode, auto-discovered `rung1_L*` refs) → G5 solo → `MeetTestbed.ConfigureG6("rung1")` + play 250 ticks → `compare_g6.py g6 rung1` · SteeringTests (C# lane keeping == Python)
+  - [x] Unity: G0 meet8 8/8 · G2 ≤ 4e-16 · G3 ≤ 2.4e-6 · G4 (1 s) ≤ 1.8e-6 on all 8 lane refs · **G5/G6: all 8 lanes of Testbed_Rung1 vs their solo CPU runs PASS — qpos drift ≤ 2e-6 @ 1 s, ≤ 1.6e-5 @ 5 s, torque ratio 1.0000, same (no-)fall outcomes** · SteeringTests PASS · EditMode 18/18 · capture `parity/c6/rung1_tick252.png`
 - [ ] **C7 Rung 2 — train** omnidirectional + yaw to bar. **GATE G1.**
 - [ ] **C8 Rung 2 — Unity spot-check.** G3, G5, G6 with rung2 brain; commands switchable from HUD.
 
