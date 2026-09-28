@@ -97,11 +97,58 @@ Rules: every surface an athlete can touch is a MuJoCo geom generated into the MJ
   - [ ] G0 for the pedestal scene (Python vs Unity fingerprint) + a G5-style closed-loop parity run of one attempt
   - [ ] Iron Pedestal fine-tune (foot-on-pedestal term, trained on the pedestal geometry) for edge margin
 - [x] **D2 Stadium (Blender MCP, Olympic realistic)** — `SourceArt/Stadium/stadium.blend` → `Assets/PoOlympic/Art/Stadium/Stadium.glb` (1.5 MB, ~28k tris, render-only): World-Athletics 400 m oval (84.39 m straights, R 36.5 m, 8 × 1.22 m lanes = meet layout), 20 m start extension, finish / 100 m lines; two-tier bowl with front-view crowd textures; roof canopy + floodlight ring; LED boards; 2 scoreboards. **Venues for every event category** with `VENUE_*` anchors (glTF nodes + `venues.json`): HomeStraight (8, 19, 9, 10, 22, hurdles) · CentreStage (1, 5) · Agility (11 slalom, 12 turntable) · Terrain (14–17, parkour) · Jumps (runways + pit) · Mats (27 get-up, crawl, flip) · Skills (carry, bench, kick + goal) · BackStraight. `EventScenes.PlaceStadium(venue, groundY)` snaps a venue onto the MuJoCo origin (verified: home anchor at Unity (−57.81, −0.50, −41.38)). Iron Pedestal scene now plays inside the stadium (`parity/d1/stadium_live.png`).
-  - [ ] confirm the full 30-event list (only ~20 are named in DESIGN.md) and add any missing venue types
+  - [x] full 30-event list received (Phase E catalogue): every event maps onto an existing venue — no new venue type needed
 - [ ] **D3 Broadcast** — 9:16 tracking cameras per event, HUD polish (UI Toolkit), result cards
-- [ ] **D4 8-lane Iron Pedestal heat** — per-lane traits (strength / latency / obs noise) → survival odds; pedestal per lane in the meet MJCF
-- [ ] **D5 remaining Sprint Series events** 5 Gust Gauntlet · 8 30m Dash · 19 Terminal Velocity (rung1) · 9, 10, 11, 12, 22 (rung2, after C8)
+- [ ] **D4 8-lane Iron Pedestal heat** — rules per catalogue: 8 runners, **last one standing wins** (escalating gusts until one remains); per-lane traits (strength / latency / obs noise) → survival odds; pedestal per lane in the meet MJCF
+- [ ] **D5 remaining Sprint Series events** 5 Gust Gauntlet · 8 30m Dash · 19 Terminal Velocity (rung1) · 9, 10, 11, 12, 22 (rung2, after C8) — then the rest of the catalogue: **Phase E** below
 - [ ] **D6** full suite re-validation + perf pass
+
+## Phase E — The 30 Olympic Events (catalogue, added 2026-09-27)
+
+All 30 events are unlocked from the start (instant exhibition play or gauntlet construction). Each event = **venue** (render-only, `Stadium.glb` anchor) + **props** (MuJoCo geoms in the event MJCF, shared by training / CPU gates / Unity) + **brain** (the rung that owns the skill) + **event controller** (rules, scoring, elimination, seeded schedule; pattern: `IronPedestalEvent`). An event is done when: CPU scoring script passes with the brain, the Unity scene plays it end-to-end (1 biped, then 8 lanes), and a G5-style parity run of one attempt passes.
+
+Skill gaps: events marked **S** need behaviours the current contract cannot command (upper-body / hand targets, pelvis height, single-leg, cadence, …) → one "stance skills" rung with an extended command block (**contract v3**, design decision before implementation). Events marked **M** likely need a motion prior (R7).
+
+| # | Event | Rules (summary) | Venue | Props (MJCF) | Brain / rung | Status |
+|---|---|---|---|---|---|---|
+| **Phase 1 — Stability & Balance** |
+| 1 | The Iron Pedestal | 8 runners on 1 m × 1 m pedestals; last to keep equilibrium without stepping off wins | CentreStage | pedestal (per lane in the meet) | R0 | 1-biped slice done (20 s survive); 8-lane *last-standing* with escalating gusts = D4 |
+| 2 | Torso Archer | feet planted, track fast overhead flight targets with the upper body; angular accuracy, zero foot slip | CentreStage | flying target (mocap-free kinematic body) | **S** upper-body target cmd | todo |
+| 3 | Deep Squat Endurance | rhythmic squat reps; lowest torso drop + balance retention | CentreStage | — | **S** pelvis-height cmd | todo |
+| 4 | Precision Javelin Reach | single-arm extension to dynamic targets at max reach, stance anchored | CentreStage | target marker | **S** hand-target cmd | todo |
+| 5 | The Gust Gauntlet | lateral wind bursts + floor shakers; scored on recovery time back to centre | CentreStage | shaker platform (actuated slide joint) | R0 (+ platform shake DR) | todo |
+| **Phase 2 — Fundamental Track & Gait** |
+| 6 | The Flamingo Classic | one foot raised; time until touchdown | CentreStage | — | **S** single-leg stance cmd | todo |
+| 7 | Cadence March | high-knee marching in place to a rising metronome | CentreStage / Agility | — | **S** cadence / march-in-place cmd (phase clock with zero velocity) | todo |
+| 8 | The 30m Dash | pure forward sprint to the finish ribbon | HomeStraight | finish ribbon (visual) | R1 / R2 | todo (brain ready: rung1) |
+| 9 | The Inverted Sprint | 20 m backwards; DQ on lane drift or backward tumble | HomeStraight | — | R2 | todo (after C7) |
+| 10 | Crab Shuffle Relay | side-step between parallel rails without crossing legs | HomeStraight / Agility | boundary rails | R2 (+ leg-cross check) | todo |
+| **Phase 3 — Omnidirectional Agility** |
+| 11 | Slalom Sprint | weave through gates; penalties for missed gates / clipped flags | Agility | gate poles + flags | R2 + gate-following steering | todo |
+| 12 | The 360 Turntable | rapid in-place turns on a marked spot; rotational speed, zero drift | Agility (turntable pads) | — | R2 | todo (blocked on r2 yaw) |
+| 13 | Steeplechase Jog | 50 m run with sustained aerial flight phases between strikes | HomeStraight | — | R1/R2 + flight-phase reward | todo |
+| 14 | The Alpine Ramp | ascend a 15° ramp into a finish sensor | Terrain | 15° ramp | R4 | todo |
+| 15 | Cross-Country Rubble | traverse randomized mounds and ruts | Terrain | heightfield / box rubble (seeded) | R4 | todo |
+| **Phase 4 — High Impact & Jumping** |
+| 16 | The Platform Drop | rapid stair descent; descent speed + soft landing | Terrain | stairs (down) | R4 | todo |
+| 17 | Stadium Stair Climb | 20-step climb without catching toes on step lips | Terrain | 20 stairs (up) | R4 | todo |
+| 18 | The Olympic High Jump | static squat jump; highest pelvis clearance | Jumps / Mats | — | R5 | todo |
+| 19 | Terminal Velocity Sprint | open sprint to top speed until saturation or collapse | HomeStraight (+ BackStraight) | — | R1 / R2 (vx → 4+) | todo |
+| 20 | Low Hurdle Dash | 30 m with 0.3 m hurdles; high-knee clearance | HomeStraight | 0.3 m hurdles | R5 | todo |
+| **Phase 5 — Heavy Athletics & Transitional Motion** |
+| 21 | The Sandpit Long Jump | run-up, forward launch into the sand pit | Jumps | take-off board, pit (soft contact) | R5 | todo |
+| 22 | Emergency Brake | full sprint to a red stop line; full standstill without crossing it | HomeStraight | stop line (visual) | R2 | todo (brake passes in r2_v1) |
+| 23 | The Trench Crawl | low-ceiling tunnel forces all-fours crawling | Terrain | tunnel ceiling | R8 crawl (**M**?) | todo |
+| 24 | The Courier Carry | carry a weighted crate 15 m without dropping / pitching back | Skills | crate (free body) + hand contact | R8 carry (needs hand/wrist contact on the body) | todo |
+| 25 | The Bench Relay | approach a bench, stable seated rest, explode back into a sprint | Skills | bench | R8 sit/stand | todo |
+| **Phase 6 — The Extreme Decathlon** |
+| 26 | Stepping Stones | narrow elevated pads, zero room for error; miss-step = drop out | Terrain | elevated stepping pads | R4 + foot-placement targets (**S**) | todo |
+| 27 | The Resurrection Dash | start flat on the back; fastest to rise and sprint 5 m | Mats | — | R3 get-up | todo |
+| 28 | Floor Acrobatic Sprint | flip / cartwheel across a gymnastics mat | Mats | mat (soft contact) | R8 acrobatics (**M**) | todo |
+| 29 | Striker Shootout | intercept a rolling ball mid-stride and kick past a target | Skills (goal) | ball (free sphere, pooled) | R8 kick (+ ball obs) | todo |
+| 30 | The Grand Parkour Vault | approach, wall vault, drop landing, hurdle sprint | Terrain | wall, drop, hurdles | R8 parkour (**M**) | todo |
+
+Order of work (follows brain availability): 1 (8-lane) → 8, 19, 13 (rung1) → 9, 10, 11, 12, 22 (after C7/C8) → 5 → contract-v3 stance skills (2, 3, 4, 6, 7) → R3 (27) → R4 (14, 15, 16, 17, 26) → R5 (18, 20, 21) → R8 (23, 24, 25, 28, 29, 30). Per-event: MJCF props via `build_mjcf.py`, CPU scoring in `poolympic/events/`, Unity controller + `EventScenes.Build*`, 1-biped then 8-lane, parity spot-check.
 
 ## Backlog (later rungs & platforms)
 
