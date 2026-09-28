@@ -143,7 +143,7 @@ class AthleteCommand(UniformVelocityCommand):
         if env_ids is None:  # per-step path: contract.advance_phase with the current command
             moving = torch.linalg.norm(self.command, dim=-1) >= C.PHASE_CMD_THRESHOLD
             cmd = self.command
-            speed = torch.linalg.norm(cmd[:, :2], dim=-1) + 0.5 * cmd[:, 2].abs()
+            speed = torch.linalg.norm(cmd[:, :2], dim=-1) + C.GAIT_HZ_YAW_WEIGHT * cmd[:, 2].abs()
             hz = C.GAIT_HZ_BASE + C.GAIT_HZ_PER_MPS * speed
             adv = torch.remainder(self.phase + hz * C.DECIMATION * 0.005, 1.0)
             self.phase = torch.where(moving, adv, torch.zeros_like(self.phase))

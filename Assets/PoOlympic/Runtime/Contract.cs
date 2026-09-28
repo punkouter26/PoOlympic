@@ -60,6 +60,7 @@ namespace PoOlympic
         public double joint_vel_scale;
         public double gait_hz_base;
         public double gait_hz_per_mps;
+        public double gait_hz_yaw_weight;
         public double phase_cmd_threshold;
         public Steering steering;
         public ObsNoiseTerm[] obs_noise;
@@ -106,7 +107,7 @@ namespace PoOlympic
 
         public double GaitHz(Vector3 command)
         {
-            double speed = Math.Sqrt((double)command.x * command.x + (double)command.y * command.y) + 0.5 * Math.Abs((double)command.z);
+            double speed = Math.Sqrt((double)command.x * command.x + (double)command.y * command.y) + gait_hz_yaw_weight * Math.Abs((double)command.z);
             return gait_hz_base + gait_hz_per_mps * speed;
         }
     }

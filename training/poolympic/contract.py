@@ -19,12 +19,15 @@ ROOT = Path(__file__).resolve().parents[1]
 SCENE_XML = ROOT / "assets" / "scene_matt.xml"
 CONTRACT_JSON = ROOT.parent / "parity" / "contract.json"
 
-CONTRACT_VERSION = 2
+CONTRACT_VERSION = 3
 DECIMATION = 4
 ACTION_SCALE = 0.25  # rad per unit action
 JOINT_VEL_SCALE = 0.05
 GAIT_HZ_BASE = 0.8  # stride frequency (Hz) = GAIT_HZ_BASE + GAIT_HZ_PER_MPS * speed  (human-like: 0.9 Hz @ 0.5 m/s,
-GAIT_HZ_PER_MPS = 0.2  # 1.4 Hz @ 3 m/s); speed = |(vx, vy)| + 0.5·|wz|. Advanced only while commanded to move.
+GAIT_HZ_PER_MPS = 0.2  # 1.4 Hz @ 3 m/s); speed = |(vx, vy)| + GAIT_HZ_YAW_WEIGHT·|wz|. Advanced only while moving.
+# v3 (2026-09-28): yaw weight 0.5 -> 1.2. At a 2.5 rad/s pivot the v2 clock ran 1.05 Hz, i.e. ~60 deg of turn per step —
+# at MATT's +-40 deg hip-rotation limit — and capped the 360 Turntable at ~3.2 s; 1.4 Hz lets it step faster.
+GAIT_HZ_YAW_WEIGHT = 1.2
 PHASE_CMD_THRESHOLD = 0.1  # |(vx, vy, wz)| below this => phase frozen at 0
 # Lane-keeping steering (outside the policy; Python evaluator and Unity PolicyRunner use the same law):
 #   heading_target = atan(-LANE_GAIN * lane_offset_y * dir);  wz = clip(HEADING_GAIN * wrap(target - yaw), ±STEER_WZ_LIMIT)
@@ -126,7 +129,7 @@ def advance_phase(phase: float, command: np.ndarray) -> float:
 
 
 def gait_hz(command: np.ndarray) -> float:
-    speed = math.hypot(float(command[0]), float(command[1])) + 0.5 * abs(float(command[2]))
+    speed = math.hypot(float(command[0]), float(command[1])) + GAIT_HZ_YAW_WEIGHT * abs(float(command[2]))
     return GAIT_HZ_BASE + GAIT_HZ_PER_MPS * speed
 
 
@@ -180,6 +183,7 @@ def export_contract(fingerprint_sha256: str | None = None) -> dict:
         "joint_vel_scale": JOINT_VEL_SCALE,
         "gait_hz_base": GAIT_HZ_BASE,
         "gait_hz_per_mps": GAIT_HZ_PER_MPS,
+        "gait_hz_yaw_weight": GAIT_HZ_YAW_WEIGHT,
         "phase_cmd_threshold": PHASE_CMD_THRESHOLD,
         "obs_noise": [{"term": k, "offset": offsets[k]["offset"], "size": offsets[k]["size"], "amplitude": v}
                       for k, v in OBS_NOISE.items()],
