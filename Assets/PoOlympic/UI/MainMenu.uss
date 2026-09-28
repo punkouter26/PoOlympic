@@ -34,27 +34,107 @@
     margin: 12px 0 12px 4px;
 }
 
+.section-head {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.section-hint {
+    font-size: 20px;
+    color: rgb(150, 162, 186);
+    margin-right: 4px;
+}
+
+.roster-row {
+    flex-direction: row;
+    align-items: stretch;
+}
+
+.roster {
+    flex-grow: 1;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.athlete-card {
+    width: 230px;
+    height: 120px;
+    margin: 0 12px 0 0;
+    padding: 10px 16px;
+    align-items: flex-start;
+    justify-content: center;
+    background-color: rgb(28, 39, 63);
+    border-width: 2px;
+    border-color: rgb(255, 216, 74);
+    border-radius: 14px;
+    color: rgb(232, 236, 244);
+    transition-duration: 0.12s;
+}
+
+.athlete-card:hover {
+    background-color: rgb(38, 52, 82);
+}
+
+.athlete-name {
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
+    font-size: 34px;
+    color: rgb(255, 216, 74);
+}
+
+.athlete-stats {
+    font-size: 19px;
+    color: rgb(190, 199, 216);
+}
+
+.fill-button {
+    width: 170px;
+    font-size: 24px;
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
+    -unity-text-align: middle-center;
+    white-space: normal;
+    color: rgb(232, 236, 244);
+    background-color: rgb(34, 45, 70);
+    border-width: 0;
+    border-radius: 14px;
+}
+
+.fill-button:hover {
+    background-color: rgb(48, 62, 94);
+}
+
 .slots {
-    background-color: rgb(20, 29, 48);
-    border-radius: 16px;
-    padding: 8px 16px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
 }
 
 .slot {
+    width: 49%;
+    height: 84px;
+    margin: 0 0 10px 0;
+    padding: 0 18px;
     flex-direction: row;
     align-items: center;
-    height: 64px;
-    border-bottom-width: 1px;
-    border-color: rgb(34, 45, 70);
+    background-color: rgb(20, 29, 48);
+    border-width: 2px;
+    border-color: rgb(20, 29, 48);
+    border-radius: 12px;
+    color: rgb(232, 236, 244);
+    transition-duration: 0.12s;
 }
 
-.slot--last {
-    border-bottom-width: 0;
+.slot:hover {
+    background-color: rgb(28, 39, 63);
+}
+
+.slot--selected {
+    border-color: rgb(255, 216, 74);
 }
 
 .slot-lane {
-    width: 130px;
-    font-size: 26px;
+    width: 110px;
+    font-size: 24px;
     color: rgb(150, 162, 186);
 }
 
@@ -62,26 +142,10 @@
     flex-grow: 1;
     -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
     font-size: 30px;
-    -unity-text-align: middle-center;
 }
 
-.slot-arrow {
-    width: 64px;
-    height: 48px;
-    font-size: 34px;
-    background-color: rgb(34, 45, 70);
-    border-width: 0;
-    border-radius: 10px;
-    color: rgb(232, 236, 244);
-    -unity-text-align: middle-center;
-}
-
-.slot-arrow:hover {
-    background-color: rgb(48, 62, 94);
-}
-
-.slot-arrow:disabled {
-    opacity: 0.3;
+.slot-athlete--empty {
+    color: rgb(90, 102, 126);
 }
 
 .event-list {

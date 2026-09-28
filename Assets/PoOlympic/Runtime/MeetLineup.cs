@@ -12,6 +12,12 @@ namespace PoOlympic
     {
         public const string MenuScene = "MainMenu";
         public static readonly string[] Roster = { "MATT" };
+        /// <summary>One-line card stats per roster athlete (body + brains).</summary>
+        public static string Stats(string athlete) => athlete switch
+        {
+            "MATT" => "1.84 m · 80 kg\nRung 0 + Rung 2",
+            _ => "",
+        };
         public static string[] Athletes { get; private set; } = Enumerable.Repeat(Roster[0], 8).ToArray();
         public static int EventNumber { get; private set; } = 1;
 

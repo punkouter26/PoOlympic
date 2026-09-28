@@ -4,7 +4,15 @@
         <ui:VisualElement name="panel" class="menu-panel">
             <ui:Label text="POOLYMPICS" class="title" />
             <ui:Label text="Pick 8 athletes and an event" class="subtitle" />
-            <ui:Label text="ATHLETES" class="section-title" />
+            <ui:VisualElement class="section-head">
+                <ui:Label text="ROSTER" class="section-title" />
+                <ui:Label text="Tap a lane, then an athlete" class="section-hint" />
+            </ui:VisualElement>
+            <ui:VisualElement class="roster-row">
+                <ui:VisualElement name="roster" class="roster" />
+                <ui:Button name="fillAllButton" text="Fill all 8" class="fill-button" />
+            </ui:VisualElement>
+            <ui:Label text="LANES" class="section-title" />
             <ui:VisualElement name="slots" class="slots" />
             <ui:Label text="EVENT" class="section-title" />
             <ui:ScrollView name="eventList" class="event-list" />
