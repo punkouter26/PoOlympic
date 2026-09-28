@@ -1,0 +1,378 @@
+{
+ "schema": 1,
+ "brain": "rung2.onnx",
+ "onnx_sha256": "4f2cb5983286ef90d2e510983e19ec39824f30add08d23e714dc7020379d5e17",
+ "fingerprint_sha256": "bfd287b0ce43147ad430d90787f724d9ef7a25a4cc281730278aa3ed0bb024e8",
+ "seconds": 5.0,
+ "scene": "scene_meet8.xml",
+ "lanes": [
+  {
+   "lane": 0,
+   "command": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "disturbances": [
+    {
+     "tick": 40,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      0.3,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 100,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      0.0871,
+      0.1551,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "rung2_L0"
+  },
+  {
+   "lane": 1,
+   "command": [
+    -1.5,
+    0.0,
+    0.0
+   ],
+   "disturbances": [
+    {
+     "tick": 45,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      -0.3,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 105,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      -2.7423,
+      -0.516,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "rung2_L1"
+  },
+  {
+   "lane": 2,
+   "command": [
+    0.0,
+    0.75,
+    0.0
+   ],
+   "disturbances": [
+    {
+     "tick": 50,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      0.3,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 110,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      0.0625,
+      1.9504,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "rung2_L2"
+  },
+  {
+   "lane": 3,
+   "command": [
+    0.0,
+    -0.75,
+    0.0
+   ],
+   "disturbances": [
+    {
+     "tick": 55,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      -0.3,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 115,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      -0.0477,
+      -1.7266,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "rung2_L3"
+  },
+  {
+   "lane": 4,
+   "command": [
+    0.0,
+    0.0,
+    1.5
+   ],
+   "disturbances": [
+    {
+     "tick": 60,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      0.3,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 120,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      0.0514,
+      0.2322,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "rung2_L4"
+  },
+  {
+   "lane": 5,
+   "command": [
+    0.0,
+    0.0,
+    -1.5
+   ],
+   "disturbances": [
+    {
+     "tick": 65,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      -0.3,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 125,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      0.1322,
+      0.0645,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "rung2_L5"
+  },
+  {
+   "lane": 6,
+   "command": [
+    3.5,
+    0.0,
+    0.0
+   ],
+   "disturbances": [
+    {
+     "tick": 70,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      0.3,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 130,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      6.7669,
+      0.9498,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "rung2_L6"
+  },
+  {
+   "lane": 7,
+   "command": [
+    1.0,
+    0.0,
+    1.0
+   ],
+   "disturbances": [
+    {
+     "tick": 75,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      -0.3,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 135,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      -0.373,
+      1.7316,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "rung2_L7"
+  }
+ ]
+}

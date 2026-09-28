@@ -83,8 +83,8 @@ In-editor authoring runs through the Unity CLI (`unity command …`, com.unity.p
   - [x] G0 meet8 PASS (8/8 lanes, each == solo athlete except bits/origin) · G6 harness dry run PASS (interim brain) · solo G5 re-verified (zero/random/rung0, contract v2 brains)
   - [x] `make_g6.py rung1` → plan + 8 solo refs; CPU meet pre-check PASS (5 s drift ≤ 2e-7)
   - [x] Unity: G0 meet8 8/8 · G2 ≤ 4e-16 · G3 ≤ 2.4e-6 · G4 (1 s) ≤ 1.8e-6 on all 8 lane refs · **G5/G6: all 8 lanes of Testbed_Rung1 vs their solo CPU runs PASS — qpos drift ≤ 2e-6 @ 1 s, ≤ 1.6e-5 @ 5 s, torque ratio 1.0000, same (no-)fall outcomes** · SteeringTests PASS · EditMode 18/18 · capture `parity/c6/rung1_tick252.png`
-- [ ] **C7 Rung 2 — train** omnidirectional + yaw to bar. **GATE G1.**
-- [ ] **C8 Rung 2 — Unity spot-check.** G3, G5, G6 with rung2 brain; commands switchable from HUD.
+- [x] **C7 Rung 2 — train** omnidirectional + yaw to bar. **GATE G1.** — `rung2.onnx` = r2_v6 it 1200: **G1 10/10** (0 falls, turntable 2.44 s both ways, brake 1.16 m, 20 m backward); margin set 22/30 (top-speed 3.2–3.8 m/s undershoot) → r2_v7 (sharper speed tracking) in progress. Path: r2_v1 (yaw decay) → r2_v2 (yaw rewards, 6/10) → symmetry augmentation + mirror loss (r2_v3–v3c) → **contract v3** gait clock (yaw weight 1.2) r2_v4 (7/10) → widened envelope r2_v5b (7/10) → lateral-acceleration command cap r2_v6 (10/10). See log.
+- [x] **C8 Rung 2 — Unity spot-check.** G3, G5, G6 with rung2 brain; commands switchable from HUD. — G2 4.4e-16 · G3 ≤ 4.3e-6 · G4 ≤ 9.5e-7 on 8 lane refs (stand / back / crab ± / spin ± / sprint 3.5 / walk-turn); **G6 PASS 8/8** in Testbed_Rung1 (1 s drift ≤ 4.6e-6); Testbed_Rung1 HUD presets Stop / Walk / Sprint / Back / Crab ◀▶ / Spin. **Phase C complete.**
 
 ## Phase D — Engine Polish & Game Loop (detailed plan, written 2026-09-27 after C6 passed)
 

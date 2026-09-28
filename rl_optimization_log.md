@@ -229,3 +229,8 @@ One entry per run or decision. Newest at the bottom.
 - r2_v6 gates: 300 7/10 · 600 8/10 · 900 9/10 · **1200 10/10** (turntable 2.44/2.44 s, brake 1.16 m, backward 20 m, 0 falls, yaw mean 0.17). The lateral-acceleration cap removed every yaw failure (from it 300 on).
 - **Margin set (30 seeds): 22/30.** 10 of 11 failing segments are sprints at 3.2–3.8 m/s (lin RMS 0.20–0.48), one crab 0.97 m/s (0.204). Steady-state probe: mean speed undershoots by ~4–5 % at every speed (2.5 → 2.40, 3.0 → 2.87, 3.5 → 3.35, 4.0 → 3.78 m/s) plus per-stride oscillation; peak torque at the ankle cap (220 Nm). The fine tracking kernel (std 0.5) pays 91 % at a 0.15 m/s shortfall — no incentive to close it; Rung 1's bar stopped at 3 m/s so it didn't show there.
 - **r2_v7** (task `…-Sym4`): r2_v6 + track_lin std 0.5 → 0.3 (same shortfall costs ~22 %). Warm start from r2_v6's best checkpoint.
+
+## 2026-09-28 04:50 · C8 PASS with rung2.onnx (r2_v6 it 1200) — Phase C complete
+- `rung2.onnx` exported; `make_g6.py rung2 rung2`: CPU meet pre-check PASS.
+- Unity: G2 4.4e-16, G3 ≤ 4.3e-6, G4 (1 s) ≤ 9.5e-7 on all 8 lane references (ParityHarness direct — the EditMode test list is fixed at compile time and did not yet include the new rung2 refs). **G6 8/8 PASS**, 1 s drift ≤ 4.6e-6; crab-right / spin lanes diverge chaotically by 5 s (13 / 27 cm) exactly like the CPU meet (height RMS ≤ 1.9e-3 m, torque ±0.2 %). Capture `parity/c8/rung2_tick252.png`.
+- r2_v7 (track_lin std 0.3, from r2_v6 it 1200) training to lift the margin set; if it beats rung2.onnx on the 30-seed margin set it replaces it (C8 re-run ~15 min).
