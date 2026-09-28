@@ -396,20 +396,31 @@ def compose_model(skin, geoms, inertials, with_scene: bool, n_cubes: int, defaul
 
 
 def compose_meet(skin, geoms, inertials, default_qpos: np.ndarray, n_lanes: int = N_LANES,
-                 n_cubes: int = N_CUBES_MEET) -> tuple[str, dict]:
+                 n_cubes: int = N_CUBES_MEET, origins: list[np.ndarray] | None = None, pedestal_h: float = 0.0,
+                 model: str | None = None) -> tuple[str, dict]:
     """Multi-athlete scene (G6 / events): lane k = the training athlete with every name prefixed `L<k>_`, its own
-    collision bits (lane isolation) and its pelvis shifted to lane_origin(k). Ground + cube pool as in the solo
-    scene. Returns (xml, layout) — layout is the lane table Unity and the evaluators share."""
-    root = ET.Element("mujoco", {"model": f"meet{n_lanes}"})
+    collision bits (lane isolation) and its pelvis shifted to origins[k] (default lane_origin(k)). Ground + cube pool as
+    in the solo scene. pedestal_h > 0: every lane stands on its own 1 m x 1 m pedestal (`L<k>_pedestal`, top at z = 0)
+    and the ground drops to -pedestal_h (Iron Pedestal heat). Returns (xml, layout) — the lane table Unity and the
+    evaluators share."""
+    root = ET.Element("mujoco", {"model": model or f"meet{n_lanes}"})
     option_block(root)
     wb = ET.SubElement(root, "worldbody")
     ET.SubElement(wb, "light", {"name": "sun", "pos": "0 0 5", "dir": "0 0 -1", "directional": "true"})
-    ET.SubElement(wb, "geom", {"name": "ground", "type": "plane", "size": "0 0 0.05", "contype": str(ALL_BITS),
-                               "conaffinity": str(ALL_BITS), "condim": "3", "friction": vec(GROUND_FRICTION)})
+    ground = {"name": "ground", "type": "plane", "size": "0 0 0.05", "contype": str(ALL_BITS),
+              "conaffinity": str(ALL_BITS), "condim": "3", "friction": vec(GROUND_FRICTION)}
+    if pedestal_h:
+        ground["pos"] = vec([0, 0, -pedestal_h])
+    ET.SubElement(wb, "geom", ground)
     contact = ET.Element("contact")
     all_actuators, key_qpos, lanes = [], [], []
     for k in range(n_lanes):
-        p, o = lane_prefix(k), lane_origin(k)
+        p, o = lane_prefix(k), (np.asarray(origins[k], float) if origins is not None else lane_origin(k))
+        if pedestal_h:
+            ET.SubElement(wb, "geom", {"name": p + "pedestal", "type": "box", "pos": vec(o + [0, 0, -pedestal_h / 2]),
+                                       "size": vec([PEDESTAL_HALF, PEDESTAL_HALF, pedestal_h / 2]),
+                                       "contype": str(ALL_BITS), "conaffinity": str(ALL_BITS), "condim": "3",
+                                       "friction": vec(GROUND_FRICTION)})
         pelvis, actuators, _ = build_robot(skin, geoms, inertials, lane=k)
         tree_order = [j.get("name") for j in pelvis.iter("joint")]
         actuators = sorted(actuators, key=lambda a: tree_order.index(a[0]))
@@ -426,20 +437,39 @@ def compose_meet(skin, geoms, inertials, default_qpos: np.ndarray, n_lanes: int 
         lanes.append({"lane": k, "prefix": p, "origin": o.tolist(), "cubes": [2 * k, 2 * k + 1]})
     inertia = CUBE_MASS * (2 * CUBE_HALF) ** 2 / 6.0
     for i in range(n_cubes):
-        cb = ET.SubElement(wb, "body", {"name": f"cube{i}", "pos": vec(cube_park_pos(i))})
+        park = cube_park_pos(i) - [0, 0, pedestal_h]
+        cb = ET.SubElement(wb, "body", {"name": f"cube{i}", "pos": vec(park)})
         ET.SubElement(cb, "inertial", {"pos": "0 0 0", "mass": f(CUBE_MASS), "diaginertia": vec([inertia] * 3)})
         ET.SubElement(cb, "freejoint", {"name": f"cube{i}_free"})
         ET.SubElement(cb, "geom", {"name": f"cube{i}_geom", "type": "box", "size": vec([CUBE_HALF] * 3),
                                    "contype": str(ALL_BITS), "conaffinity": str(ALL_BITS), "condim": "3",
                                    "friction": f"{f(CUBE_FRICTION)} 0.005 0.0001"})
-        key_qpos.append(np.concatenate([cube_park_pos(i), [1, 0, 0, 0]]))
+        key_qpos.append(np.concatenate([park, [1, 0, 0, 0]]))
     root.append(contact)
     actuator_block(root, all_actuators)
     kf = ET.SubElement(root, "keyframe")
     ET.SubElement(kf, "key", {"name": "default", "qpos": vec(np.concatenate(key_qpos))})
-    layout = {"n_lanes": n_lanes, "lane_width": LANE_WIDTH, "n_cubes": n_cubes, "lanes": lanes,
+    layout = {"n_lanes": n_lanes, "lane_width": LANE_WIDTH, "n_cubes": n_cubes, "lanes": lanes, "pedestal_h": pedestal_h,
               "note": "lane k: names prefixed L<k>_, pelvis shifted by origin; solo-scene cube i -> meet cube cubes[i]"}
     return indent(root), layout
+
+
+VENUES_JSON = ROOT.parent / "SourceArt" / "Stadium" / "venues.json"
+
+
+def venue_lane_origins(event: int, reference_lane: int) -> list[np.ndarray]:
+    """Competitor spots of a stadium event (venues.json, written by SourceArt/Stadium/build_venues.py) in the athlete
+    frame: the reference lane's spot is the origin and its facing is +x (EventScenes.PlaceStadium does the same turn in
+    Unity). Heights are relative to the reference spot (the surface the athlete stands on)."""
+    ev = json.loads(VENUES_JSON.read_text())["events"][f"{event:02d}"]
+    ref = ev["lanes"][reference_lane]
+    p0, yaw = np.asarray(ref["pos"], float), math.radians(ref["yaw_deg"])
+    c, s = math.cos(-yaw), math.sin(-yaw)
+    out = []
+    for lane in ev["lanes"]:
+        d = np.asarray(lane["pos"], float) - p0
+        out.append(np.array([c * d[0] - s * d[1], s * d[0] + c * d[1], d[2]]))
+    return out
 
 
 def cube_entity_xml() -> str:
@@ -540,6 +570,11 @@ def main() -> int:
                                       for i in range(N_CUBES_TRAINING)])]))
     (ASSETS / "scene_pedestal.xml").write_text(header + pedestal_xml + "\n")
     meet_xml, meet_layout = compose_meet(skin, geoms, inertials, qdef)
+    ped_origins = venue_lane_origins(1, reference_lane=3)
+    ped8_xml, ped8_layout = compose_meet(skin, geoms, inertials, qdef, origins=ped_origins, pedestal_h=PEDESTAL_H,
+                                         model="pedestal8")
+    (ASSETS / "scene_pedestal8.xml").write_text(header + ped8_xml + "\n")
+    (ASSETS / "pedestal8_layout.json").write_text(json.dumps(ped8_layout, indent=1) + "\n")
     (ASSETS / f"scene_meet{N_LANES}.xml").write_text(header + meet_xml + "\n")
     (ASSETS / f"meet{N_LANES}_layout.json").write_text(json.dumps(meet_layout, indent=1) + "\n")
 

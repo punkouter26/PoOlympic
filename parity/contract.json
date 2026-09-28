@@ -9,6 +9,58 @@
  "gait_hz_base": 0.8,
  "gait_hz_per_mps": 0.2,
  "phase_cmd_threshold": 0.1,
+ "obs_noise": [
+  {
+   "term": "base_lin_vel_heading",
+   "offset": 0,
+   "size": 3,
+   "amplitude": 0.1
+  },
+  {
+   "term": "base_ang_vel_local",
+   "offset": 3,
+   "size": 3,
+   "amplitude": 0.2
+  },
+  {
+   "term": "projected_gravity",
+   "offset": 6,
+   "size": 3,
+   "amplitude": 0.05
+  },
+  {
+   "term": "base_height",
+   "offset": 9,
+   "size": 1,
+   "amplitude": 0.02
+  },
+  {
+   "term": "joint_pos_rel",
+   "offset": 15,
+   "size": 23,
+   "amplitude": 0.01
+  },
+  {
+   "term": "joint_vel_scaled",
+   "offset": 38,
+   "size": 23,
+   "amplitude": 0.05
+  }
+ ],
+ "trait_ranges": {
+  "strength": [
+   0.85,
+   1.15
+  ],
+  "latency_substeps": [
+   0,
+   4
+  ],
+  "obs_noise": [
+   0.0,
+   1.0
+  ]
+ },
  "steering": {
   "heading_gain": 2.0,
   "lane_gain": 0.3,

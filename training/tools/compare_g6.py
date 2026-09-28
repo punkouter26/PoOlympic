@@ -5,7 +5,7 @@
   g6 <name>     G6: each Unity lane run (parity/unity_run_g6_<name>_L<k>.json) vs its solo CPU reference, G5 criteria
                 -> parity/g6_report_<name>_unity.json
 
-Usage: uv run python tools/compare_g6.py g0
+Usage: uv run python tools/compare_g6.py g0 [meet8|pedestal8]
        uv run python tools/compare_g6.py g6 <name>
 """
 
@@ -34,16 +34,21 @@ def solo_equivalent(fp: dict) -> dict:
         if key not in ("ground", "cube_geom"):
             g["contype"] = g["conaffinity"] = None
     out["bodies"]["pelvis"]["pos"] = None
+    out["geoms"]["ground"]["pos"] = None       # the pedestal scenes lower the ground to -0.5 m
     return out
 
 
-def g0() -> int:
-    mm = mujoco.MjModel.from_xml_path(str(meet.MEET_XML))
+def g0(scene: str = "meet8") -> int:
+    """scene: meet8 (scene_meet8.xml) or pedestal8 (scene_pedestal8.xml); Unity dumps fingerprint_unity_<scene>_L<k>.json."""
+    xml = ROOT / "assets" / f"scene_{scene}.xml"
+    layout = json.loads((ROOT / "assets" / f"{scene}_layout.json").read_text())
+    lanes = [meet.Lane(l["lane"], l["prefix"], None, tuple(l["cubes"])) for l in layout["lanes"]]
+    mm = mujoco.MjModel.from_xml_path(str(xml))
     solo = F.fingerprint(mujoco.MjModel.from_xml_path(str(ROOT / "assets" / "scene_matt.xml")))
     ok = True
-    for lane in meet.load_layout():
+    for lane in lanes:
         py = F.fingerprint(mm, lane.prefix, f"cube{lane.cubes[0]}")
-        uni = json.loads((PARITY / f"fingerprint_unity_meet8_L{lane.lane}.json").read_text())
+        uni = json.loads((PARITY / f"fingerprint_unity_{scene}_L{lane.lane}.json").read_text())
         errs = F.compare(F.normalize_for_compare(py), F.normalize_for_compare(uni))
         same = F.compare(solo_equivalent(solo), solo_equivalent(py))
         bits = {g["contype"] for key, g in py["geoms"].items() if key not in ("ground", "cube_geom")}
@@ -52,7 +57,7 @@ def g0() -> int:
         for e in (errs + same)[:10]:
             print("   ", e)
         ok &= not errs and not same
-    print("G0 meet8", "PASS" if ok else "FAIL")
+    print(f"G0 {scene}", "PASS" if ok else "FAIL")
     return 0 if ok else 1
 
 
@@ -77,4 +82,4 @@ def g6(name: str) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(g0() if sys.argv[1] == "g0" else g6(sys.argv[2]))
+    raise SystemExit(g0(sys.argv[2] if len(sys.argv) > 2 else "meet8") if sys.argv[1] == "g0" else g6(sys.argv[2]))

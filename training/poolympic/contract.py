@@ -47,6 +47,12 @@ OBS_LAYOUT = [  # (name, size) — order is the contract
     ("last_action", 23),
 ]
 OBS_DIM = sum(s for _, s in OBS_LAYOUT)
+# Per-term uniform observation-noise amplitudes used in training (matt_env actor terms). An athlete's "sensor noise"
+# trait scales these (0 = clean, 1 = training level).
+OBS_NOISE = {"base_lin_vel_heading": 0.1, "base_ang_vel_local": 0.2, "projected_gravity": 0.05, "base_height": 0.02,
+             "joint_pos_rel": 0.01, "joint_vel_scaled": 0.05}
+# Athlete traits (DESIGN §1: per-lane stat differences -> odds). Same ranges as the training domain randomisation.
+TRAIT_RANGES = {"strength": (0.85, 1.15), "latency_substeps": (0, 4), "obs_noise": (0.0, 1.0)}
 NUM_ACTIONS = 23
 
 
@@ -175,6 +181,10 @@ def export_contract(fingerprint_sha256: str | None = None) -> dict:
         "gait_hz_base": GAIT_HZ_BASE,
         "gait_hz_per_mps": GAIT_HZ_PER_MPS,
         "phase_cmd_threshold": PHASE_CMD_THRESHOLD,
+        "obs_noise": [{"term": k, "offset": offsets[k]["offset"], "size": offsets[k]["size"], "amplitude": v}
+                      for k, v in OBS_NOISE.items()],
+        "trait_ranges": {"strength": list(TRAIT_RANGES["strength"]), "latency_substeps": list(TRAIT_RANGES["latency_substeps"]),
+                         "obs_noise": list(TRAIT_RANGES["obs_noise"])},
         "steering": {"heading_gain": HEADING_GAIN, "lane_gain": LANE_GAIN, "wz_limit": STEER_WZ_LIMIT,
                      "law": "wz = clip(heading_gain * wrap(atan(-lane_gain * lane_offset_y * dir) - yaw), +-wz_limit); dir = -1 if vx_cmd < 0 else 1"},
         "obs_dim": OBS_DIM,

@@ -57,13 +57,106 @@ namespace PoOlympic.Editor
             return st;
         }
 
+        public const string IronPedestalHeatScene = "Assets/PoOlympic/Scenes/Event_IronPedestal_Heat.unity";
+        public const string PedestalHeatSource = "training/assets/scene_pedestal8.xml";
+        public const string PedestalHeatLayout = "training/assets/pedestal8_layout.json";
+
+        /// <summary>
+        /// Event 1 official heat: 8 runners on the 8 stadium pedestals (training/assets/scene_pedestal8.xml; lane origins
+        /// come from the venue layout, so physics pedestals = stadium pedestals), 16 pooled cubes, IronPedestalHeat + HUD.
+        /// </summary>
+        [MenuItem("PoOlympic/Events/Build Event 1 — Iron Pedestal Heat (8 runners)")]
+        public static string BuildIronPedestalHeat() => BuildIronPedestalHeat(DefaultRung0Brain);
+
+        public static string BuildIronPedestalHeat(string brainFile)
+        {
+            if (EditorApplication.isPlaying) throw new InvalidOperationException("exit Play mode first");
+            ParityHarness.SyncArtifacts();
+            AthleteImport.SyncModel(PedestalHeatLayout);
+            var layout = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(Path.Combine(Path.GetDirectoryName(Application.dataPath), PedestalHeatLayout)));
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var physics = AthleteImport.ImportIntoActiveScene(PedestalHeatSource);
+
+            var src = EditorSceneManager.OpenScene(ParityHarness.TestbedScene, OpenSceneMode.Additive);
+            GameObject Copy(string name)
+            {
+                var clone = UnityEngine.Object.Instantiate(Array.Find(src.GetRootGameObjects(), g => g.name == name));
+                clone.name = name;
+                SceneManager.MoveGameObjectToScene(clone, scene);
+                return clone;
+            }
+            var cam = Copy("Main Camera");
+            Copy("Sun");
+            EditorSceneManager.CloseScene(src, true);
+            SceneManager.SetActiveScene(scene);
+            PlaceStadium(scene, 1, AthleteLane);
+
+            var cubeMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/PoOlympic/Materials/PoolCube.mat");
+            foreach (var rend in physics.GetComponentsInChildren<Renderer>(true))
+            {
+                if (rend.GetComponent<MjGeom>() == null) continue;
+                bool cube = rend.gameObject.name.StartsWith("cube");
+                rend.enabled = cube;                         // pedestals are drawn by the stadium (identical boxes)
+                if (cube && cubeMat != null) rend.sharedMaterial = cubeMat;
+            }
+
+            var contract = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/PoOlympic/Models/contract.json");
+            var brain = AssetDatabase.LoadAssetAtPath<ModelAsset>($"{ParityHarness.ModelsFolder}/Brains/{brainFile}") ?? throw new FileNotFoundException(brainFile);
+            var sidecar = AssetDatabase.LoadAssetAtPath<TextAsset>($"{ParityHarness.ModelsFolder}/Brains/{brainFile}.json");
+            var mattPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(VisualBinding.MattAsset);
+            var pool = new GameObject("CubePool").AddComponent<MjCubePool>();
+            pool.poolSize = (int)layout["n_cubes"];
+            var heat = new GameObject("IronPedestalHeat").AddComponent<IronPedestalHeat>();
+            heat.cubes = pool;
+            MjBody focusPelvis = null;
+            foreach (var l in layout["lanes"])
+            {
+                int k = (int)l["lane"];
+                string prefix = (string)l["prefix"];
+                var o = l["origin"];
+                var go = new GameObject($"Athlete_Lane{k + 1}");
+                var r = go.AddComponent<PolicyRunner>();
+                r.contractJson = contract;
+                r.brain = brain;
+                r.brainSidecar = sidecar;
+                r.athletePrefix = prefix;
+                r.laneOriginX = (double)o[0];
+                r.laneOriginY = (double)o[1];
+                r.cubeSlots = l["cubes"].Select(c => (int)c).ToArray();
+                r.useStandardParityScript = false;
+                var visual = (GameObject)PrefabUtility.InstantiatePrefab(mattPrefab, go.transform);
+                visual.name = "MATT_Visual";
+                visual.transform.SetPositionAndRotation(new Vector3((float)o[0], (float)o[2], (float)o[1]), VisualBinding.GltfToPlugin);
+                var binder = visual.AddComponent<BoneBinder>();
+                binder.Capture(physics.transform, prefix);
+                var (pe, re) = binder.BindError();
+                if (pe > 0.01f || re > 1f) throw new InvalidOperationException($"lane {k} bind error {pe * 1000f:F2} mm / {re:F2} deg");
+                heat.runners.Add(new IronPedestalHeat.Runner { runner = r, name = $"L{k + 1}" });
+                if (k == AthleteLane) focusPelvis = Array.Find(physics.GetComponentsInChildren<MjBody>(true), bd => bd.name == prefix + "pelvis");
+            }
+            pool.runner = heat.runners[0].runner;
+            var hud = new GameObject("HeatHUD").AddComponent<HeatHud>();
+            hud.heat = heat;
+            hud.version = $"v0 · {Path.GetFileNameWithoutExtension(brainFile)} · 8 runners";
+
+            var cc = cam.GetComponent<Camera>();
+            cc.nearClipPlane = 0.2f;
+            cc.farClipPlane = 1000f;
+            var bc = cam.GetComponent<BroadcastCamera>();
+            bc.target = focusPelvis;
+            bc.focusOffset = new Vector3(0f, 0f, 1.5f);      // centre of the row (lanes 1..8 at Unity z = -9 .. +12)
+            bc.offset = new Vector3(8f, 3.4f, -17f);         // front-left end of the row: all 8 pedestals recede in a 9:16 frame
+            EditorSceneManager.SaveScene(scene, IronPedestalHeatScene);
+            return $"{IronPedestalHeatScene}: {heat.runners.Count} runners, brain {brainFile}";
+        }
+
         public const string HubScene = "Assets/PoOlympic/Scenes/Stadium_Hub.unity";
         public const string CatalogJson = "Assets/PoOlympic/Art/Stadium/events_catalog.json";
 
         /// <summary>Event number → built event scene (grows as events are implemented).</summary>
         public static readonly System.Collections.Generic.Dictionary<int, string> EventScenePaths = new()
         {
-            { 1, IronPedestalScene },
+            { 1, IronPedestalHeatScene },   // official 8-runner heat (solo practice: Event_IronPedestal.unity)
         };
 
         /// <summary>
@@ -127,6 +220,7 @@ namespace PoOlympic.Editor
 
             var list = new System.Collections.Generic.List<EditorBuildSettingsScene> { new(HubScene, true) };
             foreach (var path in EventScenePaths.Values) list.Add(new EditorBuildSettingsScene(path, true));
+            list.Add(new EditorBuildSettingsScene(IronPedestalScene, true));
             EditorBuildSettings.scenes = list.ToArray();
             return $"{HubScene}: {venues.Count} event venues, {venues.Count(x => x.Playable)} playable; build scenes {list.Count}";
         }

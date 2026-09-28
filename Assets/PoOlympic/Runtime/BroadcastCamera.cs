@@ -15,6 +15,8 @@ namespace PoOlympic
         public Vector2 aspect = new(9, 16);
         public Vector3 offset = new(0.6f, 0.35f, -4.2f);
         public float lookHeight = 0.9f;
+        [Tooltip("Added to the target position before framing (e.g. centre of a row of competitors).")]
+        public Vector3 focusOffset;
         public float followSharpness = 6f;
         Camera _cam;
 
@@ -24,7 +26,7 @@ namespace PoOlympic
         {
             ApplyLetterbox();
             if (target == null) return;
-            var p = target.transform.position;
+            var p = target.transform.position + focusOffset;
             var focus = new Vector3(p.x, lookHeight, p.z);
             var want = focus + offset;
             float k = 1f - Mathf.Exp(-followSharpness * Time.unscaledDeltaTime);

@@ -103,7 +103,12 @@ Rules: every surface an athlete can touch is a MuJoCo geom generated into the MJ
   - [x] **z-fighting fixed**: decal layers ≥ 1 cm apart (`Z_PAD … Z_LABEL` in build_venues.py; shell lane / finish lines + start extension lifted), redundant pedestal cap removed, audit = 0 overlapping different-material decals < 8 mm; event camera near plane 0.05 → 0.2 m (hub 0.5 m).
   - [x] `EventScenes.PlaceStadium(event, lane)`: stadium turned + shifted so the competitor spot lands on the MuJoCo origin facing +x; Event 1 athlete = lane 4 (`E01_L3`), stadium pedestal ≡ MuJoCo pedestal (bounds verified), 7 pedestals ready for D4 · `parity/d1/event1_venue.png` · EditMode 18/18
 - [ ] **D3 Broadcast** — 9:16 tracking cameras per event, HUD polish (UI Toolkit), result cards
-- [ ] **D4 8-lane Iron Pedestal heat** — rules per catalogue: 8 runners, **last one standing wins** (escalating gusts until one remains); per-lane traits (strength / latency / obs noise) → survival odds; pedestal per lane in the meet MJCF
+- [x] **D4 8-lane Iron Pedestal heat** — rules per catalogue: 8 runners, **last one standing wins**
+  - physics `scene_pedestal8.xml` (+ `pedestal8_layout.json`): 8 lane-isolated athletes, each on its own 1 × 1 × 0.5 m pedestal; lane origins from `venues.json` (E01, relative to lane 4) → physics pedestals ≡ stadium pedestals · **G0 pedestal8 PASS 8/8**
+  - athlete traits (contract `trait_ranges` / `obs_noise`): strength ×[0.85, 1.15] on force limits, latency 0–4 substeps (mjlab delay semantics), sensor noise ×[0, 1] of training noise — `PolicyRunner.SetTraits`, nominal = parity (EditMode 18/18)
+  - rules (Python `poolympic/events/iron_pedestal.py` ≡ Unity `IronPedestalHeat`): 3 s rounds, gust 0.3 m/s + 0.05/round (own seeded direction per lane), cube every 3rd round, out = fall rule / stepped off (`AthleteJudge`), ranking by elimination time; tuned on CPU: heats 27–41 s (mean 35), first out ~17–26 s
+  - Unity `Event_IronPedestal_Heat.unity` (*Build Event 1 — Iron Pedestal Heat*), `HeatHud` standings (status, out time, traits), winner banner; hub Event 1 ▸ opens the heat. Play-through: L1 wins after 31.6 s, 11 rounds (`parity/d4/heat_*.png`)
+  - [ ] odds from traits (betting layer) · Iron Pedestal fine-tune for edge margin (optional)
 - [ ] **D5 remaining Sprint Series events** 5 Gust Gauntlet · 8 30m Dash · 19 Terminal Velocity (rung1) · 9, 10, 11, 12, 22 (rung2, after C8) — then the rest of the catalogue: **Phase E** below
 - [ ] **D6** full suite re-validation + perf pass
 
@@ -116,7 +121,7 @@ Skill gaps: events marked **S** need behaviours the current contract cannot comm
 | # | Event | Rules (summary) | Venue | Props (MJCF) | Brain / rung | Status |
 |---|---|---|---|---|---|---|
 | **Phase 1 — Stability & Balance** |
-| 1 | The Iron Pedestal | 8 runners on 1 m × 1 m pedestals; last to keep equilibrium without stepping off wins | CentreStage | pedestal (per lane in the meet) | R0 | 1-biped slice done (20 s survive); 8-lane *last-standing* with escalating gusts = D4 |
+| 1 | The Iron Pedestal | 8 runners on 1 m × 1 m pedestals; last to keep equilibrium without stepping off wins | CentreStage | pedestal (per lane in the meet) | R0 | **playable**: 8-runner last-standing heat (D4) + solo practice scene |
 | 2 | Torso Archer | feet planted, track fast overhead flight targets with the upper body; angular accuracy, zero foot slip | CentreStage | flying target (mocap-free kinematic body) | **S** upper-body target cmd | todo |
 | 3 | Deep Squat Endurance | rhythmic squat reps; lowest torso drop + balance retention | CentreStage | — | **S** pelvis-height cmd | todo |
 | 4 | Precision Javelin Reach | single-arm extension to dynamic targets at max reach, stance anchored | CentreStage | target marker | **S** hand-target cmd | todo |

@@ -39,6 +39,15 @@ namespace PoOlympic
         [Tooltip("Pool cube slots this lane owns: a lane-local script's cube<i> is cube<cubeSlots[i]> in the scene.")]
         public int[] cubeSlots = { 0, 1, 2, 3 };
 
+        [Header("Athlete traits (DESIGN §1: per-lane stats → odds; nominal = parity)")]
+        [Tooltip("Scales this athlete's actuator force limits (training DR: effort limits x[0.85, 1.15]).")]
+        public float strength = 1f;
+        [Tooltip("Physics substeps (0-4) before a new ctrl reaches the actuators (mjlab XmlActuator delay).")]
+        public int latencySubsteps;
+        [Tooltip("Scales the training observation noise (contract.obs_noise); 0 = clean.")]
+        public float obsNoise;
+        public int noiseSeed;
+
         [Header("Disturbances")]
         public bool useStandardParityScript = true;
         public List<Disturbance> disturbances = new();
@@ -59,7 +68,8 @@ namespace PoOlympic
         readonly List<Disturbance> _pending = new();
         bool _resetRequested;
         float[] _obs, _ctrlF, _actionRaw, _lastAction;
-        double[] _ctrl;
+        double[] _ctrl, _ctrlPrev, _baseForceRange;
+        System.Random _noiseRng;
         double _phase;
         int _substep;
         StringBuilder _rec;
@@ -112,7 +122,16 @@ namespace PoOlympic
             _actionRaw = new float[n];
             _lastAction = new float[n];
             _ctrl = new double[n];
+            _ctrlPrev = new double[n];
             Array.Copy(Binding.DefaultPos, _ctrl, n);
+            Array.Copy(Binding.DefaultPos, _ctrlPrev, n);
+            _baseForceRange = new double[2 * n];
+            for (int i = 0; i < n; i++)
+            {
+                _baseForceRange[2 * i] = m->actuator_forcerange[2 * Binding.ActuatorIds[i]];
+                _baseForceRange[2 * i + 1] = m->actuator_forcerange[2 * Binding.ActuatorIds[i] + 1];
+            }
+            ApplyTraits(m);
             if (!holdDefaultPose) _brain = new PolicyBrain(brain, Contract.obs_dim);
             if (!string.IsNullOrEmpty(recordName)) BeginRecording(m);
             ControlTick = 0;
@@ -146,6 +165,26 @@ namespace PoOlympic
             MujocoLib.mj_forward(m, d);
         }
 
+        /// <summary>Set this athlete's traits (takes effect immediately; strength rescales its actuator force limits).</summary>
+        public void SetTraits(float strengthScale, int latency, float noise, int seed)
+        {
+            strength = strengthScale;
+            latencySubsteps = Math.Clamp(latency, 0, Contract != null ? Contract.decimation : 4);
+            obsNoise = noise;
+            noiseSeed = seed;
+            if (Initialized && MjScene.InstanceExists) ApplyTraits(MjScene.Instance.Model);
+        }
+
+        void ApplyTraits(MujocoLib.mjModel_* m)
+        {
+            for (int i = 0; i < Binding.ActuatorIds.Length; i++)
+            {
+                m->actuator_forcerange[2 * Binding.ActuatorIds[i]] = _baseForceRange[2 * i] * strength;
+                m->actuator_forcerange[2 * Binding.ActuatorIds[i] + 1] = _baseForceRange[2 * i + 1] * strength;
+            }
+            _noiseRng = new System.Random(noiseSeed);
+        }
+
         /// <summary>Queue a native-MuJoCo disturbance for the next control tick. World frame: "root" means this
         /// athlete's root; cube targets are scene pool slots (MjCubePool).</summary>
         public void Request(Disturbance d)
@@ -174,11 +213,14 @@ namespace PoOlympic
                 _resetRequested = false;
                 ResetToDefault(m, d);
                 Array.Copy(Binding.DefaultPos, _ctrl, _ctrl.Length);
+                Array.Copy(Binding.DefaultPos, _ctrlPrev, _ctrlPrev.Length);
                 Array.Clear(_lastAction, 0, _lastAction.Length);
                 _phase = 0;
             }
             if (_substep % Contract.decimation == 0) ControlStep(m, d);
-            for (int i = 0; i < _ctrl.Length; i++) d->ctrl[Binding.ActuatorIds[i]] = _ctrl[i];
+            // latency trait: a new ctrl reaches the actuators `latencySubsteps` physics steps after its control tick
+            var applied = _substep % Contract.decimation >= latencySubsteps ? _ctrl : _ctrlPrev;
+            for (int i = 0; i < applied.Length; i++) d->ctrl[Binding.ActuatorIds[i]] = applied[i];
             if (_substep % Contract.decimation == 0)
             {
                 if (_byTick.TryGetValue(ControlTick, out var list))
@@ -204,6 +246,11 @@ namespace PoOlympic
             }
             _phase = Contract.AdvancePhase(_phase, command);
             ObservationBuilder.Build(Contract, Binding, d->qpos, d->qvel, command, _phase, _lastAction, _obs);
+            if (obsNoise > 0f && Contract.obs_noise != null)
+                foreach (var t in Contract.obs_noise)
+                    for (int i = 0; i < t.size; i++)
+                        _obs[t.offset + i] += (float)((_noiseRng.NextDouble() * 2.0 - 1.0) * t.amplitude * obsNoise);
+            Array.Copy(_ctrl, _ctrlPrev, _ctrl.Length);
             if (holdDefaultPose)
             {
                 Array.Copy(Binding.DefaultPos, _ctrl, _ctrl.Length);

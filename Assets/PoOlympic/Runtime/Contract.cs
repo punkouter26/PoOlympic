@@ -29,6 +29,23 @@ namespace PoOlympic
         }
 
         [Serializable]
+        public class ObsNoiseTerm
+        {
+            public string term;
+            public int offset;
+            public int size;
+            public double amplitude;
+        }
+
+        [Serializable]
+        public class TraitRanges
+        {
+            public double[] strength;
+            public double[] latency_substeps;
+            public double[] obs_noise;
+        }
+
+        [Serializable]
         public class JointQpos
         {
             public string joint;
@@ -45,6 +62,8 @@ namespace PoOlympic
         public double gait_hz_per_mps;
         public double phase_cmd_threshold;
         public Steering steering;
+        public ObsNoiseTerm[] obs_noise;
+        public TraitRanges trait_ranges;
         public int obs_dim;
         public int num_actions;
         public string root_joint;

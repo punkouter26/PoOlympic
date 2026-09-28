@@ -50,9 +50,7 @@ namespace PoOlympic
 
         System.Random _rng;
         int _liveStartTick, _nextGustTick, _nextCubeTick;
-        int _torsoBody = -1;
-        int[] _footGeoms;
-        readonly Dictionary<int, bool> _groundGeoms = new();
+        AthleteJudge _judge;
 
         float TickSeconds => (float)(runner.Contract.timestep * runner.Contract.decimation);
         int Ticks(float s) => Mathf.RoundToInt(s / TickSeconds);
@@ -72,17 +70,6 @@ namespace PoOlympic
             Outcome = "";
         }
 
-        unsafe void BindIndices(MujocoLib.mjModel_* m)
-        {
-            var bodies = AthleteBinding.NameIndex(m, (int)MujocoLib.mjtObj.mjOBJ_BODY, (int)m->nbody);
-            var geoms = AthleteBinding.NameIndex(m, (int)MujocoLib.mjtObj.mjOBJ_GEOM, (int)m->ngeom);
-            var p = runner.athletePrefix;
-            _torsoBody = bodies[p + "torso"];
-            _footGeoms = new[] { geoms[p + "foot_l_geom0"], geoms[p + "toe_l_geom0"], geoms[p + "foot_r_geom0"], geoms[p + "toe_r_geom0"] };
-            foreach (var n in new[] { "ground", "pedestal" })
-                if (geoms.TryGetValue(n, out var g)) _groundGeoms[g] = true;
-        }
-
         double Uniform(Vector2 range) => range.x + _rng.NextDouble() * (range.y - range.x);
 
         unsafe void Update()
@@ -90,7 +77,7 @@ namespace PoOlympic
             if (runner == null || !runner.Initialized || !MjScene.InstanceExists || MjScene.Instance.Data == null) return;
             var m = MjScene.Instance.Model;
             var d = MjScene.Instance.Data;
-            if (_torsoBody < 0) BindIndices(m);
+            _judge ??= new AthleteJudge(m, runner, "ground", "pedestal") { fallPelvisZ = fallPelvisZ, fallTiltDeg = fallTiltDeg, steppedOffZ = steppedOffZ };
             PhaseTime += Time.deltaTime;
             switch (Current)
             {
@@ -119,7 +106,7 @@ namespace PoOlympic
                         Cubes++;
                         _nextCubeTick += Ticks((float)Uniform(cubeIntervalSeconds));
                     }
-                    var why = Eliminated(m, d);
+                    var why = _judge.Eliminated(m, d);
                     if (why != null) Finish(why, won: false);
                     else if (LiveTime >= durationSeconds) Finish("SURVIVED", won: true);
                     break;
@@ -138,24 +125,6 @@ namespace PoOlympic
             BestTime = Mathf.Max(BestTime, LiveTime);
             OnResult?.Invoke(this);
             Debug.Log($"[IronPedestal] attempt {Attempt} seed {seed + Attempt}: {outcome} at {LiveTime:F2} s ({Gusts} gusts, {Cubes} cubes)");
-        }
-
-        /// <summary>DESIGN §1 fall rule + leaving the pedestal. Null while still in the event.</summary>
-        unsafe string Eliminated(MujocoLib.mjModel_* m, MujocoLib.mjData_* d)
-        {
-            if (runner.PelvisHeight(d) < fallPelvisZ) return "FELL";
-            double tiltZ = d->xmat[9 * _torsoBody + 8];
-            if (Math.Acos(Math.Clamp(tiltZ, -1, 1)) * 180 / Math.PI > fallTiltDeg) return "FELL";
-            foreach (var g in _footGeoms)
-                if (d->geom_xpos[3 * g + 2] < steppedOffZ) return "STEPPED OFF";
-            for (int i = 0; i < d->ncon; i++)
-            {
-                var c = d->contact[i];
-                int other = _groundGeoms.ContainsKey(c.geom1) ? c.geom2 : _groundGeoms.ContainsKey(c.geom2) ? c.geom1 : -1;
-                if (other < 0 || Array.IndexOf(_footGeoms, other) >= 0) continue;
-                if (m->body_rootid[m->geom_bodyid[other]] == m->jnt_bodyid[runner.Binding.OwnJoints[0]]) return "FELL";
-            }
-            return null;
         }
     }
 }
