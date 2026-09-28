@@ -33,7 +33,7 @@ def _zombie(rung: str):
     return make
 
 
-TASKS.update({f"zombie_{r}": _zombie(r) for r in ("rung0", "rung1", "rung2")})
+TASKS.update({f"zombie_{r}": _zombie(r) for r in ("rung0", "rung1", "rung2", "rung2_base")})
 
 
 def main(task: str = "rung0") -> int:
@@ -101,6 +101,8 @@ def main(task: str = "rung0") -> int:
         if k.startswith("dr_") or k in ("push_robot", "drop_cube"):
             cfg.events.pop(k)
     cfg.scene.entities["robot"].articulation.actuators[0].delay_max_lag = 0
+    # no terminations here: a fall mid-sweep resets the episode and ctrl jumps, which reads as a wiring error
+    cfg.terminations = {k: v for k, v in cfg.terminations.items() if k == "time_out"}
     env = ManagerBasedRlEnv(cfg=cfg, device="cuda:0")
     env.reset()
     m = env.sim.mj_model

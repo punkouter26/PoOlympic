@@ -137,6 +137,35 @@ RUNG2_STAGES = [dict(_scaled_env(s), step=s["step"]) for s in M.RUNG2_STAGES]
 RUNG2_TRAIN_ENVELOPE = _scaled_env(M.RUNG2_TRAIN_ENVELOPE)
 
 
+def zombie_rung2_base_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """Rung 2 first run = MATT's r2_v1 recipe (matt_rung2_env_cfg) on the scaled envelope: direct yaw commands with the
+    strong yaw kernels, 15 % stops, MATT's RUNG2_STAGES curriculum — none of the later r2 additions (symmetric runner,
+    lateral-acceleration cap, sprint focus, sharp linear kernel). Starting straight on the final recipe (z2_v1) drove
+    the warm-started zombie into standing still (track_lin 1.52 -> 0.30, velocity error rising)."""
+    _check_body()
+    cfg = zombie_rung1_env_cfg(play=play)
+    cmd = cfg.commands["athlete"]
+    cmd.heading_command = False
+    cmd.rel_heading_envs = 0.0
+    cmd.rel_standing_envs = 0.15
+    cmd.resampling_time_range = (3.0 * TS, 8.0 * TS)
+    s0 = RUNG2_STAGES[0]
+    cmd.ranges = mdp.AthleteCommandCfg.Ranges(lin_vel_x=s0["lin_vel_x"], lin_vel_y=s0["lin_vel_y"],
+                                              ang_vel_z=s0["ang_vel_z"], heading=None)
+    rw = cfg.rewards
+    rw["track_ang"] = RewardTermCfg(func=vel_mdp.track_angular_velocity, weight=2.0,
+                                    params={"command_name": "athlete", "std": 0.5 * WS})
+    rw["track_ang_coarse"] = RewardTermCfg(func=vel_mdp.track_angular_velocity, weight=1.0,
+                                           params={"command_name": "athlete", "std": 1.0 * WS})
+    rw["posture"].weight = 0.25
+    cfg.curriculum = {"command_vel": CurriculumTermCfg(func=vel_mdp.commands_vel, params={
+        "command_name": "athlete", "velocity_stages": RUNG2_STAGES})}
+    if play:
+        last = RUNG2_STAGES[-1]
+        cmd.ranges.lin_vel_x, cmd.ranges.lin_vel_y, cmd.ranges.ang_vel_z = last["lin_vel_x"], last["lin_vel_y"], last["ang_vel_z"]
+    return cfg
+
+
 def zombie_rung2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     """Rung 2 — omnidirectional + yaw, MATT's final recipe (r2_v8: symmetric runner, curriculum to the widened
     envelope, lateral-acceleration cap, sharp linear tracking, sprint focus) on the scaled envelope. Warm start from the
