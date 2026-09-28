@@ -392,3 +392,22 @@ def matt_pedestal2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
             "start": 0.3, "step": 0.02, "max_level": 1.2, "up": 0.6, "down": 0.3}),
     }
     return cfg
+
+
+RUNG2_TRAIN_ENVELOPE = {"lin_vel_x": (-1.5, 4.0), "lin_vel_y": (-1.2, 1.2), "ang_vel_z": (-3.0, 3.0)}
+
+
+def matt_rung2_sym2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """r2_v5: r2_v4 (symmetric, contract v3) with the training envelope ~20 % wider than the G1 envelope in the hard
+    directions (wz ±3.0 so the 2.5 rad/s turntable is not at the edge; vy ±1.2 for ~1 m/s crabs) and more zero-command
+    stops (0.20) — the r2_v4 misses were exactly turntable-at-edge, crab ~0.9 m/s and holding still after shoves."""
+    cfg = matt_rung2_sym_env_cfg(play=play)
+    env = RUNG2_TRAIN_ENVELOPE
+    cfg.curriculum = {
+        "command_vel": CurriculumTermCfg(func=vel_mdp.commands_vel, params={
+            "command_name": "athlete", "velocity_stages": [dict(env, step=0)]}),
+    }
+    cmd = cfg.commands["athlete"]
+    cmd.ranges.lin_vel_x, cmd.ranges.lin_vel_y, cmd.ranges.ang_vel_z = env["lin_vel_x"], env["lin_vel_y"], env["ang_vel_z"]
+    cmd.rel_standing_envs = 0.20
+    return cfg
