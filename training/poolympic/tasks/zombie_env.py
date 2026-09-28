@@ -167,9 +167,9 @@ def zombie_rung2_base_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
 
 
 def zombie_rung2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
-    """Rung 2 — omnidirectional + yaw, MATT's final recipe (r2_v8: symmetric runner, curriculum to the widened
-    envelope, lateral-acceleration cap, sharp linear tracking, sprint focus) on the scaled envelope. Warm start from the
-    zombie Rung 1 brain (tools/warm_start.py)."""
+    """Rung 2 fine-tune — MATT's final recipe (r2_v8: symmetric runner, full widened
+    envelope, lateral-acceleration cap, sharp linear tracking, sprint focus) on the scaled envelope. Warm start: the best
+    base-run checkpoint (z2_v2, PoOlympic-Zombie-Rung2-Omni-Base) via tools/warm_start.py."""
     _check_body()
     cfg = zombie_rung1_env_cfg(play=play)
     cmd = cfg.commands["athlete"]
@@ -192,9 +192,12 @@ def zombie_rung2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     rw["track_ang_coarse"] = RewardTermCfg(func=vel_mdp.track_angular_velocity, weight=1.0,
                                            params={"command_name": "athlete", "std": 1.0 * WS})
     rw["posture"].weight = 0.25
-    stages = RUNG2_STAGES + [dict(RUNG2_TRAIN_ENVELOPE, step=1500 * 24)]
+    # fine-tune after the base run (z2_v2): the curriculum already ran — full widened envelope from the start
+    # (MATT's Sym2+ tasks did the same)
+    env = RUNG2_TRAIN_ENVELOPE
+    cmd.ranges.lin_vel_x, cmd.ranges.lin_vel_y, cmd.ranges.ang_vel_z = env["lin_vel_x"], env["lin_vel_y"], env["ang_vel_z"]
     cfg.curriculum = {"command_vel": CurriculumTermCfg(func=vel_mdp.commands_vel, params={
-        "command_name": "athlete", "velocity_stages": stages})}
+        "command_name": "athlete", "velocity_stages": [dict(env, step=0)]})}
     if play:
         cmd.ranges.lin_vel_x, cmd.ranges.lin_vel_y, cmd.ranges.ang_vel_z = (
             RUNG2_TRAIN_ENVELOPE["lin_vel_x"], RUNG2_TRAIN_ENVELOPE["lin_vel_y"], RUNG2_TRAIN_ENVELOPE["ang_vel_z"])
