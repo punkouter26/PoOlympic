@@ -582,6 +582,11 @@ def main() -> int:
                                            model="track8", park_offset=(0.0, -30.0, 0.0))
     (ASSETS / "scene_track8.xml").write_text(header + track_xml + "\n")
     (ASSETS / "track8_layout.json").write_text(json.dumps(track_layout, indent=1) + "\n")
+    # 12 The 360 Turntable: 8 spin spots in the venue's 2 x 4 grid (3 m x 4 m pitch); the cube park line is clear of it
+    turn_xml, turn_layout = compose_meet(skin, geoms, inertials, qdef, origins=venue_lane_origins(12, reference_lane=3),
+                                         model="turntable8")
+    (ASSETS / "scene_turntable8.xml").write_text(header + turn_xml + "\n")
+    (ASSETS / "turntable8_layout.json").write_text(json.dumps(turn_layout, indent=1) + "\n")
     (ASSETS / f"scene_meet{N_LANES}.xml").write_text(header + meet_xml + "\n")
     (ASSETS / f"meet{N_LANES}_layout.json").write_text(json.dumps(meet_layout, indent=1) + "\n")
 

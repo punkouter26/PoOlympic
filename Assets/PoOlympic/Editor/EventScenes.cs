@@ -40,13 +40,15 @@ namespace PoOlympic.Editor
         /// turned about the vertical by the lane's yaw (MuJoCo yaw ψ ≙ Unity Euler(0, −ψ, 0), so undoing ψ is Euler(0, +ψ, 0))
         /// and shifted so the competitor spot E##_L# lands on the MuJoCo origin: the athlete (default pose facing +x) then
         /// stands exactly on that spot facing the event direction. Spot height = surface under the athlete (pedestal top).
+        /// extraYawDeg turns the athlete relative to the event direction (180 = facing away from the finish, event 9).
         /// </summary>
-        public static GameObject PlaceStadium(Scene scene, int eventNum, int lane)
+        public static GameObject PlaceStadium(Scene scene, int eventNum, int lane, float extraYawDeg = 0f)
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(StadiumAsset) ?? throw new FileNotFoundException(StadiumAsset);
             var st = (GameObject)PrefabUtility.InstantiatePrefab(prefab, scene);
             st.name = "Stadium";
             var (_, yaw) = VenueLane(eventNum, lane);
+            yaw += extraYawDeg;
             st.transform.SetPositionAndRotation(Vector3.zero, Quaternion.Euler(0f, yaw, 0f) * Quaternion.Euler(0f, 180f, 0f));
             var name = $"E{eventNum:00}_L{lane}";
             var anchor = Array.Find(st.GetComponentsInChildren<Transform>(true), t => t.name == name)
@@ -158,9 +160,10 @@ namespace PoOlympic.Editor
             (8, TrackRaceEvent.Mode.Dash, "30m DASH", "Assets/PoOlympic/Scenes/Event_30mDash.unity"),
             (19, TrackRaceEvent.Mode.Terminal, "TERMINAL VELOCITY", "Assets/PoOlympic/Scenes/Event_TerminalVelocity.unity"),
             (22, TrackRaceEvent.Mode.Brake, "EMERGENCY BRAKE", "Assets/PoOlympic/Scenes/Event_EmergencyBrake.unity"),
+            (9, TrackRaceEvent.Mode.Inverted, "INVERTED SPRINT", "Assets/PoOlympic/Scenes/Event_InvertedSprint.unity"),
         };
 
-        [MenuItem("PoOlympic/Events/Build Track Races (8, 19, 22)")]
+        [MenuItem("PoOlympic/Events/Build Track Races (8, 9, 19, 22)")]
         public static string BuildTrackRaces()
         {
             var sb = new System.Text.StringBuilder();
@@ -171,28 +174,95 @@ namespace PoOlympic.Editor
         /// <summary>
         /// Straight-track race scene: 8 runners on scene_track8.xml (lane origins from the stadium venue), stadium snapped
         /// to the event's lane 4, TrackRaceEvent + RaceHud, broadcast camera trackside following lane 4.
+        /// Backward races (Inverted): the athletes face away from the finish — the stadium is turned 180° about venue lane 5
+        /// (the MuJoCo lane layout is the mirror image), so MuJoCo lane k runs in venue lane 8 - k.
         /// </summary>
         public static string BuildTrackRace(int eventNum, TrackRaceEvent.Mode mode, string title, string scenePath, string brainFile)
         {
+            bool reversed = mode == TrackRaceEvent.Mode.Inverted;
+            var meet = BuildMeetScene(TrackSource, TrackLayout, eventNum, reversed ? 7 - AthleteLane : AthleteLane, reversed ? 180f : 0f, brainFile);
+            var race = new GameObject("TrackRaceEvent").AddComponent<TrackRaceEvent>();
+            race.mode = mode;
+            (race.distance, race.commandSpeed, race.maxSeconds) = TrackRaceEvent.Defaults(mode);
+            foreach (var (k, r) in meet.Lanes)
+                race.runners.Add(new TrackRaceEvent.Runner { runner = r, name = $"L{(reversed ? 8 - k : k + 1)}" });
+            meet.Pool.runner = race.runners[0].runner;
+            var hud = new GameObject("RaceHUD").AddComponent<RaceHud>();
+            hud.race = race;
+            hud.title = title;
+            hud.subtitle = $"Event {eventNum} · 8 runners";
+            hud.version = $"v0 · {Path.GetFileNameWithoutExtension(brainFile)}";
+
+            var bc = meet.Camera.GetComponent<BroadcastCamera>();
+            bc.target = meet.FocusPelvis;
+            bc.focusOffset = new Vector3(reversed ? -1.0f : 1.0f, 0f, -0.6f);   // centre of the 8 lanes (Unity z = +3.66 .. -4.88), a bit ahead
+            bc.offset = new Vector3(reversed ? 3.5f : -3.5f, 3.2f, -13f);      // trackside, slightly behind the pack (backward runners face it)
+            EditorSceneManager.SaveScene(meet.Scene, scenePath);
+            return $"{scenePath}: {mode}, {race.runners.Count} runners, {race.distance} m, brain {brainFile}";
+        }
+
+        public const string TurntableScene = "Assets/PoOlympic/Scenes/Event_360Turntable.unity";
+        public const string TurntableSource = "training/assets/scene_turntable8.xml";
+        public const string TurntableLayout = "training/assets/turntable8_layout.json";
+
+        /// <summary>Event 12: 8 athletes on the venue's spin spots (scene_turntable8.xml), TurntableEvent + HUD.</summary>
+        [MenuItem("PoOlympic/Events/Build Event 12 — 360 Turntable")]
+        public static string BuildTurntable() => BuildTurntable(DefaultRung2Brain);
+
+        public static string BuildTurntable(string brainFile)
+        {
+            var meet = BuildMeetScene(TurntableSource, TurntableLayout, 12, AthleteLane, 0f, brainFile);
+            var ev = new GameObject("TurntableEvent").AddComponent<TurntableEvent>();
+            foreach (var (k, r) in meet.Lanes) ev.spinners.Add(new TurntableEvent.Spinner { runner = r, name = $"S{k + 1}" });
+            meet.Pool.runner = ev.spinners[0].runner;
+            var hud = new GameObject("TurntableHUD").AddComponent<TurntableHud>();
+            hud.ev = ev;
+            hud.version = $"v0 · {Path.GetFileNameWithoutExtension(brainFile)}";
+
+            var bc = meet.Camera.GetComponent<BroadcastCamera>();
+            bc.target = meet.FocusPelvis;
+            bc.focusOffset = new Vector3(-4.5f, 0f, -2f);    // centre of the 2 x 4 grid (spot S4 is the origin)
+            bc.offset = new Vector3(10.5f, 5.2f, -8.5f);     // front three-quarter: the athletes start facing +x
+            EditorSceneManager.SaveScene(meet.Scene, TurntableScene);
+            return $"{TurntableScene}: {ev.spinners.Count} athletes, {ev.turns} turns at {ev.spinRate} rad/s, brain {brainFile}";
+        }
+
+        public sealed class MeetScene
+        {
+            public Scene Scene;
+            public GameObject Camera;
+            public MjCubePool Pool;
+            public MjBody FocusPelvis;
+            public readonly System.Collections.Generic.List<(int lane, PolicyRunner runner)> Lanes = new();
+        }
+
+        /// <summary>
+        /// Shared setup of every 8-athlete event scene: the event MJCF (lane origins from the stadium venue), camera + sun
+        /// from the testbed, the render-only stadium snapped to venue lane `anchorLane` (turned by extraYawDeg), one
+        /// PolicyRunner + bound MATT visual per lane, the cube pool. MuJoCo geoms are hidden except the pool cubes (the
+        /// stadium draws the props). Focus pelvis = lane AthleteLane (the MuJoCo origin).
+        /// </summary>
+        public static MeetScene BuildMeetScene(string source, string layoutPath, int eventNum, int anchorLane, float extraYawDeg, string brainFile)
+        {
             if (EditorApplication.isPlaying) throw new InvalidOperationException("exit Play mode first");
             ParityHarness.SyncArtifacts();
-            AthleteImport.SyncModel(TrackLayout);
-            var layout = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(Path.Combine(Path.GetDirectoryName(Application.dataPath), TrackLayout)));
-            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            var physics = AthleteImport.ImportIntoActiveScene(TrackSource);
+            AthleteImport.SyncModel(layoutPath);
+            var layout = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(Path.Combine(Path.GetDirectoryName(Application.dataPath), layoutPath)));
+            var meet = new MeetScene { Scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single) };
+            var physics = AthleteImport.ImportIntoActiveScene(source);
             var src = EditorSceneManager.OpenScene(ParityHarness.TestbedScene, OpenSceneMode.Additive);
             GameObject Copy(string name)
             {
                 var clone = UnityEngine.Object.Instantiate(Array.Find(src.GetRootGameObjects(), g => g.name == name));
                 clone.name = name;
-                SceneManager.MoveGameObjectToScene(clone, scene);
+                SceneManager.MoveGameObjectToScene(clone, meet.Scene);
                 return clone;
             }
-            var cam = Copy("Main Camera");
+            meet.Camera = Copy("Main Camera");
             Copy("Sun");
             EditorSceneManager.CloseScene(src, true);
-            SceneManager.SetActiveScene(scene);
-            PlaceStadium(scene, eventNum, AthleteLane);
+            SceneManager.SetActiveScene(meet.Scene);
+            PlaceStadium(meet.Scene, eventNum, anchorLane, extraYawDeg);
 
             var cubeMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/PoOlympic/Materials/PoolCube.mat");
             foreach (var rend in physics.GetComponentsInChildren<Renderer>(true))
@@ -206,12 +276,8 @@ namespace PoOlympic.Editor
             var brain = AssetDatabase.LoadAssetAtPath<ModelAsset>($"{ParityHarness.ModelsFolder}/Brains/{brainFile}") ?? throw new FileNotFoundException(brainFile);
             var sidecar = AssetDatabase.LoadAssetAtPath<TextAsset>($"{ParityHarness.ModelsFolder}/Brains/{brainFile}.json");
             var mattPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(VisualBinding.MattAsset);
-            var pool = new GameObject("CubePool").AddComponent<MjCubePool>();
-            pool.poolSize = (int)layout["n_cubes"];
-            var race = new GameObject("TrackRaceEvent").AddComponent<TrackRaceEvent>();
-            race.mode = mode;
-            (race.distance, race.commandSpeed, race.maxSeconds) = TrackRaceEvent.Defaults(mode);
-            MjBody focusPelvis = null;
+            meet.Pool = new GameObject("CubePool").AddComponent<MjCubePool>();
+            meet.Pool.poolSize = (int)layout["n_cubes"];
             foreach (var l in layout["lanes"])
             {
                 int k = (int)l["lane"];
@@ -234,25 +300,13 @@ namespace PoOlympic.Editor
                 binder.Capture(physics.transform, prefix);
                 var (pe, re) = binder.BindError();
                 if (pe > 0.01f || re > 1f) throw new InvalidOperationException($"lane {k} bind error {pe * 1000f:F2} mm / {re:F2} deg");
-                race.runners.Add(new TrackRaceEvent.Runner { runner = r, name = $"L{k + 1}" });
-                if (k == AthleteLane) focusPelvis = Array.Find(physics.GetComponentsInChildren<MjBody>(true), bd => bd.name == prefix + "pelvis");
+                meet.Lanes.Add((k, r));
+                if (k == AthleteLane) meet.FocusPelvis = Array.Find(physics.GetComponentsInChildren<MjBody>(true), bd => bd.name == prefix + "pelvis");
             }
-            pool.runner = race.runners[0].runner;
-            var hud = new GameObject("RaceHUD").AddComponent<RaceHud>();
-            hud.race = race;
-            hud.title = title;
-            hud.subtitle = $"Event {eventNum} · 8 runners";
-            hud.version = $"v0 · {Path.GetFileNameWithoutExtension(brainFile)}";
-
-            var cc = cam.GetComponent<Camera>();
+            var cc = meet.Camera.GetComponent<Camera>();
             cc.nearClipPlane = 0.2f;
             cc.farClipPlane = 1000f;
-            var bc = cam.GetComponent<BroadcastCamera>();
-            bc.target = focusPelvis;
-            bc.focusOffset = new Vector3(1.0f, 0f, -0.6f);   // centre of the 8 lanes (Unity z = +3.66 .. -4.88), a bit ahead
-            bc.offset = new Vector3(-3.5f, 3.2f, -13f);      // trackside, outside lane 8, slightly behind the pack
-            EditorSceneManager.SaveScene(scene, scenePath);
-            return $"{scenePath}: {mode}, {race.runners.Count} runners, {race.distance} m, brain {brainFile}";
+            return meet;
         }
 
         public const string HubScene = "Assets/PoOlympic/Scenes/Stadium_Hub.unity";
@@ -263,6 +317,8 @@ namespace PoOlympic.Editor
         {
             { 1, IronPedestalHeatScene },   // official 8-runner heat (solo practice: Event_IronPedestal.unity)
             { 8, "Assets/PoOlympic/Scenes/Event_30mDash.unity" },
+            { 9, "Assets/PoOlympic/Scenes/Event_InvertedSprint.unity" },
+            { 12, TurntableScene },
             { 19, "Assets/PoOlympic/Scenes/Event_TerminalVelocity.unity" },
             { 22, "Assets/PoOlympic/Scenes/Event_EmergencyBrake.unity" },
         };

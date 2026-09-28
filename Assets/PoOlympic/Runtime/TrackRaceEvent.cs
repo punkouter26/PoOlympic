@@ -12,12 +12,14 @@ namespace PoOlympic
     ///   Terminal  (19 Terminal Velocity)   open sprint of the back straight at the max trained command; rank by peak 1 s speed
     ///   Brake     (22 Emergency Brake)     run in at 3 m/s; each runner brakes (command 0) at its seeded "nerve" distance
     ///                                      before the red line; toe past the line = DQ; rank by the gap left
+    ///   Inverted  (9  The Inverted Sprint)  20 m backwards (command vx &lt; 0; runners face away from the finish, the scene
+    ///                                      turns the stadium 180°); pelvis more than `laneHalf` off the lane line = DQ
     /// Runners steer with the contract's lane keeping (PolicyRunner.laneKeeping). Traits + nerve are drawn per heat.
     ///   Ready (countdown) → Live → Result → auto restart (new seed)
     /// </summary>
     public class TrackRaceEvent : MonoBehaviour
     {
-        public enum Mode { Dash, Terminal, Brake }
+        public enum Mode { Dash, Terminal, Brake, Inverted }
         public enum Phase { Ready, Live, Result }
 
         [Serializable]
@@ -27,7 +29,7 @@ namespace PoOlympic
             public string name;
             [NonSerialized] public AthleteJudge judge;
             [NonSerialized] public string status = "";
-            [NonSerialized] public float finishS = -1, peakMps, gapM = float.NaN, nerveM, x, v;
+            [NonSerialized] public float finishS = -1, peakMps, gapM = float.NaN, nerveM, x, v, y;
             [NonSerialized] public bool braking;
             [NonSerialized] public int place;
             [NonSerialized] public readonly Queue<float> speedWindow = new();
@@ -41,7 +43,7 @@ namespace PoOlympic
         public float commandSpeed = 3.8f;
         public float maxSeconds = 25f;
         public Vector2 brakeNerve = new(1.4f, 2.2f);
-        public float toeAhead = 0.25f, stoppedSpeed = 0.1f;
+        public float toeAhead = 0.25f, stoppedSpeed = 0.1f, laneHalf = 0.61f;
         public float countdownSeconds = 3f, resultHoldSeconds = 6f;
         public bool autoRestart = true, randomTraits = true;
         public int seed = 1;
@@ -61,6 +63,7 @@ namespace PoOlympic
         {
             Mode.Dash => (30f, 3.8f, 25f),
             Mode.Terminal => (84.39f, 4.0f, 45f),
+            Mode.Inverted => (20f, -1.5f, 30f),
             _ => (30f, 3.0f, 25f),
         };
 
@@ -113,11 +116,13 @@ namespace PoOlympic
             PhaseTime += Time.deltaTime;
             var lead = runners[0].runner;
             float tick = (float)(lead.Contract.timestep * lead.Contract.decimation);
+            float sign = commandSpeed < 0f ? -1f : 1f;   // progress is measured along the race direction
             foreach (var r in runners)
             {
                 int ra = r.runner.Binding.RootQposAdr, da = r.runner.Binding.RootDofAdr;
-                r.x = (float)(d->qpos[ra] - r.runner.laneOriginX);
-                r.v = (float)d->qvel[da];
+                r.x = sign * (float)(d->qpos[ra] - r.runner.laneOriginX);
+                r.v = sign * (float)d->qvel[da];
+                r.y = (float)(d->qpos[ra + 1] - r.runner.laneOriginY);
             }
             switch (Current)
             {
@@ -145,6 +150,7 @@ namespace PoOlympic
                         }
                         var why = r.judge.Eliminated(m, d);
                         if (why == "FELL") { Out(r, "FELL"); continue; }
+                        if (mode == Mode.Inverted && Mathf.Abs(r.y) > laneHalf) { Out(r, "DQ"); continue; }
                         if (mode != Mode.Brake && r.x >= distance) { r.status = "FINISHED"; r.finishS = LiveTime; Stand(r); }
                         if (mode == Mode.Brake)
                         {
@@ -169,7 +175,7 @@ namespace PoOlympic
             foreach (var r in runners.Where(r => r.Racing)) { r.status = "DNF"; Stand(r); }
             IEnumerable<Runner> order = mode switch
             {
-                Mode.Dash => runners.OrderBy(r => r.status == "FINISHED" ? 0 : 1).ThenBy(r => r.finishS),
+                Mode.Dash or Mode.Inverted => runners.OrderBy(r => r.status == "FINISHED" ? 0 : 1).ThenBy(r => r.finishS),
                 Mode.Terminal => runners.OrderBy(r => r.status == "FELL" ? 1 : 0).ThenByDescending(r => r.peakMps),
                 _ => runners.OrderBy(r => r.status == "STOPPED" ? 0 : 1).ThenBy(r => r.status == "STOPPED" ? r.gapM : 0f),
             };
@@ -184,6 +190,7 @@ namespace PoOlympic
         public string Describe(Runner r) => mode switch
         {
             Mode.Dash => r.status == "FINISHED" ? $"{r.finishS:0.00} s" : r.status,
+            Mode.Inverted => r.status == "FINISHED" ? $"{r.finishS:0.00} s" : r.status == "DQ" ? "DQ (left lane)" : r.status,
             Mode.Terminal => $"{r.peakMps:0.00} m/s" + (r.status == "FELL" ? " FELL" : ""),
             _ => r.status == "STOPPED" ? $"{r.gapM * 100f:0} cm short" : r.status == "DQ" ? "DQ (crossed)" : r.status,
         };

@@ -110,7 +110,7 @@ Rules: every surface an athlete can touch is a MuJoCo geom generated into the MJ
   - Unity `Event_IronPedestal_Heat.unity` (*Build Event 1 — Iron Pedestal Heat*), `HeatHud` standings (status, out time, traits), winner banner; hub Event 1 ▸ opens the heat. Play-through: L1 wins after 31.6 s, 11 rounds (`parity/d4/heat_*.png`)
   - [ ] odds from traits (betting layer)
   - [x] Iron Pedestal fine-tune tried twice (ped_v1 fixed ±0.8 m/s gusts; ped_v2 adaptive gusts) — neither beat r0_v2_it1000 on identical heats (28.2 s mean survival); Event 1 keeps the Rung 0 brain (see log)
-- [ ] **D5 remaining Sprint Series events** — done: 8, 19, 22 (straight-track race framework: `scene_track8.xml` from the venue layout, G0 8/8; Python `events/track.py` ≡ Unity `TrackRaceEvent` + `RaceHud`; *PoOlympic › Events › Build Track Races*); todo: 5 Gust Gauntlet · 8 30m Dash · 19 Terminal Velocity (rung1) · 9, 10, 11, 12, 22 (rung2, after C8) — then the rest of the catalogue: **Phase E** below
+- [ ] **D5 remaining Sprint Series events** — done: 8, 9, 12, 19, 22 (9 = backward race on the track framework; 12 = `scene_turntable8.xml` + `events/turntable.py` ≡ `TurntableEvent`, G0 8/8; shared `EventScenes.BuildMeetScene`); earlier: 8, 19, 22 (straight-track race framework: `scene_track8.xml` from the venue layout, G0 8/8; Python `events/track.py` ≡ Unity `TrackRaceEvent` + `RaceHud`; *PoOlympic › Events › Build Track Races*); todo: 5 Gust Gauntlet · 8 30m Dash · 19 Terminal Velocity (rung1) · 9, 10, 11, 12, 22 (rung2, after C8) — then the rest of the catalogue: **Phase E** below
 - [ ] **D6** full suite re-validation + perf pass
 
 ## Phase E — The 30 Olympic Events (catalogue, added 2026-09-27)
@@ -131,11 +131,11 @@ Skill gaps: events marked **S** need behaviours the current contract cannot comm
 | 6 | The Flamingo Classic | one foot raised; time until touchdown | CentreStage | — | **S** single-leg stance cmd | todo |
 | 7 | Cadence March | high-knee marching in place to a rising metronome | CentreStage / Agility | — | **S** cadence / march-in-place cmd (phase clock with zero velocity) | todo |
 | 8 | The 30m Dash | pure forward sprint to the finish ribbon | HomeStraight | finish ribbon (visual) | R2 | **playable** (8 runners, `Event_30mDash.unity`) |
-| 9 | The Inverted Sprint | 20 m backwards; DQ on lane drift or backward tumble | HomeStraight | — | R2 | todo (after C7) |
+| 9 | The Inverted Sprint | 20 m backwards; DQ on lane drift or backward tumble | HomeStraight | — | R2 | **playable** (8 runners at cmd −1.5 m/s, lane-drift DQ, stadium turned 180°, `Event_InvertedSprint.unity`) |
 | 10 | Crab Shuffle Relay | side-step between parallel rails without crossing legs | HomeStraight / Agility | boundary rails | R2 (+ leg-cross check) | todo |
 | **Phase 3 — Omnidirectional Agility** |
 | 11 | Slalom Sprint | weave through gates; penalties for missed gates / clipped flags | Agility | gate poles + flags | R2 + gate-following steering | todo |
-| 12 | The 360 Turntable | rapid in-place turns on a marked spot; rotational speed, zero drift | Agility (turntable pads) | — | R2 | todo (blocked on r2 yaw) |
+| 12 | The 360 Turntable | rapid in-place turns on a marked spot; rotational speed, zero drift | Agility (turntable pads) | — | R2 | **playable** (8 spots, 3 turns at 3 rad/s, seeded direction, score = time + 2 s/m drift, `Event_360Turntable.unity`) |
 | 13 | Steeplechase Jog | 50 m run with sustained aerial flight phases between strikes | HomeStraight | — | R1/R2 + flight-phase reward | todo |
 | 14 | The Alpine Ramp | ascend a 15° ramp into a finish sensor | Terrain | 15° ramp | R4 | todo |
 | 15 | Cross-Country Rubble | traverse randomized mounds and ruts | Terrain | heightfield / box rubble (seeded) | R4 | todo |

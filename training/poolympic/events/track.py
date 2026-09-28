@@ -5,6 +5,9 @@
   brake     (22 Emergency Brake)       run in at BRAKE_VX, each runner brakes (command 0) when its pelvis is BRAKE_TRIGGER
                                        metres before the red line; must stop without crossing it (toe past the line =
                                        DQ); rank by the gap left to the line
+  inverted  (9  The Inverted Sprint)   20 m backwards (runners face away from the finish: the finish is at x = -20 in the
+                                       runner's frame; Unity turns the stadium 180 deg); leaving the lane (|y| > half a
+                                       lane) = DQ, a fall = out; rank by finish time
 Runners steer with the contract's lane keeping (contract.steer_yaw_rate); traits as in the Iron Pedestal heat.
 """
 
@@ -28,7 +31,9 @@ MODES = {
     "dash": {"distance": 30.0, "vx": 3.8, "max_s": 25.0},
     "terminal": {"distance": 84.39, "vx": 4.0, "max_s": 45.0},   # the whole back straight (stadium venue E19)
     "brake": {"distance": 30.0, "vx": 3.0, "max_s": 25.0},
+    "inverted": {"distance": 20.0, "vx": -1.5, "max_s": 30.0},   # vx = the Rung 2 envelope's backward limit
 }
+LANE_HALF = 0.61      # m — inverted sprint: pelvis further than this from the lane centre line = DQ (lane drift)
 BRAKE_NERVE = (1.4, 2.2)   # m before the line at which a runner hits the brakes — per-runner "nerve" (seeded); the
                            # brain stops from 3 m/s with the toe ~1.6 m past its trigger point → late = DQ, early = big gap
 TOE_AHEAD = 0.25      # m — the toe tip is ahead of the pelvis while standing
@@ -79,7 +84,7 @@ def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = Non
         t = tick * dt
         for i, ln in enumerate(lanes):
             r = res[i]
-            if r.status in ("FELL", "FINISHED") and mode != "brake":
+            if r.status and mode != "brake":
                 ln.control(sess, d, np.zeros(3))
                 continue
             ra = ln.ath.root_qposadr
@@ -103,15 +108,19 @@ def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = Non
             if r.status in ("FELL", "FINISHED", "DQ", "STOPPED"):
                 continue
             ra, da = ln.ath.root_qposadr, ln.ath.root_dofadr
-            x = d.qpos[ra] - ln.origin[0]
-            vx = float(d.qvel[da])
+            sign = -1.0 if cfg["vx"] < 0 else 1.0
+            x = sign * (d.qpos[ra] - ln.origin[0])       # progress along the race direction
+            vx = sign * float(d.qvel[da])
             speed_hist[i].append(vx)
             if len(speed_hist[i]) >= 50:
                 r.peak_mps = max(r.peak_mps, float(np.mean(speed_hist[i][-50:])))
             if ln.eliminated(m, d) == "FELL" or (ln.eliminated(m, d) and mode != "brake"):
                 r.status = "FELL"
                 continue
-            if mode in ("dash", "terminal") and x >= cfg["distance"]:
+            if mode == "inverted" and abs(d.qpos[ra + 1] - ln.origin[1]) > LANE_HALF:
+                r.status = "DQ"
+                continue
+            if mode in ("dash", "terminal", "inverted") and x >= cfg["distance"]:
                 r.status, r.finish_s = "FINISHED", t
             if mode == "brake":
                 toe = x + TOE_AHEAD
@@ -126,7 +135,7 @@ def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = Non
         if mode == "brake":
             r.nerve_m = nerve[i]
     # ranking
-    if mode == "dash":
+    if mode in ("dash", "inverted"):
         key = lambda r: (0, r.finish_s) if r.status == "FINISHED" else (1, 0)
     elif mode == "terminal":
         key = lambda r: (0 if r.status != "FELL" else 1, -r.peak_mps)
