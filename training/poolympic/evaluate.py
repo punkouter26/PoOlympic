@@ -295,7 +295,7 @@ def rung1_verdict(results: list[DashResult]) -> dict:
 # Rung 2 — omnidirectional + yaw (DESIGN §1): per seed, four drills in fresh episodes
 #   tracking   5 × 5 s command segments from the event envelope, 0.3 m/s shoves every 3–5 s; per segment (after a
 #              1.5 s transition) RMS |v_xy − cmd| < 0.2 m/s and RMS |wz − cmd| < 0.3 rad/s.
-#              Envelope (independent extremes like vx 4 + wz 2.5 are not physical): sprint/back vx ∈ [−1.5, 4] with
+#              Envelope (independent extremes like vx 4 + wz 2.5 are not physical): sprint/back vx ∈ [−1.5, 3.8] with
 #              |wz| ≤ 0.5 · crab vx ∈ ±0.5, vy ∈ ±1 · turn vx ∈ [0, 1.5], wz ∈ ±2 · stop (all zero)
 #   turntable  from standing, cmd wz = ±2.5 (max trained rate; sign by seed): 360° in < 3 s, pelvis drift < 0.3 m
 #   brake      5 s at 3 m/s (lane keeping), then zero command: stopping distance < 2 m, no fall within 4 s
@@ -306,6 +306,7 @@ RUNG2_YAW_TOL = 0.3
 # DESIGN §1 lists wz in [-2, 2] AND "360 deg < 3 s", which 2 rad/s cannot meet (3.14 s at best). Event 12 is scored
 # on rotational speed, so the drill commands the maximum trained yaw rate (Rung 2 curriculum: +-2.5). Bars unchanged.
 TURNTABLE_WZ = 2.5
+RUNG2_VX_MAX = 3.8  # m/s — MATT's top speed with the elite-athlete torque caps (user decision 2026-09-28; spec said 4.0)
 TURNTABLE_MAX_S = 3.0
 TURNTABLE_MAX_DRIFT = 0.3
 BRAKE_MAX_M = 2.0
@@ -339,7 +340,7 @@ def _vel_heading(sim: Sim) -> tuple[float, float, float]:
 def _envelope_command(rng: np.random.Generator) -> tuple[str, np.ndarray]:
     kind = str(rng.choice(["sprint", "crab", "turn", "stop"], p=[0.35, 0.25, 0.25, 0.15]))
     if kind == "sprint":
-        return kind, np.array([rng.uniform(-1.5, 4.0), 0.0, rng.uniform(-0.5, 0.5)])
+        return kind, np.array([rng.uniform(-1.5, RUNG2_VX_MAX), 0.0, rng.uniform(-0.5, 0.5)])
     if kind == "crab":
         return kind, np.array([rng.uniform(-0.5, 0.5), rng.uniform(-1.0, 1.0), 0.0])
     if kind == "turn":
@@ -359,14 +360,15 @@ def _shover(rng: np.random.Generator, dv: float):
     return pre
 
 
-STEADY_ACCEL = 1.5  # m/s^2 — steady-state variant only: allow |dv| / STEADY_ACCEL (+0.5 s) to reach a new speed
+STEADY_ACCEL = 1.5  # m/s^2 — tracking is measured once the athlete can have reached the new speed: settle = max(1.5,
+                    # 0.5 + |dv| / STEADY_ACCEL) s (user decision 2026-09-28; acceleration is scored by the dash events)
 
 
 def rung2_episode(onnx_path: Path, seed: int, sim: Sim | None = None, shove_dv: float = 0.3,
-                  steady_state: bool = False) -> Rung2Result:
-    """steady_state=False: official drill (tracking measured from 1.5 s after each command change).
-    steady_state=True: diagnostic variant — the settle time grows with the speed change (max(1.5, 0.5 + |dv|/1.5 s)),
-    separating steady tracking from acceleration time. Not the G1 bar."""
+                  steady_state: bool = True) -> Rung2Result:
+    """G1 drill. steady_state=True (official since 2026-09-28): the settle time grows with the speed change,
+    max(1.5, 0.5 + |dv|/1.5 s), so tracking is scored on the commanded speed, not on acceleration time.
+    steady_state=False reproduces the earlier fixed 1.5 s window."""
     rng = np.random.default_rng(seed)
     sim = sim or Sim(onnx_path)
     dt = C.DECIMATION * sim.m.opt.timestep
