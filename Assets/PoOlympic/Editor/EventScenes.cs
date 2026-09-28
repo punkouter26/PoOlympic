@@ -63,22 +63,39 @@ namespace PoOlympic.Editor
         public const string IronPedestalHeatScene = "Assets/PoOlympic/Scenes/Event_IronPedestal_Heat.unity";
         public const string PedestalHeatSource = "training/assets/scene_pedestal8.xml";
         public const string PedestalHeatLayout = "training/assets/pedestal8_layout.json";
+        // Phase Z: the official heat is a mixed meet — MATT in lanes 1/3/5/7, the zombie in 2/4/6/8
+        // (training/tools/compose_mixed.py pedestal8 matt,zombie,…)
+        public const string PedestalMixedSource = "training/assets/scene_pedestal8_mzmzmzmz.xml";
+        public const string PedestalMixedLayout = "training/assets/pedestal8_mzmzmzmz_layout.json";
+        public const string ZombieAsset = "Assets/PoOlympic/Art/Zombie.glb";
+        public const string DefaultZombieRung0Brain = "zombie_rung0.onnx";
+
+        /// <summary>Per-body assets: contract (Models/contract[_body].json), visual (glTF) and lane label letter.</summary>
+        public static (string contract, string visual, string letter) BodyAssets(string body) => body switch
+        {
+            "matt" => ("Assets/PoOlympic/Models/contract.json", VisualBinding.MattAsset, "M"),
+            "zombie" => ("Assets/PoOlympic/Models/contract_zombie.json", ZombieAsset, "Z"),
+            _ => throw new ArgumentException($"unknown athlete body '{body}'"),
+        };
 
         /// <summary>
-        /// Event 1 official heat: 8 runners on the 8 stadium pedestals (training/assets/scene_pedestal8.xml; lane origins
-        /// come from the venue layout, so physics pedestals = stadium pedestals), 16 pooled cubes, IronPedestalHeat + HUD.
+        /// Event 1 official heat: 8 athletes on the 8 stadium pedestals (lane origins come from the venue layout, so
+        /// physics pedestals = stadium pedestals), 16 pooled cubes, IronPedestalHeat + HUD. Mixed meet: every lane carries
+        /// its own body (layout "body"), contract, brain and visual.
         /// </summary>
-        [MenuItem("PoOlympic/Events/Build Event 1 — Iron Pedestal Heat (8 runners)")]
-        public static string BuildIronPedestalHeat() => BuildIronPedestalHeat(DefaultRung0Brain);
+        [MenuItem("PoOlympic/Events/Build Event 1 — Iron Pedestal Heat (MATT + zombie)")]
+        public static string BuildIronPedestalHeat() => BuildIronPedestalHeat(DefaultRung0Brain, PedestalMixedSource, PedestalMixedLayout);
 
-        public static string BuildIronPedestalHeat(string brainFile)
+        public static string BuildIronPedestalHeat(string brainFile) => BuildIronPedestalHeat(brainFile, PedestalHeatSource, PedestalHeatLayout);
+
+        public static string BuildIronPedestalHeat(string brainFile, string source, string layoutPath, string zombieBrain = DefaultZombieRung0Brain)
         {
             if (EditorApplication.isPlaying) throw new InvalidOperationException("exit Play mode first");
             ParityHarness.SyncArtifacts();
-            AthleteImport.SyncModel(PedestalHeatLayout);
-            var layout = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(Path.Combine(Path.GetDirectoryName(Application.dataPath), PedestalHeatLayout)));
+            AthleteImport.SyncModel(layoutPath);
+            var layout = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(Path.Combine(Path.GetDirectoryName(Application.dataPath), layoutPath)));
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            var physics = AthleteImport.ImportIntoActiveScene(PedestalHeatSource);
+            var physics = AthleteImport.ImportIntoActiveScene(source);
 
             var src = EditorSceneManager.OpenScene(ParityHarness.TestbedScene, OpenSceneMode.Additive);
             GameObject Copy(string name)
@@ -103,44 +120,48 @@ namespace PoOlympic.Editor
                 if (cube && cubeMat != null) rend.sharedMaterial = cubeMat;
             }
 
-            var contract = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/PoOlympic/Models/contract.json");
-            var brain = AssetDatabase.LoadAssetAtPath<ModelAsset>($"{ParityHarness.ModelsFolder}/Brains/{brainFile}") ?? throw new FileNotFoundException(brainFile);
-            var sidecar = AssetDatabase.LoadAssetAtPath<TextAsset>($"{ParityHarness.ModelsFolder}/Brains/{brainFile}.json");
-            var mattPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(VisualBinding.MattAsset);
+            var brains = new System.Collections.Generic.Dictionary<string, string> { { "matt", brainFile }, { "zombie", zombieBrain } };
             var pool = new GameObject("CubePool").AddComponent<MjCubePool>();
             pool.poolSize = (int)layout["n_cubes"];
             var heat = new GameObject("IronPedestalHeat").AddComponent<IronPedestalHeat>();
             heat.cubes = pool;
             MjBody focusPelvis = null;
+            var lineup = new System.Collections.Generic.List<string>();
             foreach (var l in layout["lanes"])
             {
                 int k = (int)l["lane"];
                 string prefix = (string)l["prefix"];
+                string body = (string)l["body"] ?? "matt";
+                lineup.Add(body);
+                var (contractPath, visualPath, letter) = BodyAssets(body);
                 var o = l["origin"];
                 var go = new GameObject($"Athlete_Lane{k + 1}");
                 var r = go.AddComponent<PolicyRunner>();
-                r.contractJson = contract;
-                r.brain = brain;
-                r.brainSidecar = sidecar;
+                r.contractJson = AssetDatabase.LoadAssetAtPath<TextAsset>(contractPath) ?? throw new FileNotFoundException(contractPath);
+                r.brain = AssetDatabase.LoadAssetAtPath<ModelAsset>($"{ParityHarness.ModelsFolder}/Brains/{brains[body]}") ?? throw new FileNotFoundException(brains[body]);
+                r.brainSidecar = AssetDatabase.LoadAssetAtPath<TextAsset>($"{ParityHarness.ModelsFolder}/Brains/{brains[body]}.json");
                 r.athletePrefix = prefix;
                 r.laneOriginX = (double)o[0];
                 r.laneOriginY = (double)o[1];
                 r.cubeSlots = l["cubes"].Select(c => (int)c).ToArray();
                 r.useStandardParityScript = false;
-                var visual = (GameObject)PrefabUtility.InstantiatePrefab(mattPrefab, go.transform);
-                visual.name = "MATT_Visual";
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(visualPath) ?? throw new FileNotFoundException(visualPath);
+                var visual = (GameObject)PrefabUtility.InstantiatePrefab(prefab, go.transform);
+                visual.name = $"{body.ToUpperInvariant()}_Visual";
                 visual.transform.SetPositionAndRotation(new Vector3((float)o[0], (float)o[2], (float)o[1]), VisualBinding.GltfToPlugin);
                 var binder = visual.AddComponent<BoneBinder>();
                 binder.Capture(physics.transform, prefix);
                 var (pe, re) = binder.BindError();
-                if (pe > 0.01f || re > 1f) throw new InvalidOperationException($"lane {k} bind error {pe * 1000f:F2} mm / {re:F2} deg");
-                heat.runners.Add(new IronPedestalHeat.Runner { runner = r, name = $"L{k + 1}" });
+                if (pe > 0.01f || re > 1f) throw new InvalidOperationException($"lane {k} ({body}) bind error {pe * 1000f:F2} mm / {re:F2} deg");
+                heat.runners.Add(new IronPedestalHeat.Runner { runner = r, name = $"{letter}{k + 1}" });
                 if (k == AthleteLane) focusPelvis = Array.Find(physics.GetComponentsInChildren<MjBody>(true), bd => bd.name == prefix + "pelvis");
             }
             pool.runner = heat.runners[0].runner;
             var hud = new GameObject("HeatHUD").AddComponent<HeatHud>();
             hud.heat = heat;
-            hud.version = $"v0 · {Path.GetFileNameWithoutExtension(brainFile)} · 8 runners";
+            hud.version = lineup.Distinct().Count() > 1
+                ? $"v0 · {Path.GetFileNameWithoutExtension(brainFile)} + {Path.GetFileNameWithoutExtension(zombieBrain)}"
+                : $"v0 · {Path.GetFileNameWithoutExtension(brainFile)} · 8 runners";
 
             var cc = cam.GetComponent<Camera>();
             cc.nearClipPlane = 0.2f;
@@ -150,7 +171,7 @@ namespace PoOlympic.Editor
             bc.focusOffset = new Vector3(0f, 0f, 1.5f);      // centre of the row (lanes 1..8 at Unity z = -9 .. +12)
             bc.offset = new Vector3(8f, 3.4f, -17f);         // front-left end of the row: all 8 pedestals recede in a 9:16 frame
             EditorSceneManager.SaveScene(scene, IronPedestalHeatScene);
-            return $"{IronPedestalHeatScene}: {heat.runners.Count} runners, brain {brainFile}";
+            return $"{IronPedestalHeatScene}: {heat.runners.Count} runners ({string.Join(",", lineup)}), brains {string.Join(" / ", brains.Values)}";
         }
 
         public const string TrackSource = "training/assets/scene_track8.xml";
@@ -548,10 +569,17 @@ namespace PoOlympic.Editor
             foreach (var (num, path) in EventScenePaths.OrderBy(kv => kv.Key))
             {
                 var e = catalog.First(x => (int)x["number"] == num);
+                var lineup = Enumerable.Repeat("MATT", 8).ToArray();
+                if (num == 1)
+                {
+                    var lay = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(Path.Combine(Path.GetDirectoryName(Application.dataPath), PedestalMixedLayout)));
+                    lineup = lay["lanes"].Select(l => ((string)l["body"] ?? "matt").ToUpperInvariant()).ToArray();
+                }
                 menu.events.Add(new MainMenuController.MenuEvent
                 {
-                    number = num, name = (string)e["name"], rules = (string)e["rules"], brain = (string)e["brain"],
-                    scene = Path.GetFileNameWithoutExtension(path),
+                    number = num, name = (string)e["name"], rules = (string)e["rules"],
+                    brain = num == 1 ? "rung0 · MATT + ZOMBIE" : (string)e["brain"],
+                    scene = Path.GetFileNameWithoutExtension(path), lineup = lineup,
                 });
             }
             EditorSceneManager.SaveScene(scene, MainMenuScene);

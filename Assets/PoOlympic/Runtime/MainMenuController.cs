@@ -25,6 +25,7 @@ namespace PoOlympic
             public string rules;
             public string brain;
             public string scene;   // scene name in Build Settings
+            public string[] lineup; // athlete per lane in the built scene (MATT / ZOMBIE); scenes are built per lineup
         }
 
         public List<MenuEvent> events = new();
@@ -132,6 +133,7 @@ namespace PoOlympic
         /// <summary>Put `athlete` in the selected lane and move the selection on to the next lane.</summary>
         void Assign(string athlete)
         {
+            if (_selected?.lineup != null) return;       // lineup fixed by the event scene
             _lastAthlete = athlete;
             _lineup[_lane] = athlete;
             _lane = (_lane + 1) % _lineup.Length;
@@ -140,6 +142,7 @@ namespace PoOlympic
 
         void FillAll()
         {
+            if (_selected?.lineup != null) return;
             for (int k = 0; k < _lineup.Length; k++) _lineup[k] = _lastAthlete;
             RefreshSlots();
         }
@@ -159,6 +162,11 @@ namespace PoOlympic
         void SelectEvent(MenuEvent ev)
         {
             _selected = ev;
+            if (ev?.lineup != null && ev.lineup.Length == _lineup.Length)   // the scene's own lineup (fixed for now)
+            {
+                Array.Copy(ev.lineup, _lineup, _lineup.Length);
+                RefreshSlots();
+            }
             for (int i = 0; i < _eventButtons.Count; i++)
                 _eventButtons[i].EnableInClassList("event-button--selected", events[i] == ev);
             _rules.text = ev?.rules ?? "";

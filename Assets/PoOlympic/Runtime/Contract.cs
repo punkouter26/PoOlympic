@@ -52,6 +52,7 @@ namespace PoOlympic
             public double[] qpos;
         }
 
+        public string body;                   // athlete body (Phase Z); absent = MATT
         public int contract_version;
         public string mujoco_version;
         public double timestep;
@@ -72,6 +73,23 @@ namespace PoOlympic
         public double[] default_qpos_scene;
         public JointQpos[] default_joint_qpos;
         public string fingerprint_sha256;
+
+        public string BodyName => string.IsNullOrEmpty(body) ? "matt" : body;
+
+        /// <summary>Fall rule pelvis height: MATT 0.55 m; other bodies the same fraction of their standing pelvis height
+        /// (training/poolympic/events/iron_pedestal.py body_fall_z).</summary>
+        public double FallPelvisZ
+        {
+            get
+            {
+                if (BodyName == "matt") return 0.55;
+                foreach (var j in default_joint_qpos)
+                    if (j.joint == root_joint) return 0.55 * j.qpos[2] / MattRootZ;
+                throw new InvalidOperationException("contract: root joint missing from default_joint_qpos");
+            }
+        }
+
+        public const double MattRootZ = 0.9549291;   // scene_matt.xml keyframe "default"
 
         public static Contract Parse(string json)
         {

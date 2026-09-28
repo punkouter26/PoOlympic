@@ -49,6 +49,8 @@ namespace PoOlympic.Editor
             var models = Path.Combine(ProjectRoot, ModelsFolder);
             Directory.CreateDirectory(Path.Combine(models, "Brains"));
             File.Copy(Path.Combine(ProjectRoot, "parity", "contract.json"), Path.Combine(models, "contract.json"), true);
+            foreach (var f in Directory.GetFiles(Path.Combine(ProjectRoot, "parity"), "contract_*.json"))   // other bodies
+                File.Copy(f, Path.Combine(models, Path.GetFileName(f)), true);
             foreach (var f in Directory.GetFiles(Path.Combine(ProjectRoot, "parity", "brains")))
                 File.Copy(f, Path.Combine(models, "Brains", Path.GetFileName(f)), true);
             AssetDatabase.Refresh();

@@ -56,6 +56,7 @@ class LaneResult:
     reason: str | None
     gusts_survived: int
     place: int = 0
+    body: str = "matt"
 
 
 @dataclass
@@ -70,8 +71,10 @@ class HeatResult:
 
 
 class _Lane:
-    def __init__(self, m, d, k: int, prefix: str, origin: np.ndarray, traits: Traits, rng: np.random.Generator):
+    def __init__(self, m, d, k: int, prefix: str, origin: np.ndarray, traits: Traits, rng: np.random.Generator,
+                 fall_z: float = FALL_Z):
         self.k, self.prefix, self.origin, self.traits, self.rng = k, prefix, origin, traits, rng
+        self.fall_z = fall_z          # per body: the same fraction of its standing pelvis height as MATT's 0.55 m
         self.ath = C.Athlete.bind(m, prefix)
         self.torso = m.body(prefix + "torso").id
         self.pelvis = m.body(prefix + "pelvis").id
@@ -120,7 +123,7 @@ class _Lane:
 
     def eliminated(self, m, d) -> str | None:
         r = self.ath.root_qposadr
-        if d.qpos[r + 2] < FALL_Z:
+        if d.qpos[r + 2] < self.fall_z:
             return "FELL"
         if math.degrees(math.acos(max(-1.0, min(1.0, d.xmat[self.torso][8])))) > FALL_TILT_DEG:
             return "FELL"
@@ -134,29 +137,45 @@ class _Lane:
         return None
 
 
-def run_heat(onnx: Path, seed: int, traits: list[Traits] | None = None, max_s: float = MAX_S) -> HeatResult:
-    m = mujoco.MjModel.from_xml_path(str(SCENE))
+def body_fall_z(body: str) -> float:
+    """MATT's 0.55 m pelvis fall line at the same fraction of the body's standing pelvis height."""
+    from .. import bodies
+    if body == "matt":
+        return FALL_Z
+    z = float(mujoco.MjModel.from_xml_path(str(bodies.BODIES[body].scene_xml)).key("default").qpos[2])
+    matt = float(mujoco.MjModel.from_xml_path(str(bodies.BODIES["matt"].scene_xml)).key("default").qpos[2])
+    return FALL_Z * z / matt
+
+
+def run_heat(onnx: Path, seed: int, traits: list[Traits] | None = None, max_s: float = MAX_S,
+             scene: Path = SCENE, layout_path: Path = LAYOUT, brains: dict[str, Path] | None = None) -> HeatResult:
+    """brains: body -> ONNX for multi-body heats (layout lanes carry "body", tools/compose_mixed.py); default: `onnx`
+    for every lane."""
+    from .. import bodies
+    m = mujoco.MjModel.from_xml_path(str(scene))
     d = mujoco.MjData(m)
-    layout = json.loads(LAYOUT.read_text())
-    defaults = json.loads(C.CONTRACT_JSON.read_text())["default_joint_qpos"]
+    layout = json.loads(Path(layout_path).read_text())
+    lane_body = [l.get("body", "matt") for l in layout["lanes"]]
+    defaults = {b: json.loads(bodies.BODIES[b].contract_json.read_text())["default_joint_qpos"] for b in set(lane_body)}
     rng = np.random.default_rng(seed)
     traits = traits or [Traits.sample(rng) for _ in range(len(layout["lanes"]))]
     lanes = [_Lane(m, d, l["lane"], l["prefix"], np.asarray(l["origin"], float), traits[i],
-                   np.random.default_rng([seed, 1000 + i]))
+                   np.random.default_rng([seed, 1000 + i]), fall_z=body_fall_z(lane_body[i]))
              for i, l in enumerate(layout["lanes"])]
-    for ln in lanes:
-        ln.reset(m, d, defaults)
+    for ln, b in zip(lanes, lane_body):
+        ln.reset(m, d, defaults[b])
     mujoco.mj_forward(m, d)
-    sess = ort.InferenceSession(str(onnx), providers=["CPUExecutionProvider"])
+    sessions = {b: ort.InferenceSession(str((brains or {}).get(b, onnx)), providers=["CPUExecutionProvider"])
+                for b in set(lane_body)}
     dt_tick = m.opt.timestep * C.DECIMATION
     n_cubes = layout["n_cubes"]
     next_cube, rnd = 0, 0
     tick, t = 0, 0.0
     next_round = COUNTDOWN_S
     while t < max_s and sum(ln.out_at is None for ln in lanes) > 1:
-        for ln in lanes:
+        for ln, b in zip(lanes, lane_body):
             if ln.out_at is None:
-                ln.control(sess, d)
+                ln.control(sessions[b], d)
         if t >= next_round:                      # gust round: same magnitude, own direction, cube every other round
             dv = GUST_START + GUST_STEP * rnd
             for ln in lanes:
@@ -191,7 +210,7 @@ def run_heat(onnx: Path, seed: int, traits: list[Traits] | None = None, max_s: f
     for i, ln in enumerate(order):
         if i > 0 and not (ln.out_at is None and order[i - 1].out_at is None) and ln.out_at != order[i - 1].out_at:
             place = i + 1
-        res.lanes.append(LaneResult(ln.k, ln.traits, ln.out_at, ln.reason, ln.gusts, place))
+        res.lanes.append(LaneResult(ln.k, ln.traits, ln.out_at, ln.reason, ln.gusts, place, lane_body[ln.k]))
     res.lanes.sort(key=lambda r: r.lane)
     return res
 

@@ -21,6 +21,7 @@ namespace PoOlympic
         public AthleteJudge(MujocoLib.mjModel_* m, PolicyRunner runner, params string[] supportGeoms)
         {
             _runner = runner;
+            fallPelvisZ = runner.Contract.FallPelvisZ;   // per body (MATT 0.55 m, zombie 0.324 m)
             var bodies = AthleteBinding.NameIndex(m, (int)MujocoLib.mjtObj.mjOBJ_BODY, (int)m->nbody);
             var geoms = AthleteBinding.NameIndex(m, (int)MujocoLib.mjtObj.mjOBJ_GEOM, (int)m->ngeom);
             var p = runner.athletePrefix;
