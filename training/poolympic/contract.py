@@ -15,16 +15,22 @@ from pathlib import Path
 import mujoco
 import numpy as np
 
+from . import bodies
+
 ROOT = Path(__file__).resolve().parents[1]
-SCENE_XML = ROOT / "assets" / "scene_matt.xml"
-CONTRACT_JSON = ROOT.parent / "parity" / "contract.json"
+BODY = bodies.current()                  # $POOLYMPIC_BODY (default matt) — one body per Python process (Phase Z)
+SCENE_XML = BODY.scene_xml
+CONTRACT_JSON = BODY.contract_json
 
 CONTRACT_VERSION = 3
 DECIMATION = 4
 ACTION_SCALE = 0.25  # rad per unit action
 JOINT_VEL_SCALE = 0.05
-GAIT_HZ_BASE = 0.8  # stride frequency (Hz) = GAIT_HZ_BASE + GAIT_HZ_PER_MPS * speed  (human-like: 0.9 Hz @ 0.5 m/s,
-GAIT_HZ_PER_MPS = 0.2  # 1.4 Hz @ 3 m/s); speed = |(vx, vy)| + GAIT_HZ_YAW_WEIGHT·|wz|. Advanced only while moving.
+# stride frequency (Hz) = GAIT_HZ_BASE + GAIT_HZ_PER_MPS * speed  (MATT, human-like: 0.9 Hz @ 0.5 m/s, 1.4 Hz @ 3 m/s);
+# speed = |(vx, vy)| + GAIT_HZ_YAW_WEIGHT·|wz|. Advanced only while moving. Other bodies: Froude-scaled
+# f(v) = (0.8 + 0.2 v/√λ)/√λ  ->  base 0.8/√λ, per m/s 0.2/λ  (λ = 1 for MATT: values unchanged).
+GAIT_HZ_BASE = 0.8 / math.sqrt(BODY.length_scale)
+GAIT_HZ_PER_MPS = 0.2 / BODY.length_scale
 # v3 (2026-09-28): yaw weight 0.5 -> 1.2. At a 2.5 rad/s pivot the v2 clock ran 1.05 Hz, i.e. ~60 deg of turn per step —
 # at MATT's +-40 deg hip-rotation limit — and capped the 360 Turntable at ~3.2 s; 1.4 Hz lets it step faster.
 GAIT_HZ_YAW_WEIGHT = 1.2
@@ -174,6 +180,7 @@ def export_contract(fingerprint_sha256: str | None = None) -> dict:
         offsets[name] = {"offset": o, "size": size}
         o += size
     contract = {
+        **({} if BODY.name == "matt" else {"body": BODY.name}),
         "contract_version": CONTRACT_VERSION,
         "mujoco_version": mujoco.__version__,
         "timestep": float(m.opt.timestep),

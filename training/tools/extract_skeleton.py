@@ -1,10 +1,10 @@
 """A4 — Extract MATT's bind-pose skeleton + skinned vertices into the MuJoCo frame.
 
 Outputs (training/assets/derived/):
-  skeleton_matt.json  joint names, parents, world bind positions/rotations (MuJoCo frame)
-  skin_matt.npz       bind-pose vertex positions (MuJoCo frame) + per-vertex dominant joint + weights
+  skeleton_<body>.json  joint names, parents, world bind positions/rotations (MuJoCo frame)
+  skin_<body>.npz       bind-pose vertex positions (MuJoCo frame) + per-vertex dominant joint + weights
 
-Usage:  uv run python tools/extract_skeleton.py [path/to/matt.glb]
+Usage:  uv run python tools/extract_skeleton.py [path/to/body.glb]            (body = $POOLYMPIC_BODY, default matt)
 """
 
 from __future__ import annotations
@@ -17,9 +17,11 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+from poolympic import bodies  # noqa: E402
 from poolympic.gltf_io import Glb, rot_to_mj, to_mj  # noqa: E402
 
-DEFAULT_GLB = ROOT.parent / "SourceArt" / "test_MATT_Avaturn.glb"
+BODY = bodies.current()
+DEFAULT_GLB = BODY.glb
 OUT_DIR = ROOT / "assets" / "derived"
 
 
@@ -72,7 +74,7 @@ def main(glb_path: Path) -> int:
     verts = np.concatenate(verts)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(
-        OUT_DIR / "skin_matt.npz",
+        BODY.skin_npz,
         verts=verts, dominant=np.concatenate(dom), weights=np.concatenate(wts),
         joints=np.concatenate(jidx), mesh=np.concatenate(mesh_ids),
         mesh_names=np.array([m.name for m in skin.meshes]), joint_names=np.array(names),
@@ -102,11 +104,13 @@ def main(glb_path: Path) -> int:
         "ground_min_z_m": float(verts[:, 2].min()),
         "joints": joints,
     }
-    (OUT_DIR / "skeleton_matt.json").write_text(json.dumps(report, indent=1))
+    BODY.skeleton_json.write_text(json.dumps(report, indent=1))
 
     print(f"joints={len(joints)}  bind-consistency={bind_dev:.2e}  L/R mirror err={mirror_err*1000:.3f} mm")
     print(f"height body={height_body:.3f} m  with hair={height_all:.3f} m  min z={verts[:, 2].min():+.4f} m  verts={len(verts)}")
-    ok = len(joints) == 52 and mirror_err < 1e-3 and bind_dev < 1e-4 and 1.80 < height_all < 1.90
+    mirror_tol = 1e-3 if BODY.name == "matt" else 0.01   # the zombie sculpt is ~5 mm asymmetric (geometry is mirrored)
+    ok = (len(joints) == BODY.n_joints and mirror_err < mirror_tol and bind_dev < 1e-4
+          and BODY.height_range[0] < height_all < BODY.height_range[1])
     print("A4 CHECKS", "PASS" if ok else "FAIL")
     return 0 if ok else 1
 

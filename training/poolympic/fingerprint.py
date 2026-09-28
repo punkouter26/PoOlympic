@@ -121,14 +121,17 @@ def canonical_bytes(fp: dict) -> bytes:
 
 
 def write_python_fingerprint(scene_xml: Path | None = None) -> tuple[Path, str]:
-    m = mujoco.MjModel.from_xml_path(str(scene_xml or ROOT / "assets" / "scene_matt.xml"))
+    """Fingerprint of the current body's scene ($POOLYMPIC_BODY): parity/fingerprint_python[_<body>].json + .sha256."""
+    from . import bodies
+    body = bodies.current()
+    m = mujoco.MjModel.from_xml_path(str(scene_xml or body.scene_xml))
     fp = fingerprint(m)
     PARITY.mkdir(exist_ok=True)
-    path = PARITY / "fingerprint_python.json"
+    path = body.fingerprint_json
     data = canonical_bytes(fp)
     path.write_bytes(data)
     sha = hashlib.sha256(data).hexdigest()
-    (PARITY / "fingerprint_python.sha256").write_text(sha + "\n")
+    path.with_suffix(".sha256").write_text(sha + "\n")
     return path, sha
 
 

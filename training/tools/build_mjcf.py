@@ -29,10 +29,17 @@ import mujoco
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from poolympic import bodies  # noqa: E402
+
 ASSETS = ROOT / "assets"
 DERIVED = ASSETS / "derived"
+# Phase Z: the body is chosen with $POOLYMPIC_BODY (default matt). Every size-dependent number below is MATT's value times
+# a scale that is exactly 1.0 for MATT, so his artefacts stay byte-identical.
+BODY = bodies.current()
+L = BODY.length_scale
 
-TOTAL_MASS = 80.0
+TOTAL_MASS = BODY.total_mass
 TIMESTEP = 0.005
 SOLVER_ITERATIONS = 20
 N_CUBES_TRAINING = 4
@@ -70,6 +77,11 @@ def vec(v) -> str:
     return " ".join(f(x) for x in v)
 
 
+# Body pairs that never collide (MuJoCo already skips parent/child). The inner thighs touch at rest on every body.
+# A self-colliding body adds the pairs that touch in its zero / default pose (filled in by build_zombie_excludes).
+EXCLUDES: list[tuple[str, str]] = [("thigh_l", "thigh_r")]
+
+
 def lane_bits(lane: int, leg: bool) -> tuple[int, int]:
     """(contype, conaffinity). Upper body: collides with ground/cubes only. Legs: also leg<->leg within lane."""
     if leg:
@@ -91,7 +103,7 @@ class JointSpec:
     mirror: bool = True  # mirror axis for right side (x and z components flip sign)
 
 
-GAINS = {  # kp (Nm/rad), kv (Nm s/rad), force cap (Nm), armature
+MATT_GAINS = {  # kp (Nm/rad), kv (Nm s/rad), force cap (Nm), armature
     "hip": (300.0, 30.0, 280.0, 0.02),
     "knee": (300.0, 30.0, 280.0, 0.02),
     "ankle": (200.0, 20.0, 220.0, 0.01),
@@ -99,7 +111,13 @@ GAINS = {  # kp (Nm/rad), kv (Nm s/rad), force cap (Nm), armature
     "shoulder": (60.0, 6.0, 80.0, 0.01),
     "elbow": (50.0, 5.0, 70.0, 0.01),
 }
-TOE_PASSIVE = dict(stiffness=20.0, damping=1.0, armature=0.005)
+# size scaling: stiffness and torque cap ∝ mass × length × strength, damping additionally × time scale, armature ∝ m l²
+_TS, _IS, _TT = BODY.torque_scale, BODY.inertia_scale, BODY.time_scale
+GAINS = MATT_GAINS if BODY.name == "matt" else {
+    k: (kp * _TS, kv * _TS * _TT, cap * _TS, arm * _IS) for k, (kp, kv, cap, arm) in MATT_GAINS.items()}
+_PS = BODY.mass_scale * L        # passive toe spring: size-scaled, not weakened
+TOE_PASSIVE = dict(stiffness=20.0, damping=1.0, armature=0.005) if BODY.name == "matt" else dict(
+    stiffness=20.0 * _PS, damping=1.0 * _PS * _TT, armature=0.005 * _IS)
 
 ABDOMEN = [
     JointSpec("abdomen_flex", (0, 1, 0), (-30, 60), "abdomen"),
@@ -172,9 +190,9 @@ MIRROR = np.array([1.0, -1.0, 1.0])
 
 class Skin:
     def __init__(self):
-        sk = json.loads((DERIVED / "skeleton_matt.json").read_text())
+        sk = json.loads(BODY.skeleton_json.read_text())
         self.joint_pos = {j["name"]: np.array(j["pos"]) for j in sk["joints"]}
-        z = np.load(DERIVED / "skin_matt.npz")
+        z = np.load(BODY.skin_npz)
         names = list(z["joint_names"])
         mesh_names = list(z["mesh_names"])
         keep = np.array([("hair" not in mesh_names[m]) for m in z["mesh"]])  # hair is visual only
@@ -184,6 +202,17 @@ class Skin:
 
     def of(self, bones: list[str]) -> np.ndarray:
         return self.verts[np.isin(self.dom, bones)]
+
+    def hand_tip(self, side: str) -> np.ndarray:
+        """End of the forearm capsule: MATT's middle finger (LeftHandMiddle2); rigs without finger bones (zombie) use
+        the hand vertex furthest along the forearm direction (98th percentile)."""
+        S = "Left" if side == "l" else "Right"
+        if f"{S}HandMiddle2" in self.joint_pos:
+            return self.joint_pos[f"{S}HandMiddle2"]
+        p0, p1 = self.joint_pos[f"{S}ForeArm"], self.joint_pos[f"{S}Hand"]
+        u = (p1 - p0) / np.linalg.norm(p1 - p0)
+        t = float(np.percentile((self.of([f"{S}Hand"]) - p1) @ u, 98))
+        return p1 + u * t
 
 
 def fit_limb_capsule(p0, p1, verts, pct=65.0, shrink=0.5, p1_extra=0.0):
@@ -230,22 +259,28 @@ def fit_box(verts, x_lo, x_hi, sole_z, height):
 def fit_geoms(skin: Skin) -> dict[str, list[dict]]:
     J = skin.joint_pos
     g: dict[str, list[dict]] = {}
-    g["pelvis"] = [fit_trunk_capsule(skin.of(["Hips"]), J["Hips"][2] - 0.08, J["Spine"][2] + 0.02)]
+    g["pelvis"] = [fit_trunk_capsule(skin.of(["Hips"]), J["Hips"][2] - 0.08 * L, J["Spine"][2] + 0.02 * L)]
     g["torso"] = [fit_trunk_capsule(skin.of(["Spine", "Spine1"]))]
-    g["chest"] = [fit_trunk_capsule(skin.of(["Spine2"]), J["Spine2"][2], J["LeftArm"][2] - 0.03)]
+    g["chest"] = [fit_trunk_capsule(skin.of(["Spine2"]), J["Spine2"][2], J["LeftArm"][2] - 0.03 * L)]
     neck = fit_limb_capsule(J["Neck"], J["Head"], skin.of(["Neck"]), pct=60, shrink=0.0)
     head = fit_sphere(skin.of(["Head"]))
     g["head"] = [neck, head]
     # Left limbs (mirrored later)
     g["upper_arm_l"] = [fit_limb_capsule(J["LeftArm"], J["LeftForeArm"], skin.of(["LeftArm"]))]
-    g["forearm_l"] = [fit_limb_capsule(J["LeftForeArm"], J["LeftHandMiddle2"], skin.of(["LeftForeArm"]), pct=70)]
+    g["forearm_l"] = [fit_limb_capsule(J["LeftForeArm"], skin.hand_tip("l"), skin.of(["LeftForeArm"]), pct=70)]
     g["thigh_l"] = [fit_limb_capsule(J["LeftUpLeg"], J["LeftLeg"], skin.of(["LeftUpLeg"]), pct=60)]
     g["shin_l"] = [fit_limb_capsule(J["LeftLeg"], J["LeftFoot"], skin.of(["LeftLeg"]), pct=60)]
     foot_v = skin.of(["LeftFoot", "LeftToeBase"])
     toe_x = J["LeftToeBase"][0]
-    g["foot_l"] = [fit_box(foot_v, float(np.percentile(foot_v[:, 0], 0.5)), toe_x, skin.sole_z, 0.06)]
-    g["toe_l"] = [fit_box(foot_v[foot_v[:, 0] > toe_x - 0.01], toe_x, float(np.percentile(foot_v[:, 0], 99.5)),
-                          skin.sole_z, 0.035)]
+    heel_x = float(np.percentile(foot_v[:, 0], 0.5))
+    if BODY.name != "matt":
+        # AccuRig weights the heel skin to the calf: take the heel from all skin near the sole under this foot
+        sole = skin.verts[(skin.verts[:, 2] < skin.sole_z + 0.03 * L)
+                          & (np.abs(skin.verts[:, 1] - J["LeftFoot"][1]) < 0.07 * L)]
+        heel_x = float(np.percentile(sole[:, 0], 0.5))
+    g["foot_l"] = [fit_box(foot_v, heel_x, toe_x, skin.sole_z, 0.06 * L)]
+    g["toe_l"] = [fit_box(foot_v[foot_v[:, 0] > toe_x - 0.01 * L], toe_x, float(np.percentile(foot_v[:, 0], 99.5)),
+                          skin.sole_z, 0.035 * L)]
     for b in ("upper_arm", "forearm", "thigh", "shin", "foot", "toe"):
         g[f"{b}_r"] = [mirror_geom(x) for x in g[f"{b}_l"]]
     return g
@@ -301,7 +336,7 @@ def build_robot(skin: Skin, geoms, inertials=None, lane: int = LANE) -> tuple[ET
                 actuators.append((jname, js.group))
             ET.SubElement(el, "joint", ja)
             joints_in_order.append((jname, js))
-        ct, ca = lane_bits(lane, s.leg)
+        ct, ca = lane_bits(lane, s.leg or BODY.self_collision)   # self-colliding body: every geom on the leg bit
         for gi, g in enumerate(geoms[s.name]):
             ga = {"name": f"{s.name}_geom{gi}", "type": g["type"], "size": vec(g["size"]),
                   "contype": str(ct), "conaffinity": str(ca), "condim": "3", "friction": vec(BODY_FRICTION)}
@@ -354,7 +389,7 @@ def compose_model(skin, geoms, inertials, with_scene: bool, n_cubes: int, defaul
                   pedestal_h: float = 0.0) -> str:
     """pedestal_h > 0: Iron Pedestal scene — ground plane at z = -pedestal_h, a static 1 m x 1 m box with its top at z = 0
     under the athlete (same surface as the ground), parked cubes lowered onto the ground."""
-    root = ET.Element("mujoco", {"model": ("pedestal_scene" if pedestal_h else "matt_scene") if with_scene else "matt"})
+    root = ET.Element("mujoco", {"model": ("pedestal_scene" if pedestal_h else f"{BODY.name}_scene") if with_scene else BODY.name})
     option_block(root)
     wb = ET.SubElement(root, "worldbody")
     if with_scene:
@@ -387,7 +422,8 @@ def compose_model(skin, geoms, inertials, with_scene: bool, n_cubes: int, defaul
     # Inner thighs overlap at rest (hip pivots 0.172 m apart, thigh radius ~0.089 m): exclude that pair only;
     # shin/foot/toe still collide across legs (leg-crossing detection).
     contact = ET.SubElement(root, "contact")
-    ET.SubElement(contact, "exclude", {"body1": "thigh_l", "body2": "thigh_r"})
+    for b1, b2 in EXCLUDES:
+        ET.SubElement(contact, "exclude", {"body1": b1, "body2": b2})
     actuator_block(root, actuators)
     if with_scene and default_qpos is not None:
         kf = ET.SubElement(root, "keyframe")
@@ -451,7 +487,8 @@ def compose_meet(skin, geoms, inertials, default_qpos: np.ndarray, n_lanes: int 
                 el.set("name", p + el.get("name"))
         pelvis.set("pos", vec(np.array([float(x) for x in pelvis.get("pos").split()]) + o))
         wb.append(pelvis)
-        ET.SubElement(contact, "exclude", {"body1": p + "thigh_l", "body2": p + "thigh_r"})
+        for b1, b2 in EXCLUDES:
+            ET.SubElement(contact, "exclude", {"body1": p + b1, "body2": p + b2})
         all_actuators += [(p + j, g) for j, g in actuators]
         q = default_qpos.copy()
         q[0:3] += o
@@ -603,6 +640,54 @@ def default_pose_qpos(skin, geoms, inertials) -> np.ndarray:
 JOINT_DEFAULTS: dict[str, float] = {}
 
 
+def touching_pairs(skin, geoms, inertials) -> list[tuple[str, str]]:
+    """Non-parent/child body pairs whose geoms are in contact at the zero pose or the default stance (self-colliding
+    bodies only): those overlaps are anatomy, not collisions (e.g. upper arm against chest at the shoulder)."""
+    xml = compose_model(skin, geoms, inertials, with_scene=False, n_cubes=0)
+    m = mujoco.MjModel.from_xml_string(xml)
+    d = mujoco.MjData(m)
+    pairs = set()
+    poses = [m.qpos0.copy()]
+    q = m.qpos0.copy()
+    for i in range(m.njnt):
+        if m.joint(i).name in JOINT_DEFAULTS:
+            q[m.jnt_qposadr[i]] = math.radians(JOINT_DEFAULTS[m.joint(i).name])
+    poses.append(q)
+    for q in poses:
+        d.qpos[:] = q
+        mujoco.mj_forward(m, d)
+        for c in d.contact[: d.ncon]:
+            b1, b2 = m.body(m.geom_bodyid[c.geom1]).name, m.body(m.geom_bodyid[c.geom2]).name
+            pair = tuple(sorted((b1, b2)))
+            if pair != ("thigh_l", "thigh_r"):
+                pairs.add(pair)
+    return sorted(pairs)
+
+
+def write_other_body(header, skin, geoms, inertials, geom_mass, qdef, scene_xml, robot_xml) -> int:
+    """Phase Z: a second body writes only its own robot + training scene + report (the event meets are MATT's for now)."""
+    BODY.robot_xml.write_text(header + robot_xml + "\n")
+    BODY.scene_xml.write_text(header + scene_xml + "\n")
+    m = mujoco.MjModel.from_xml_string(scene_xml)
+    specs = body_specs()
+    report = {
+        "body": BODY.name, "length_scale": L, "torque_scale": BODY.torque_scale,
+        "total_mass": float(sum(m.body_mass[m.body(s.name).id] for s in specs)),
+        "uniform_density_geom_mass": geom_mass,
+        "nq": m.nq, "nv": m.nv, "nu": m.nu, "nbody": m.nbody, "ngeom": m.ngeom,
+        "sole_z_bind": skin.sole_z, "default_qpos": qdef.round(6).tolist(), "excludes": EXCLUDES,
+        "gains": {k: [round(x, 5) for x in v] for k, v in GAINS.items()},
+        "actuators": [m.actuator(i).name for i in range(m.nu)],
+        "bodies": {s.name: {"mass": round(inertials[s.name]["mass"], 4),
+                            "geoms": [{k: (v if isinstance(v, str) else np.round(np.asarray(v, float), 4).tolist())
+                                       for k, v in g.items()} for g in geoms[s.name]]} for s in specs},
+    }
+    BODY.body_report.write_text(json.dumps(report, indent=1))
+    print(f"{BODY.robot_xml.name} + {BODY.scene_xml.name} written. nq={m.nq} nv={m.nv} nu={m.nu} bodies={m.nbody} geoms={m.ngeom}")
+    print(f"robot mass={report['total_mass']:.3f} kg, default standing root height z={qdef[2]:.4f} m, excludes={EXCLUDES}")
+    return 0
+
+
 def main() -> int:
     skin = Skin()
     geoms = fit_geoms(skin)
@@ -612,11 +697,19 @@ def main() -> int:
         for js in s.joints:
             JOINT_DEFAULTS[f"{js.name}_{s.side}" if s.side else js.name] = js.default_deg
 
+    for jn, deg in BODY.joint_defaults.items():        # body-specific default stance (both sides)
+        for key in (jn, f"{jn}_l", f"{jn}_r"):
+            if key in JOINT_DEFAULTS:
+                JOINT_DEFAULTS[key] = deg
+    if BODY.self_collision:
+        EXCLUDES.extend(touching_pairs(skin, geoms, inertials))
     qdef = default_pose_qpos(skin, geoms, inertials)
     robot_xml = compose_model(skin, geoms, inertials, with_scene=False, n_cubes=0)
     scene_xml = compose_model(skin, geoms, inertials, with_scene=True, n_cubes=N_CUBES_TRAINING, default_qpos=np.concatenate(
         [qdef, np.concatenate([np.concatenate([cube_park_pos(i), [1, 0, 0, 0]]) for i in range(N_CUBES_TRAINING)])]))
-    header = "<!-- GENERATED by training/tools/build_mjcf.py from SourceArt/test_MATT_Avaturn.glb. Do not edit. -->\n"
+    header = f"<!-- GENERATED by training/tools/build_mjcf.py from {BODY.glb.relative_to(ROOT.parent).as_posix()}. Do not edit. -->\n"
+    if BODY.name != "matt":
+        return write_other_body(header, skin, geoms, inertials, geom_mass, qdef, scene_xml, robot_xml)
     (ASSETS / "cube.xml").write_text(header + cube_entity_xml() + "\n")
     (ASSETS / "matt.xml").write_text(header + robot_xml + "\n")
     (ASSETS / "scene_matt.xml").write_text(header + scene_xml + "\n")
