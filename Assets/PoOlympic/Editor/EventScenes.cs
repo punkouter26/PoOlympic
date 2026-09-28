@@ -19,6 +19,27 @@ namespace PoOlympic.Editor
         public const string PedestalSource = "training/assets/scene_pedestal.xml";
         public const string IronMaterial = "Assets/PoOlympic/Materials/IronPedestal.mat";
         public const string DefaultRung0Brain = "r0_v2_it1000.onnx";
+        public const string StadiumAsset = "Assets/PoOlympic/Art/Stadium/Stadium.glb";
+
+        /// <summary>
+        /// Render-only stadium (SourceArt/Stadium/stadium.blend → Stadium.glb, authored in MuJoCo axes). glTF→glTFast maps
+        /// Blender (x, y, z) to Unity (−x, z, −y); a 180° yaw makes it (x, z, y) = the MuJoCo plug-in's mapping. The root is
+        /// then shifted so the named venue anchor (VENUE_*) sits on the MuJoCo origin with the infield at `groundY`.
+        /// </summary>
+        public static GameObject PlaceStadium(Scene scene, string venue, float groundY)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(StadiumAsset) ?? throw new FileNotFoundException(StadiumAsset);
+            var st = (GameObject)PrefabUtility.InstantiatePrefab(prefab, scene);
+            st.name = "Stadium";
+            st.transform.SetPositionAndRotation(Vector3.zero, Quaternion.Euler(0f, 180f, 0f));
+            var anchor = Array.Find(st.GetComponentsInChildren<Transform>(true), t => t.name == venue)
+                         ?? throw new MissingReferenceException($"venue anchor {venue} not in {StadiumAsset}");
+            var p = anchor.position;
+            st.transform.position = new Vector3(-p.x, groundY, -p.z);
+            foreach (var c in st.GetComponentsInChildren<Component>(true))
+                if (c is Collider || c is Rigidbody) throw new InvalidOperationException($"stadium must be render-only: {c.GetType().Name} on {c.name}");
+            return st;
+        }
 
         static Material IronPedestalMaterial()
         {
@@ -54,10 +75,9 @@ namespace PoOlympic.Editor
             }
             var cam = Copy("Main Camera");
             Copy("Sun");
-            var track = Copy("TrackVisual");
-            track.transform.position = new Vector3(0f, -0.5f, 0f); // the MuJoCo ground sits at z = -0.5 in this scene
             EditorSceneManager.CloseScene(src, true);
             SceneManager.SetActiveScene(scene);
+            PlaceStadium(scene, "VENUE_CentreStage", -0.5f); // the MuJoCo ground sits at z = -0.5 in this scene
 
             // MuJoCo geom renderers: only the pedestal and the pool cubes are shown
             var cubeMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/PoOlympic/Materials/PoolCube.mat");
