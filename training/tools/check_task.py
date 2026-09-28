@@ -26,6 +26,16 @@ from poolympic.tasks.matt_env import matt_rung2_sym3_env_cfg, matt_pedestal2_env
 TASKS = {"rung0": matt_rung0_env_cfg, "rung1": matt_rung1_env_cfg, "rung2": matt_rung2_env_cfg, "pedestal": matt_pedestal_env_cfg, "pedestal2": matt_pedestal2_env_cfg, "rung2_sym3": matt_rung2_sym3_env_cfg}
 
 
+def _zombie(rung: str):
+    def make():   # needs POOLYMPIC_BODY=zombie (zombie_env checks)
+        from poolympic.tasks import zombie_env
+        return getattr(zombie_env, f"zombie_{rung}_env_cfg")()
+    return make
+
+
+TASKS.update({f"zombie_{r}": _zombie(r) for r in ("rung0", "rung1", "rung2")})
+
+
 def main(task: str = "rung0") -> int:
     make = TASKS[task]
     cfg = make()

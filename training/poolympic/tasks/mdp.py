@@ -355,3 +355,48 @@ def gust_curriculum(env, env_ids, start: float, step: float, max_level: float, u
         elif full < down:
             env._poolympic_gust = max(start, env._poolympic_gust - step)
     return {"gust_mps": torch.tensor(env._poolympic_gust)}
+
+
+# ------------------------------------------------------------------ Phase Z: zombie style (movement personality)
+def _heading_frame_xy(env, v_xy: torch.Tensor) -> torch.Tensor:
+    """World xy vectors (..., 2) rotated into the pelvis heading frame (x forward, y left)."""
+    _, qp, _ = _root(env)
+    yaw = heading_yaw(qp[:, 3:7])
+    c, s = torch.cos(yaw), torch.sin(yaw)
+    while c.dim() < v_xy.dim() - 1:
+        c, s = c[:, None], s[:, None]
+    return torch.stack([c * v_xy[..., 0] + s * v_xy[..., 1], -s * v_xy[..., 0] + c * v_xy[..., 1]], dim=-1)
+
+
+def torso_pitch_tracking(env, target_deg: float, std_deg: float, body_name: str = "torso") -> torch.Tensor:
+    """Reward the torso leaning forward by target_deg (zombie hunch) instead of standing upright: signed pitch of the
+    torso z axis towards the heading direction."""
+    ent = env.scene["robot"]
+    bid = ent.find_bodies(body_name)[0][0]
+    w, x, y, z = ent.data.body_link_quat_w[:, bid].unbind(-1)
+    axis = torch.stack([2 * (x * z + w * y), 2 * (y * z - w * x)], dim=-1)          # torso z axis, world xy part
+    up = 1.0 - 2.0 * (x * x + y * y)
+    fwd = _heading_frame_xy(env, axis)[:, 0]
+    pitch = torch.atan2(fwd, up)
+    return torch.exp(-((pitch - math.radians(target_deg)) ** 2) / math.radians(std_deg) ** 2)
+
+
+def feet_width(env, target: float, std: float) -> torch.Tensor:
+    """Reward a lateral foot spacing of `target` metres (heading frame) — the zombie's wide stance."""
+    xy = _foot_geom_xy(env)                                                        # (N, 4, 2): foot_l, toe_l, foot_r, toe_r
+    lat = _heading_frame_xy(env, xy)[..., 1]
+    width = lat[:, 0] - lat[:, 2]
+    return torch.exp(-((width - target) ** 2) / std**2)
+
+
+def feet_low(env, max_height: float, std: float) -> torch.Tensor:
+    """Reward keeping both foot boxes below max_height (geom centre, m above the ground) — the zombie shuffle: feet
+    skim the ground instead of lifting high."""
+    ent = env.scene["robot"]
+    ids = getattr(env, "_poolympic_foot_geom_ids", None)
+    if ids is None:
+        _foot_geom_xy(env)
+        ids = env._poolympic_foot_geom_ids
+    h = ent.data.data.geom_xpos[:, ids[[0, 2]], 2]
+    excess = torch.relu(h - max_height)
+    return torch.exp(-(excess**2).sum(-1) / std**2)
