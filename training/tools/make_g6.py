@@ -9,7 +9,7 @@ Writes:
   parity/g6_report_<name>_python.json             each meet lane vs its solo run (G5 criteria)
 Unity then runs the same plan in Testbed_Rung1 (PoOlympic › Parity › G6) and tools/compare_g6.py scores it.
 
-Usage: uv run python tools/make_g6.py <brain.onnx> <name>
+Usage: uv run python tools/make_g6.py <brain.onnx> <name> [rung1|rung2]   (lane command set)
 """
 
 from __future__ import annotations
@@ -29,6 +29,9 @@ SECONDS = 5.0
 # (vx, vy, wz) per lane — float32-exact values so C# (float Vector3) and Python (float64) see identical commands
 LANE_COMMANDS = [(0.0, 0.0, 0.0), (0.5, 0.0, 0.0), (1.0, 0.0, 0.0), (1.5, 0.0, 0.0),
                  (2.0, 0.0, 0.0), (2.5, 0.0, 0.0), (3.0, 0.0, 0.0), (1.75, 0.0, 0.25)]
+# Rung 2 (C8): every new skill in one heat — stand, backward, crab both ways, spin both ways, sprint, walking turn
+LANE_COMMANDS_RUNG2 = [(0.0, 0.0, 0.0), (-1.5, 0.0, 0.0), (0.0, 0.75, 0.0), (0.0, -0.75, 0.0),
+                       (0.0, 0.0, 1.5), (0.0, 0.0, -1.5), (3.5, 0.0, 0.0), (1.0, 0.0, 1.0)]
 SHOVE_DV = 0.3
 
 
@@ -43,10 +46,10 @@ def lane_script(onnx: Path, k: int, command) -> list[Disturbance]:
     return [shove, cube]
 
 
-def main(onnx_arg: str, name: str) -> int:
+def main(onnx_arg: str, name: str, commands: str = "rung1") -> int:
     onnx = Path(onnx_arg)
     lanes = []
-    for k, cmd in enumerate(LANE_COMMANDS):
+    for k, cmd in enumerate(LANE_COMMANDS_RUNG2 if commands == "rung2" else LANE_COMMANDS):
         script = lane_script(onnx, k, cmd)
         ref = rollout(onnx, seconds=SECONDS, disturbances=script, command=cmd)
         write(ref, f"{name}_L{k}")
@@ -76,4 +79,4 @@ def main(onnx_arg: str, name: str) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main(sys.argv[1], sys.argv[2]))
+    raise SystemExit(main(sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else "rung1"))

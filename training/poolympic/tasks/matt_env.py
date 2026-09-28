@@ -339,11 +339,14 @@ def matt_rung2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     cmd.ranges = mdp.AthleteCommandCfg.Ranges(lin_vel_x=s0["lin_vel_x"], lin_vel_y=s0["lin_vel_y"],
                                               ang_vel_z=s0["ang_vel_z"], heading=None)
     # yaw tracking is a primary objective now: tighter kernel (Rung 1: std √0.5 was nearly flat for small yaw-rate
-    # errors → heading bias) + a wide one for the fast turntable
-    cfg.rewards["track_ang"] = RewardTermCfg(func=vel_mdp.track_angular_velocity, weight=1.5,
+    # errors → heading bias) + a wide one for the fast turntable.
+    # r2_v2 (r2_v1 yaw decayed after wz ±2 entered): fine w 1.5 → 2.0; coarse w 0.5 → 1.0, std 1.5 → 1.0 so a 1 rad/s
+    # miss still pays and improving it pays more; posture 0.5 → 0.25 so hips / trunk may rotate for fast pivots.
+    cfg.rewards["track_ang"] = RewardTermCfg(func=vel_mdp.track_angular_velocity, weight=2.0,
                                              params={"command_name": "athlete", "std": 0.5})
-    cfg.rewards["track_ang_coarse"] = RewardTermCfg(func=vel_mdp.track_angular_velocity, weight=0.5,
-                                                    params={"command_name": "athlete", "std": 1.5})
+    cfg.rewards["track_ang_coarse"] = RewardTermCfg(func=vel_mdp.track_angular_velocity, weight=1.0,
+                                                    params={"command_name": "athlete", "std": 1.0})
+    cfg.rewards["posture"].weight = 0.25
     cfg.curriculum = {
         "command_vel": CurriculumTermCfg(func=vel_mdp.commands_vel, params={
             "command_name": "athlete", "velocity_stages": RUNG2_STAGES}),

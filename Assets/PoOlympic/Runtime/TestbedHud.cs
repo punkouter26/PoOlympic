@@ -29,6 +29,30 @@ namespace PoOlympic
             return $"{r.command.x:F2} m/s  x {x,5:F1} m  z {h:F2}  {(h < 0.55 ? "FALLEN" : "UP")}";
         }
 
+        // C8: behaviour switching from the HUD — command presets for every lane (MuJoCo frame: vx, vy, wz)
+        static readonly (string label, Vector3 cmd, bool laneKeep)[] Presets =
+        {
+            ("Stop", Vector3.zero, false), ("Walk", new Vector3(1f, 0f, 0f), true), ("Sprint", new Vector3(3f, 0f, 0f), true),
+            ("Back", new Vector3(-1.5f, 0f, 0f), true), ("Crab ◀", new Vector3(0f, 0.75f, 0f), false),
+            ("Crab ▶", new Vector3(0f, -0.75f, 0f), false), ("Spin", new Vector3(0f, 0f, 2.2f), false),
+        };
+
+        void CommandPresets(Rect area)
+        {
+            float w = Mathf.Min(78f, (area.width - 20f) / Presets.Length - 4f);
+            for (int i = 0; i < Presets.Length; i++)
+            {
+                var (label, cmd, keep) = Presets[i];
+                if (GUI.Button(new Rect(area.x + 10 + i * (w + 4), area.yMax - 84, w, 32), label))
+                    foreach (var r in lanes)
+                    {
+                        if (r == null) continue;
+                        r.command = cmd;
+                        r.laneKeeping = keep;
+                    }
+            }
+        }
+
         void OnGUI()
         {
             var cam = Camera.main;
@@ -51,6 +75,7 @@ namespace PoOlympic
             if (GUI.Button(new Rect(area.x + 182, area.yMax - 44, 80, 34), "Drop cube")) cubes.DropOnAthlete(runner);
             if (lanes.Length > 0 && GUI.Button(new Rect(area.x + 268, area.yMax - 44, 80, 34), $"Lane {System.Array.IndexOf(lanes, runner)} ▸"))
                 runner = lanes[(System.Array.IndexOf(lanes, runner) + 1) % lanes.Length];
+            if (lanes.Length > 0) CommandPresets(area);
             GUI.Label(new Rect(area.xMax - 150, area.yMax - 30, 140, 24), version);
         }
     }

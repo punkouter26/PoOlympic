@@ -174,3 +174,9 @@ One entry per run or decision. Newest at the bottom.
 - **Traits** (contract.json `trait_ranges`, `obs_noise`): strength scales the lane's actuator force limits, latency delays ctrl by 0–4 substeps, sensor noise scales the training obs noise. Python (`events/iron_pedestal.py`) and C# (`PolicyRunner.SetTraits`) implement the same semantics; nominal traits leave every parity gate unchanged (EditMode 18/18).
 - **Tuning (CPU, rung-0 brain):** escalation 0.5 + 0.1/round, cube every 2nd → heats 13–17 s (too short); nominal-trait sanity run at a constant 0.5 m/s still loses 2–3/8 runners in 25 s (3 s rounds with cubes are harsher than G1's 3–5 s). Chosen: 0.3 + 0.05/round, cube every 3rd → heats 27–41 s (mean 34.8), first elimination 17–26 s. Over 6 heats, place correlates with latency (+0.29) and strength (+0.25, noisy), not noise (−0.06): outcomes stay uncertain (good for betting) but traits matter.
 - **Unity heat:** SURVIVED by L1 after 31.6 s / 11 rounds, first out 19.9 s — same shape as the CPU runs.
+
+## 2026-09-27 23:08 · r2_v2 started (user: "spend next 8 hours training as needed")
+- Warm start: r2_v1 **it 700** (best yaw), `warm_start.py` (command stats re-seeded to stage 0, count 1e6, action std floor 0.25, iter 0).
+- Rewards vs r2_v1: track_ang w 1.5 → **2.0** (std 0.5); track_ang_coarse w 0.5 → **1.0**, std 1.5 → **1.0**; posture 0.5 → **0.25**. Curriculum unchanged (wz ±1 → ±2 @500 → ±2.5 @1000). 2000 iterations. `check_task.py rung2` PASS.
+- Unattended gate `tools/watch_eval.py` → `parity/watch_r2_v2.jsonl`: every 250 its export + G1 rung 2 (10 seeds) + yaw probe.
+- C8 prep: `make_g6.py <brain> <name> rung2` lane commands (stand, back −1.5, crab ±0.75, spin ±1.5, sprint 3.5, walk-turn 1.0/1.0); Testbed_Rung1 HUD command presets (Stop / Walk / Sprint / Back / Crab ◀▶ / Spin, lane keeping on for the straight-line ones).
