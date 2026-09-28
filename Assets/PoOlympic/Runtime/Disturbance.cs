@@ -14,7 +14,7 @@ namespace PoOlympic
     public class Disturbance
     {
         public int tick;
-        public string kind;   // "shove": Δqvel on the free joint's linear dofs | "cube": teleport a pooled cube (qpos7 + qvel6)
+        public string kind;   // "shove": Δqvel on the free joint's linear dofs | "kick": Δqvel on a 1-dof joint | "cube": teleport a pooled cube (qpos7 + qvel6)
                               // "park": return a pooled cube to its parking slot (model qpos0, at rest)
         public string target; // joint name, e.g. "root" or "cube0_free"
         public double[] dqvel;
@@ -53,6 +53,9 @@ namespace PoOlympic
             {
                 case "shove":
                     for (int i = 0; i < 3; i++) d->qvel[da + i] += dqvel[i];
+                    break;
+                case "kick":   // Δqvel on a 1-dof joint (slide / hinge), e.g. a shaker platform axis
+                    d->qvel[da] += dqvel[0];
                     break;
                 case "cube":
                     for (int i = 0; i < 7; i++) d->qpos[qa + i] = qpos[i];

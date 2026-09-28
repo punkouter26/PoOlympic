@@ -1,11 +1,11 @@
-"""Event rules with the shipped Rung 2 brain: one CPU heat each (events 9, 10, 11, 12)."""
+"""Event rules with the shipped Rung 2 brain: one CPU heat each (events 5, 9, 10, 11, 12)."""
 
 import math
 
 import pytest
 
 from poolympic import contract as C
-from poolympic.events import crab, slalom, track, turntable
+from poolympic.events import crab, gauntlet, slalom, track, turntable
 
 BRAIN = C.ROOT.parent / "parity" / "brains" / "rung2.onnx"
 pytestmark = pytest.mark.skipif(not BRAIN.exists(), reason="rung2.onnx not exported")
@@ -65,6 +65,31 @@ def test_slalom_line_passes_each_pole_on_its_side():
         y, _ = slalom.line_y(slalom.POLE_X0 + g * slalom.POLE_DX, 0.5)
         assert y == pytest.approx(0.5 if g % 2 == 0 else -0.5)
     assert slalom.line_y(0.0, 0.5) == (0.0, 0.0) and slalom.line_y(slalom.DISTANCE, 0.5) == (0.0, 0.0)
+
+
+def test_gust_gauntlet_heat():
+    res = gauntlet.run_heat(BRAIN, seed=1)
+    assert sorted(l.place for l in res.lanes) == list(range(1, 9))
+    for l in res.lanes:
+        assert len(l.recoveries) == gauntlet.N_ROUNDS
+        assert all(0.0 <= r <= gauntlet.ROUND_S for r in l.recoveries)
+        assert l.total_s == pytest.approx(sum(l.recoveries))
+    # survivors rank ahead of the eliminated, the eliminated by elimination time (later = better)
+    by_place = sorted(res.lanes, key=lambda l: l.place)
+    outs = [l.out_at_s for l in by_place if l.out_at_s is not None]
+    assert all(l.out_at_s is None for l in by_place[: 8 - len(outs)])
+    assert outs == sorted(outs, reverse=True)
+    assert any(l.out_at_s is None or l.out_at_s > 10.0 for l in res.lanes)   # the first bursts are survivable
+
+
+def test_homing_command_walks_back_to_the_spot():
+    q0 = [1.0, 0.0, 0.0, 0.0]
+    vx, vy, wz = gauntlet.homing_command(q0, 0.3, -0.2)          # pushed forward-right → walk back-left
+    assert vx < 0 and vy > 0 and wz == 0.0
+    assert gauntlet.homing_command(q0, 0.03, 0.03).tolist() == [0.0, 0.0, 0.0]   # inside the deadband
+    half = math.radians(90) / 2                                    # facing +y: world +x offset is to the right
+    vx, vy, _ = gauntlet.homing_command([math.cos(half), 0.0, 0.0, math.sin(half)], 0.3, 0.0)
+    assert vy > 0 and abs(vx) < 1e-9
 
 
 def test_crab_command_holds_the_course():

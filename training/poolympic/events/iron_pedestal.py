@@ -77,7 +77,7 @@ class _Lane:
         self.pelvis = m.body(prefix + "pelvis").id
         self.feet = [m.geom(prefix + n).id for n in ("foot_l_geom0", "toe_l_geom0", "foot_r_geom0", "toe_r_geom0")]
         names = {m.geom(g).name for g in range(m.ngeom)}
-        self.support = {m.geom("ground").id} | ({m.geom(prefix + "pedestal").id} if prefix + "pedestal" in names else set())
+        self.support = {m.geom("ground").id} | {m.geom(prefix + n).id for n in ("pedestal", "shaker") if prefix + n in names}
         self.phase = 0.0
         self.last = np.zeros(C.NUM_ACTIONS)
         self.ctrl_now = self.ath.default_pos.copy()

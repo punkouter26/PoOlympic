@@ -289,6 +289,50 @@ namespace PoOlympic.Editor
             return $"{SlalomScene}: {ev.racers.Count} runners, {ev.nPoles} poles, {ev.speed} m/s, brain {brainFile}";
         }
 
+        public const string GauntletScene = "Assets/PoOlympic/Scenes/Event_GustGauntlet.unity";
+        public const string ShakerSource = "training/assets/scene_shaker8.xml";
+        public const string ShakerLayout = "training/assets/shaker8_layout.json";
+
+        /// <summary>Event 5: 8 athletes on spring-mounted shaker platforms (scene_shaker8.xml); GustGauntletEvent +
+        /// StandingsHud. The platforms move, so they are drawn by their MuJoCo geoms (stadium hazard material) and the
+        /// stadium's static shaker pads are hidden.</summary>
+        [MenuItem("PoOlympic/Events/Build Event 5 — Gust Gauntlet")]
+        public static string BuildGustGauntlet() => BuildGustGauntlet(DefaultRung2Brain);
+
+        public static string BuildGustGauntlet(string brainFile)
+        {
+            var meet = BuildMeetScene(ShakerSource, ShakerLayout, 5, AthleteLane, 0f, brainFile);
+            var pads = meet.Scene.GetRootGameObjects().First(g => g.name == "Stadium").GetComponentsInChildren<Renderer>(true)
+                           .Where(r => r.name.StartsWith("E05_Shaker_")).ToArray();
+            if (pads.Length != 8) throw new InvalidOperationException($"expected 8 stadium shaker pads, found {pads.Length}");
+            var hazard = pads[0].sharedMaterial;
+            foreach (var pad in pads) pad.enabled = false;
+            int shown = 0;
+            foreach (var g in UnityEngine.Object.FindObjectsByType<MjGeom>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (!g.name.EndsWith("_shaker") || !g.TryGetComponent<Renderer>(out var rend)) continue;
+                rend.enabled = true;
+                rend.sharedMaterial = hazard;
+                shown++;
+            }
+            if (shown != 8) throw new InvalidOperationException($"expected 8 MuJoCo shaker platforms, found {shown}");
+            var ev = new GameObject("GustGauntletEvent").AddComponent<GustGauntletEvent>();
+            foreach (var (k, r) in meet.Lanes) ev.athletes.Add(new GustGauntletEvent.Athlete { runner = r, name = $"S{k + 1}" });
+            meet.Pool.runner = ev.athletes[0].runner;
+            var hud = new GameObject("StandingsHUD").AddComponent<StandingsHud>();
+            hud.board = ev;
+            hud.title = "THE GUST GAUNTLET";
+            hud.subtitle = "Event 5";
+            hud.version = $"v0 · {Path.GetFileNameWithoutExtension(brainFile)}";
+
+            var bc = meet.Camera.GetComponent<BroadcastCamera>();
+            bc.target = meet.FocusPelvis;
+            bc.focusOffset = new Vector3(-4.5f, 0f, -2f);    // centre of the 2 x 4 grid (platform S4 is the origin)
+            bc.offset = new Vector3(10.5f, 5.2f, -8.5f);     // front three-quarter, as the turntable
+            EditorSceneManager.SaveScene(meet.Scene, GauntletScene);
+            return $"{GauntletScene}: {ev.athletes.Count} athletes, {ev.rounds} rounds, brain {brainFile}";
+        }
+
         public sealed class MeetScene
         {
             public Scene Scene;
@@ -378,6 +422,7 @@ namespace PoOlympic.Editor
         public static readonly System.Collections.Generic.Dictionary<int, string> EventScenePaths = new()
         {
             { 1, IronPedestalHeatScene },   // official 8-runner heat (solo practice: Event_IronPedestal.unity)
+            { 5, GauntletScene },
             { 8, "Assets/PoOlympic/Scenes/Event_30mDash.unity" },
             { 9, "Assets/PoOlympic/Scenes/Event_InvertedSprint.unity" },
             { 10, CrabScene },

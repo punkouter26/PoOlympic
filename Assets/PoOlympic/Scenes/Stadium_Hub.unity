@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &54969906
+--- !u!1 &76529341
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,59 +127,59 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 54969907}
-  - component: {fileID: 54969908}
+  - component: {fileID: 76529342}
+  - component: {fileID: 76529343}
   m_Layer: 0
-  m_Name: E13 Steeplechase Jog
+  m_Name: E28 Floor Acrobatic Sprint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &54969907
+--- !u!4 &76529342
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 54969906}
+  m_GameObject: {fileID: 76529341}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -70, y: 0, z: -12.999994}
+  m_LocalPosition: {x: 1.9999976, y: 0, z: -26}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 354423998}
+  m_Father: {fileID: 473247224}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &54969908
+--- !u!114 &76529343
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 54969906}
+  m_GameObject: {fileID: 76529341}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 13
-  eventName: Steeplechase Jog
-  phase: 3
-  skill: Flight Phase Running
-  brain: rung1
-  rules: 50m sprint requiring sustained aerial flight phases between foot strikes.
+  number: 28
+  eventName: Floor Acrobatic Sprint
+  phase: 6
+  skill: Flip / Cartwheel
+  brain: rung8
+  rules: Full-body inversion across a gymnastics safety mat.
   eventScene: 
   lanes:
-  - {fileID: 1988911645}
-  - {fileID: 1988911644}
-  - {fileID: 1988911643}
-  - {fileID: 1988911642}
-  - {fileID: 1988911641}
-  - {fileID: 1988911640}
-  - {fileID: 1988911639}
-  - {fileID: 1988911638}
---- !u!1 &57130634
+  - {fileID: 1468226476}
+  - {fileID: 1468226475}
+  - {fileID: 1468226474}
+  - {fileID: 1468226473}
+  - {fileID: 1468226472}
+  - {fileID: 1468226471}
+  - {fileID: 1468226470}
+  - {fileID: 1468226469}
+--- !u!1 &142431176
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -187,10 +187,130 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 57130638}
-  - component: {fileID: 57130635}
-  - component: {fileID: 57130637}
-  - component: {fileID: 57130636}
+  - component: {fileID: 142431177}
+  - component: {fileID: 142431178}
+  m_Layer: 0
+  m_Name: E04 Precision Javelin Reach
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &142431177
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 142431176}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 48, y: 0, z: -0.000004261732}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 473247224}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &142431178
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 142431176}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
+  number: 4
+  eventName: Precision Javelin Reach
+  phase: 1
+  skill: Arm Extension
+  brain: stance skills
+  rules: Single-arm extension toward dynamic targets at maximum reach while keeping stance anchored.
+  eventScene: 
+  lanes:
+  - {fileID: 1468226668}
+  - {fileID: 1468226667}
+  - {fileID: 1468226666}
+  - {fileID: 1468226665}
+  - {fileID: 1468226664}
+  - {fileID: 1468226663}
+  - {fileID: 1468226662}
+  - {fileID: 1468226661}
+--- !u!1 &208300135
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 208300136}
+  - component: {fileID: 208300137}
+  m_Layer: 0
+  m_Name: E19 Terminal Velocity Sprint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &208300136
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 208300135}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 42.195004, y: 0, z: 41.379993}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 473247224}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &208300137
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 208300135}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
+  number: 19
+  eventName: Terminal Velocity Sprint
+  phase: 4
+  skill: High-Speed Limit
+  brain: rung1
+  rules: Open sprint pushing top-end velocity until motor saturation or collapse.
+  eventScene: Event_TerminalVelocity
+  lanes:
+  - {fileID: 1468226548}
+  - {fileID: 1468226547}
+  - {fileID: 1468226546}
+  - {fileID: 1468226545}
+  - {fileID: 1468226544}
+  - {fileID: 1468226543}
+  - {fileID: 1468226542}
+  - {fileID: 1468226541}
+--- !u!1 &422122162
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 422122166}
+  - component: {fileID: 422122163}
+  - component: {fileID: 422122165}
+  - component: {fileID: 422122164}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -198,13 +318,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!20 &57130635
+--- !u!20 &422122163
 Camera:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 57130634}
+  m_GameObject: {fileID: 422122162}
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
@@ -249,13 +369,13 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!114 &57130636
+--- !u!114 &422122164
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 57130634}
+  m_GameObject: {fileID: 422122162}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4b187599da426f74e84c17406289103e, type: 3}
@@ -267,21 +387,21 @@ MonoBehaviour:
   lookHeight: 0.9
   focusOffset: {x: 0, y: 0, z: 0}
   followSharpness: 6
---- !u!81 &57130637
+--- !u!81 &422122165
 AudioListener:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 57130634}
+  m_GameObject: {fileID: 422122162}
   m_Enabled: 1
---- !u!4 &57130638
+--- !u!4 &422122166
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 57130634}
+  m_GameObject: {fileID: 422122162}
   serializedVersion: 2
   m_LocalRotation: {x: 0.041039586, y: -0.07082901, z: 0.002916594, w: 0.9966396}
   m_LocalPosition: {x: 0.6, y: 1.25, z: -4.2}
@@ -290,7 +410,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &58845881
+--- !u!1 &473247223
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -298,127 +418,7 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 58845882}
-  - component: {fileID: 58845883}
-  m_Layer: 0
-  m_Name: E09 The Inverted Sprint
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &58845882
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 58845881}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -16, y: 0, z: -12.999998}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 354423998}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &58845883
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 58845881}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 9
-  eventName: The Inverted Sprint
-  phase: 2
-  skill: Backward Walking
-  brain: rung2
-  rules: 20m reverse sprint. Disqualification upon lane drifting or backward tumbling.
-  eventScene: Event_InvertedSprint
-  lanes:
-  - {fileID: 1988911677}
-  - {fileID: 1988911676}
-  - {fileID: 1988911675}
-  - {fileID: 1988911674}
-  - {fileID: 1988911673}
-  - {fileID: 1988911672}
-  - {fileID: 1988911671}
-  - {fileID: 1988911670}
---- !u!1 &131034265
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 131034266}
-  - component: {fileID: 131034267}
-  m_Layer: 0
-  m_Name: E23 The Trench Crawl
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &131034266
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 131034265}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -58, y: 0, z: -25.999992}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 354423998}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &131034267
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 131034265}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 23
-  eventName: The Trench Crawl
-  phase: 5
-  skill: Quadrupedal Crawl
-  brain: rung8
-  rules: Low ceiling tunnel forcing all-fours crawl movement.
-  eventScene: 
-  lanes:
-  - {fileID: 1988911565}
-  - {fileID: 1988911564}
-  - {fileID: 1988911563}
-  - {fileID: 1988911562}
-  - {fileID: 1988911561}
-  - {fileID: 1988911560}
-  - {fileID: 1988911559}
-  - {fileID: 1988911558}
---- !u!1 &354423997
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 354423998}
+  - component: {fileID: 473247224}
   m_Layer: 0
   m_Name: Events
   m_TagString: Untagged
@@ -426,52 +426,52 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &354423998
+--- !u!4 &473247224
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 354423997}
+  m_GameObject: {fileID: 473247223}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1025902021}
-  - {fileID: 1929227482}
-  - {fileID: 1992294077}
-  - {fileID: 1143836774}
-  - {fileID: 844086130}
-  - {fileID: 1050102329}
-  - {fileID: 378832523}
-  - {fileID: 710646245}
-  - {fileID: 58845882}
-  - {fileID: 910417174}
-  - {fileID: 1949894989}
-  - {fileID: 515303598}
-  - {fileID: 54969907}
-  - {fileID: 783123133}
-  - {fileID: 785946529}
-  - {fileID: 980742949}
-  - {fileID: 1786312653}
-  - {fileID: 1734145315}
-  - {fileID: 908346242}
-  - {fileID: 1257461219}
-  - {fileID: 672446371}
-  - {fileID: 1113749871}
-  - {fileID: 131034266}
-  - {fileID: 1695605409}
-  - {fileID: 977935051}
-  - {fileID: 1514399092}
-  - {fileID: 1648369573}
-  - {fileID: 1721180746}
-  - {fileID: 1929538941}
-  - {fileID: 374726100}
+  - {fileID: 2125775611}
+  - {fileID: 1327356749}
+  - {fileID: 1033054645}
+  - {fileID: 142431177}
+  - {fileID: 1713037406}
+  - {fileID: 1115033924}
+  - {fileID: 2082023492}
+  - {fileID: 1060779617}
+  - {fileID: 964929906}
+  - {fileID: 1760216933}
+  - {fileID: 804098494}
+  - {fileID: 503515031}
+  - {fileID: 1134711620}
+  - {fileID: 782052280}
+  - {fileID: 1137594930}
+  - {fileID: 473442434}
+  - {fileID: 1042968329}
+  - {fileID: 1397219105}
+  - {fileID: 208300136}
+  - {fileID: 783388733}
+  - {fileID: 1985182315}
+  - {fileID: 1314006047}
+  - {fileID: 1277025434}
+  - {fileID: 508087875}
+  - {fileID: 1733033537}
+  - {fileID: 1160309929}
+  - {fileID: 1865917973}
+  - {fileID: 76529342}
+  - {fileID: 1235053463}
+  - {fileID: 731914938}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &374726098
+--- !u!1 &473442433
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -479,8 +479,188 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 374726100}
-  - component: {fileID: 374726099}
+  - component: {fileID: 473442434}
+  - component: {fileID: 473442435}
+  m_Layer: 0
+  m_Name: E16 The Platform Drop
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &473442434
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 473442433}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -15.999999, y: 0, z: 13.000001}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 473247224}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &473442435
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 473442433}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
+  number: 16
+  eventName: The Platform Drop
+  phase: 4
+  skill: Walking Down Stairs
+  brain: rung4
+  rules: Rapid descent down stepped terrain; scored on descent speed and soft-landing dissipation.
+  eventScene: 
+  lanes:
+  - {fileID: 1468226572}
+  - {fileID: 1468226571}
+  - {fileID: 1468226570}
+  - {fileID: 1468226569}
+  - {fileID: 1468226568}
+  - {fileID: 1468226567}
+  - {fileID: 1468226566}
+  - {fileID: 1468226565}
+--- !u!1 &503515030
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 503515031}
+  - component: {fileID: 503515032}
+  m_Layer: 0
+  m_Name: E12 The 360 Turntable
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &503515031
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 503515030}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -48, y: 0, z: 0.000004261732}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 473247224}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &503515032
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 503515030}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
+  number: 12
+  eventName: The 360 Turntable
+  phase: 3
+  skill: In-Place Yaw Pivot
+  brain: rung2
+  rules: Rapid rotational turns in place on a marked spot; scored on rotational speed and zero translation drift.
+  eventScene: Event_360Turntable
+  lanes:
+  - {fileID: 1468226604}
+  - {fileID: 1468226603}
+  - {fileID: 1468226602}
+  - {fileID: 1468226601}
+  - {fileID: 1468226600}
+  - {fileID: 1468226599}
+  - {fileID: 1468226598}
+  - {fileID: 1468226597}
+--- !u!1 &508087874
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 508087875}
+  - component: {fileID: 508087876}
+  m_Layer: 0
+  m_Name: E24 The Courier Carry
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &508087875
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 508087874}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -38, y: 0, z: -25.999996}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 473247224}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &508087876
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 508087874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
+  number: 24
+  eventName: The Courier Carry
+  phase: 5
+  skill: Heavy Payload
+  brain: rung8
+  rules: Carry a weighted crate across 15m without dropping or pitching backward.
+  eventScene: 
+  lanes:
+  - {fileID: 1468226508}
+  - {fileID: 1468226507}
+  - {fileID: 1468226506}
+  - {fileID: 1468226505}
+  - {fileID: 1468226504}
+  - {fileID: 1468226503}
+  - {fileID: 1468226502}
+  - {fileID: 1468226501}
+--- !u!1 &731914936
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 731914938}
+  - component: {fileID: 731914937}
   m_Layer: 0
   m_Name: E30 The Grand Parkour Vault
   m_TagString: Untagged
@@ -488,13 +668,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &374726099
+--- !u!114 &731914937
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 374726098}
+  m_GameObject: {fileID: 731914936}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
@@ -508,30 +688,30 @@ MonoBehaviour:
   rules: 'Multi-stage course: approach, wall vault, drop landing, and hurdle sprint.'
   eventScene: 
   lanes:
-  - {fileID: 1988911748}
-  - {fileID: 1988911747}
-  - {fileID: 1988911746}
-  - {fileID: 1988911745}
-  - {fileID: 1988911744}
-  - {fileID: 1988911743}
-  - {fileID: 1988911742}
-  - {fileID: 1988911509}
---- !u!4 &374726100
+  - {fileID: 1468226699}
+  - {fileID: 1468226698}
+  - {fileID: 1468226697}
+  - {fileID: 1468226696}
+  - {fileID: 1468226695}
+  - {fileID: 1468226694}
+  - {fileID: 1468226693}
+  - {fileID: 1468226460}
+--- !u!4 &731914938
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 374726098}
+  m_GameObject: {fileID: 731914936}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -70, y: 0, z: 13.000005}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 354423998}
+  m_Father: {fileID: 473247224}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &378832522
+--- !u!1 &768136051
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -539,59 +719,78 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 378832523}
-  - component: {fileID: 378832524}
+  - component: {fileID: 768136053}
+  - component: {fileID: 768136052}
   m_Layer: 0
-  m_Name: E07 Cadence March
+  m_Name: StadiumDirector
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &378832523
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 378832522}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 62, y: 0, z: -0.0000054240227}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 354423998}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &378832524
+--- !u!114 &768136052
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 378832522}
+  m_GameObject: {fileID: 768136051}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
+  m_Script: {fileID: 11500000, guid: 52474f45241fc3141b6f6becdc2ab420, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 7
-  eventName: Cadence March
-  phase: 2
-  skill: Stepping In-Place
-  brain: stance skills
-  rules: High-knee marching synchronized to a rising stadium metronome.
-  eventScene: 
-  lanes:
-  - {fileID: 1988911693}
-  - {fileID: 1988911692}
-  - {fileID: 1988911691}
-  - {fileID: 1988911690}
-  - {fileID: 1988911689}
-  - {fileID: 1988911688}
-  - {fileID: 1988911687}
-  - {fileID: 1988911686}
---- !u!1 &476271291
+  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.StadiumDirector
+  cam: {fileID: 422122163}
+  venues:
+  - {fileID: 2125775612}
+  - {fileID: 1327356750}
+  - {fileID: 1033054646}
+  - {fileID: 142431178}
+  - {fileID: 1713037407}
+  - {fileID: 1115033925}
+  - {fileID: 2082023493}
+  - {fileID: 1060779618}
+  - {fileID: 964929907}
+  - {fileID: 1760216934}
+  - {fileID: 804098495}
+  - {fileID: 503515032}
+  - {fileID: 1134711621}
+  - {fileID: 782052281}
+  - {fileID: 1137594931}
+  - {fileID: 473442435}
+  - {fileID: 1042968330}
+  - {fileID: 1397219106}
+  - {fileID: 208300137}
+  - {fileID: 783388734}
+  - {fileID: 1985182316}
+  - {fileID: 1314006048}
+  - {fileID: 1277025435}
+  - {fileID: 508087876}
+  - {fileID: 1733033538}
+  - {fileID: 1160309930}
+  - {fileID: 1865917974}
+  - {fileID: 76529343}
+  - {fileID: 1235053464}
+  - {fileID: 731914937}
+  selected: 1
+  viewOffset: {x: -9, y: 9, z: -17}
+  flySharpness: 3
+--- !u!4 &768136053
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 768136051}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &782052279
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -599,9 +798,189 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 476271294}
-  - component: {fileID: 476271293}
-  - component: {fileID: 476271292}
+  - component: {fileID: 782052280}
+  - component: {fileID: 782052281}
+  m_Layer: 0
+  m_Name: E14 The Alpine Ramp
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &782052280
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 782052279}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -36, y: 0, z: 13.000003}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 473247224}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &782052281
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 782052279}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
+  number: 14
+  eventName: The Alpine Ramp
+  phase: 3
+  skill: Mild Incline
+  brain: rung4
+  rules: Ascending a 15-degree ramp straight into a finish sensor.
+  eventScene: 
+  lanes:
+  - {fileID: 1468226588}
+  - {fileID: 1468226587}
+  - {fileID: 1468226586}
+  - {fileID: 1468226585}
+  - {fileID: 1468226584}
+  - {fileID: 1468226583}
+  - {fileID: 1468226582}
+  - {fileID: 1468226581}
+--- !u!1 &783388732
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 783388733}
+  - component: {fileID: 783388734}
+  m_Layer: 0
+  m_Name: E20 Low Hurdle Dash
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &783388733
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 783388732}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -24.000002, y: 0, z: -41.379993}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 473247224}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &783388734
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 783388732}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
+  number: 20
+  eventName: Low Hurdle Dash
+  phase: 4
+  skill: Obstacle Step-Over
+  brain: rung5
+  rules: 30m sprint incorporating 0.3m hurdles requiring coordinated high-knee clearance.
+  eventScene: 
+  lanes:
+  - {fileID: 1468226540}
+  - {fileID: 1468226539}
+  - {fileID: 1468226538}
+  - {fileID: 1468226537}
+  - {fileID: 1468226536}
+  - {fileID: 1468226535}
+  - {fileID: 1468226534}
+  - {fileID: 1468226533}
+--- !u!1 &804098493
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 804098494}
+  - component: {fileID: 804098495}
+  m_Layer: 0
+  m_Name: E11 Slalom Sprint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &804098494
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 804098493}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 32, y: 0, z: -13.000003}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 473247224}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &804098495
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 804098493}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
+  number: 11
+  eventName: Slalom Sprint
+  phase: 3
+  skill: Velocity Vectoring
+  brain: rung2
+  rules: Weaving through slalom gates; penalties added for missed gates or clipping flags.
+  eventScene: Event_SlalomSprint
+  lanes:
+  - {fileID: 1468226612}
+  - {fileID: 1468226611}
+  - {fileID: 1468226610}
+  - {fileID: 1468226609}
+  - {fileID: 1468226608}
+  - {fileID: 1468226607}
+  - {fileID: 1468226606}
+  - {fileID: 1468226605}
+--- !u!1 &944728396
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 944728399}
+  - component: {fileID: 944728398}
+  - component: {fileID: 944728397}
   m_Layer: 0
   m_Name: Sun
   m_TagString: Untagged
@@ -609,13 +988,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &476271292
+--- !u!114 &944728397
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 476271291}
+  m_GameObject: {fileID: 944728396}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
@@ -638,13 +1017,13 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
---- !u!108 &476271293
+--- !u!108 &944728398
 Light:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 476271291}
+  m_GameObject: {fileID: 944728396}
   m_Enabled: 1
   serializedVersion: 13
   m_Type: 1
@@ -703,13 +1082,13 @@ Light:
   m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
---- !u!4 &476271294
+--- !u!4 &944728399
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 476271291}
+  m_GameObject: {fileID: 944728396}
   serializedVersion: 2
   m_LocalRotation: {x: 0.40821794, y: -0.23456973, z: 0.10938166, w: 0.8754261}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -718,7 +1097,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &515303597
+--- !u!1 &964929905
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -726,59 +1105,59 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 515303598}
-  - component: {fileID: 515303599}
+  - component: {fileID: 964929906}
+  - component: {fileID: 964929907}
   m_Layer: 0
-  m_Name: E12 The 360 Turntable
+  m_Name: E09 The Inverted Sprint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &515303598
+--- !u!4 &964929906
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 515303597}
+  m_GameObject: {fileID: 964929905}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -48, y: 0, z: 0.000004261732}
+  m_LocalPosition: {x: -16, y: 0, z: -12.999998}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 354423998}
+  m_Father: {fileID: 473247224}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &515303599
+--- !u!114 &964929907
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 515303597}
+  m_GameObject: {fileID: 964929905}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 12
-  eventName: The 360 Turntable
-  phase: 3
-  skill: In-Place Yaw Pivot
+  number: 9
+  eventName: The Inverted Sprint
+  phase: 2
+  skill: Backward Walking
   brain: rung2
-  rules: Rapid rotational turns in place on a marked spot; scored on rotational speed and zero translation drift.
-  eventScene: Event_360Turntable
+  rules: 20m reverse sprint. Disqualification upon lane drifting or backward tumbling.
+  eventScene: Event_InvertedSprint
   lanes:
-  - {fileID: 1988911653}
-  - {fileID: 1988911652}
-  - {fileID: 1988911651}
-  - {fileID: 1988911650}
-  - {fileID: 1988911649}
-  - {fileID: 1988911648}
-  - {fileID: 1988911647}
-  - {fileID: 1988911646}
---- !u!1 &672446370
+  - {fileID: 1468226628}
+  - {fileID: 1468226627}
+  - {fileID: 1468226626}
+  - {fileID: 1468226625}
+  - {fileID: 1468226624}
+  - {fileID: 1468226623}
+  - {fileID: 1468226622}
+  - {fileID: 1468226621}
+--- !u!1 &1033054644
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -786,738 +1165,59 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 672446371}
-  - component: {fileID: 672446372}
+  - component: {fileID: 1033054645}
+  - component: {fileID: 1033054646}
   m_Layer: 0
-  m_Name: E21 The Sandpit Long Jump
+  m_Name: E03 Deep Squat Endurance
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &672446371
+--- !u!4 &1033054645
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 672446370}
+  m_GameObject: {fileID: 1033054644}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -55.999996, y: 0, z: 26.000008}
+  m_LocalPosition: {x: -20, y: 0, z: 0.0000018179417}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 354423998}
+  m_Father: {fileID: 473247224}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &672446372
+--- !u!114 &1033054646
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 672446370}
+  m_GameObject: {fileID: 1033054644}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 21
-  eventName: The Sandpit Long Jump
-  phase: 5
-  skill: Broad Jump
-  brain: rung5
-  rules: Run-up followed by forward horizontal launch into a sandpit.
-  eventScene: 
-  lanes:
-  - {fileID: 1988911581}
-  - {fileID: 1988911580}
-  - {fileID: 1988911579}
-  - {fileID: 1988911578}
-  - {fileID: 1988911577}
-  - {fileID: 1988911576}
-  - {fileID: 1988911575}
-  - {fileID: 1988911574}
---- !u!1 &710646244
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 710646245}
-  - component: {fileID: 710646246}
-  m_Layer: 0
-  m_Name: E08 The 30m Dash
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &710646245
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 710646244}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -57.805, y: 0, z: -41.379993}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 354423998}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &710646246
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 710646244}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 8
-  eventName: The 30m Dash
-  phase: 2
-  skill: Planar Forward Walking
-  brain: rung1
-  rules: Pure forward linear sprint to the finish ribbon.
-  eventScene: Event_30mDash
-  lanes:
-  - {fileID: 1988911685}
-  - {fileID: 1988911684}
-  - {fileID: 1988911683}
-  - {fileID: 1988911682}
-  - {fileID: 1988911681}
-  - {fileID: 1988911680}
-  - {fileID: 1988911679}
-  - {fileID: 1988911678}
---- !u!1 &746916573
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 746916575}
-  - component: {fileID: 746916574}
-  m_Layer: 0
-  m_Name: StadiumDirector
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &746916574
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 746916573}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 52474f45241fc3141b6f6becdc2ab420, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.StadiumDirector
-  cam: {fileID: 57130635}
-  venues:
-  - {fileID: 1025902022}
-  - {fileID: 1929227483}
-  - {fileID: 1992294078}
-  - {fileID: 1143836775}
-  - {fileID: 844086131}
-  - {fileID: 1050102330}
-  - {fileID: 378832524}
-  - {fileID: 710646246}
-  - {fileID: 58845883}
-  - {fileID: 910417175}
-  - {fileID: 1949894990}
-  - {fileID: 515303599}
-  - {fileID: 54969908}
-  - {fileID: 783123134}
-  - {fileID: 785946530}
-  - {fileID: 980742950}
-  - {fileID: 1786312654}
-  - {fileID: 1734145316}
-  - {fileID: 908346243}
-  - {fileID: 1257461220}
-  - {fileID: 672446372}
-  - {fileID: 1113749872}
-  - {fileID: 131034267}
-  - {fileID: 1695605410}
-  - {fileID: 977935052}
-  - {fileID: 1514399093}
-  - {fileID: 1648369574}
-  - {fileID: 1721180747}
-  - {fileID: 1929538942}
-  - {fileID: 374726099}
-  selected: 1
-  viewOffset: {x: -9, y: 9, z: -17}
-  flySharpness: 3
---- !u!4 &746916575
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 746916573}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &783123132
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 783123133}
-  - component: {fileID: 783123134}
-  m_Layer: 0
-  m_Name: E14 The Alpine Ramp
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &783123133
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 783123132}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -36, y: 0, z: 13.000003}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 354423998}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &783123134
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 783123132}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 14
-  eventName: The Alpine Ramp
-  phase: 3
-  skill: Mild Incline
-  brain: rung4
-  rules: Ascending a 15-degree ramp straight into a finish sensor.
-  eventScene: 
-  lanes:
-  - {fileID: 1988911637}
-  - {fileID: 1988911636}
-  - {fileID: 1988911635}
-  - {fileID: 1988911634}
-  - {fileID: 1988911633}
-  - {fileID: 1988911632}
-  - {fileID: 1988911631}
-  - {fileID: 1988911630}
---- !u!1 &785946528
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 785946529}
-  - component: {fileID: 785946530}
-  m_Layer: 0
-  m_Name: E15 Cross-Country Rubble
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &785946529
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 785946528}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 20, y: 0, z: 12.999997}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 354423998}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &785946530
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 785946528}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 15
-  eventName: Cross-Country Rubble
-  phase: 3
-  skill: Uneven Terrain
-  brain: rung4
-  rules: Traversal across randomized mounds and ruts.
-  eventScene: 
-  lanes:
-  - {fileID: 1988911629}
-  - {fileID: 1988911628}
-  - {fileID: 1988911627}
-  - {fileID: 1988911626}
-  - {fileID: 1988911625}
-  - {fileID: 1988911624}
-  - {fileID: 1988911623}
-  - {fileID: 1988911622}
---- !u!1 &844086129
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 844086130}
-  - component: {fileID: 844086131}
-  m_Layer: 0
-  m_Name: E05 The Gust Gauntlet
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &844086130
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 844086129}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -34, y: 0.10000001, z: 0.0000030696392}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 354423998}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &844086131
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 844086129}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 5
-  eventName: The Gust Gauntlet
+  number: 3
+  eventName: Deep Squat Endurance
   phase: 1
-  skill: Push Shock
-  brain: rung0
-  rules: Athletes endure lateral wind bursts and sudden floor shakers. Scored on recovery time back to center.
-  eventScene: 
-  lanes:
-  - {fileID: 1988911709}
-  - {fileID: 1988911708}
-  - {fileID: 1988911707}
-  - {fileID: 1988911706}
-  - {fileID: 1988911705}
-  - {fileID: 1988911704}
-  - {fileID: 1988911703}
-  - {fileID: 1988911702}
---- !u!1 &908346241
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 908346242}
-  - component: {fileID: 908346243}
-  m_Layer: 0
-  m_Name: E19 Terminal Velocity Sprint
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &908346242
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 908346241}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 42.195004, y: 0, z: 41.379993}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 354423998}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &908346243
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 908346241}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 19
-  eventName: Terminal Velocity Sprint
-  phase: 4
-  skill: High-Speed Limit
-  brain: rung1
-  rules: Open sprint pushing top-end velocity until motor saturation or collapse.
-  eventScene: Event_TerminalVelocity
-  lanes:
-  - {fileID: 1988911597}
-  - {fileID: 1988911596}
-  - {fileID: 1988911595}
-  - {fileID: 1988911594}
-  - {fileID: 1988911593}
-  - {fileID: 1988911592}
-  - {fileID: 1988911591}
-  - {fileID: 1988911590}
---- !u!1 &910417173
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 910417174}
-  - component: {fileID: 910417175}
-  m_Layer: 0
-  m_Name: E10 Crab Shuffle Relay
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &910417174
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 910417173}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 7.9999995, y: 0, z: -13.000002}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 354423998}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &910417175
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 910417173}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 10
-  eventName: Crab Shuffle Relay
-  phase: 2
-  skill: Lateral Shuffling
-  brain: rung2
-  rules: Side-stepping dash between parallel boundary rails without crossing legs.
-  eventScene: Event_CrabShuffle
-  lanes:
-  - {fileID: 1988911669}
-  - {fileID: 1988911668}
-  - {fileID: 1988911667}
-  - {fileID: 1988911666}
-  - {fileID: 1988911665}
-  - {fileID: 1988911664}
-  - {fileID: 1988911663}
-  - {fileID: 1988911662}
---- !u!1 &977935050
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 977935051}
-  - component: {fileID: 977935052}
-  m_Layer: 0
-  m_Name: E25 The Bench Relay
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &977935051
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 977935050}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -18.000002, y: 0, z: -26}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 354423998}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &977935052
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 977935050}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 25
-  eventName: The Bench Relay
-  phase: 5
-  skill: Sit & Re-Stand
-  brain: rung8
-  rules: Approach a bench, execute a stable seated rest, and explode back into a sprint.
-  eventScene: 
-  lanes:
-  - {fileID: 1988911549}
-  - {fileID: 1988911548}
-  - {fileID: 1988911547}
-  - {fileID: 1988911546}
-  - {fileID: 1988911545}
-  - {fileID: 1988911544}
-  - {fileID: 1988911543}
-  - {fileID: 1988911542}
---- !u!1 &980742948
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 980742949}
-  - component: {fileID: 980742950}
-  m_Layer: 0
-  m_Name: E16 The Platform Drop
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &980742949
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 980742948}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -15.999999, y: 0, z: 13.000001}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 354423998}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &980742950
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 980742948}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 16
-  eventName: The Platform Drop
-  phase: 4
-  skill: Walking Down Stairs
-  brain: rung4
-  rules: Rapid descent down stepped terrain; scored on descent speed and soft-landing dissipation.
-  eventScene: 
-  lanes:
-  - {fileID: 1988911621}
-  - {fileID: 1988911620}
-  - {fileID: 1988911619}
-  - {fileID: 1988911618}
-  - {fileID: 1988911617}
-  - {fileID: 1988911616}
-  - {fileID: 1988911615}
-  - {fileID: 1988911614}
---- !u!1 &1025902020
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1025902021}
-  - component: {fileID: 1025902022}
-  m_Layer: 0
-  m_Name: E01 The Iron Pedestal
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1025902021
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1025902020}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.5, z: -7.1054274e-15}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 354423998}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1025902022
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1025902020}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 1
-  eventName: The Iron Pedestal
-  phase: 1
-  skill: Standing Still
-  brain: rung0
-  rules: 8 runners start on narrow 1m x 1m pedestals. The last runner to maintain base equilibrium without stepping off wins.
-  eventScene: Event_IronPedestal_Heat
-  lanes:
-  - {fileID: 1988911741}
-  - {fileID: 1988911740}
-  - {fileID: 1988911739}
-  - {fileID: 1988911738}
-  - {fileID: 1988911737}
-  - {fileID: 1988911736}
-  - {fileID: 1988911735}
-  - {fileID: 1988911734}
---- !u!1 &1050102328
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1050102329}
-  - component: {fileID: 1050102330}
-  m_Layer: 0
-  m_Name: E06 The Flamingo Classic
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1050102329
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1050102328}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 20, y: 0, z: -0.0000017285347}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 354423998}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1050102330
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1050102328}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 6
-  eventName: The Flamingo Classic
-  phase: 2
-  skill: Single-Leg Stance
+  skill: Squatting
   brain: stance skills
-  rules: One foot raised; time-until-touchdown determines placement.
+  rules: Rhythmic squat repetitions. Lowest torso drop combined with balance retention scores maximum points.
   eventScene: 
   lanes:
-  - {fileID: 1988911701}
-  - {fileID: 1988911700}
-  - {fileID: 1988911699}
-  - {fileID: 1988911698}
-  - {fileID: 1988911697}
-  - {fileID: 1988911696}
-  - {fileID: 1988911695}
-  - {fileID: 1988911694}
---- !u!1 &1113749870
+  - {fileID: 1468226676}
+  - {fileID: 1468226675}
+  - {fileID: 1468226674}
+  - {fileID: 1468226673}
+  - {fileID: 1468226672}
+  - {fileID: 1468226671}
+  - {fileID: 1468226670}
+  - {fileID: 1468226669}
+--- !u!1 &1042968328
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1525,488 +1225,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1113749871}
-  - component: {fileID: 1113749872}
-  m_Layer: 0
-  m_Name: E22 Emergency Brake
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1113749871
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1113749870}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 7.9999967, y: 0, z: -41.38}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 354423998}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1113749872
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1113749870}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 22
-  eventName: Emergency Brake
-  phase: 5
-  skill: Sudden Stop
-  brain: rung2
-  rules: Full sprint toward a red stop line. Athletes must reach full standstill without crossing the boundary.
-  eventScene: Event_EmergencyBrake
-  lanes:
-  - {fileID: 1988911573}
-  - {fileID: 1988911572}
-  - {fileID: 1988911571}
-  - {fileID: 1988911570}
-  - {fileID: 1988911569}
-  - {fileID: 1988911568}
-  - {fileID: 1988911567}
-  - {fileID: 1988911566}
---- !u!1 &1143836773
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1143836774}
-  - component: {fileID: 1143836775}
-  m_Layer: 0
-  m_Name: E04 Precision Javelin Reach
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1143836774
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1143836773}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 48, y: 0, z: -0.000004261732}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 354423998}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1143836775
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1143836773}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 4
-  eventName: Precision Javelin Reach
-  phase: 1
-  skill: Arm Extension
-  brain: stance skills
-  rules: Single-arm extension toward dynamic targets at maximum reach while keeping stance anchored.
-  eventScene: 
-  lanes:
-  - {fileID: 1988911717}
-  - {fileID: 1988911716}
-  - {fileID: 1988911715}
-  - {fileID: 1988911714}
-  - {fileID: 1988911713}
-  - {fileID: 1988911712}
-  - {fileID: 1988911711}
-  - {fileID: 1988911710}
---- !u!1 &1257461218
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1257461219}
-  - component: {fileID: 1257461220}
-  m_Layer: 0
-  m_Name: E20 Low Hurdle Dash
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1257461219
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1257461218}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -24.000002, y: 0, z: -41.379993}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 354423998}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1257461220
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1257461218}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 20
-  eventName: Low Hurdle Dash
-  phase: 4
-  skill: Obstacle Step-Over
-  brain: rung5
-  rules: 30m sprint incorporating 0.3m hurdles requiring coordinated high-knee clearance.
-  eventScene: 
-  lanes:
-  - {fileID: 1988911589}
-  - {fileID: 1988911588}
-  - {fileID: 1988911587}
-  - {fileID: 1988911586}
-  - {fileID: 1988911585}
-  - {fileID: 1988911584}
-  - {fileID: 1988911583}
-  - {fileID: 1988911582}
---- !u!1 &1514399091
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1514399092}
-  - component: {fileID: 1514399093}
-  m_Layer: 0
-  m_Name: E26 Stepping Stones
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1514399092
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1514399091}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 50, y: 0, z: 12.999996}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 354423998}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1514399093
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1514399091}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 26
-  eventName: Stepping Stones
-  phase: 6
-  skill: Agility Ladder
-  brain: rung4
-  rules: Narrow elevated pads with zero room for error; miss-steps result in drop out.
-  eventScene: 
-  lanes:
-  - {fileID: 1988911541}
-  - {fileID: 1988911540}
-  - {fileID: 1988911539}
-  - {fileID: 1988911538}
-  - {fileID: 1988911537}
-  - {fileID: 1988911536}
-  - {fileID: 1988911535}
-  - {fileID: 1988911534}
---- !u!1 &1648369572
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1648369573}
-  - component: {fileID: 1648369574}
-  m_Layer: 0
-  m_Name: E27 The Resurrection Dash
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1648369573
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1648369572}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -77, y: 0, z: -41.379993}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 354423998}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1648369574
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1648369572}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 27
-  eventName: The Resurrection Dash
-  phase: 6
-  skill: Get-Up from Ground
-  brain: rung3
-  rules: Athletes start flat on their backs; fastest to rise and sprint 5m wins.
-  eventScene: 
-  lanes:
-  - {fileID: 1988911533}
-  - {fileID: 1988911532}
-  - {fileID: 1988911531}
-  - {fileID: 1988911530}
-  - {fileID: 1988911529}
-  - {fileID: 1988911528}
-  - {fileID: 1988911527}
-  - {fileID: 1988911526}
---- !u!1 &1695605408
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1695605409}
-  - component: {fileID: 1695605410}
-  m_Layer: 0
-  m_Name: E24 The Courier Carry
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1695605409
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1695605408}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -38, y: 0, z: -25.999996}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 354423998}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1695605410
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1695605408}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 24
-  eventName: The Courier Carry
-  phase: 5
-  skill: Heavy Payload
-  brain: rung8
-  rules: Carry a weighted crate across 15m without dropping or pitching backward.
-  eventScene: 
-  lanes:
-  - {fileID: 1988911557}
-  - {fileID: 1988911556}
-  - {fileID: 1988911555}
-  - {fileID: 1988911554}
-  - {fileID: 1988911553}
-  - {fileID: 1988911552}
-  - {fileID: 1988911551}
-  - {fileID: 1988911550}
---- !u!1 &1721180745
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1721180746}
-  - component: {fileID: 1721180747}
-  m_Layer: 0
-  m_Name: E28 Floor Acrobatic Sprint
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1721180746
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1721180745}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.9999976, y: 0, z: -26}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 354423998}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1721180747
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1721180745}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 28
-  eventName: Floor Acrobatic Sprint
-  phase: 6
-  skill: Flip / Cartwheel
-  brain: rung8
-  rules: Full-body inversion across a gymnastics safety mat.
-  eventScene: 
-  lanes:
-  - {fileID: 1988911525}
-  - {fileID: 1988911524}
-  - {fileID: 1988911523}
-  - {fileID: 1988911522}
-  - {fileID: 1988911521}
-  - {fileID: 1988911520}
-  - {fileID: 1988911519}
-  - {fileID: 1988911518}
---- !u!1 &1734145314
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1734145315}
-  - component: {fileID: 1734145316}
-  m_Layer: 0
-  m_Name: E18 The Olympic High Jump
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1734145315
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1734145314}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -62, y: 0, z: 0.000005453825}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 354423998}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1734145316
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1734145314}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 18
-  eventName: The Olympic High Jump
-  phase: 4
-  skill: Vertical Leap
-  brain: rung5
-  rules: Static squat jump measuring highest clearance of the pelvis.
-  eventScene: 
-  lanes:
-  - {fileID: 1988911605}
-  - {fileID: 1988911604}
-  - {fileID: 1988911603}
-  - {fileID: 1988911602}
-  - {fileID: 1988911601}
-  - {fileID: 1988911600}
-  - {fileID: 1988911599}
-  - {fileID: 1988911598}
---- !u!1 &1786312652
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1786312653}
-  - component: {fileID: 1786312654}
+  - component: {fileID: 1042968329}
+  - component: {fileID: 1042968330}
   m_Layer: 0
   m_Name: E17 Stadium Stair Climb
   m_TagString: Untagged
@@ -2014,28 +1234,28 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1786312653
+--- !u!4 &1042968329
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1786312652}
+  m_GameObject: {fileID: 1042968328}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 2.000001, y: 0, z: 13}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 354423998}
+  m_Father: {fileID: 473247224}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1786312654
+--- !u!114 &1042968330
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1786312652}
+  m_GameObject: {fileID: 1042968328}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
@@ -2049,15 +1269,15 @@ MonoBehaviour:
   rules: 20-step vertical climb without catching toes on step lips.
   eventScene: 
   lanes:
-  - {fileID: 1988911613}
-  - {fileID: 1988911612}
-  - {fileID: 1988911611}
-  - {fileID: 1988911610}
-  - {fileID: 1988911609}
-  - {fileID: 1988911608}
-  - {fileID: 1988911607}
-  - {fileID: 1988911606}
---- !u!1 &1929227481
+  - {fileID: 1468226564}
+  - {fileID: 1468226563}
+  - {fileID: 1468226562}
+  - {fileID: 1468226561}
+  - {fileID: 1468226560}
+  - {fileID: 1468226559}
+  - {fileID: 1468226558}
+  - {fileID: 1468226557}
+--- !u!1 &1060779616
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2065,59 +1285,59 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1929227482}
-  - component: {fileID: 1929227483}
+  - component: {fileID: 1060779617}
+  - component: {fileID: 1060779618}
   m_Layer: 0
-  m_Name: E02 Torso Archer
+  m_Name: E08 The 30m Dash
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1929227482
+--- !u!4 &1060779617
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1929227481}
+  m_GameObject: {fileID: 1060779616}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 34, y: 0, z: -0.00000295043}
+  m_LocalPosition: {x: -57.805, y: 0, z: -41.379993}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 354423998}
+  m_Father: {fileID: 473247224}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1929227483
+--- !u!114 &1060779618
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1929227481}
+  m_GameObject: {fileID: 1060779616}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 2
-  eventName: Torso Archer
-  phase: 1
-  skill: Upper-Body Tracking
-  brain: stance skills
-  rules: Athletes plant feet and track rapid overhead flight targets with upper bodies. Scored on angular accuracy and zero foot slippage.
-  eventScene: 
+  number: 8
+  eventName: The 30m Dash
+  phase: 2
+  skill: Planar Forward Walking
+  brain: rung1
+  rules: Pure forward linear sprint to the finish ribbon.
+  eventScene: Event_30mDash
   lanes:
-  - {fileID: 1988911733}
-  - {fileID: 1988911732}
-  - {fileID: 1988911731}
-  - {fileID: 1988911730}
-  - {fileID: 1988911729}
-  - {fileID: 1988911728}
-  - {fileID: 1988911727}
-  - {fileID: 1988911726}
---- !u!1 &1929538940
+  - {fileID: 1468226636}
+  - {fileID: 1468226635}
+  - {fileID: 1468226634}
+  - {fileID: 1468226633}
+  - {fileID: 1468226632}
+  - {fileID: 1468226631}
+  - {fileID: 1468226630}
+  - {fileID: 1468226629}
+--- !u!1 &1115033923
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2125,8 +1345,248 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1929538941}
-  - component: {fileID: 1929538942}
+  - component: {fileID: 1115033924}
+  - component: {fileID: 1115033925}
+  m_Layer: 0
+  m_Name: E06 The Flamingo Classic
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1115033924
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1115033923}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 20, y: 0, z: -0.0000017285347}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 473247224}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1115033925
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1115033923}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
+  number: 6
+  eventName: The Flamingo Classic
+  phase: 2
+  skill: Single-Leg Stance
+  brain: stance skills
+  rules: One foot raised; time-until-touchdown determines placement.
+  eventScene: 
+  lanes:
+  - {fileID: 1468226652}
+  - {fileID: 1468226651}
+  - {fileID: 1468226650}
+  - {fileID: 1468226649}
+  - {fileID: 1468226648}
+  - {fileID: 1468226647}
+  - {fileID: 1468226646}
+  - {fileID: 1468226645}
+--- !u!1 &1134711619
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1134711620}
+  - component: {fileID: 1134711621}
+  m_Layer: 0
+  m_Name: E13 Steeplechase Jog
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1134711620
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1134711619}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -70, y: 0, z: -12.999994}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 473247224}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1134711621
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1134711619}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
+  number: 13
+  eventName: Steeplechase Jog
+  phase: 3
+  skill: Flight Phase Running
+  brain: rung1
+  rules: 50m sprint requiring sustained aerial flight phases between foot strikes.
+  eventScene: 
+  lanes:
+  - {fileID: 1468226596}
+  - {fileID: 1468226595}
+  - {fileID: 1468226594}
+  - {fileID: 1468226593}
+  - {fileID: 1468226592}
+  - {fileID: 1468226591}
+  - {fileID: 1468226590}
+  - {fileID: 1468226589}
+--- !u!1 &1137594929
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1137594930}
+  - component: {fileID: 1137594931}
+  m_Layer: 0
+  m_Name: E15 Cross-Country Rubble
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1137594930
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1137594929}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 20, y: 0, z: 12.999997}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 473247224}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1137594931
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1137594929}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
+  number: 15
+  eventName: Cross-Country Rubble
+  phase: 3
+  skill: Uneven Terrain
+  brain: rung4
+  rules: Traversal across randomized mounds and ruts.
+  eventScene: 
+  lanes:
+  - {fileID: 1468226580}
+  - {fileID: 1468226579}
+  - {fileID: 1468226578}
+  - {fileID: 1468226577}
+  - {fileID: 1468226576}
+  - {fileID: 1468226575}
+  - {fileID: 1468226574}
+  - {fileID: 1468226573}
+--- !u!1 &1160309928
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1160309929}
+  - component: {fileID: 1160309930}
+  m_Layer: 0
+  m_Name: E26 Stepping Stones
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1160309929
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1160309928}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 50, y: 0, z: 12.999996}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 473247224}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1160309930
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1160309928}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
+  number: 26
+  eventName: Stepping Stones
+  phase: 6
+  skill: Agility Ladder
+  brain: rung4
+  rules: Narrow elevated pads with zero room for error; miss-steps result in drop out.
+  eventScene: 
+  lanes:
+  - {fileID: 1468226492}
+  - {fileID: 1468226491}
+  - {fileID: 1468226490}
+  - {fileID: 1468226489}
+  - {fileID: 1468226488}
+  - {fileID: 1468226487}
+  - {fileID: 1468226486}
+  - {fileID: 1468226485}
+--- !u!1 &1235053462
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1235053463}
+  - component: {fileID: 1235053464}
   m_Layer: 0
   m_Name: E29 Striker Shootout
   m_TagString: Untagged
@@ -2134,28 +1594,28 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1929538941
+--- !u!4 &1235053463
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1929538940}
+  m_GameObject: {fileID: 1235053462}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 21.999998, y: 0, z: -26.000002}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 354423998}
+  m_Father: {fileID: 473247224}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1929538942
+--- !u!114 &1235053464
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1929538940}
+  m_GameObject: {fileID: 1235053462}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
@@ -2169,15 +1629,15 @@ MonoBehaviour:
   rules: Intercept a rolling soccer ball mid-stride and kick past a target marker.
   eventScene: 
   lanes:
-  - {fileID: 1988911517}
-  - {fileID: 1988911516}
-  - {fileID: 1988911515}
-  - {fileID: 1988911514}
-  - {fileID: 1988911513}
-  - {fileID: 1988911512}
-  - {fileID: 1988911511}
-  - {fileID: 1988911510}
---- !u!1 &1949894988
+  - {fileID: 1468226468}
+  - {fileID: 1468226467}
+  - {fileID: 1468226466}
+  - {fileID: 1468226465}
+  - {fileID: 1468226464}
+  - {fileID: 1468226463}
+  - {fileID: 1468226462}
+  - {fileID: 1468226461}
+--- !u!1 &1277025433
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2185,59 +1645,239 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1949894989}
-  - component: {fileID: 1949894990}
+  - component: {fileID: 1277025434}
+  - component: {fileID: 1277025435}
   m_Layer: 0
-  m_Name: E11 Slalom Sprint
+  m_Name: E23 The Trench Crawl
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1949894989
+--- !u!4 &1277025434
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1949894988}
+  m_GameObject: {fileID: 1277025433}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 32, y: 0, z: -13.000003}
+  m_LocalPosition: {x: -58, y: 0, z: -25.999992}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 354423998}
+  m_Father: {fileID: 473247224}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1949894990
+--- !u!114 &1277025435
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1949894988}
+  m_GameObject: {fileID: 1277025433}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 11
-  eventName: Slalom Sprint
-  phase: 3
-  skill: Velocity Vectoring
-  brain: rung2
-  rules: Weaving through slalom gates; penalties added for missed gates or clipping flags.
-  eventScene: Event_SlalomSprint
+  number: 23
+  eventName: The Trench Crawl
+  phase: 5
+  skill: Quadrupedal Crawl
+  brain: rung8
+  rules: Low ceiling tunnel forcing all-fours crawl movement.
+  eventScene: 
   lanes:
-  - {fileID: 1988911661}
-  - {fileID: 1988911660}
-  - {fileID: 1988911659}
-  - {fileID: 1988911658}
-  - {fileID: 1988911657}
-  - {fileID: 1988911656}
-  - {fileID: 1988911655}
-  - {fileID: 1988911654}
---- !u!1001 &1988911508
+  - {fileID: 1468226516}
+  - {fileID: 1468226515}
+  - {fileID: 1468226514}
+  - {fileID: 1468226513}
+  - {fileID: 1468226512}
+  - {fileID: 1468226511}
+  - {fileID: 1468226510}
+  - {fileID: 1468226509}
+--- !u!1 &1314006046
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1314006047}
+  - component: {fileID: 1314006048}
+  m_Layer: 0
+  m_Name: E22 Emergency Brake
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1314006047
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1314006046}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 7.9999967, y: 0, z: -41.38}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 473247224}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1314006048
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1314006046}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
+  number: 22
+  eventName: Emergency Brake
+  phase: 5
+  skill: Sudden Stop
+  brain: rung2
+  rules: Full sprint toward a red stop line. Athletes must reach full standstill without crossing the boundary.
+  eventScene: Event_EmergencyBrake
+  lanes:
+  - {fileID: 1468226524}
+  - {fileID: 1468226523}
+  - {fileID: 1468226522}
+  - {fileID: 1468226521}
+  - {fileID: 1468226520}
+  - {fileID: 1468226519}
+  - {fileID: 1468226518}
+  - {fileID: 1468226517}
+--- !u!1 &1327356748
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1327356749}
+  - component: {fileID: 1327356750}
+  m_Layer: 0
+  m_Name: E02 Torso Archer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1327356749
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1327356748}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 34, y: 0, z: -0.00000295043}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 473247224}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1327356750
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1327356748}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
+  number: 2
+  eventName: Torso Archer
+  phase: 1
+  skill: Upper-Body Tracking
+  brain: stance skills
+  rules: Athletes plant feet and track rapid overhead flight targets with upper bodies. Scored on angular accuracy and zero foot slippage.
+  eventScene: 
+  lanes:
+  - {fileID: 1468226684}
+  - {fileID: 1468226683}
+  - {fileID: 1468226682}
+  - {fileID: 1468226681}
+  - {fileID: 1468226680}
+  - {fileID: 1468226679}
+  - {fileID: 1468226678}
+  - {fileID: 1468226677}
+--- !u!1 &1397219104
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1397219105}
+  - component: {fileID: 1397219106}
+  m_Layer: 0
+  m_Name: E18 The Olympic High Jump
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1397219105
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1397219104}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -62, y: 0, z: 0.000005453825}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 473247224}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1397219106
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1397219104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
+  number: 18
+  eventName: The Olympic High Jump
+  phase: 4
+  skill: Vertical Leap
+  brain: rung5
+  rules: Static squat jump measuring highest clearance of the pelvis.
+  eventScene: 
+  lanes:
+  - {fileID: 1468226556}
+  - {fileID: 1468226555}
+  - {fileID: 1468226554}
+  - {fileID: 1468226553}
+  - {fileID: 1468226552}
+  - {fileID: 1468226551}
+  - {fileID: 1468226550}
+  - {fileID: 1468226549}
+--- !u!1001 &1468226459
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -2294,1207 +1934,1207 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: -4161369568681901532, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
---- !u!4 &1988911509 stripped
+--- !u!4 &1468226460 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2498151449067150003, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911510 stripped
+--- !u!4 &1468226461 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8386912645525761001, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911511 stripped
+--- !u!4 &1468226462 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -3746060227910779093, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911512 stripped
+--- !u!4 &1468226463 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4654080627535634400, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911513 stripped
+--- !u!4 &1468226464 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3508392514297050081, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911514 stripped
+--- !u!4 &1468226465 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -1850762390198312169, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911515 stripped
+--- !u!4 &1468226466 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -486296750262829118, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911516 stripped
+--- !u!4 &1468226467 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -5907447804882944035, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911517 stripped
+--- !u!4 &1468226468 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8241932938487300025, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911518 stripped
+--- !u!4 &1468226469 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5002768735321549478, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911519 stripped
+--- !u!4 &1468226470 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -3703156407017543975, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911520 stripped
+--- !u!4 &1468226471 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1519959678983058088, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911521 stripped
+--- !u!4 &1468226472 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -1695836644153912472, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911522 stripped
+--- !u!4 &1468226473 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1377268281273333080, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911523 stripped
+--- !u!4 &1468226474 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -2824140521988342348, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911524 stripped
+--- !u!4 &1468226475 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 608894122363073154, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911525 stripped
+--- !u!4 &1468226476 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3591120088987187711, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911526 stripped
+--- !u!4 &1468226477 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1289943165551024621, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911527 stripped
+--- !u!4 &1468226478 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1394128972958354300, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911528 stripped
+--- !u!4 &1468226479 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -3475861239968471511, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911529 stripped
+--- !u!4 &1468226480 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8820957161960789782, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911530 stripped
+--- !u!4 &1468226481 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -5578751520212884919, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911531 stripped
+--- !u!4 &1468226482 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -7732893298979500130, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911532 stripped
+--- !u!4 &1468226483 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 978746336985797311, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911533 stripped
+--- !u!4 &1468226484 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -9084580242153801983, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911534 stripped
+--- !u!4 &1468226485 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2634301174498030269, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911535 stripped
+--- !u!4 &1468226486 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -1958124145454382450, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911536 stripped
+--- !u!4 &1468226487 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1206045083502355492, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911537 stripped
+--- !u!4 &1468226488 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -5780767657938492249, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911538 stripped
+--- !u!4 &1468226489 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -7334546263488129472, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911539 stripped
+--- !u!4 &1468226490 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6452485504094669701, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911540 stripped
+--- !u!4 &1468226491 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -1608181815334527962, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911541 stripped
+--- !u!4 &1468226492 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -3371963902392141560, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911542 stripped
+--- !u!4 &1468226493 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -7704810137879699872, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911543 stripped
+--- !u!4 &1468226494 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -4806333601656123515, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911544 stripped
+--- !u!4 &1468226495 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2149227237082104808, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911545 stripped
+--- !u!4 &1468226496 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -7269563685581743598, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911546 stripped
+--- !u!4 &1468226497 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -1379215504466798381, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911547 stripped
+--- !u!4 &1468226498 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -1869765617301935983, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911548 stripped
+--- !u!4 &1468226499 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -5108075504015490773, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911549 stripped
+--- !u!4 &1468226500 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -7006664101855511865, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911550 stripped
+--- !u!4 &1468226501 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -2516314830046662584, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911551 stripped
+--- !u!4 &1468226502 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7939659200698436569, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911552 stripped
+--- !u!4 &1468226503 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6653832284734252700, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911553 stripped
+--- !u!4 &1468226504 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -2190319062250199896, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911554 stripped
+--- !u!4 &1468226505 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8233351197557458999, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911555 stripped
+--- !u!4 &1468226506 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -5235748696343523363, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911556 stripped
+--- !u!4 &1468226507 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3923657199937892514, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911557 stripped
+--- !u!4 &1468226508 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4819281574953307368, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911558 stripped
+--- !u!4 &1468226509 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7079361698431754795, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911559 stripped
+--- !u!4 &1468226510 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -6196736306105659952, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911560 stripped
+--- !u!4 &1468226511 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -3511275027532435943, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911561 stripped
+--- !u!4 &1468226512 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -5681390819989801092, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911562 stripped
+--- !u!4 &1468226513 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5484844500857277477, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911563 stripped
+--- !u!4 &1468226514 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 228029189840261877, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911564 stripped
+--- !u!4 &1468226515 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2444526263903846038, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911565 stripped
+--- !u!4 &1468226516 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -7260297154108216984, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911566 stripped
+--- !u!4 &1468226517 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -266108348884845507, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911567 stripped
+--- !u!4 &1468226518 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -6300179534701016529, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911568 stripped
+--- !u!4 &1468226519 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8402322679238026327, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911569 stripped
+--- !u!4 &1468226520 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8152431015167484006, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911570 stripped
+--- !u!4 &1468226521 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -1053324527777028341, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911571 stripped
+--- !u!4 &1468226522 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -7706813207708379511, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911572 stripped
+--- !u!4 &1468226523 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6136412895185920287, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911573 stripped
+--- !u!4 &1468226524 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7584867938262759201, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911574 stripped
+--- !u!4 &1468226525 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1392182817815146879, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911575 stripped
+--- !u!4 &1468226526 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 777339379493551903, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911576 stripped
+--- !u!4 &1468226527 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1901026902582477849, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911577 stripped
+--- !u!4 &1468226528 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -4631790937886606741, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911578 stripped
+--- !u!4 &1468226529 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -1160576928191474645, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911579 stripped
+--- !u!4 &1468226530 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 371578182108472480, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911580 stripped
+--- !u!4 &1468226531 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -6025279465537914719, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911581 stripped
+--- !u!4 &1468226532 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1549454901144997476, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911582 stripped
+--- !u!4 &1468226533 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4995607262115967808, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911583 stripped
+--- !u!4 &1468226534 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -4562984765995838937, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911584 stripped
+--- !u!4 &1468226535 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 108701445419506802, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911585 stripped
+--- !u!4 &1468226536 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4610264072854662153, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911586 stripped
+--- !u!4 &1468226537 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8514787214919150173, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911587 stripped
+--- !u!4 &1468226538 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2329995512743358147, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911588 stripped
+--- !u!4 &1468226539 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -2776323383772364441, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911589 stripped
+--- !u!4 &1468226540 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -9155133405413116931, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911590 stripped
+--- !u!4 &1468226541 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5885357769386963038, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911591 stripped
+--- !u!4 &1468226542 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8408956140405429152, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911592 stripped
+--- !u!4 &1468226543 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -3295176633680981441, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911593 stripped
+--- !u!4 &1468226544 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -5686947246209248564, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911594 stripped
+--- !u!4 &1468226545 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -54932585316292463, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911595 stripped
+--- !u!4 &1468226546 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -130132604252605848, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911596 stripped
+--- !u!4 &1468226547 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2206898968307796305, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911597 stripped
+--- !u!4 &1468226548 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8944621270848111944, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911598 stripped
+--- !u!4 &1468226549 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -1749950722466270401, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911599 stripped
+--- !u!4 &1468226550 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -1196306881990458140, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911600 stripped
+--- !u!4 &1468226551 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -6583742492545196201, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911601 stripped
+--- !u!4 &1468226552 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5539295734950059067, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911602 stripped
+--- !u!4 &1468226553 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -2090921284167442902, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911603 stripped
+--- !u!4 &1468226554 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3064634506188438539, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911604 stripped
+--- !u!4 &1468226555 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7885800858327183128, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911605 stripped
+--- !u!4 &1468226556 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -7651807328224026744, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911606 stripped
+--- !u!4 &1468226557 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8153038728207777758, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911607 stripped
+--- !u!4 &1468226558 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5633126812117166580, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911608 stripped
+--- !u!4 &1468226559 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -1337369654344902072, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911609 stripped
+--- !u!4 &1468226560 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1090969140708992927, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911610 stripped
+--- !u!4 &1468226561 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1506693469018382548, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911611 stripped
+--- !u!4 &1468226562 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2309050250501842278, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911612 stripped
+--- !u!4 &1468226563 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2861610039821707534, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911613 stripped
+--- !u!4 &1468226564 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -7055068468922190919, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911614 stripped
+--- !u!4 &1468226565 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8217677785474978501, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911615 stripped
+--- !u!4 &1468226566 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7533359246171849805, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911616 stripped
+--- !u!4 &1468226567 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 9051343125123538849, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911617 stripped
+--- !u!4 &1468226568 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -4759441304337378940, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911618 stripped
+--- !u!4 &1468226569 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -1710069632023720479, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911619 stripped
+--- !u!4 &1468226570 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -3833111915524740580, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911620 stripped
+--- !u!4 &1468226571 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4849635863101698738, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911621 stripped
+--- !u!4 &1468226572 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -721912014724966071, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911622 stripped
+--- !u!4 &1468226573 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6332616902562717141, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911623 stripped
+--- !u!4 &1468226574 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -2404734785782576950, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911624 stripped
+--- !u!4 &1468226575 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2628700065793308116, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911625 stripped
+--- !u!4 &1468226576 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7201376787481906802, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911626 stripped
+--- !u!4 &1468226577 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8717108466659205208, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911627 stripped
+--- !u!4 &1468226578 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -1863363624173773709, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911628 stripped
+--- !u!4 &1468226579 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8993466747920512707, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911629 stripped
+--- !u!4 &1468226580 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -6948059377813583750, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911630 stripped
+--- !u!4 &1468226581 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -2666030539752847451, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911631 stripped
+--- !u!4 &1468226582 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6952243479172253306, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911632 stripped
+--- !u!4 &1468226583 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8688234385783407636, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911633 stripped
+--- !u!4 &1468226584 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6853607535861220993, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911634 stripped
+--- !u!4 &1468226585 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8403905515258747876, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911635 stripped
+--- !u!4 &1468226586 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1436662926128465242, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911636 stripped
+--- !u!4 &1468226587 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2562074922974462822, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911637 stripped
+--- !u!4 &1468226588 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1755370988207054638, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911638 stripped
+--- !u!4 &1468226589 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 910695857905901688, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911639 stripped
+--- !u!4 &1468226590 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3249908417721374942, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911640 stripped
+--- !u!4 &1468226591 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -2397979282858581195, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911641 stripped
+--- !u!4 &1468226592 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -3966435387673903284, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911642 stripped
+--- !u!4 &1468226593 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -1748191900127105689, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911643 stripped
+--- !u!4 &1468226594 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -9115996775874307859, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911644 stripped
+--- !u!4 &1468226595 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -2717168620393935727, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911645 stripped
+--- !u!4 &1468226596 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4128743768219339672, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911646 stripped
+--- !u!4 &1468226597 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -7267569831816857590, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911647 stripped
+--- !u!4 &1468226598 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -2564832188786670395, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911648 stripped
+--- !u!4 &1468226599 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1577311454539472782, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911649 stripped
+--- !u!4 &1468226600 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4851437760945231938, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911650 stripped
+--- !u!4 &1468226601 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -490944434331618443, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911651 stripped
+--- !u!4 &1468226602 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4099392291239373651, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911652 stripped
+--- !u!4 &1468226603 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -6711279321354390848, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911653 stripped
+--- !u!4 &1468226604 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -4788942361524338835, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911654 stripped
+--- !u!4 &1468226605 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8087345306379548711, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911655 stripped
+--- !u!4 &1468226606 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -5134666716002486717, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911656 stripped
+--- !u!4 &1468226607 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3481724649031962055, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911657 stripped
+--- !u!4 &1468226608 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6886727048786726177, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911658 stripped
+--- !u!4 &1468226609 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5594766896857330243, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911659 stripped
+--- !u!4 &1468226610 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4575079951645044490, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911660 stripped
+--- !u!4 &1468226611 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8520525793069687783, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911661 stripped
+--- !u!4 &1468226612 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -5496615199049402854, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911662 stripped
+--- !u!4 &1468226613 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1717658134475093715, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911663 stripped
+--- !u!4 &1468226614 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5312067500804547517, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911664 stripped
+--- !u!4 &1468226615 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -7218532367382950737, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911665 stripped
+--- !u!4 &1468226616 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2756193572413853315, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911666 stripped
+--- !u!4 &1468226617 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5123166625056945002, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911667 stripped
+--- !u!4 &1468226618 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -639594801991942619, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911668 stripped
+--- !u!4 &1468226619 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4297927312225456976, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911669 stripped
+--- !u!4 &1468226620 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7033816820834487851, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911670 stripped
+--- !u!4 &1468226621 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -1771770424131611612, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911671 stripped
+--- !u!4 &1468226622 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -2211382356159905117, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911672 stripped
+--- !u!4 &1468226623 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1097890206069498002, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911673 stripped
+--- !u!4 &1468226624 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6566189121561154696, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911674 stripped
+--- !u!4 &1468226625 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -5525743885587242467, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911675 stripped
+--- !u!4 &1468226626 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -2848517343362831028, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911676 stripped
+--- !u!4 &1468226627 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1734663634096221827, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911677 stripped
+--- !u!4 &1468226628 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -497156350771539836, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911678 stripped
+--- !u!4 &1468226629 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -6181326034192207211, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911679 stripped
+--- !u!4 &1468226630 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -6325262465327209686, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911680 stripped
+--- !u!4 &1468226631 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2202691711362202064, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911681 stripped
+--- !u!4 &1468226632 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 547531939738489241, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911682 stripped
+--- !u!4 &1468226633 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -3757097032645674891, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911683 stripped
+--- !u!4 &1468226634 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -6708411517855540608, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911684 stripped
+--- !u!4 &1468226635 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -7215141167725608360, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911685 stripped
+--- !u!4 &1468226636 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -6479247481721238248, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911686 stripped
+--- !u!4 &1468226637 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -1507559964452013200, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911687 stripped
+--- !u!4 &1468226638 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -5552895553467051725, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911688 stripped
+--- !u!4 &1468226639 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6375223554361661502, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911689 stripped
+--- !u!4 &1468226640 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7750456977196313118, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911690 stripped
+--- !u!4 &1468226641 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8177336150570331616, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911691 stripped
+--- !u!4 &1468226642 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8878311065222468574, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911692 stripped
+--- !u!4 &1468226643 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -6619901625177898391, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911693 stripped
+--- !u!4 &1468226644 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3580193580311837297, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911694 stripped
+--- !u!4 &1468226645 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3499337049212678326, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911695 stripped
+--- !u!4 &1468226646 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8622480147014000010, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911696 stripped
+--- !u!4 &1468226647 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -9056155533697973756, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911697 stripped
+--- !u!4 &1468226648 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4510346186808466158, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911698 stripped
+--- !u!4 &1468226649 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -2640810796246299835, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911699 stripped
+--- !u!4 &1468226650 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -2090574261877195882, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911700 stripped
+--- !u!4 &1468226651 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -3992099373856062126, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911701 stripped
+--- !u!4 &1468226652 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 9134919700510322228, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911702 stripped
+--- !u!4 &1468226653 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -7976632328115487584, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911703 stripped
+--- !u!4 &1468226654 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7371789341366372242, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911704 stripped
+--- !u!4 &1468226655 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 108747023292915527, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911705 stripped
+--- !u!4 &1468226656 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8933172794583490497, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911706 stripped
+--- !u!4 &1468226657 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -3576726104852717452, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911707 stripped
+--- !u!4 &1468226658 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8429970811237860415, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911708 stripped
+--- !u!4 &1468226659 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7989779444783665870, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911709 stripped
+--- !u!4 &1468226660 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -6192502630432379596, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911710 stripped
+--- !u!4 &1468226661 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -4783782438017572253, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911711 stripped
+--- !u!4 &1468226662 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -7872022666062942088, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911712 stripped
+--- !u!4 &1468226663 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -1830556664411364662, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911713 stripped
+--- !u!4 &1468226664 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 273728996211409586, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911714 stripped
+--- !u!4 &1468226665 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -6565246120376556399, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911715 stripped
+--- !u!4 &1468226666 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6143493395184586258, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911716 stripped
+--- !u!4 &1468226667 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4196620359702427811, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911717 stripped
+--- !u!4 &1468226668 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2018405497363730970, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911718 stripped
+--- !u!4 &1468226669 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -6511179060155938031, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911719 stripped
+--- !u!4 &1468226670 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5004110709412387363, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911720 stripped
+--- !u!4 &1468226671 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2825209809332586914, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911721 stripped
+--- !u!4 &1468226672 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8581365882572338479, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911722 stripped
+--- !u!4 &1468226673 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -3212159269330098085, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911723 stripped
+--- !u!4 &1468226674 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -5171920077587337377, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911724 stripped
+--- !u!4 &1468226675 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -956770354245585530, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911725 stripped
+--- !u!4 &1468226676 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -2115357369774885171, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911726 stripped
+--- !u!4 &1468226677 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -2875733379901787144, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911727 stripped
+--- !u!4 &1468226678 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4747107666957775134, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911728 stripped
+--- !u!4 &1468226679 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -5612591158911562182, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911729 stripped
+--- !u!4 &1468226680 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -220070895245810572, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911730 stripped
+--- !u!4 &1468226681 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4755644723293528656, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911731 stripped
+--- !u!4 &1468226682 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7693183227797579517, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911732 stripped
+--- !u!4 &1468226683 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6672562895096981045, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911733 stripped
+--- !u!4 &1468226684 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4346883269265481020, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911734 stripped
+--- !u!4 &1468226685 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 9175694893302113517, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911735 stripped
+--- !u!4 &1468226686 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1887777953533455217, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911736 stripped
+--- !u!4 &1468226687 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -7320923527242866700, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911737 stripped
+--- !u!4 &1468226688 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -5890537809230764437, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911738 stripped
+--- !u!4 &1468226689 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8184818551706443367, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911739 stripped
+--- !u!4 &1468226690 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5855724090911576346, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911740 stripped
+--- !u!4 &1468226691 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -4617475585288356174, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911741 stripped
+--- !u!4 &1468226692 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8781155638399919624, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911742 stripped
+--- !u!4 &1468226693 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4730531671239085243, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911743 stripped
+--- !u!4 &1468226694 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -7953521272256859332, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911744 stripped
+--- !u!4 &1468226695 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -5611376141112930773, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911745 stripped
+--- !u!4 &1468226696 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7556147410648487163, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911746 stripped
+--- !u!4 &1468226697 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -2841411343185034161, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911747 stripped
+--- !u!4 &1468226698 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8658942637038808028, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1988911748 stripped
+--- !u!4 &1468226699 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -5613314139827197712, guid: 8d7d0a7d94410ea45ac4415665ccde09, type: 3}
-  m_PrefabInstance: {fileID: 1988911508}
+  m_PrefabInstance: {fileID: 1468226459}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1992294076
+--- !u!1 &1713037405
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3502,64 +3142,424 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1992294077}
-  - component: {fileID: 1992294078}
+  - component: {fileID: 1713037406}
+  - component: {fileID: 1713037407}
   m_Layer: 0
-  m_Name: E03 Deep Squat Endurance
+  m_Name: E05 The Gust Gauntlet
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1992294077
+--- !u!4 &1713037406
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1992294076}
+  m_GameObject: {fileID: 1713037405}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -20, y: 0, z: 0.0000018179417}
+  m_LocalPosition: {x: -34, y: 0.10000001, z: 0.0000030696392}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 354423998}
+  m_Father: {fileID: 473247224}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1992294078
+--- !u!114 &1713037407
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1992294076}
+  m_GameObject: {fileID: 1713037405}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
-  number: 3
-  eventName: Deep Squat Endurance
+  number: 5
+  eventName: The Gust Gauntlet
   phase: 1
-  skill: Squatting
-  brain: stance skills
-  rules: Rhythmic squat repetitions. Lowest torso drop combined with balance retention scores maximum points.
+  skill: Push Shock
+  brain: rung2
+  rules: Athletes endure lateral wind bursts and sudden floor shakers. Scored on recovery time back to center.
+  eventScene: Event_GustGauntlet
+  lanes:
+  - {fileID: 1468226660}
+  - {fileID: 1468226659}
+  - {fileID: 1468226658}
+  - {fileID: 1468226657}
+  - {fileID: 1468226656}
+  - {fileID: 1468226655}
+  - {fileID: 1468226654}
+  - {fileID: 1468226653}
+--- !u!1 &1733033536
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1733033537}
+  - component: {fileID: 1733033538}
+  m_Layer: 0
+  m_Name: E25 The Bench Relay
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1733033537
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1733033536}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -18.000002, y: 0, z: -26}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 473247224}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1733033538
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1733033536}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
+  number: 25
+  eventName: The Bench Relay
+  phase: 5
+  skill: Sit & Re-Stand
+  brain: rung8
+  rules: Approach a bench, execute a stable seated rest, and explode back into a sprint.
   eventScene: 
   lanes:
-  - {fileID: 1988911725}
-  - {fileID: 1988911724}
-  - {fileID: 1988911723}
-  - {fileID: 1988911722}
-  - {fileID: 1988911721}
-  - {fileID: 1988911720}
-  - {fileID: 1988911719}
-  - {fileID: 1988911718}
+  - {fileID: 1468226500}
+  - {fileID: 1468226499}
+  - {fileID: 1468226498}
+  - {fileID: 1468226497}
+  - {fileID: 1468226496}
+  - {fileID: 1468226495}
+  - {fileID: 1468226494}
+  - {fileID: 1468226493}
+--- !u!1 &1760216932
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1760216933}
+  - component: {fileID: 1760216934}
+  m_Layer: 0
+  m_Name: E10 Crab Shuffle Relay
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1760216933
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1760216932}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 7.9999995, y: 0, z: -13.000002}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 473247224}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1760216934
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1760216932}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
+  number: 10
+  eventName: Crab Shuffle Relay
+  phase: 2
+  skill: Lateral Shuffling
+  brain: rung2
+  rules: Side-stepping dash between parallel boundary rails without crossing legs.
+  eventScene: Event_CrabShuffle
+  lanes:
+  - {fileID: 1468226620}
+  - {fileID: 1468226619}
+  - {fileID: 1468226618}
+  - {fileID: 1468226617}
+  - {fileID: 1468226616}
+  - {fileID: 1468226615}
+  - {fileID: 1468226614}
+  - {fileID: 1468226613}
+--- !u!1 &1865917972
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1865917973}
+  - component: {fileID: 1865917974}
+  m_Layer: 0
+  m_Name: E27 The Resurrection Dash
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1865917973
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1865917972}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -77, y: 0, z: -41.379993}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 473247224}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1865917974
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1865917972}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
+  number: 27
+  eventName: The Resurrection Dash
+  phase: 6
+  skill: Get-Up from Ground
+  brain: rung3
+  rules: Athletes start flat on their backs; fastest to rise and sprint 5m wins.
+  eventScene: 
+  lanes:
+  - {fileID: 1468226484}
+  - {fileID: 1468226483}
+  - {fileID: 1468226482}
+  - {fileID: 1468226481}
+  - {fileID: 1468226480}
+  - {fileID: 1468226479}
+  - {fileID: 1468226478}
+  - {fileID: 1468226477}
+--- !u!1 &1985182314
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1985182315}
+  - component: {fileID: 1985182316}
+  m_Layer: 0
+  m_Name: E21 The Sandpit Long Jump
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1985182315
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1985182314}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -55.999996, y: 0, z: 26.000008}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 473247224}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1985182316
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1985182314}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
+  number: 21
+  eventName: The Sandpit Long Jump
+  phase: 5
+  skill: Broad Jump
+  brain: rung5
+  rules: Run-up followed by forward horizontal launch into a sandpit.
+  eventScene: 
+  lanes:
+  - {fileID: 1468226532}
+  - {fileID: 1468226531}
+  - {fileID: 1468226530}
+  - {fileID: 1468226529}
+  - {fileID: 1468226528}
+  - {fileID: 1468226527}
+  - {fileID: 1468226526}
+  - {fileID: 1468226525}
+--- !u!1 &2082023491
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2082023492}
+  - component: {fileID: 2082023493}
+  m_Layer: 0
+  m_Name: E07 Cadence March
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2082023492
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2082023491}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 62, y: 0, z: -0.0000054240227}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 473247224}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2082023493
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2082023491}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
+  number: 7
+  eventName: Cadence March
+  phase: 2
+  skill: Stepping In-Place
+  brain: stance skills
+  rules: High-knee marching synchronized to a rising stadium metronome.
+  eventScene: 
+  lanes:
+  - {fileID: 1468226644}
+  - {fileID: 1468226643}
+  - {fileID: 1468226642}
+  - {fileID: 1468226641}
+  - {fileID: 1468226640}
+  - {fileID: 1468226639}
+  - {fileID: 1468226638}
+  - {fileID: 1468226637}
+--- !u!1 &2125775610
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2125775611}
+  - component: {fileID: 2125775612}
+  m_Layer: 0
+  m_Name: E01 The Iron Pedestal
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2125775611
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2125775610}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.5, z: -7.1054274e-15}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 473247224}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2125775612
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2125775610}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae26768dc4886dc4a8785418deb381da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.EventVenue
+  number: 1
+  eventName: The Iron Pedestal
+  phase: 1
+  skill: Standing Still
+  brain: rung0
+  rules: 8 runners start on narrow 1m x 1m pedestals. The last runner to maintain base equilibrium without stepping off wins.
+  eventScene: Event_IronPedestal_Heat
+  lanes:
+  - {fileID: 1468226692}
+  - {fileID: 1468226691}
+  - {fileID: 1468226690}
+  - {fileID: 1468226689}
+  - {fileID: 1468226688}
+  - {fileID: 1468226687}
+  - {fileID: 1468226686}
+  - {fileID: 1468226685}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1988911508}
-  - {fileID: 57130638}
-  - {fileID: 476271294}
-  - {fileID: 354423998}
-  - {fileID: 746916575}
+  - {fileID: 1468226459}
+  - {fileID: 422122166}
+  - {fileID: 944728399}
+  - {fileID: 473247224}
+  - {fileID: 768136053}
