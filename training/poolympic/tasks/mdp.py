@@ -151,6 +151,18 @@ class AthleteCommand(UniformVelocityCommand):
 
     def _resample_command(self, env_ids):
         super()._resample_command(env_ids)
+        frac = getattr(self.cfg, "sprint_fraction", 0.0)
+        if frac:  # r2_v8: extra mass on fast running with a mild turn (the G1 margin misses: 3.2-3.8 m/s, |wz| 0.2-0.5)
+            n = len(env_ids)
+            pick = torch.rand(n, device=self.device) < frac
+            if pick.any():
+                ids = env_ids[pick]
+                lo, hi = self.cfg.sprint_vx
+                self.vel_command_b[ids, 0] = torch.empty(len(ids), device=self.device).uniform_(lo, hi)
+                self.vel_command_b[ids, 1] = 0.0
+                self.vel_command_b[ids, 2] = torch.empty(len(ids), device=self.device).uniform_(-self.cfg.sprint_wz, self.cfg.sprint_wz)
+                if hasattr(self, "is_standing_env"):
+                    self.is_standing_env[ids] = False
         a_max = getattr(self.cfg, "max_lateral_accel", None)
         if a_max:  # |wz| <= a_max / |v|: no physically impossible sprint-and-spin commands (r2_v6)
             v = torch.linalg.norm(self.vel_command_b[env_ids, :2], dim=-1).clamp(min=1e-3)
@@ -161,6 +173,9 @@ class AthleteCommand(UniformVelocityCommand):
 @dataclass(kw_only=True)
 class AthleteCommandCfg(UniformVelocityCommandCfg):
     max_lateral_accel: float | None = None  # m/s^2; None = independent uniform sampling
+    sprint_fraction: float = 0.0            # share of resamples drawn from the sprint band below
+    sprint_vx: tuple[float, float] = (2.5, 4.0)
+    sprint_wz: float = 0.6
 
     def build(self, env):
         return AthleteCommand(self, env)

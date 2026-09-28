@@ -429,3 +429,12 @@ def matt_rung2_sym4_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     cfg.rewards["track_lin"] = RewardTermCfg(func=vel_mdp.track_linear_velocity, weight=2.0,
                                              params={"command_name": "athlete", "std": 0.3})
     return cfg
+
+
+def matt_rung2_sym5_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """r2_v8: r2_v7 + 30 % of command resamples from the sprint band (vx 2.5-4.0, |wz| <= 0.6). r2_v6/v7 margin misses
+    are almost all 3.2-3.8 m/s sprints with a mild turn; uniform sampling put ~12 % of commands in that band, spread
+    over |wz| up to ±1.1."""
+    cfg = matt_rung2_sym4_env_cfg(play=play)
+    cfg.commands["athlete"].sprint_fraction = 0.3
+    return cfg

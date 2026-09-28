@@ -234,3 +234,7 @@ One entry per run or decision. Newest at the bottom.
 - `rung2.onnx` exported; `make_g6.py rung2 rung2`: CPU meet pre-check PASS.
 - Unity: G2 4.4e-16, G3 ≤ 4.3e-6, G4 (1 s) ≤ 9.5e-7 on all 8 lane references (ParityHarness direct — the EditMode test list is fixed at compile time and did not yet include the new rung2 refs). **G6 8/8 PASS**, 1 s drift ≤ 4.6e-6; crab-right / spin lanes diverge chaotically by 5 s (13 / 27 cm) exactly like the CPU meet (height RMS ≤ 1.9e-3 m, torque ±0.2 %). Capture `parity/c8/rung2_tick252.png`.
 - r2_v7 (track_lin std 0.3, from r2_v6 it 1200) training to lift the margin set; if it beats rung2.onnx on the 30-seed margin set it replaces it (C8 re-run ~15 min).
+
+## 2026-09-28 04:55 · r2_v7 stopped (plateau) → r2_v8 sprint focus
+- r2_v7 (track_lin std 0.3): 20-seed gates it 300 17/20, it 600 17/20 (yaw mean 0.13–0.14 best yet, only lin misses). Speed bias fixed in the normal range (2.5 → 2.47, 3.0 → 2.93 m/s; RMS 0.06 / 0.10) but 4.0 → 3.76 (RMS 0.39). Margin set unchanged 22/30: misses are 3.2–3.8 m/s sprints with a mild turn (|wz| 0.2–0.5, lin 0.21–0.63) + one stop (0.202). A straight 3.5 m/s sprint passes (0.18) — the athlete slows when turning at speed.
+- **r2_v8:** `…-Sym5` = r2_v7 + `sprint_fraction` 0.3 (vx 2.5–4.0, |wz| ≤ 0.6; verified 34 % of commands in that band, cap intact). Warm start r2_v7 it 600. 1500 its at 1.57 s/it; 20-seed gates.
