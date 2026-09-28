@@ -397,7 +397,7 @@ def compose_model(skin, geoms, inertials, with_scene: bool, n_cubes: int, defaul
 
 def compose_meet(skin, geoms, inertials, default_qpos: np.ndarray, n_lanes: int = N_LANES,
                  n_cubes: int = N_CUBES_MEET, origins: list[np.ndarray] | None = None, pedestal_h: float = 0.0,
-                 model: str | None = None) -> tuple[str, dict]:
+                 model: str | None = None, park_offset=(0.0, 0.0, 0.0)) -> tuple[str, dict]:
     """Multi-athlete scene (G6 / events): lane k = the training athlete with every name prefixed `L<k>_`, its own
     collision bits (lane isolation) and its pelvis shifted to origins[k] (default lane_origin(k)). Ground + cube pool as
     in the solo scene. pedestal_h > 0: every lane stands on its own 1 m x 1 m pedestal (`L<k>_pedestal`, top at z = 0)
@@ -437,7 +437,7 @@ def compose_meet(skin, geoms, inertials, default_qpos: np.ndarray, n_lanes: int 
         lanes.append({"lane": k, "prefix": p, "origin": o.tolist(), "cubes": [2 * k, 2 * k + 1]})
     inertia = CUBE_MASS * (2 * CUBE_HALF) ** 2 / 6.0
     for i in range(n_cubes):
-        park = cube_park_pos(i) - [0, 0, pedestal_h]
+        park = cube_park_pos(i) - [0, 0, pedestal_h] + np.asarray(park_offset, float)
         cb = ET.SubElement(wb, "body", {"name": f"cube{i}", "pos": vec(park)})
         ET.SubElement(cb, "inertial", {"pos": "0 0 0", "mass": f(CUBE_MASS), "diaginertia": vec([inertia] * 3)})
         ET.SubElement(cb, "freejoint", {"name": f"cube{i}_free"})
@@ -575,6 +575,13 @@ def main() -> int:
                                          model="pedestal8")
     (ASSETS / "scene_pedestal8.xml").write_text(header + ped8_xml + "\n")
     (ASSETS / "pedestal8_layout.json").write_text(json.dumps(ped8_layout, indent=1) + "\n")
+    # straight-track races (8 30m Dash, 19 Terminal Velocity, 22 Emergency Brake): flat lanes 1.22 m apart, from the
+    # home-straight venue (the back straight has the same layout in the runner's frame)
+    # cube pool parked 30 m to the side: the default park line (x = 50..80, y = 0) is lane 4's running line
+    track_xml, track_layout = compose_meet(skin, geoms, inertials, qdef, origins=venue_lane_origins(8, reference_lane=3),
+                                           model="track8", park_offset=(0.0, -30.0, 0.0))
+    (ASSETS / "scene_track8.xml").write_text(header + track_xml + "\n")
+    (ASSETS / "track8_layout.json").write_text(json.dumps(track_layout, indent=1) + "\n")
     (ASSETS / f"scene_meet{N_LANES}.xml").write_text(header + meet_xml + "\n")
     (ASSETS / f"meet{N_LANES}_layout.json").write_text(json.dumps(meet_layout, indent=1) + "\n")
 

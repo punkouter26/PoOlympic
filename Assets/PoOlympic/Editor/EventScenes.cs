@@ -150,6 +150,111 @@ namespace PoOlympic.Editor
             return $"{IronPedestalHeatScene}: {heat.runners.Count} runners, brain {brainFile}";
         }
 
+        public const string TrackSource = "training/assets/scene_track8.xml";
+        public const string TrackLayout = "training/assets/track8_layout.json";
+        public const string DefaultRung2Brain = "rung2.onnx";
+        public static readonly (int ev, TrackRaceEvent.Mode mode, string title, string scene)[] TrackEvents =
+        {
+            (8, TrackRaceEvent.Mode.Dash, "30m DASH", "Assets/PoOlympic/Scenes/Event_30mDash.unity"),
+            (19, TrackRaceEvent.Mode.Terminal, "TERMINAL VELOCITY", "Assets/PoOlympic/Scenes/Event_TerminalVelocity.unity"),
+            (22, TrackRaceEvent.Mode.Brake, "EMERGENCY BRAKE", "Assets/PoOlympic/Scenes/Event_EmergencyBrake.unity"),
+        };
+
+        [MenuItem("PoOlympic/Events/Build Track Races (8, 19, 22)")]
+        public static string BuildTrackRaces()
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (var t in TrackEvents) sb.AppendLine(BuildTrackRace(t.ev, t.mode, t.title, t.scene, DefaultRung2Brain));
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Straight-track race scene: 8 runners on scene_track8.xml (lane origins from the stadium venue), stadium snapped
+        /// to the event's lane 4, TrackRaceEvent + RaceHud, broadcast camera trackside following lane 4.
+        /// </summary>
+        public static string BuildTrackRace(int eventNum, TrackRaceEvent.Mode mode, string title, string scenePath, string brainFile)
+        {
+            if (EditorApplication.isPlaying) throw new InvalidOperationException("exit Play mode first");
+            ParityHarness.SyncArtifacts();
+            AthleteImport.SyncModel(TrackLayout);
+            var layout = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(Path.Combine(Path.GetDirectoryName(Application.dataPath), TrackLayout)));
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var physics = AthleteImport.ImportIntoActiveScene(TrackSource);
+            var src = EditorSceneManager.OpenScene(ParityHarness.TestbedScene, OpenSceneMode.Additive);
+            GameObject Copy(string name)
+            {
+                var clone = UnityEngine.Object.Instantiate(Array.Find(src.GetRootGameObjects(), g => g.name == name));
+                clone.name = name;
+                SceneManager.MoveGameObjectToScene(clone, scene);
+                return clone;
+            }
+            var cam = Copy("Main Camera");
+            Copy("Sun");
+            EditorSceneManager.CloseScene(src, true);
+            SceneManager.SetActiveScene(scene);
+            PlaceStadium(scene, eventNum, AthleteLane);
+
+            var cubeMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/PoOlympic/Materials/PoolCube.mat");
+            foreach (var rend in physics.GetComponentsInChildren<Renderer>(true))
+            {
+                if (rend.GetComponent<MjGeom>() == null) continue;
+                bool cube = rend.gameObject.name.StartsWith("cube");
+                rend.enabled = cube;
+                if (cube && cubeMat != null) rend.sharedMaterial = cubeMat;
+            }
+            var contract = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/PoOlympic/Models/contract.json");
+            var brain = AssetDatabase.LoadAssetAtPath<ModelAsset>($"{ParityHarness.ModelsFolder}/Brains/{brainFile}") ?? throw new FileNotFoundException(brainFile);
+            var sidecar = AssetDatabase.LoadAssetAtPath<TextAsset>($"{ParityHarness.ModelsFolder}/Brains/{brainFile}.json");
+            var mattPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(VisualBinding.MattAsset);
+            var pool = new GameObject("CubePool").AddComponent<MjCubePool>();
+            pool.poolSize = (int)layout["n_cubes"];
+            var race = new GameObject("TrackRaceEvent").AddComponent<TrackRaceEvent>();
+            race.mode = mode;
+            (race.distance, race.commandSpeed, race.maxSeconds) = TrackRaceEvent.Defaults(mode);
+            MjBody focusPelvis = null;
+            foreach (var l in layout["lanes"])
+            {
+                int k = (int)l["lane"];
+                string prefix = (string)l["prefix"];
+                var o = l["origin"];
+                var go = new GameObject($"Athlete_Lane{k + 1}");
+                var r = go.AddComponent<PolicyRunner>();
+                r.contractJson = contract;
+                r.brain = brain;
+                r.brainSidecar = sidecar;
+                r.athletePrefix = prefix;
+                r.laneOriginX = (double)o[0];
+                r.laneOriginY = (double)o[1];
+                r.cubeSlots = l["cubes"].Select(c => (int)c).ToArray();
+                r.useStandardParityScript = false;
+                var visual = (GameObject)PrefabUtility.InstantiatePrefab(mattPrefab, go.transform);
+                visual.name = "MATT_Visual";
+                visual.transform.SetPositionAndRotation(new Vector3((float)o[0], (float)o[2], (float)o[1]), VisualBinding.GltfToPlugin);
+                var binder = visual.AddComponent<BoneBinder>();
+                binder.Capture(physics.transform, prefix);
+                var (pe, re) = binder.BindError();
+                if (pe > 0.01f || re > 1f) throw new InvalidOperationException($"lane {k} bind error {pe * 1000f:F2} mm / {re:F2} deg");
+                race.runners.Add(new TrackRaceEvent.Runner { runner = r, name = $"L{k + 1}" });
+                if (k == AthleteLane) focusPelvis = Array.Find(physics.GetComponentsInChildren<MjBody>(true), bd => bd.name == prefix + "pelvis");
+            }
+            pool.runner = race.runners[0].runner;
+            var hud = new GameObject("RaceHUD").AddComponent<RaceHud>();
+            hud.race = race;
+            hud.title = title;
+            hud.subtitle = $"Event {eventNum} · 8 runners";
+            hud.version = $"v0 · {Path.GetFileNameWithoutExtension(brainFile)}";
+
+            var cc = cam.GetComponent<Camera>();
+            cc.nearClipPlane = 0.2f;
+            cc.farClipPlane = 1000f;
+            var bc = cam.GetComponent<BroadcastCamera>();
+            bc.target = focusPelvis;
+            bc.focusOffset = new Vector3(1.0f, 0f, -0.6f);   // centre of the 8 lanes (Unity z = +3.66 .. -4.88), a bit ahead
+            bc.offset = new Vector3(-3.5f, 3.2f, -13f);      // trackside, outside lane 8, slightly behind the pack
+            EditorSceneManager.SaveScene(scene, scenePath);
+            return $"{scenePath}: {mode}, {race.runners.Count} runners, {race.distance} m, brain {brainFile}";
+        }
+
         public const string HubScene = "Assets/PoOlympic/Scenes/Stadium_Hub.unity";
         public const string CatalogJson = "Assets/PoOlympic/Art/Stadium/events_catalog.json";
 
@@ -157,6 +262,9 @@ namespace PoOlympic.Editor
         public static readonly System.Collections.Generic.Dictionary<int, string> EventScenePaths = new()
         {
             { 1, IronPedestalHeatScene },   // official 8-runner heat (solo practice: Event_IronPedestal.unity)
+            { 8, "Assets/PoOlympic/Scenes/Event_30mDash.unity" },
+            { 19, "Assets/PoOlympic/Scenes/Event_TerminalVelocity.unity" },
+            { 22, "Assets/PoOlympic/Scenes/Event_EmergencyBrake.unity" },
         };
 
         /// <summary>

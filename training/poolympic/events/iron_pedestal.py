@@ -76,7 +76,9 @@ class _Lane:
         self.torso = m.body(prefix + "torso").id
         self.pelvis = m.body(prefix + "pelvis").id
         self.feet = [m.geom(prefix + n).id for n in ("foot_l_geom0", "toe_l_geom0", "foot_r_geom0", "toe_r_geom0")]
-        self.support = {m.geom("ground").id, m.geom(prefix + "pedestal").id}
+        names = {m.geom(g).name for g in range(m.ngeom)}
+        self.support = {m.geom("ground").id} | ({m.geom(prefix + "pedestal").id} if prefix + "pedestal" in names else set())
+        self.phase = 0.0
         self.last = np.zeros(C.NUM_ACTIONS)
         self.ctrl_now = self.ath.default_pos.copy()
         self.ctrl_prev = self.ath.default_pos.copy()
@@ -101,8 +103,10 @@ class _Lane:
             nv = 6 if m.jnt_type[j] == mujoco.mjtJoint.mjJNT_FREE else 1
             d.qvel[m.jnt_dofadr[j]: m.jnt_dofadr[j] + nv] = 0
 
-    def control(self, sess, d):
-        obs = C.build_obs(self.ath, d.qpos, d.qvel, np.zeros(3), 0.0, self.last)
+    def control(self, sess, d, cmd=None):
+        cmd = np.zeros(3) if cmd is None else np.asarray(cmd, float)
+        self.phase = C.advance_phase(self.phase, cmd)
+        obs = C.build_obs(self.ath, d.qpos, d.qvel, cmd, self.phase, self.last)
         if self.traits.obs_noise > 0:
             obs = (obs + self.rng.uniform(-1, 1, C.OBS_DIM) * self.noise).astype(np.float32)
         ctrl, act = sess.run(None, {"obs": obs[None]})
