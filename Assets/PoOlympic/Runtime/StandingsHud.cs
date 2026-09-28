@@ -61,6 +61,7 @@ namespace PoOlympic
             var banner = b.Banner;
             if (!string.IsNullOrEmpty(banner)) GUI.Label(new Rect(a.x, a.y + a.height * 0.40f, a.width, 150 * s), banner, _big);
             if (GUI.Button(new Rect(a.x + pad, a.yMax - 40 * s - pad, 110 * s, 40 * s), "New heat")) b.Restart();
+            if (MeetLineup.MenuAvailable && GUI.Button(new Rect(a.x + pad + 120 * s, a.yMax - 40 * s - pad, 90 * s, 40 * s), "Menu")) MeetLineup.ReturnToMenu();
             GUI.Label(new Rect(a.xMax - 220 * s - pad, a.yMax - 26 * s - pad, 220 * s, 26 * s), version,
                 new GUIStyle(_small) { alignment = TextAnchor.LowerRight });
         }

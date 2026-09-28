@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UIElements;
 
 namespace PoOlympic.Editor
 {
@@ -491,11 +492,71 @@ namespace PoOlympic.Editor
             director.selected = 1;
             EditorSceneManager.SaveScene(scene, HubScene);
 
-            var list = new System.Collections.Generic.List<EditorBuildSettingsScene> { new(HubScene, true) };
+            int built = SetBuildScenes();
+            return $"{HubScene}: {venues.Count} event venues, {venues.Count(x => x.Playable)} playable; build scenes {built}";
+        }
+
+        /// <summary>Build Settings: main menu (first = start scene, if built) → stadium hub → every built event scene.</summary>
+        static int SetBuildScenes()
+        {
+            var list = new System.Collections.Generic.List<EditorBuildSettingsScene>();
+            if (File.Exists(MainMenuScene)) list.Add(new EditorBuildSettingsScene(MainMenuScene, true));
+            list.Add(new EditorBuildSettingsScene(HubScene, true));
             foreach (var path in EventScenePaths.Values) list.Add(new EditorBuildSettingsScene(path, true));
             list.Add(new EditorBuildSettingsScene(IronPedestalScene, true));
             EditorBuildSettings.scenes = list.ToArray();
-            return $"{HubScene}: {venues.Count} event venues, {venues.Count(x => x.Playable)} playable; build scenes {list.Count}";
+            return list.Count;
+        }
+
+        public const string MainMenuScene = "Assets/PoOlympic/Scenes/MainMenu.unity";
+        public const string MenuUxml = "Assets/PoOlympic/UI/MainMenu.uxml";
+        public const string MenuTheme = "Assets/PoOlympic/UI/PoOlympicTheme.tss";
+        public const string MenuPanelSettings = "Assets/PoOlympic/UI/PoOlympicPanelSettings.asset";
+
+        /// <summary>
+        /// Main menu: pick the athlete for each of the 8 lanes (only MATT so far) and one of the playable events
+        /// (EventScenePaths, names/rules from the catalogue); PLAY loads the event scene. UI Toolkit (MainMenu.uxml),
+        /// portrait reference 1080 × 1920. Becomes the first scene in Build Settings.
+        /// </summary>
+        [MenuItem("PoOlympic/Events/Build Main Menu")]
+        public static string BuildMainMenu()
+        {
+            if (EditorApplication.isPlaying) throw new InvalidOperationException("exit Play mode first");
+            var panel = AssetDatabase.LoadAssetAtPath<PanelSettings>(MenuPanelSettings);
+            if (panel == null)
+            {
+                panel = ScriptableObject.CreateInstance<PanelSettings>();
+                AssetDatabase.CreateAsset(panel, MenuPanelSettings);
+            }
+            panel.themeStyleSheet = AssetDatabase.LoadAssetAtPath<ThemeStyleSheet>(MenuTheme) ?? throw new FileNotFoundException(MenuTheme);
+            panel.scaleMode = PanelScaleMode.ScaleWithScreenSize;
+            panel.referenceResolution = new Vector2Int(1080, 1920);
+            panel.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
+            panel.match = 1f;                                  // fit the portrait layout to the screen height
+            EditorUtility.SetDirty(panel);
+
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var cam = new GameObject("Main Camera") { tag = "MainCamera" }.AddComponent<Camera>();
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = new Color(0.047f, 0.071f, 0.125f);
+            var go = new GameObject("MainMenu");
+            var doc = go.AddComponent<UIDocument>();
+            doc.panelSettings = panel;
+            doc.visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(MenuUxml) ?? throw new FileNotFoundException(MenuUxml);
+            var menu = go.AddComponent<MainMenuController>();
+            var catalog = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(CatalogJson))["events"];
+            foreach (var (num, path) in EventScenePaths.OrderBy(kv => kv.Key))
+            {
+                var e = catalog.First(x => (int)x["number"] == num);
+                menu.events.Add(new MainMenuController.MenuEvent
+                {
+                    number = num, name = (string)e["name"], rules = (string)e["rules"], brain = (string)e["brain"],
+                    scene = Path.GetFileNameWithoutExtension(path),
+                });
+            }
+            EditorSceneManager.SaveScene(scene, MainMenuScene);
+            int n = SetBuildScenes();
+            return $"{MainMenuScene}: {menu.events.Count} events, 8 lanes (roster: {string.Join(", ", MeetLineup.Roster)}); build scenes {n}";
         }
 
         static Material IronPedestalMaterial()

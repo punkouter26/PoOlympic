@@ -63,6 +63,7 @@ namespace PoOlympic
 
             float bw = 110 * s, bh = 40 * s;
             if (GUI.Button(new Rect(a.x + pad, a.yMax - bh - pad, bw, bh), "New heat")) heat.Restart();
+            if (MeetLineup.MenuAvailable && GUI.Button(new Rect(a.x + pad + bw + 10 * s, a.yMax - bh - pad, 0.8f * bw, bh), "Menu")) MeetLineup.ReturnToMenu();
             GUI.Label(new Rect(a.xMax - 200 * s - pad, a.yMax - 26 * s - pad, 200 * s, 26 * s), version,
                 new GUIStyle(_small) { alignment = TextAnchor.LowerRight });
         }

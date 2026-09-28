@@ -20,7 +20,18 @@ namespace PoOlympic
         public float followSharpness = 6f;
         Camera _cam;
 
-        void Awake() => _cam = GetComponent<Camera>();
+        void Awake()
+        {
+            _cam = GetComponent<Camera>();
+            // The letterboxed viewport leaves bars nobody clears (after a scene load they keep the previous scene's
+            // frame): a full-screen camera that renders nothing clears them to black first.
+            var bars = new GameObject("LetterboxClear").AddComponent<Camera>();
+            bars.transform.SetParent(transform, false);
+            bars.clearFlags = CameraClearFlags.SolidColor;
+            bars.backgroundColor = Color.black;
+            bars.cullingMask = 0;
+            bars.depth = _cam.depth - 1;
+        }
 
         void LateUpdate()
         {
