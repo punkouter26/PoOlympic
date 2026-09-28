@@ -359,7 +359,14 @@ def _shover(rng: np.random.Generator, dv: float):
     return pre
 
 
-def rung2_episode(onnx_path: Path, seed: int, sim: Sim | None = None, shove_dv: float = 0.3) -> Rung2Result:
+STEADY_ACCEL = 1.5  # m/s^2 — steady-state variant only: allow |dv| / STEADY_ACCEL (+0.5 s) to reach a new speed
+
+
+def rung2_episode(onnx_path: Path, seed: int, sim: Sim | None = None, shove_dv: float = 0.3,
+                  steady_state: bool = False) -> Rung2Result:
+    """steady_state=False: official drill (tracking measured from 1.5 s after each command change).
+    steady_state=True: diagnostic variant — the settle time grows with the speed change (max(1.5, 0.5 + |dv|/1.5 s)),
+    separating steady tracking from acceleration time. Not the G1 bar."""
     rng = np.random.default_rng(seed)
     sim = sim or Sim(onnx_path)
     dt = C.DECIMATION * sim.m.opt.timestep
@@ -381,13 +388,18 @@ def rung2_episode(onnx_path: Path, seed: int, sim: Sim | None = None, shove_dv: 
     sim.reset()
     shove = _shover(rng, shove_dv)
     segments = []
+    prev_cmd = np.zeros(3)
     for _ in range(5):
         kind, cmd = _envelope_command(rng)
+        settle = 1.5
+        if steady_state:
+            settle = max(1.5, 0.5 + float(np.linalg.norm(cmd[:2] - prev_cmd[:2])) / STEADY_ACCEL)
+        prev_cmd = cmd
         lin, yaw = [], []
         for k in range(int(5.0 / dt)):
             if not tick(cmd, shove):
                 break
-            if k * dt >= 1.5:
+            if k * dt >= settle:
                 vx, vy, wz = _vel_heading(sim)
                 lin.append(math.hypot(vx - cmd[0], vy - cmd[1]))
                 yaw.append(wz - cmd[2])
