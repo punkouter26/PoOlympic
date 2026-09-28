@@ -1,11 +1,11 @@
-"""Event rules with the shipped Rung 2 brain: one CPU heat each (events 9 and 12)."""
+"""Event rules with the shipped Rung 2 brain: one CPU heat each (events 9, 10, 11, 12)."""
 
 import math
 
 import pytest
 
 from poolympic import contract as C
-from poolympic.events import crab, track, turntable
+from poolympic.events import crab, slalom, track, turntable
 
 BRAIN = C.ROOT.parent / "parity" / "brains" / "rung2.onnx"
 pytestmark = pytest.mark.skipif(not BRAIN.exists(), reason="rung2.onnx not exported")
@@ -47,6 +47,24 @@ def test_crab_shuffle_heat():
         assert crab.DISTANCE / crab.VY < l.finish_s < 30.0
         assert l.max_x_drift_m < 0.5          # rails are 0.61 m from the lane line
         assert l.score == pytest.approx(l.finish_s + crab.CROSS_PENALTY * l.crossings + crab.RAIL_PENALTY * l.rail_touches)
+
+
+def test_slalom_heat():
+    res = slalom.run_heat(BRAIN, seed=2)        # run_heat also asserts the course constants against the pole geoms
+    assert sorted(l.place for l in res.lanes) == list(range(1, 9))
+    done = [l for l in res.lanes if l.status == "FINISHED"]
+    assert len(done) >= 5
+    for l in done:
+        assert slalom.LINE[0] <= l.line_m <= slalom.LINE[1]
+        assert slalom.DISTANCE / slalom.VX < l.finish_s < slalom.MAX_S
+        assert l.score == pytest.approx(l.finish_s + slalom.MISS_PENALTY * l.misses + slalom.CLIP_PENALTY * l.clips)
+
+
+def test_slalom_line_passes_each_pole_on_its_side():
+    for g in range(slalom.N_POLES):
+        y, _ = slalom.line_y(slalom.POLE_X0 + g * slalom.POLE_DX, 0.5)
+        assert y == pytest.approx(0.5 if g % 2 == 0 else -0.5)
+    assert slalom.line_y(0.0, 0.5) == (0.0, 0.0) and slalom.line_y(slalom.DISTANCE, 0.5) == (0.0, 0.0)
 
 
 def test_crab_command_holds_the_course():

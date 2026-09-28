@@ -249,12 +249,15 @@ def build_lane_events():
             for j in range(N + 1):
                 y = cy - BLOCK_W / 2 + j * LW
                 box(f"{tag}_Rail_{j}", (lo + hi) / 2, y, 0.3, hi - lo, 0.04, 0.04, steel)
-        elif num == 11:  # slalom gates, alternating sides every 4 m
+        elif num == 11:  # slalom poles on every lane's centre line every 4 m (weave: left of pole 1, right of pole 2, …)
+            poles = []
             for k, y in enumerate(ys):
+                poles.append([])
                 for g in range(7):
                     gx = lo + 3.0 + 4.0 * g
-                    gy = y + (0.35 if g % 2 else -0.35)
-                    box(f"{tag}_Gate_{k}_{g}", gx, gy, 0.6, 0.04, 0.04, 1.2, orange)
+                    box(f"{tag}_Gate_{k}_{g}", gx, y, 0.6, 0.04, 0.04, 1.2, orange)
+                    poles[-1].append([round(gx, 4), round(y, 4)])
+            LAYOUT["events"]["11"]["poles"] = poles    # physical poles in scene_slalom8.xml
         elif num == 13:  # steeplechase: distance boards every 10 m
             for d in range(10, int(hi - lo), 10):
                 flat(f"{tag}_Mark_{d}", lo + d - 0.03, cy - BLOCK_W / 2, lo + d + 0.03, cy + BLOCK_W / 2, Z_MARK, orange)

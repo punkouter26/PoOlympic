@@ -496,6 +496,14 @@ def crab_rails() -> list[dict]:
     return rails
 
 
+def slalom_poles() -> list[dict]:
+    """11 Slalom Sprint poles (build_venues.py: 4 cm x 1.2 m steel-orange poles on every lane's centre line; venues.json
+    "poles" = per lane the pole positions) as MuJoCo boxes in the athlete frame of reference lane 3."""
+    ev = json.loads(VENUES_JSON.read_text())["events"]["11"]
+    return [{"name": f"pole{k}_{g}", "pos": venue_to_athlete(11, 3, [x, y, 0.6]), "size": [0.02, 0.02, 0.6]}
+            for k, lane in enumerate(ev["poles"]) for g, (x, y) in enumerate(lane)]
+
+
 def cube_entity_xml() -> str:
     """One pooled cube as a standalone model (mjlab entity for training) — identical to the scene's cube bodies."""
     root = ET.Element("mujoco", {"model": "cube"})
@@ -617,6 +625,11 @@ def main() -> int:
                                          model="crab8", park_offset=(0.0, -30.0, 0.0), props=crab_rails())
     (ASSETS / "scene_crab8.xml").write_text(header + crab_xml + "\n")
     (ASSETS / "crab8_layout.json").write_text(json.dumps(crab_layout, indent=1) + "\n")
+    # 11 Slalom Sprint: 7 physical poles on every lane's centre line (venues.json "poles")
+    slalom_xml, slalom_layout = compose_meet(skin, geoms, inertials, qdef, origins=venue_lane_origins(11, 3),
+                                             model="slalom8", park_offset=(0.0, -30.0, 0.0), props=slalom_poles())
+    (ASSETS / "scene_slalom8.xml").write_text(header + slalom_xml + "\n")
+    (ASSETS / "slalom8_layout.json").write_text(json.dumps(slalom_layout, indent=1) + "\n")
     (ASSETS / f"scene_meet{N_LANES}.xml").write_text(header + meet_xml + "\n")
     (ASSETS / f"meet{N_LANES}_layout.json").write_text(json.dumps(meet_layout, indent=1) + "\n")
 

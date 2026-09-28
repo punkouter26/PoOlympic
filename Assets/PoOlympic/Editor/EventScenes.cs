@@ -260,6 +260,35 @@ namespace PoOlympic.Editor
             return $"{CrabScene}: {ev.racers.Count} athletes, {ev.distance} m at {ev.sideSpeed} m/s, {ev.railGeoms.Length} rails, brain {brainFile}";
         }
 
+        public const string SlalomScene = "Assets/PoOlympic/Scenes/Event_SlalomSprint.unity";
+        public const string SlalomSource = "training/assets/scene_slalom8.xml";
+        public const string SlalomLayout = "training/assets/slalom8_layout.json";
+
+        /// <summary>Event 11: 8 runners weave through the 7 physical poles on each lane's centre line (scene_slalom8.xml);
+        /// SlalomEvent + StandingsHud.</summary>
+        [MenuItem("PoOlympic/Events/Build Event 11 — Slalom Sprint")]
+        public static string BuildSlalom() => BuildSlalom(DefaultRung2Brain);
+
+        public static string BuildSlalom(string brainFile)
+        {
+            var meet = BuildMeetScene(SlalomSource, SlalomLayout, 11, AthleteLane, 0f, brainFile);
+            var ev = new GameObject("SlalomEvent").AddComponent<SlalomEvent>();
+            foreach (var (k, r) in meet.Lanes) ev.racers.Add(new SlalomEvent.Racer { runner = r, name = $"L{k + 1}", lane = k });
+            meet.Pool.runner = ev.racers[0].runner;
+            var hud = new GameObject("StandingsHUD").AddComponent<StandingsHud>();
+            hud.board = ev;
+            hud.title = "SLALOM SPRINT";
+            hud.subtitle = "Event 11";
+            hud.version = $"v0 · {Path.GetFileNameWithoutExtension(brainFile)}";
+
+            var bc = meet.Camera.GetComponent<BroadcastCamera>();
+            bc.target = meet.FocusPelvis;
+            bc.focusOffset = new Vector3(1.5f, 0f, -0.6f);   // centre of the 8 lanes (Unity z = +3.66 .. -4.88), ahead of the pack
+            bc.offset = new Vector3(-4f, 3.4f, -12f);        // trackside, outside lane 8, slightly behind the pack
+            EditorSceneManager.SaveScene(meet.Scene, SlalomScene);
+            return $"{SlalomScene}: {ev.racers.Count} runners, {ev.nPoles} poles, {ev.speed} m/s, brain {brainFile}";
+        }
+
         public sealed class MeetScene
         {
             public Scene Scene;
@@ -352,6 +381,7 @@ namespace PoOlympic.Editor
             { 8, "Assets/PoOlympic/Scenes/Event_30mDash.unity" },
             { 9, "Assets/PoOlympic/Scenes/Event_InvertedSprint.unity" },
             { 10, CrabScene },
+            { 11, SlalomScene },
             { 12, TurntableScene },
             { 19, "Assets/PoOlympic/Scenes/Event_TerminalVelocity.unity" },
             { 22, "Assets/PoOlympic/Scenes/Event_EmergencyBrake.unity" },
