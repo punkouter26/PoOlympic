@@ -25,7 +25,10 @@ N = 8
 LW = LANE_W                  # 1.22 m
 BLOCK_W = N * LW             # 9.76 m
 STATION_PITCH = 3.0
-PEDESTAL = (1.0, 1.0, 0.5)   # = training/tools/build_mjcf.py PEDESTAL_HALF*2, PEDESTAL_H
+PEDESTAL = (1.0, 1.0, 0.5)
+# Decal layers above the infield (z = 0). >= 1 cm apart: at 30-60 m a 24-bit depth buffer resolves only a few mm, so the
+# old 1-5 mm offsets z-fought ("flicker").
+Z_PAD, Z_BORDER, Z_SURFACE, Z_LINE, Z_MARK, Z_LABEL = 0.02, 0.032, 0.03, 0.042, 0.052, 0.064   # = training/tools/build_mjcf.py PEDESTAL_HALF*2, PEDESTAL_H
 
 PHASE_COL = {1: (0.07, 0.15, 0.36), 2: (0.04, 0.28, 0.29), 3: (0.24, 0.11, 0.34),
              4: (0.33, 0.08, 0.10), 5: (0.24, 0.26, 0.08), 6: (0.11, 0.11, 0.12)}
@@ -104,7 +107,7 @@ def ring_mark(name, cx, cy, r, w, z, m, n=40):
     return mesh_obj(name, verts, faces, m, COL)
 
 
-def label(name, text, x, y, size, z=0.012, yaw=0.0, m=None):
+def label(name, text, x, y, size, z=Z_LABEL, yaw=0.0, m=None):
     cu = bpy.data.curves.new(name, "FONT")
     cu.body = text
     cu.size = size
@@ -134,11 +137,11 @@ def anchor(name, x, y, z=0.0, yaw=0.0):
     return e
 
 
-def pad_with_border(tag, x0, y0, x1, y1, phase, z=0.004):
+def pad_with_border(tag, x0, y0, x1, y1, phase, z=Z_PAD):
     flat(f"{tag}_Pad", x0, y0, x1, y1, z, PAD[phase])
     w = 0.08
     for i, (a, b, c, d) in enumerate(((x0, y0, x1, y0 + w), (x0, y1 - w, x1, y1), (x0, y0, x0 + w, y1), (x1 - w, y0, x1, y1))):
-        flat(f"{tag}_Border{i}", a, b, c, d, z + 0.002, line_m)
+        flat(f"{tag}_Border{i}", a, b, c, d, z + (Z_BORDER - Z_PAD), line_m)
 
 
 LAYOUT = {"units": "m", "frame": "MuJoCo world: x along the home straight, y left, z up; infield z = 0",
@@ -172,34 +175,33 @@ def build_station(num, cx, cy):
         top = 0.0
         if num == 1:
             box(f"{tag}_Pedestal_{k}", x, y, PEDESTAL[2] / 2, PEDESTAL[0], PEDESTAL[1], PEDESTAL[2], iron)
-            flat(f"{tag}_Pedestal_Top_{k}", x - 0.45, y - 0.45, x + 0.45, y + 0.45, PEDESTAL[2] + 0.001, mat("Pedestal_Top", (0.30, 0.31, 0.33), 0.35, 0.9))
             label(f"{tag}_No_{k}", str(k + 1), x - 0.25, y - 2.1, 0.8)
             top = PEDESTAL[2]
         elif num == 5:   # shaker platforms (hazard striped)
             box(f"{tag}_Shaker_{k}", x, y, 0.05, 1.6, 1.6, 0.1, hazard)
             top = 0.1
         elif num == 12:
-            ring_mark(f"{tag}_Spot_{k}", x, y, 1.1, 0.07, 0.008, line_m)
-            flat(f"{tag}_Dot_{k}", x - 0.1, y - 0.1, x + 0.1, y + 0.1, 0.009, orange)
+            ring_mark(f"{tag}_Spot_{k}", x, y, 1.1, 0.07, Z_MARK, line_m)
+            flat(f"{tag}_Dot_{k}", x - 0.1, y - 0.1, x + 0.1, y + 0.1, Z_LABEL, orange)
         elif num == 18:  # measuring pole with height stripes behind each station
             box(f"{tag}_Pole_{k}", x + 0.9, y, 1.5, 0.08, 0.08, 3.0, steel)
             for h in range(1, 6):
                 box(f"{tag}_Mark_{k}_{h}", x + 0.9, y, 0.5 * h, 0.2, 0.2, 0.03, red)
-            ring_mark(f"{tag}_Spot_{k}", x, y, 0.6, 0.06, 0.008, line_m)
+            ring_mark(f"{tag}_Spot_{k}", x, y, 0.6, 0.06, Z_MARK, line_m)
         elif num == 2:   # archer: foot box + overhead target mast
-            flat(f"{tag}_FootBox_{k}", x - 0.5, y - 0.4, x + 0.5, y + 0.4, 0.008, line_m)
+            flat(f"{tag}_FootBox_{k}", x - 0.5, y - 0.4, x + 0.5, y + 0.4, Z_MARK, line_m)
             box(f"{tag}_Mast_{k}", x, y + (1.3 if y > cy else -1.3), 2.5, 0.08, 0.08, 5.0, steel)
             box(f"{tag}_Target_{k}", x, y + (1.3 if y > cy else -1.3), 5.1, 0.7, 0.05, 0.7, red)
         elif num == 4:   # javelin reach: target pole at arm's length
-            flat(f"{tag}_FootBox_{k}", x - 0.4, y - 0.4, x + 0.4, y + 0.4, 0.008, line_m)
+            flat(f"{tag}_FootBox_{k}", x - 0.4, y - 0.4, x + 0.4, y + 0.4, Z_MARK, line_m)
             box(f"{tag}_Reach_{k}", x + 1.1, y, 0.8, 0.05, 0.05, 1.6, steel)
             box(f"{tag}_Reach_Target_{k}", x + 1.1, y, 1.45, 0.18, 0.18, 0.18, orange)
         elif num == 3:
-            flat(f"{tag}_Mat_{k}", x - 0.6, y - 0.6, x + 0.6, y + 0.6, 0.02, mat_blue)
+            flat(f"{tag}_Mat_{k}", x - 0.6, y - 0.6, x + 0.6, y + 0.6, Z_SURFACE, mat_blue)
         elif num == 6:
-            ring_mark(f"{tag}_Spot_{k}", x, y, 0.5, 0.06, 0.008, line_m)
+            ring_mark(f"{tag}_Spot_{k}", x, y, 0.5, 0.06, Z_MARK, line_m)
         elif num == 7:
-            ring_mark(f"{tag}_Spot_{k}", x, y, 0.7, 0.06, 0.008, line_m)
+            ring_mark(f"{tag}_Spot_{k}", x, y, 0.7, 0.06, Z_MARK, line_m)
         lanes.append((x, y, top, -math.pi / 2 if num == 1 else 0.0))
     if num == 7:     # stadium metronome tower at the grid centre
         box(f"{tag}_Metronome", cx, cy, 2.5, 0.4, 0.4, 5.0, steel)
@@ -221,9 +223,9 @@ def lane_block(num, x0, cy, length, direction=+1, pad=True, lines=True):
     if lines:
         for j in range(N + 1):
             y = cy - BLOCK_W / 2 + j * LW
-            flat(f"{tag}_Lane_{j}", lo, y - 0.025, hi, y + 0.025, 0.009, line_m)
+            flat(f"{tag}_Lane_{j}", lo, y - 0.025, hi, y + 0.025, Z_LINE, line_m)
     for nm, x in (("Start", x0), ("Finish", x1)):
-        flat(f"{tag}_{nm}", x - 0.04, cy - BLOCK_W / 2, x + 0.04, cy + BLOCK_W / 2, 0.011, red if nm == "Finish" else line_m)
+        flat(f"{tag}_{nm}", x - 0.04, cy - BLOCK_W / 2, x + 0.04, cy + BLOCK_W / 2, Z_MARK, red if nm == "Finish" else line_m)
     label(f"{tag}_Label", f"{num:02d} {name.upper()}", lo - 1.2, cy + BLOCK_W / 2 + 0.6, 0.6)
     yaw = 0.0 if direction > 0 else math.pi
     lanes = []
@@ -255,7 +257,7 @@ def build_lane_events():
                     box(f"{tag}_Gate_{k}_{g}", gx, gy, 0.6, 0.04, 0.04, 1.2, orange)
         elif num == 13:  # steeplechase: distance boards every 10 m
             for d in range(10, int(hi - lo), 10):
-                flat(f"{tag}_Mark_{d}", lo + d - 0.03, cy - BLOCK_W / 2, lo + d + 0.03, cy + BLOCK_W / 2, 0.012, orange)
+                flat(f"{tag}_Mark_{d}", lo + d - 0.03, cy - BLOCK_W / 2, lo + d + 0.03, cy + BLOCK_W / 2, Z_MARK, orange)
         elif num == 14:  # 15 deg ramp (10 m) + top deck
             rise = 10.0 * math.tan(math.radians(15))
             xa, xb = lo + 2.0, lo + 12.0
@@ -318,12 +320,12 @@ def build_lane_events():
                 box(f"{tag}_GoalL_{k}", gx, y - 0.55, 0.4, 0.05, 0.05, 0.8, white_net)
                 box(f"{tag}_GoalR_{k}", gx, y + 0.55, 0.4, 0.05, 0.05, 0.8, white_net)
                 box(f"{tag}_GoalBar_{k}", gx, y, 0.8, 0.05, 1.15, 0.05, white_net)
-                ring_mark(f"{tag}_Ball_{k}", lo + 8.0, y, 0.12, 0.04, 0.012, line_m, n=16)
+                ring_mark(f"{tag}_Ball_{k}", lo + 8.0, y, 0.12, 0.04, Z_MARK, line_m, n=16)
         elif num == 21:  # 8 runways + take-off boards + wide sand pit
             for k, y in enumerate(ys):
-                flat(f"{tag}_Runway_{k}", lo, y - LW / 2 + 0.03, lo + 22.0, y + LW / 2 - 0.03, 0.006, track_red)
-                flat(f"{tag}_Board_{k}", lo + 21.8, y - LW / 2 + 0.03, lo + 22.0, y + LW / 2 - 0.03, 0.01, line_m)
-            flat(f"{tag}_Pit", lo + 23.0, cy - BLOCK_W / 2, lo + 33.0, cy + BLOCK_W / 2, 0.012, sand)
+                flat(f"{tag}_Runway_{k}", lo, y - LW / 2 + 0.03, lo + 22.0, y + LW / 2 - 0.03, Z_SURFACE, track_red)
+                flat(f"{tag}_Board_{k}", lo + 21.8, y - LW / 2 + 0.03, lo + 22.0, y + LW / 2 - 0.03, Z_LINE, line_m)
+            flat(f"{tag}_Pit", lo + 23.0, cy - BLOCK_W / 2, lo + 33.0, cy + BLOCK_W / 2, Z_SURFACE, sand)
 
 
 def build_track_events():
@@ -338,7 +340,7 @@ def build_track_events():
                     for s in (-0.5, 0.5):
                         box(f"{tag}_HurdleLeg_{i}_{k}_{int(s > 0)}", hx, y + s, 0.15, 0.04, 0.04, 0.3, steel)
         elif num == 22:  # red stop zone at the end of the run-in
-            flat(f"{tag}_StopZone", hi - 0.3, cy - BLOCK_W / 2, hi, cy + BLOCK_W / 2, 0.012, red)
+            flat(f"{tag}_StopZone", hi - 0.3, cy - BLOCK_W / 2, hi, cy + BLOCK_W / 2, Z_SURFACE, red)
         elif num == 19:  # speed-trap gantries at both ends of the back straight
             for i, gx in enumerate((lo + 2.0, hi - 2.0)):
                 for s in (-1, 1):

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using Mujoco;
 using Unity.InferenceEngine;
 using UnityEditor;
@@ -54,6 +55,80 @@ namespace PoOlympic.Editor
             foreach (var c in st.GetComponentsInChildren<Component>(true))
                 if (c is Collider || c is Rigidbody) throw new InvalidOperationException($"stadium must be render-only: {c.GetType().Name} on {c.name}");
             return st;
+        }
+
+        public const string HubScene = "Assets/PoOlympic/Scenes/Stadium_Hub.unity";
+        public const string CatalogJson = "Assets/PoOlympic/Art/Stadium/events_catalog.json";
+
+        /// <summary>Event number → built event scene (grows as events are implemented).</summary>
+        public static readonly System.Collections.Generic.Dictionary<int, string> EventScenePaths = new()
+        {
+            { 1, IronPedestalScene },
+        };
+
+        /// <summary>
+        /// Stadium hub: the stadium in the MuJoCo frame (yaw 180° only) with all 30 events as EventVenue objects (catalogue
+        /// data + their 8 competitor anchors), an event picker, and Build Settings = hub + every built event scene.
+        /// </summary>
+        [MenuItem("PoOlympic/Events/Build Stadium Hub (all 30 events)")]
+        public static string BuildStadiumHub()
+        {
+            if (EditorApplication.isPlaying) throw new InvalidOperationException("exit Play mode first");
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(StadiumAsset) ?? throw new FileNotFoundException(StadiumAsset);
+            var st = (GameObject)PrefabUtility.InstantiatePrefab(prefab, scene);
+            st.name = "Stadium";
+            st.transform.SetPositionAndRotation(Vector3.zero, Quaternion.Euler(0f, 180f, 0f)); // stadium coords = MuJoCo coords
+            var anchors = st.GetComponentsInChildren<Transform>(true);
+
+            var src = EditorSceneManager.OpenScene(ParityHarness.TestbedScene, OpenSceneMode.Additive);
+            GameObject Copy(string name)
+            {
+                var clone = UnityEngine.Object.Instantiate(Array.Find(src.GetRootGameObjects(), g => g.name == name));
+                clone.name = name;
+                SceneManager.MoveGameObjectToScene(clone, scene);
+                return clone;
+            }
+            var cam = Copy("Main Camera");
+            Copy("Sun");
+            EditorSceneManager.CloseScene(src, true);
+            SceneManager.SetActiveScene(scene);
+            cam.GetComponent<BroadcastCamera>().target = null; // letterbox only; the director drives the camera
+            cam.GetComponent<Camera>().farClipPlane = 1500f;
+            cam.GetComponent<Camera>().nearClipPlane = 0.5f; // overview camera: never closer than a few metres
+
+            var catalog = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(CatalogJson))["events"];
+            var root = new GameObject("Events");
+            var venues = new System.Collections.Generic.List<EventVenue>();
+            foreach (var e in catalog)
+            {
+                int n = (int)e["number"];
+                var go = new GameObject($"E{n:00} {(string)e["name"]}");
+                go.transform.SetParent(root.transform);
+                var v = go.AddComponent<EventVenue>();
+                v.number = n;
+                v.eventName = (string)e["name"];
+                v.phase = (int)e["phase"];
+                v.skill = (string)e["skill"];
+                v.brain = (string)e["brain"];
+                v.rules = (string)e["rules"];
+                v.eventScene = EventScenePaths.TryGetValue(n, out var path) ? Path.GetFileNameWithoutExtension(path) : "";
+                for (int k = 0; k < 8; k++)
+                    v.lanes[k] = Array.Find(anchors, t => t.name == $"E{n:00}_L{k}") ?? throw new MissingReferenceException($"E{n:00}_L{k}");
+                go.transform.position = v.Centre;
+                venues.Add(v);
+            }
+            if (venues.Count != 30) throw new InvalidOperationException($"catalogue has {venues.Count} events, expected 30");
+            var director = new GameObject("StadiumDirector").AddComponent<StadiumDirector>();
+            director.cam = cam.GetComponent<Camera>();
+            director.venues = venues.ToArray();
+            director.selected = 1;
+            EditorSceneManager.SaveScene(scene, HubScene);
+
+            var list = new System.Collections.Generic.List<EditorBuildSettingsScene> { new(HubScene, true) };
+            foreach (var path in EventScenePaths.Values) list.Add(new EditorBuildSettingsScene(path, true));
+            EditorBuildSettings.scenes = list.ToArray();
+            return $"{HubScene}: {venues.Count} event venues, {venues.Count(x => x.Playable)} playable; build scenes {list.Count}";
         }
 
         static Material IronPedestalMaterial()
@@ -135,6 +210,10 @@ namespace PoOlympic.Editor
             hud.version = $"v0 · {Path.GetFileNameWithoutExtension(brainFile)}";
 
             var bc = cam.GetComponent<BroadcastCamera>();
+            // depth precision: the stadium is 300 m across and its decals sit 1 cm apart — a 0.05 m near plane z-fights
+            var c = cam.GetComponent<Camera>();
+            c.nearClipPlane = 0.2f;
+            c.farClipPlane = 1000f;
             bc.target = Array.Find(physics.GetComponentsInChildren<MjBody>(true), b => b.name == "pelvis");
             bc.offset = new Vector3(4.4f, 0.9f, -2.2f); // front three-quarter: the athlete faces +x, the empty pedestals run along +z
 
