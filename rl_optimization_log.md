@@ -224,3 +224,8 @@ One entry per run or decision. Newest at the bottom.
 ## 2026-09-28 03:41 · r2_v5b final · r2_v6 (feasibility-capped commands)
 - r2_v5b gates: 300 6 · 600 6 · 900 6 · 1200 5 · **1500 7/10** (turntable 2.66/2.68 s, yaw-probe mean 0.18 — best yet) · 1800 6/10 (2.52/2.52 s). Every checkpoint from 300 on passes the turntable; remaining misses = fast sprint + turn and ~1 m/s crab.
 - **r2_v6:** task `…-Sym3` (r2_v5 envelope + `max_lateral_accel` 4 m/s²), warm start r2_v5b it 1500, 2000 its at 1.73 s/it, gates 300…1999.
+
+## 2026-09-28 04:25 · **r2_v6 it 1200: GATE G1 rung 2 = 10/10** · margin 22/30 → r2_v7 prepared
+- r2_v6 gates: 300 7/10 · 600 8/10 · 900 9/10 · **1200 10/10** (turntable 2.44/2.44 s, brake 1.16 m, backward 20 m, 0 falls, yaw mean 0.17). The lateral-acceleration cap removed every yaw failure (from it 300 on).
+- **Margin set (30 seeds): 22/30.** 10 of 11 failing segments are sprints at 3.2–3.8 m/s (lin RMS 0.20–0.48), one crab 0.97 m/s (0.204). Steady-state probe: mean speed undershoots by ~4–5 % at every speed (2.5 → 2.40, 3.0 → 2.87, 3.5 → 3.35, 4.0 → 3.78 m/s) plus per-stride oscillation; peak torque at the ankle cap (220 Nm). The fine tracking kernel (std 0.5) pays 91 % at a 0.15 m/s shortfall — no incentive to close it; Rung 1's bar stopped at 3 m/s so it didn't show there.
+- **r2_v7** (task `…-Sym4`): r2_v6 + track_lin std 0.5 → 0.3 (same shortfall costs ~22 %). Warm start from r2_v6's best checkpoint.

@@ -419,3 +419,13 @@ def matt_rung2_sym3_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     cfg = matt_rung2_sym2_env_cfg(play=play)
     cfg.commands["athlete"].max_lateral_accel = 4.0
     return cfg
+
+
+def matt_rung2_sym4_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """r2_v7: r2_v6 + sharper linear tracking. r2_v6 it 1200 passed G1 10/10 but the 30-seed margin set 22/30: a steady
+    ~4-5 % speed undershoot (cmd 3.5 -> 3.35 m/s, 4.0 -> 3.78) — track_lin std 0.5 pays 91 % at a 0.15 m/s shortfall.
+    std 0.3 makes that shortfall cost ~22 %."""
+    cfg = matt_rung2_sym3_env_cfg(play=play)
+    cfg.rewards["track_lin"] = RewardTermCfg(func=vel_mdp.track_linear_velocity, weight=2.0,
+                                             params={"command_name": "athlete", "std": 0.3})
+    return cfg
