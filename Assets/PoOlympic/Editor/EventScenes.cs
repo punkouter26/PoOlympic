@@ -370,7 +370,8 @@ namespace PoOlympic.Editor
         /// PolicyRunner + bound MATT visual per lane, the cube pool. MuJoCo geoms are hidden except the pool cubes (the
         /// stadium draws the props). Focus pelvis = lane AthleteLane (the MuJoCo origin).
         /// </summary>
-        public static MeetScene BuildMeetScene(string source, string layoutPath, int eventNum, int anchorLane, float extraYawDeg, string brainFile)
+        public static MeetScene BuildMeetScene(string source, string layoutPath, int eventNum, int anchorLane, float extraYawDeg, string brainFile,
+                                               System.Collections.Generic.Dictionary<string, string> bodyBrains = null)
         {
             if (EditorApplication.isPlaying) throw new InvalidOperationException("exit Play mode first");
             ParityHarness.SyncArtifacts();
@@ -400,29 +401,30 @@ namespace PoOlympic.Editor
                 rend.enabled = cube;
                 if (cube && cubeMat != null) rend.sharedMaterial = cubeMat;
             }
-            var contract = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/PoOlympic/Models/contract.json");
-            var brain = AssetDatabase.LoadAssetAtPath<ModelAsset>($"{ParityHarness.ModelsFolder}/Brains/{brainFile}") ?? throw new FileNotFoundException(brainFile);
-            var sidecar = AssetDatabase.LoadAssetAtPath<TextAsset>($"{ParityHarness.ModelsFolder}/Brains/{brainFile}.json");
-            var mattPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(VisualBinding.MattAsset);
+            // per-lane body (layout "body", tools/compose_mixed.py; default matt): its contract, brain and visual
+            string BrainOf(string body) => bodyBrains != null && bodyBrains.TryGetValue(body, out var b) ? b : brainFile;
             meet.Pool = new GameObject("CubePool").AddComponent<MjCubePool>();
             meet.Pool.poolSize = (int)layout["n_cubes"];
             foreach (var l in layout["lanes"])
             {
                 int k = (int)l["lane"];
                 string prefix = (string)l["prefix"];
+                string body = (string)l["body"] ?? "matt";
+                var (contractPath, visualPath, _) = BodyAssets(body);
                 var o = l["origin"];
                 var go = new GameObject($"Athlete_Lane{k + 1}");
                 var r = go.AddComponent<PolicyRunner>();
-                r.contractJson = contract;
-                r.brain = brain;
-                r.brainSidecar = sidecar;
+                r.contractJson = AssetDatabase.LoadAssetAtPath<TextAsset>(contractPath) ?? throw new FileNotFoundException(contractPath);
+                r.brain = AssetDatabase.LoadAssetAtPath<ModelAsset>($"{ParityHarness.ModelsFolder}/Brains/{BrainOf(body)}") ?? throw new FileNotFoundException(BrainOf(body));
+                r.brainSidecar = AssetDatabase.LoadAssetAtPath<TextAsset>($"{ParityHarness.ModelsFolder}/Brains/{BrainOf(body)}.json");
                 r.athletePrefix = prefix;
                 r.laneOriginX = (double)o[0];
                 r.laneOriginY = (double)o[1];
                 r.cubeSlots = l["cubes"].Select(c => (int)c).ToArray();
                 r.useStandardParityScript = false;
-                var visual = (GameObject)PrefabUtility.InstantiatePrefab(mattPrefab, go.transform);
-                visual.name = "MATT_Visual";
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(visualPath) ?? throw new FileNotFoundException(visualPath);
+                var visual = (GameObject)PrefabUtility.InstantiatePrefab(prefab, go.transform);
+                visual.name = $"{body.ToUpperInvariant()}_Visual";
                 visual.transform.SetPositionAndRotation(new Vector3((float)o[0], (float)o[2], (float)o[1]), VisualBinding.GltfToPlugin);
                 var binder = visual.AddComponent<BoneBinder>();
                 binder.Capture(physics.transform, prefix);
