@@ -23,6 +23,18 @@ RECOVER_TILT_DEG = 10.0
 RECOVER_WINDOW_S = 1.5
 JOINT_VEL_LIMIT = 18.0
 JOINT_VEL_MAX_FRACTION = 0.05
+# Phase Z: other bodies get MATT's bars Froude-scaled (lengths x λ, speeds and times x √λ, rates / √λ). MATT keeps the
+# literal values above. The zombie stands hunched, so its recovery is judged relative to its own settled lean.
+B = C.BODY
+LAM, SS, TS = B.length_scale, B.speed_scale, B.time_scale
+WS = 1.0 / TS            # angular rates
+MATT_ROOT_Z = 0.9549291
+RELATIVE_TILT = B.name != "matt"
+if B.name != "matt":
+    _root_z = float(mujoco.MjModel.from_xml_path(str(C.SCENE_XML)).key("default").qpos[2])
+    FALL_PELVIS_Z = 0.55 * _root_z / MATT_ROOT_Z
+    RECOVER_WINDOW_S = 1.5 * TS
+    JOINT_VEL_LIMIT = 18.0 / TS
 
 
 @dataclass
@@ -119,9 +131,10 @@ class Sim:
         return f"contact:{bad}" if bad else None
 
 
-def rung0_episode(onnx_path: Path, seed: int, seconds: float = 20.0, shove_dv: float = 0.5,
-                  cube_drop_m: float = 1.5, sim: Sim | None = None) -> EpisodeResult:
-    """Rung 0: stand under random 0.5 m/s shoves + 2 kg cube drops (independent 3–5 s schedules)."""
+def rung0_episode(onnx_path: Path, seed: int, seconds: float = 20.0, shove_dv: float = 0.5 * SS,
+                  cube_drop_m: float = 1.5 * LAM, sim: Sim | None = None) -> EpisodeResult:
+    """Rung 0: stand under random 0.5 m/s shoves + 2 kg cube drops (independent 3–5 s schedules); other bodies:
+    shove x √λ, drop height / shoulder offset / jitter x λ."""
     rng = np.random.default_rng(seed)
     sim = sim or Sim(onnx_path)
     sim.reset()
@@ -157,8 +170,8 @@ def rung0_episode(onnx_path: Path, seed: int, seconds: float = 20.0, shove_dv: f
                 p = s.pelvis()
                 j = s.m.joint(f"cube{next_cube % 4}_free")
                 qa, da = s.m.jnt_qposadr[j.id], s.m.jnt_dofadr[j.id]
-                off = rng.uniform(-0.15, 0.15, 2)
-                s.d.qpos[qa : qa + 7] = [p[0] + off[0], p[1] + off[1], p[2] + 0.55 + cube_drop_m, 1, 0, 0, 0]
+                off = rng.uniform(-0.15 * LAM, 0.15 * LAM, 2)
+                s.d.qpos[qa : qa + 7] = [p[0] + off[0], p[1] + off[1], p[2] + 0.55 * LAM + cube_drop_m, 1, 0, 0, 0]
                 s.d.qvel[da : da + 6] = 0
                 next_cube += 1
                 cube_pending.append(k * dt)
@@ -178,6 +191,8 @@ def rung0_episode(onnx_path: Path, seed: int, seconds: float = 20.0, shove_dv: f
             break
 
     tl = np.array(tilt_log)
+    if RELATIVE_TILT and len(tl) > 100:           # deviation from the athlete's own settled lean (ticks 50-100, 1-2 s)
+        tl = np.abs(tl - float(np.median(tl[50:100])))
     hs = sorted(hit_times)
     rec = [recovery_time(tl, h, dt, hs[i + 1] if i + 1 < len(hs) else None) for i, h in enumerate(hs)]
     peak = max((float(tl[int(round(h / dt)): int(round((h + RECOVER_WINDOW_S) / dt))].max(initial=0.0)) for h in hit_times), default=0.0)
@@ -203,7 +218,7 @@ def recovery_time(tilt: np.ndarray, hit_t: float, dt: float, next_hit_t: float |
     return float((over[-1] + 1) * dt)
 
 
-def rung0_verdict(results: list[EpisodeResult], foot_box_half_m: float = 0.5) -> dict:
+def rung0_verdict(results: list[EpisodeResult], foot_box_half_m: float = 0.5 * LAM) -> dict:
     per_seed = []
     for r in results:
         ok = (not r.fell and r.hits > 0 and r.recovered_hits == r.hits and r.max_foot_excursion_m <= foot_box_half_m
@@ -238,13 +253,13 @@ class DashResult:
 
 
 def rung1_episode(onnx_path: Path, seed: int, speed: float | None = None, distance: float = 30.0,
-                  shove_dv: float = 0.3, warmup_s: float = 2.0, sim: Sim | None = None) -> DashResult:
+                  shove_dv: float = 0.3 * SS, warmup_s: float = 2.0 * TS, sim: Sim | None = None) -> DashResult:
     rng = np.random.default_rng(seed)
-    speed = float(rng.uniform(0.5, 3.0)) if speed is None else speed
+    speed = float(rng.uniform(0.5 * SS, 3.0 * SS)) if speed is None else speed
     sim = sim or Sim(onnx_path)
     sim.reset()
     dt = C.DECIMATION * sim.m.opt.timestep
-    max_ticks = int((distance / speed + 12.0) / dt)
+    max_ticks = int((distance / speed + 12.0 * TS) / dt)
     start = sim.pelvis()[:2].copy()
     next_shove = rng.uniform(3, 5)
     vel_err, joint_over, lat = [], 0, 0.0
@@ -285,7 +300,7 @@ def rung1_episode(onnx_path: Path, seed: int, speed: float | None = None, distan
 
 
 def rung1_verdict(results: list[DashResult]) -> dict:
-    per = [bool(r.finished and not r.fell and r.vel_rms_err < 0.15 and r.lateral_drift_m < 0.5
+    per = [bool(r.finished and not r.fell and r.vel_rms_err < 0.15 * SS and r.lateral_drift_m < 0.5 * LAM
            and r.joint_vel_over_fraction <= JOINT_VEL_MAX_FRACTION) for r in results]
     return {"rung": 1, "seeds": len(results), "passed_seeds": int(sum(per)), "PASS": all(per), "per_seed_pass": per}
 
@@ -301,16 +316,18 @@ def rung1_verdict(results: list[DashResult]) -> dict:
 #   brake      5 s at 3 m/s (lane keeping), then zero command: stopping distance < 2 m, no fall within 4 s
 #   backward   20 m at −1.5 m/s (lane keeping), 0.3 m/s shoves, no fall
 # ---------------------------------------------------------------------------------------------------------------
-RUNG2_LIN_TOL = 0.2
-RUNG2_YAW_TOL = 0.3
+RUNG2_LIN_TOL = 0.2 * SS
+RUNG2_YAW_TOL = 0.3 * WS
 # DESIGN §1 lists wz in [-2, 2] AND "360 deg < 3 s", which 2 rad/s cannot meet (3.14 s at best). Event 12 is scored
 # on rotational speed, so the drill commands the maximum trained yaw rate (Rung 2 curriculum: +-2.5). Bars unchanged.
-TURNTABLE_WZ = 2.5
-RUNG2_VX_MAX = 3.8  # m/s — MATT's top speed with the elite-athlete torque caps (user decision 2026-09-28; spec said 4.0)
-TURNTABLE_MAX_S = 3.0
-TURNTABLE_MAX_DRIFT = 0.3
-BRAKE_MAX_M = 2.0
-BACKWARD_M = 20.0
+TURNTABLE_WZ = 2.5 * WS
+RUNG2_VX_MAX = 3.8 * SS  # m/s — MATT's top speed with the elite-athlete torque caps (user decision 2026-09-28; spec said 4.0)
+TURNTABLE_MAX_S = 3.0 * TS
+TURNTABLE_MAX_DRIFT = 0.3 * LAM
+BRAKE_MAX_M = 2.0 * LAM          # stopping distance ∝ v² / a: × λ (accelerations do not scale)
+BACKWARD_M = 20.0                # event distance (rule), not scaled
+BACKWARD_V = 1.5 * SS
+BRAKE_V = 3.0 * SS
 
 
 @dataclass
@@ -340,11 +357,11 @@ def _vel_heading(sim: Sim) -> tuple[float, float, float]:
 def _envelope_command(rng: np.random.Generator) -> tuple[str, np.ndarray]:
     kind = str(rng.choice(["sprint", "crab", "turn", "stop"], p=[0.35, 0.25, 0.25, 0.15]))
     if kind == "sprint":
-        return kind, np.array([rng.uniform(-1.5, RUNG2_VX_MAX), 0.0, rng.uniform(-0.5, 0.5)])
+        return kind, np.array([rng.uniform(-1.5 * SS, RUNG2_VX_MAX), 0.0, rng.uniform(-0.5 * WS, 0.5 * WS)])
     if kind == "crab":
-        return kind, np.array([rng.uniform(-0.5, 0.5), rng.uniform(-1.0, 1.0), 0.0])
+        return kind, np.array([rng.uniform(-0.5 * SS, 0.5 * SS), rng.uniform(-1.0 * SS, 1.0 * SS), 0.0])
     if kind == "turn":
-        return kind, np.array([rng.uniform(0.0, 1.5), 0.0, rng.uniform(-2.0, 2.0)])
+        return kind, np.array([rng.uniform(0.0, 1.5 * SS), 0.0, rng.uniform(-2.0 * WS, 2.0 * WS)])
     return kind, np.zeros(3)
 
 
@@ -364,7 +381,7 @@ STEADY_ACCEL = 1.5  # m/s^2 — tracking is measured once the athlete can have r
                     # 0.5 + |dv| / STEADY_ACCEL) s (user decision 2026-09-28; acceleration is scored by the dash events)
 
 
-def rung2_episode(onnx_path: Path, seed: int, sim: Sim | None = None, shove_dv: float = 0.3,
+def rung2_episode(onnx_path: Path, seed: int, sim: Sim | None = None, shove_dv: float = 0.3 * SS,
                   steady_state: bool = True) -> Rung2Result:
     """G1 drill. steady_state=True (official since 2026-09-28): the settle time grows with the speed change,
     max(1.5, 0.5 + |dv|/1.5 s), so tracking is scored on the commanded speed, not on acceleration time.
@@ -393,9 +410,9 @@ def rung2_episode(onnx_path: Path, seed: int, sim: Sim | None = None, shove_dv: 
     prev_cmd = np.zeros(3)
     for _ in range(5):
         kind, cmd = _envelope_command(rng)
-        settle = 1.5
+        settle = 1.5 * TS
         if steady_state:
-            settle = max(1.5, 0.5 + float(np.linalg.norm(cmd[:2] - prev_cmd[:2])) / STEADY_ACCEL)
+            settle = max(1.5 * TS, 0.5 * TS + float(np.linalg.norm(cmd[:2] - prev_cmd[:2])) / STEADY_ACCEL)
         prev_cmd = cmd
         lin, yaw = [], []
         for k in range(int(5.0 / dt)):
@@ -436,7 +453,7 @@ def rung2_episode(onnx_path: Path, seed: int, sim: Sim | None = None, shove_dv: 
         sim.reset()
         lane = sim.pelvis()[1]
         for _ in range(int(5.0 / dt)):
-            if not tick(steer(3.0, lane)):
+            if not tick(steer(BRAKE_V, lane)):
                 break
         if fell is None:
             p0 = sim.pelvis()[:2].copy()
@@ -444,7 +461,7 @@ def rung2_episode(onnx_path: Path, seed: int, sim: Sim | None = None, shove_dv: 
                 if not tick(np.zeros(3)):
                     break
                 vx, vy, _ = _vel_heading(sim)
-                if brake is None and math.hypot(vx, vy) < 0.1:
+                if brake is None and math.hypot(vx, vy) < 0.1 * SS:
                     brake = float(np.linalg.norm(sim.pelvis()[:2] - p0))
 
     # --- backward
@@ -453,8 +470,8 @@ def rung2_episode(onnx_path: Path, seed: int, sim: Sim | None = None, shove_dv: 
         sim.reset()
         start = sim.pelvis()[:2].copy()
         shove = _shover(rng, shove_dv)
-        for _ in range(int((BACKWARD_M / 1.5 + 8.0) / dt)):
-            if not tick(steer(-1.5, start[1]), shove):
+        for _ in range(int((BACKWARD_M / BACKWARD_V + 8.0) / dt)):
+            if not tick(steer(-BACKWARD_V, start[1]), shove):
                 break
             back = float(start[0] - sim.pelvis()[0])
             if back >= BACKWARD_M:
