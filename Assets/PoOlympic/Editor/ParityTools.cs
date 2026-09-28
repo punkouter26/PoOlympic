@@ -59,6 +59,24 @@ namespace PoOlympic.Editor
             EditorApplication.update += step;
         }
     
+        /// <summary>Static event props (world geoms named `prefix`*) of the running scene's compiled model as JSON
+        /// {name: {pos, size, contype, conaffinity}} — G0 covers each athlete lane, this covers rails / poles.</summary>
+        public static unsafe string DumpProps(string prefix)
+        {
+            if (!MjScene.InstanceExists || MjScene.Instance.Model == null) return "{}";
+            var m = MjScene.Instance.Model;
+            var geoms = AthleteBinding.NameIndex(m, (int)MujocoLib.mjtObj.mjOBJ_GEOM, (int)m->ngeom);
+            var sb = new System.Text.StringBuilder("{");
+            foreach (var (name, id) in geoms)
+            {
+                if (!name.StartsWith(prefix)) continue;
+                if (sb.Length > 1) sb.Append(',');
+                string V(double* a) => $"[{a[3 * id].ToString("R", System.Globalization.CultureInfo.InvariantCulture)},{a[3 * id + 1].ToString("R", System.Globalization.CultureInfo.InvariantCulture)},{a[3 * id + 2].ToString("R", System.Globalization.CultureInfo.InvariantCulture)}]";
+                sb.Append($"\"{name}\":{{\"pos\":{V(m->geom_pos)},\"size\":{V(m->geom_size)},\"contype\":{m->geom_contype[id]},\"conaffinity\":{m->geom_conaffinity[id]}}}");
+            }
+            return sb.Append('}').ToString();
+        }
+
         /// <summary>Deterministically step Play mode until the first PolicyRunner reaches `tick`, then stay paused.</summary>
         public static void StepUntilTick(int tick)
         {

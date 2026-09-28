@@ -14,7 +14,7 @@ namespace PoOlympic
     /// (`ringRadius`) = DQ. Traits + direction are drawn per heat.
     ///   Ready (countdown) → Live → Result → auto restart (new seed)
     /// </summary>
-    public class TurntableEvent : MonoBehaviour
+    public class TurntableEvent : MonoBehaviour, IStandingsBoard
     {
         public enum Phase { Ready, Live, Result }
 
@@ -166,6 +166,18 @@ namespace PoOlympic
             "DQ" => "DQ (left ring)",
             "" => $"{s.turned / (2f * Mathf.PI):0.00} turns",
             _ => s.status,
+        };
+
+        public string SubtitleExtra => $"{turns} turns {(Direction > 0 ? "anticlockwise" : "clockwise")}";
+        public string ClockLine => $"{LiveTime:0.00} s";
+        public string InfoLine => $"+{driftPenalty:0.#} s per m drift";
+        public IEnumerable<(int place, string name, string result, bool bad, PolicyRunner runner)> Rows =>
+            Standings.Select(s => (s.place, s.name, Describe(s), s.status is "DQ" or "FELL", s.runner));
+        public string Banner => Current switch
+        {
+            Phase.Ready => Mathf.CeilToInt(countdownSeconds - PhaseTime).ToString(),
+            Phase.Result => $"{spinners.First(x => x.place == 1).name} WINS\n{spinners.First(x => x.place == 1).score:0.00}",
+            _ => LiveTime < 0.8f ? "SPIN!" : "",
         };
     }
 }

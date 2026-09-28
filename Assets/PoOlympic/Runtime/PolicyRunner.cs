@@ -32,6 +32,10 @@ namespace PoOlympic
         [Tooltip("Race steering: overwrite command.z every control tick with the contract's lane-keeping yaw rate " +
                  "(heading along +x, back to this lane's centre line). Off for parity runs (fixed commands).")]
         public bool laneKeeping;
+        /// <summary>Event steering (runtime only): called every control tick before the observation is built, with the
+        /// root position relative to the lane origin, the heading and the current command; returns the new command.
+        /// Same tick as the Python event loops, so event commands stay tick-exact. Runs after laneKeeping.</summary>
+        public Func<double, double, double, Vector3, Vector3> steer;
 
         [Header("Lane (meet scenes; solo = no prefix, origin 0, cube slots 0..3)")]
         [Tooltip("MuJoCo world x/y of this lane's origin: root position = contract default + origin.")]
@@ -243,6 +247,13 @@ namespace PoOlympic
                 int r = Binding.RootQposAdr;
                 command.z = (float)Contract.SteerYawRate(d->qpos[r + 3], d->qpos[r + 4], d->qpos[r + 5], d->qpos[r + 6],
                                                          d->qpos[r + 1] - laneOriginY, command.x);
+            }
+            if (steer != null)
+            {
+                int r = Binding.RootQposAdr;
+                double w = d->qpos[r + 3], qx = d->qpos[r + 4], qy = d->qpos[r + 5], qz = d->qpos[r + 6];
+                double yaw = Math.Atan2(2.0 * (w * qz + qx * qy), 1.0 - 2.0 * (qy * qy + qz * qz));
+                command = steer(d->qpos[r] - laneOriginX, d->qpos[r + 1] - laneOriginY, yaw, command);
             }
             _phase = Contract.AdvancePhase(_phase, command);
             ObservationBuilder.Build(Contract, Binding, d->qpos, d->qvel, command, _phase, _lastAction, _obs);

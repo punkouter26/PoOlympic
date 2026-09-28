@@ -397,12 +397,12 @@ def compose_model(skin, geoms, inertials, with_scene: bool, n_cubes: int, defaul
 
 def compose_meet(skin, geoms, inertials, default_qpos: np.ndarray, n_lanes: int = N_LANES,
                  n_cubes: int = N_CUBES_MEET, origins: list[np.ndarray] | None = None, pedestal_h: float = 0.0,
-                 model: str | None = None, park_offset=(0.0, 0.0, 0.0)) -> tuple[str, dict]:
+                 model: str | None = None, park_offset=(0.0, 0.0, 0.0), props: list[dict] | None = None) -> tuple[str, dict]:
     """Multi-athlete scene (G6 / events): lane k = the training athlete with every name prefixed `L<k>_`, its own
     collision bits (lane isolation) and its pelvis shifted to origins[k] (default lane_origin(k)). Ground + cube pool as
     in the solo scene. pedestal_h > 0: every lane stands on its own 1 m x 1 m pedestal (`L<k>_pedestal`, top at z = 0)
-    and the ground drops to -pedestal_h (Iron Pedestal heat). Returns (xml, layout) — the lane table Unity and the
-    evaluators share."""
+    and the ground drops to -pedestal_h (Iron Pedestal heat). props: static event boxes {name, pos, size (half)} that
+    collide with every lane (rails, poles). Returns (xml, layout) — the lane table Unity and the evaluators share."""
     root = ET.Element("mujoco", {"model": model or f"meet{n_lanes}"})
     option_block(root)
     wb = ET.SubElement(root, "worldbody")
@@ -412,6 +412,10 @@ def compose_meet(skin, geoms, inertials, default_qpos: np.ndarray, n_lanes: int 
     if pedestal_h:
         ground["pos"] = vec([0, 0, -pedestal_h])
     ET.SubElement(wb, "geom", ground)
+    for pr in props or []:
+        ET.SubElement(wb, "geom", {"name": pr["name"], "type": "box", "pos": vec(pr["pos"]), "size": vec(pr["size"]),
+                                   "contype": str(ALL_BITS), "conaffinity": str(ALL_BITS), "condim": "3",
+                                   "friction": vec(GROUND_FRICTION)})
     contact = ET.Element("contact")
     all_actuators, key_qpos, lanes = [], [], []
     for k in range(n_lanes):
@@ -451,25 +455,45 @@ def compose_meet(skin, geoms, inertials, default_qpos: np.ndarray, n_lanes: int 
     ET.SubElement(kf, "key", {"name": "default", "qpos": vec(np.concatenate(key_qpos))})
     layout = {"n_lanes": n_lanes, "lane_width": LANE_WIDTH, "n_cubes": n_cubes, "lanes": lanes, "pedestal_h": pedestal_h,
               "note": "lane k: names prefixed L<k>_, pelvis shifted by origin; solo-scene cube i -> meet cube cubes[i]"}
+    if props:
+        layout["props"] = [{"name": pr["name"], "pos": np.asarray(pr["pos"], float).tolist(), "size": list(pr["size"])}
+                           for pr in props]
     return indent(root), layout
 
 
 VENUES_JSON = ROOT.parent / "SourceArt" / "Stadium" / "venues.json"
 
 
-def venue_lane_origins(event: int, reference_lane: int) -> list[np.ndarray]:
+def venue_lane_origins(event: int, reference_lane: int, extra_yaw_deg: float = 0.0) -> list[np.ndarray]:
     """Competitor spots of a stadium event (venues.json, written by SourceArt/Stadium/build_venues.py) in the athlete
     frame: the reference lane's spot is the origin and its facing is +x (EventScenes.PlaceStadium does the same turn in
-    Unity). Heights are relative to the reference spot (the surface the athlete stands on)."""
-    ev = json.loads(VENUES_JSON.read_text())["events"][f"{event:02d}"]
-    ref = ev["lanes"][reference_lane]
-    p0, yaw = np.asarray(ref["pos"], float), math.radians(ref["yaw_deg"])
+    Unity). extra_yaw_deg turns the athlete relative to the event direction (90 = facing the event's left, crab events).
+    Heights are relative to the reference spot (the surface the athlete stands on)."""
+    return [venue_to_athlete(event, reference_lane, lane["pos"], extra_yaw_deg)
+            for lane in json.loads(VENUES_JSON.read_text())["events"][f"{event:02d}"]["lanes"]]
+
+
+def venue_to_athlete(event: int, reference_lane: int, pos, extra_yaw_deg: float = 0.0) -> np.ndarray:
+    """A stadium point (MuJoCo axes, venues.json frame) in the frame of venue_lane_origins."""
+    ref = json.loads(VENUES_JSON.read_text())["events"][f"{event:02d}"]["lanes"][reference_lane]
+    p0, yaw = np.asarray(ref["pos"], float), math.radians(ref["yaw_deg"] + extra_yaw_deg)
     c, s = math.cos(-yaw), math.sin(-yaw)
-    out = []
-    for lane in ev["lanes"]:
-        d = np.asarray(lane["pos"], float) - p0
-        out.append(np.array([c * d[0] - s * d[1], s * d[0] + c * d[1], d[2]]))
-    return out
+    d = np.asarray(pos, float) - p0
+    return np.array([c * d[0] - s * d[1], s * d[0] + c * d[1], d[2]])
+
+
+def crab_rails() -> list[dict]:
+    """10 Crab Shuffle rails (build_venues.py: a 4 cm steel bar centred 0.3 m up on every lane line, over the 20 m course)
+    as MuJoCo boxes in the crab frame (reference lane 3, athletes facing the event's left)."""
+    ev = json.loads(VENUES_JSON.read_text())["events"]["10"]
+    ys = [l["pos"][1] for l in ev["lanes"]]
+    x0, length, lw = ev["lanes"][0]["pos"][0], float(ev["length_m"]), abs(ys[0] - ys[1])
+    rails = []
+    for j in range(len(ys) + 1):
+        y = ys[0] + lw / 2 - j * lw            # lane lines from the lane-1 side
+        c = venue_to_athlete(10, 3, [x0 + length / 2, y, 0.3], 90.0)
+        rails.append({"name": f"rail{j}", "pos": c, "size": [0.02, length / 2, 0.02]})
+    return rails
 
 
 def cube_entity_xml() -> str:
@@ -587,6 +611,12 @@ def main() -> int:
                                          model="turntable8")
     (ASSETS / "scene_turntable8.xml").write_text(header + turn_xml + "\n")
     (ASSETS / "turntable8_layout.json").write_text(json.dumps(turn_layout, indent=1) + "\n")
+    # 10 Crab Shuffle: athletes turned to face the event's left (they side-step to their right = down the course);
+    # lanes are then 1.22 m apart along x, the steel rails on the lane lines are real (shin-height) obstacles
+    crab_xml, crab_layout = compose_meet(skin, geoms, inertials, qdef, origins=venue_lane_origins(10, 3, 90.0),
+                                         model="crab8", park_offset=(0.0, -30.0, 0.0), props=crab_rails())
+    (ASSETS / "scene_crab8.xml").write_text(header + crab_xml + "\n")
+    (ASSETS / "crab8_layout.json").write_text(json.dumps(crab_layout, indent=1) + "\n")
     (ASSETS / f"scene_meet{N_LANES}.xml").write_text(header + meet_xml + "\n")
     (ASSETS / f"meet{N_LANES}_layout.json").write_text(json.dumps(meet_layout, indent=1) + "\n")
 

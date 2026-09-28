@@ -5,7 +5,7 @@ import math
 import pytest
 
 from poolympic import contract as C
-from poolympic.events import track, turntable
+from poolympic.events import crab, track, turntable
 
 BRAIN = C.ROOT.parent / "parity" / "brains" / "rung2.onnx"
 pytestmark = pytest.mark.skipif(not BRAIN.exists(), reason="rung2.onnx not exported")
@@ -35,3 +35,24 @@ def test_turntable_heat():
         assert l.score == pytest.approx(l.time_s + turntable.DRIFT_PENALTY * l.max_drift_m)
     by_place = sorted(done, key=lambda l: l.place)
     assert all(a.score <= b.score for a, b in zip(by_place, by_place[1:]))
+
+
+def test_crab_shuffle_heat():
+    res = crab.run_heat(BRAIN, seed=1)
+    assert sorted(l.place for l in res.lanes) == list(range(1, 9))
+    done = [l for l in res.lanes if l.status == "FINISHED"]
+    assert len(done) >= 6
+    for l in done:
+        # 20 m at a 1.2 m/s side-step command
+        assert crab.DISTANCE / crab.VY < l.finish_s < 30.0
+        assert l.max_x_drift_m < 0.5          # rails are 0.61 m from the lane line
+        assert l.score == pytest.approx(l.finish_s + crab.CROSS_PENALTY * l.crossings + crab.RAIL_PENALTY * l.rail_touches)
+
+
+def test_crab_command_holds_the_course():
+    q0 = [1.0, 0.0, 0.0, 0.0]
+    assert crab.crab_command(q0, 0.0).tolist() == [0.0, -crab.VY, 0.0]
+    vx, _, _ = crab.crab_command(q0, 0.2)                 # drifted forward towards the next rail → step back
+    assert vx < 0
+    half = math.radians(20) / 2                            # turned 20° left → turn right
+    assert crab.crab_command([math.cos(half), 0.0, 0.0, math.sin(half)], 0.0)[2] < 0

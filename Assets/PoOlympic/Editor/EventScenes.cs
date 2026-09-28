@@ -215,8 +215,10 @@ namespace PoOlympic.Editor
             var ev = new GameObject("TurntableEvent").AddComponent<TurntableEvent>();
             foreach (var (k, r) in meet.Lanes) ev.spinners.Add(new TurntableEvent.Spinner { runner = r, name = $"S{k + 1}" });
             meet.Pool.runner = ev.spinners[0].runner;
-            var hud = new GameObject("TurntableHUD").AddComponent<TurntableHud>();
-            hud.ev = ev;
+            var hud = new GameObject("StandingsHUD").AddComponent<StandingsHud>();
+            hud.board = ev;
+            hud.title = "THE 360 TURNTABLE";
+            hud.subtitle = "Event 12";
             hud.version = $"v0 · {Path.GetFileNameWithoutExtension(brainFile)}";
 
             var bc = meet.Camera.GetComponent<BroadcastCamera>();
@@ -225,6 +227,37 @@ namespace PoOlympic.Editor
             bc.offset = new Vector3(10.5f, 5.2f, -8.5f);     // front three-quarter: the athletes start facing +x
             EditorSceneManager.SaveScene(meet.Scene, TurntableScene);
             return $"{TurntableScene}: {ev.spinners.Count} athletes, {ev.turns} turns at {ev.spinRate} rad/s, brain {brainFile}";
+        }
+
+        public const string CrabScene = "Assets/PoOlympic/Scenes/Event_CrabShuffle.unity";
+        public const string CrabSource = "training/assets/scene_crab8.xml";
+        public const string CrabLayout = "training/assets/crab8_layout.json";
+
+        /// <summary>Event 10: 8 athletes turned 90° to the course (they side-step to their right) between the physical
+        /// rails of scene_crab8.xml; CrabShuffleEvent + StandingsHud.</summary>
+        [MenuItem("PoOlympic/Events/Build Event 10 — Crab Shuffle")]
+        public static string BuildCrabShuffle() => BuildCrabShuffle(DefaultRung2Brain);
+
+        public static string BuildCrabShuffle(string brainFile)
+        {
+            var meet = BuildMeetScene(CrabSource, CrabLayout, 10, AthleteLane, 90f, brainFile);
+            var layout = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(Path.Combine(Path.GetDirectoryName(Application.dataPath), CrabLayout)));
+            var ev = new GameObject("CrabShuffleEvent").AddComponent<CrabShuffleEvent>();
+            ev.railGeoms = layout["props"].Select(pr => (string)pr["name"]).ToArray();
+            foreach (var (k, r) in meet.Lanes) ev.racers.Add(new CrabShuffleEvent.Racer { runner = r, name = $"L{k + 1}" });
+            meet.Pool.runner = ev.racers[0].runner;
+            var hud = new GameObject("StandingsHUD").AddComponent<StandingsHud>();
+            hud.board = ev;
+            hud.title = "CRAB SHUFFLE";
+            hud.subtitle = "Event 10";
+            hud.version = $"v0 · {Path.GetFileNameWithoutExtension(brainFile)}";
+
+            var bc = meet.Camera.GetComponent<BroadcastCamera>();
+            bc.target = meet.FocusPelvis;
+            bc.focusOffset = new Vector3(-0.6f, 0f, -1.5f);  // centre of the 8 lanes (Unity x = +3.66 .. -4.88), a bit down the course
+            bc.offset = new Vector3(9.5f, 4f, -5.5f);        // in front of lane 1, down the course: the row recedes, faces + rails
+            EditorSceneManager.SaveScene(meet.Scene, CrabScene);
+            return $"{CrabScene}: {ev.racers.Count} athletes, {ev.distance} m at {ev.sideSpeed} m/s, {ev.railGeoms.Length} rails, brain {brainFile}";
         }
 
         public sealed class MeetScene
@@ -318,6 +351,7 @@ namespace PoOlympic.Editor
             { 1, IronPedestalHeatScene },   // official 8-runner heat (solo practice: Event_IronPedestal.unity)
             { 8, "Assets/PoOlympic/Scenes/Event_30mDash.unity" },
             { 9, "Assets/PoOlympic/Scenes/Event_InvertedSprint.unity" },
+            { 10, CrabScene },
             { 12, TurntableScene },
             { 19, "Assets/PoOlympic/Scenes/Event_TerminalVelocity.unity" },
             { 22, "Assets/PoOlympic/Scenes/Event_EmergencyBrake.unity" },
