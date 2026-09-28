@@ -23,7 +23,7 @@ import numpy as np
 import onnxruntime as ort
 
 from .. import contract as C
-from .iron_pedestal import Traits, _Lane
+from .iron_pedestal import Traits, _Lane, make_lanes
 
 SCENE = C.ROOT / "assets" / "scene_track8.xml"
 LAYOUT = C.ROOT / "assets" / "track8_layout.json"
@@ -60,20 +60,15 @@ class RaceResult:
     lanes: list[RaceLane] = field(default_factory=list)
 
 
-def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = None) -> RaceResult:
+def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = None, scene=None, layout_path=None, brains: dict | None = None) -> RaceResult:
     cfg = MODES[mode]
-    m = mujoco.MjModel.from_xml_path(str(SCENE))
+    m = mujoco.MjModel.from_xml_path(str(scene or SCENE))
     d = mujoco.MjData(m)
-    layout = json.loads(LAYOUT.read_text())
-    defaults = json.loads(C.CONTRACT_JSON.read_text())["default_joint_qpos"]
+    layout = json.loads(Path(layout_path or LAYOUT).read_text())
     rng = np.random.default_rng(seed)
     traits = traits or [Traits.sample(rng) for _ in range(len(layout["lanes"]))]
-    lanes = [_Lane(m, d, l["lane"], l["prefix"], np.asarray(l["origin"], float), traits[i], np.random.default_rng([seed, 1000 + i]))
-             for i, l in enumerate(layout["lanes"])]
-    for ln in lanes:
-        ln.reset(m, d, defaults)
+    lanes = make_lanes(m, d, layout, seed, traits, onnx, brains)
     mujoco.mj_forward(m, d)
-    sess = ort.InferenceSession(str(onnx), providers=["CPUExecutionProvider"])
     res = [RaceLane(ln.k, ln.traits) for ln in lanes]
     nerve = [float(np.random.default_rng([seed, 2000 + i]).uniform(*BRAKE_NERVE)) for i in range(len(lanes))]
     braking = [False] * len(lanes)
@@ -85,7 +80,7 @@ def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = Non
         for i, ln in enumerate(lanes):
             r = res[i]
             if r.status and mode != "brake":
-                ln.control(sess, d, np.zeros(3))
+                ln.control(ln.sess, d, np.zeros(3))
                 continue
             ra = ln.ath.root_qposadr
             x = d.qpos[ra] - ln.origin[0]
@@ -96,7 +91,7 @@ def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = Non
             else:
                 q = d.qpos[ra + 3: ra + 7]
                 cmd = np.array([cfg["vx"], 0.0, C.steer_yaw_rate(q, d.qpos[ra + 1] - ln.origin[1], cfg["vx"])])
-            ln.control(sess, d, cmd)
+            ln.control(ln.sess, d, cmd)
         for s in range(C.DECIMATION):
             for ln in lanes:
                 ln.write_ctrl(d, s)

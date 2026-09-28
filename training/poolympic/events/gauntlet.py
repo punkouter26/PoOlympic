@@ -16,6 +16,7 @@ Rank: athletes still in by total recovery time, then the eliminated (later = bet
 from __future__ import annotations
 
 import json
+from pathlib import Path
 import math
 from dataclasses import asdict, dataclass, field
 
@@ -24,7 +25,7 @@ import numpy as np
 import onnxruntime as ort
 
 from .. import contract as C
-from .iron_pedestal import Traits, _Lane
+from .iron_pedestal import Traits, _Lane, make_lanes
 
 SCENE = C.ROOT / "assets" / "scene_shaker8.xml"
 LAYOUT = C.ROOT / "assets" / "shaker8_layout.json"
@@ -73,20 +74,15 @@ class GauntletResult:
     lanes: list[GauntletLane] = field(default_factory=list)
 
 
-def run_heat(onnx, seed: int, traits: list[Traits] | None = None) -> GauntletResult:
-    m = mujoco.MjModel.from_xml_path(str(SCENE))
+def run_heat(onnx, seed: int, traits: list[Traits] | None = None, scene=None, layout_path=None, brains: dict | None = None) -> GauntletResult:
+    m = mujoco.MjModel.from_xml_path(str(scene or SCENE))
     d = mujoco.MjData(m)
-    layout = json.loads(LAYOUT.read_text())
-    defaults = json.loads(C.CONTRACT_JSON.read_text())["default_joint_qpos"]
+    layout = json.loads(Path(layout_path or LAYOUT).read_text())
     rng = np.random.default_rng(seed)
     traits = traits or [Traits.sample(rng) for _ in range(len(layout["lanes"]))]
-    lanes = [_Lane(m, d, l["lane"], l["prefix"], np.asarray(l["origin"], float), traits[i], np.random.default_rng([seed, 1000 + i]))
-             for i, l in enumerate(layout["lanes"])]
-    for ln in lanes:
-        ln.reset(m, d, defaults)
+    lanes = make_lanes(m, d, layout, seed, traits, onnx, brains)
     mujoco.mj_forward(m, d)
     shaker = [m.jnt_dofadr[m.joint(ln.prefix + "shaker_x").id] for ln in lanes]
-    sess = ort.InferenceSession(str(onnx), providers=["CPUExecutionProvider"])
     res = [GauntletLane(ln.k, ln.traits) for ln in lanes]
     dirs = [np.random.default_rng([seed, 5000 + i]) for i in range(len(lanes))]
     dt = m.opt.timestep * C.DECIMATION
@@ -99,7 +95,7 @@ def run_heat(onnx, seed: int, traits: list[Traits] | None = None) -> GauntletRes
             ra = ln.ath.root_qposadr
             cmd = np.zeros(3) if res[i].out_at_s is not None else homing_command(
                 d.qpos[ra + 3: ra + 7], d.qpos[ra] - ln.origin[0], d.qpos[ra + 1] - ln.origin[1])
-            ln.control(sess, d, cmd)
+            ln.control(ln.sess, d, cmd)
         if tick in round_ticks:
             r = round_ticks[tick]
             dv = GUST_START + GUST_STEP * r

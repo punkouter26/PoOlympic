@@ -25,8 +25,13 @@ sys.path.insert(0, str(ROOT / "tools"))
 import build_mjcf as B  # noqa: E402  (MATT profile: only the scene helpers / constants are used here)
 
 ASSETS = ROOT / "assets"
-SCENES = {  # scene -> (venue event, reference lane, extra yaw, pedestal_h)
-    "pedestal8": (1, 3, 0.0, B.PEDESTAL_H),
+SCENES = {  # scene -> the build_mjcf.compose_meet arguments of that event scene
+    "pedestal8": dict(event=1, pedestal_h=B.PEDESTAL_H),
+    "track8": dict(event=8, park_offset=(0.0, -30.0, 0.0)),
+    "turntable8": dict(event=12),
+    "crab8": dict(event=10, yaw=90.0, park_offset=(0.0, -30.0, 0.0), props=B.crab_rails),
+    "shaker8": dict(event=5, park_offset=(0.0, -30.0, 0.0), shaker=B.SHAKER),
+    "slalom8": dict(event=11, park_offset=(0.0, -30.0, 0.0), props=B.slalom_poles),
 }
 
 
@@ -51,17 +56,25 @@ def body_parts(body: str):
 
 
 def compose(scene: str, lineup: list[str]) -> tuple[str, dict]:
-    event, ref, yaw, ped_h = SCENES[scene]
-    origins = B.venue_lane_origins(event, ref, yaw)
+    sc = SCENES[scene]
+    ped_h, shaker = sc.get("pedestal_h", 0.0), sc.get("shaker")
+    props = sc["props"]() if "props" in sc else []
+    park_offset = np.asarray(sc.get("park_offset", (0.0, 0.0, 0.0)), float)
+    origins = B.venue_lane_origins(sc["event"], 3, sc.get("yaw", 0.0))
     root = ET.Element("mujoco", {"model": f"{scene}_mixed"})
     B.option_block(root)
     wb = ET.SubElement(root, "worldbody")
     ET.SubElement(wb, "light", {"name": "sun", "pos": "0 0 5", "dir": "0 0 -1", "directional": "true"})
     ground = {"name": "ground", "type": "plane", "size": "0 0 0.05", "contype": str(B.ALL_BITS),
               "conaffinity": str(B.ALL_BITS), "condim": "3", "friction": B.vec(B.GROUND_FRICTION)}
-    if ped_h:
-        ground["pos"] = B.vec([0, 0, -ped_h])
+    drop = ped_h or (shaker["h"] if shaker else 0.0)
+    if drop:
+        ground["pos"] = B.vec([0, 0, -drop])
     ET.SubElement(wb, "geom", ground)
+    for pr in props:
+        ET.SubElement(wb, "geom", {"name": pr["name"], "type": "box", "pos": B.vec(pr["pos"]), "size": B.vec(pr["size"]),
+                                   "contype": str(B.ALL_BITS), "conaffinity": str(B.ALL_BITS), "condim": "3",
+                                   "friction": B.vec(B.GROUND_FRICTION)})
     contact = ET.Element("contact")
     actuator = ET.Element("actuator")
     key_qpos, lanes = [], []
@@ -72,6 +85,21 @@ def compose(scene: str, lineup: list[str]) -> tuple[str, dict]:
                                        "size": B.vec([B.PEDESTAL_HALF, B.PEDESTAL_HALF, ped_h / 2]),
                                        "contype": str(B.ALL_BITS), "conaffinity": str(B.ALL_BITS), "condim": "3",
                                        "friction": B.vec(B.GROUND_FRICTION)})
+        if shaker:                                   # = build_mjcf.compose_meet's spring-mounted platform
+            sh = shaker
+            plat = ET.SubElement(wb, "body", {"name": p + "shaker", "pos": B.vec(o + [0, 0, -sh["h"] / 2])})
+            half = [sh["half"], sh["half"], sh["h"] / 2]
+            ET.SubElement(plat, "inertial", {"pos": "0 0 0", "mass": B.f(sh["mass"]), "diaginertia": B.vec(
+                [sh["mass"] * (half[1] ** 2 + half[2] ** 2) / 3, sh["mass"] * (half[0] ** 2 + half[2] ** 2) / 3,
+                 sh["mass"] * (half[0] ** 2 + half[1] ** 2) / 3])})
+            for ax, axis in (("x", "1 0 0"), ("y", "0 1 0")):
+                ET.SubElement(plat, "joint", {"name": f"{p}shaker_{ax}", "type": "slide", "axis": axis,
+                                              "stiffness": B.f(sh["stiffness"]), "damping": B.f(sh["damping"]),
+                                              "limited": "true", "range": B.vec([-sh["range"], sh["range"]])})
+            ET.SubElement(plat, "geom", {"name": p + "shaker", "type": "box", "size": B.vec(half),
+                                         "contype": str(B.ALL_BITS), "conaffinity": str(B.ALL_BITS), "condim": "3",
+                                         "friction": B.vec(B.GROUND_FRICTION)})
+            key_qpos.append(np.zeros(2))
         pelvis, acts, excl, qdef = body_parts(body)
         pelvis = copy.deepcopy(pelvis)
         for el in pelvis.iter():
@@ -96,7 +124,7 @@ def compose(scene: str, lineup: list[str]) -> tuple[str, dict]:
     inertia = B.CUBE_MASS * (2 * B.CUBE_HALF) ** 2 / 6.0
     n_cubes = B.N_CUBES_MEET
     for i in range(n_cubes):
-        park = B.cube_park_pos(i) - [0, 0, ped_h]
+        park = B.cube_park_pos(i) - [0, 0, drop] + park_offset
         cb = ET.SubElement(wb, "body", {"name": f"cube{i}", "pos": B.vec(park)})
         ET.SubElement(cb, "inertial", {"pos": "0 0 0", "mass": B.f(B.CUBE_MASS), "diaginertia": B.vec([inertia] * 3)})
         ET.SubElement(cb, "freejoint", {"name": f"cube{i}_free"})
@@ -111,6 +139,11 @@ def compose(scene: str, lineup: list[str]) -> tuple[str, dict]:
     layout = {"n_lanes": len(lineup), "lane_width": B.LANE_WIDTH, "n_cubes": n_cubes, "lanes": lanes, "pedestal_h": ped_h,
               "lineup": lineup,
               "note": "lane k: names prefixed L<k>_, athlete body per lane (assets/<body>.xml), pelvis shifted by origin"}
+    if shaker:
+        layout["shaker"] = dict(shaker)
+    if props:
+        layout["props"] = [{"name": pr["name"], "pos": np.asarray(pr["pos"], float).tolist(), "size": list(pr["size"])}
+                           for pr in props]
     return B.indent(root), layout
 
 
@@ -119,16 +152,23 @@ def tag_of(lineup: list[str]) -> str:
 
 
 def verify() -> int:
-    """An all-MATT pedestal8 must compile to the model of the existing scene_pedestal8.xml."""
+    """Every all-MATT composition must compile to the model of the existing scene_<scene>.xml (per-lane fingerprints,
+    world props, keyframe, sizes)."""
     from poolympic.fingerprint import canonical_bytes, fingerprint
-    xml, _ = compose("pedestal8", ["matt"] * 8)
-    a = mujoco.MjModel.from_xml_string(xml)
-    b = mujoco.MjModel.from_xml_path(str(ASSETS / "scene_pedestal8.xml"))
-    same = all(canonical_bytes(fingerprint(a, f"L{k}_", f"cube{2 * k}")) == canonical_bytes(fingerprint(b, f"L{k}_", f"cube{2 * k}"))
-               for k in range(8))
-    same &= np.array_equal(a.key("default").qpos, b.key("default").qpos) and a.nq == b.nq and a.nu == b.nu
-    print("all-MATT compose == scene_pedestal8.xml:", "PASS" if same else "FAIL")
-    return 0 if same else 1
+    ok_all = True
+    for scene in SCENES:
+        xml, _ = compose(scene, ["matt"] * 8)
+        a = mujoco.MjModel.from_xml_string(xml)
+        b = mujoco.MjModel.from_xml_path(str(ASSETS / f"scene_{scene}.xml"))
+        same = all(canonical_bytes(fingerprint(a, f"L{k}_", f"cube{2 * k}")) == canonical_bytes(fingerprint(b, f"L{k}_", f"cube{2 * k}"))
+                   for k in range(8))
+        same &= np.array_equal(a.key("default").qpos, b.key("default").qpos) and (a.nq, a.nu, a.ngeom) == (b.nq, b.nu, b.ngeom)
+        world = lambda m: sorted((m.geom(g).name, tuple(np.round(m.geom_pos[g], 9)), tuple(np.round(m.geom_size[g], 9)))
+                                 for g in range(m.ngeom) if m.geom_bodyid[g] == 0)
+        same &= world(a) == world(b)
+        print(f"all-MATT compose == scene_{scene}.xml:", "PASS" if same else "FAIL")
+        ok_all &= same
+    return 0 if ok_all else 1
 
 
 def main(argv: list[str]) -> int:

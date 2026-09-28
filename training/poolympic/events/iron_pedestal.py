@@ -72,9 +72,13 @@ class HeatResult:
 
 class _Lane:
     def __init__(self, m, d, k: int, prefix: str, origin: np.ndarray, traits: Traits, rng: np.random.Generator,
-                 fall_z: float = FALL_Z):
+                 fall_z: float = FALL_Z, gait: tuple[float, float, float] | None = None, body: str = "matt"):
         self.k, self.prefix, self.origin, self.traits, self.rng = k, prefix, origin, traits, rng
         self.fall_z = fall_z          # per body: the same fraction of its standing pelvis height as MATT's 0.55 m
+        self.body = body
+        # gait clock (base Hz, Hz per m/s, yaw weight) of this lane's body; default = the process body's contract
+        self.gait = gait or (C.GAIT_HZ_BASE, C.GAIT_HZ_PER_MPS, C.GAIT_HZ_YAW_WEIGHT)
+        self.sess = None              # this lane's brain (make_lanes)
         self.ath = C.Athlete.bind(m, prefix)
         self.torso = m.body(prefix + "torso").id
         self.pelvis = m.body(prefix + "pelvis").id
@@ -108,13 +112,21 @@ class _Lane:
 
     def control(self, sess, d, cmd=None):
         cmd = np.zeros(3) if cmd is None else np.asarray(cmd, float)
-        self.phase = C.advance_phase(self.phase, cmd)
+        self.phase = self.advance_phase(cmd)
         obs = C.build_obs(self.ath, d.qpos, d.qvel, cmd, self.phase, self.last)
         if self.traits.obs_noise > 0:
             obs = (obs + self.rng.uniform(-1, 1, C.OBS_DIM) * self.noise).astype(np.float32)
         ctrl, act = sess.run(None, {"obs": obs[None]})
         self.ctrl_prev, self.ctrl_now = self.ctrl_now, ctrl[0].astype(np.float64)
         self.last = act[0].astype(np.float64)
+
+    def advance_phase(self, cmd: np.ndarray) -> float:
+        """contract.advance_phase with this lane's body clock (same arithmetic: MATT lanes are bit-identical)."""
+        if float(np.linalg.norm(cmd)) < C.PHASE_CMD_THRESHOLD:
+            return 0.0
+        base, per_mps, yaw_w = self.gait
+        hz = base + per_mps * (math.hypot(float(cmd[0]), float(cmd[1])) + yaw_w * abs(float(cmd[2])))
+        return (self.phase + hz * C.DECIMATION * 0.005) % 1.0
 
     def write_ctrl(self, d, substep_in_tick: int):
         # ctrl computed at a tick reaches the actuators `latency` substeps later (mjlab delay semantics)
@@ -137,6 +149,29 @@ class _Lane:
         return None
 
 
+def body_contract(body: str) -> dict:
+    from .. import bodies
+    return json.loads(bodies.BODIES[body].contract_json.read_text())
+
+
+def make_lanes(m, d, layout: dict, seed: int, traits: list[Traits], onnx, brains: dict | None = None) -> list["_Lane"]:
+    """The 8 lanes of an event scene, each with its own body (layout lane "body", default matt), brain (brains[body],
+    default `onnx`), default pose, fall line and gait clock; reset to the default pose."""
+    lanes, sessions = [], {}
+    for i, l in enumerate(layout["lanes"]):
+        body = l.get("body", "matt")
+        ct = body_contract(body)
+        ln = _Lane(m, d, l["lane"], l["prefix"], np.asarray(l["origin"], float), traits[i],
+                   np.random.default_rng([seed, 1000 + i]), fall_z=body_fall_z(body),
+                   gait=(ct["gait_hz_base"], ct["gait_hz_per_mps"], ct["gait_hz_yaw_weight"]), body=body)
+        ln.reset(m, d, ct["default_joint_qpos"])
+        if body not in sessions:
+            sessions[body] = ort.InferenceSession(str((brains or {}).get(body, onnx)), providers=["CPUExecutionProvider"])
+        ln.sess = sessions[body]
+        lanes.append(ln)
+    return lanes
+
+
 def body_fall_z(body: str) -> float:
     """MATT's 0.55 m pelvis fall line at the same fraction of the body's standing pelvis height."""
     from .. import bodies
@@ -151,31 +186,23 @@ def run_heat(onnx: Path, seed: int, traits: list[Traits] | None = None, max_s: f
              scene: Path = SCENE, layout_path: Path = LAYOUT, brains: dict[str, Path] | None = None) -> HeatResult:
     """brains: body -> ONNX for multi-body heats (layout lanes carry "body", tools/compose_mixed.py); default: `onnx`
     for every lane."""
-    from .. import bodies
     m = mujoco.MjModel.from_xml_path(str(scene))
     d = mujoco.MjData(m)
     layout = json.loads(Path(layout_path).read_text())
     lane_body = [l.get("body", "matt") for l in layout["lanes"]]
-    defaults = {b: json.loads(bodies.BODIES[b].contract_json.read_text())["default_joint_qpos"] for b in set(lane_body)}
     rng = np.random.default_rng(seed)
     traits = traits or [Traits.sample(rng) for _ in range(len(layout["lanes"]))]
-    lanes = [_Lane(m, d, l["lane"], l["prefix"], np.asarray(l["origin"], float), traits[i],
-                   np.random.default_rng([seed, 1000 + i]), fall_z=body_fall_z(lane_body[i]))
-             for i, l in enumerate(layout["lanes"])]
-    for ln, b in zip(lanes, lane_body):
-        ln.reset(m, d, defaults[b])
+    lanes = make_lanes(m, d, layout, seed, traits, onnx, brains)
     mujoco.mj_forward(m, d)
-    sessions = {b: ort.InferenceSession(str((brains or {}).get(b, onnx)), providers=["CPUExecutionProvider"])
-                for b in set(lane_body)}
     dt_tick = m.opt.timestep * C.DECIMATION
     n_cubes = layout["n_cubes"]
     next_cube, rnd = 0, 0
     tick, t = 0, 0.0
     next_round = COUNTDOWN_S
     while t < max_s and sum(ln.out_at is None for ln in lanes) > 1:
-        for ln, b in zip(lanes, lane_body):
+        for ln in lanes:
             if ln.out_at is None:
-                ln.control(sessions[b], d)
+                ln.control(ln.sess, d)
         if t >= next_round:                      # gust round: same magnitude, own direction, cube every other round
             dv = GUST_START + GUST_STEP * rnd
             for ln in lanes:

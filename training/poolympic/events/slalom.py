@@ -14,6 +14,7 @@ out. Rank by time + penalties.
 from __future__ import annotations
 
 import json
+from pathlib import Path
 import math
 from dataclasses import asdict, dataclass, field
 
@@ -22,7 +23,7 @@ import numpy as np
 import onnxruntime as ort
 
 from .. import contract as C
-from .iron_pedestal import Traits, _Lane
+from .iron_pedestal import Traits, _Lane, make_lanes
 
 SCENE = C.ROOT / "assets" / "scene_slalom8.xml"
 LAYOUT = C.ROOT / "assets" / "slalom8_layout.json"
@@ -83,24 +84,19 @@ class SlalomResult:
     lanes: list[SlalomLane] = field(default_factory=list)
 
 
-def run_heat(onnx, seed: int, traits: list[Traits] | None = None, lines: list[float] | None = None, vx: float = VX) -> SlalomResult:
-    m = mujoco.MjModel.from_xml_path(str(SCENE))
+def run_heat(onnx, seed: int, traits: list[Traits] | None = None, lines: list[float] | None = None, vx: float = VX, scene=None, layout_path=None, brains: dict | None = None) -> SlalomResult:
+    m = mujoco.MjModel.from_xml_path(str(scene or SCENE))
     d = mujoco.MjData(m)
-    layout = json.loads(LAYOUT.read_text())
-    defaults = json.loads(C.CONTRACT_JSON.read_text())["default_joint_qpos"]
+    layout = json.loads(Path(layout_path or LAYOUT).read_text())
     rng = np.random.default_rng(seed)
     traits = traits or [Traits.sample(rng) for _ in range(len(layout["lanes"]))]
-    lanes = [_Lane(m, d, l["lane"], l["prefix"], np.asarray(l["origin"], float), traits[i], np.random.default_rng([seed, 1000 + i]))
-             for i, l in enumerate(layout["lanes"])]
+    lanes = make_lanes(m, d, layout, seed, traits, onnx, brains)
     poles = [{m.geom(f"pole{ln.k}_{g}").id for g in range(N_POLES)} for ln in lanes]
     for ln in lanes:        # the course constants must match the physical poles
         for g in range(N_POLES):
             p = np.asarray(m.geom_pos[m.geom(f"pole{ln.k}_{g}").id]) - ln.origin
             assert abs(p[0] - (POLE_X0 + g * POLE_DX)) < 1e-6 and abs(p[1]) < 1e-6, (ln.k, g, p)
-    for ln in lanes:
-        ln.reset(m, d, defaults)
     mujoco.mj_forward(m, d)
-    sess = ort.InferenceSession(str(onnx), providers=["CPUExecutionProvider"])
     lines = lines or [runner_line(seed, i) for i in range(len(lanes))]
     res = [SlalomLane(ln.k, ln.traits, lines[i]) for i, ln in enumerate(lanes)]
     next_pole = [0] * len(lanes)
@@ -111,9 +107,9 @@ def run_heat(onnx, seed: int, traits: list[Traits] | None = None, lines: list[fl
         for i, ln in enumerate(lanes):
             ra = ln.ath.root_qposadr
             if res[i].status:
-                ln.control(sess, d, np.zeros(3))
+                ln.control(ln.sess, d, np.zeros(3))
             else:
-                ln.control(sess, d, slalom_command(d.qpos[ra + 3: ra + 7], d.qpos[ra] - ln.origin[0],
+                ln.control(ln.sess, d, slalom_command(d.qpos[ra + 3: ra + 7], d.qpos[ra] - ln.origin[0],
                                                    d.qpos[ra + 1] - ln.origin[1], lines[i], vx))
         for s in range(C.DECIMATION):
             for ln in lanes:

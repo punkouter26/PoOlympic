@@ -15,6 +15,7 @@ Rank by finish time + penalties; fallers / unfinished after them.
 from __future__ import annotations
 
 import json
+from pathlib import Path
 import math
 from dataclasses import asdict, dataclass, field
 
@@ -23,7 +24,7 @@ import numpy as np
 import onnxruntime as ort
 
 from .. import contract as C
-from .iron_pedestal import Traits, _Lane
+from .iron_pedestal import Traits, _Lane, make_lanes
 
 SCENE = C.ROOT / "assets" / "scene_crab8.xml"
 LAYOUT = C.ROOT / "assets" / "crab8_layout.json"
@@ -70,20 +71,15 @@ class CrabResult:
     lanes: list[CrabLane] = field(default_factory=list)
 
 
-def run_heat(onnx, seed: int, traits: list[Traits] | None = None, vy: float = VY) -> CrabResult:
-    m = mujoco.MjModel.from_xml_path(str(SCENE))
+def run_heat(onnx, seed: int, traits: list[Traits] | None = None, vy: float = VY, scene=None, layout_path=None, brains: dict | None = None) -> CrabResult:
+    m = mujoco.MjModel.from_xml_path(str(scene or SCENE))
     d = mujoco.MjData(m)
-    layout = json.loads(LAYOUT.read_text())
-    defaults = json.loads(C.CONTRACT_JSON.read_text())["default_joint_qpos"]
+    layout = json.loads(Path(layout_path or LAYOUT).read_text())
     rng = np.random.default_rng(seed)
     traits = traits or [Traits.sample(rng) for _ in range(len(layout["lanes"]))]
-    lanes = [_Lane(m, d, l["lane"], l["prefix"], np.asarray(l["origin"], float), traits[i], np.random.default_rng([seed, 1000 + i]))
-             for i, l in enumerate(layout["lanes"])]
-    for ln in lanes:
-        ln.reset(m, d, defaults)
+    lanes = make_lanes(m, d, layout, seed, traits, onnx, brains)
     mujoco.mj_forward(m, d)
     rails = {m.geom(p["name"]).id for p in layout["props"]}
-    sess = ort.InferenceSession(str(onnx), providers=["CPUExecutionProvider"])
     res = [CrabLane(ln.k, ln.traits) for ln in lanes]
     crossed = [False] * len(lanes)
     touching = [False] * len(lanes)
@@ -93,9 +89,9 @@ def run_heat(onnx, seed: int, traits: list[Traits] | None = None, vy: float = VY
         for i, ln in enumerate(lanes):
             ra = ln.ath.root_qposadr
             if res[i].status:
-                ln.control(sess, d, np.zeros(3))
+                ln.control(ln.sess, d, np.zeros(3))
             else:
-                ln.control(sess, d, crab_command(d.qpos[ra + 3: ra + 7], d.qpos[ra] - ln.origin[0], vy))
+                ln.control(ln.sess, d, crab_command(d.qpos[ra + 3: ra + 7], d.qpos[ra] - ln.origin[0], vy))
         for s in range(C.DECIMATION):
             for ln in lanes:
                 ln.write_ctrl(d, s)

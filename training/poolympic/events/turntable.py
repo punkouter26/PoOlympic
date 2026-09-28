@@ -11,6 +11,7 @@ Rank by score; fallers / DQs / unfinished after them. Traits as in the Iron Pede
 from __future__ import annotations
 
 import json
+from pathlib import Path
 import math
 from dataclasses import asdict, dataclass, field
 
@@ -19,7 +20,7 @@ import numpy as np
 import onnxruntime as ort
 
 from .. import contract as C
-from .iron_pedestal import Traits, _Lane
+from .iron_pedestal import Traits, _Lane, make_lanes
 
 SCENE = C.ROOT / "assets" / "scene_turntable8.xml"
 LAYOUT = C.ROOT / "assets" / "turntable8_layout.json"
@@ -55,19 +56,14 @@ def heat_direction(seed: int) -> int:
     return 1 if np.random.default_rng([seed, 3000]).uniform() < 0.5 else -1
 
 
-def run_heat(onnx, seed: int, traits: list[Traits] | None = None) -> SpinResult:
-    m = mujoco.MjModel.from_xml_path(str(SCENE))
+def run_heat(onnx, seed: int, traits: list[Traits] | None = None, scene=None, layout_path=None, brains: dict | None = None) -> SpinResult:
+    m = mujoco.MjModel.from_xml_path(str(scene or SCENE))
     d = mujoco.MjData(m)
-    layout = json.loads(LAYOUT.read_text())
-    defaults = json.loads(C.CONTRACT_JSON.read_text())["default_joint_qpos"]
+    layout = json.loads(Path(layout_path or LAYOUT).read_text())
     rng = np.random.default_rng(seed)
     traits = traits or [Traits.sample(rng) for _ in range(len(layout["lanes"]))]
-    lanes = [_Lane(m, d, l["lane"], l["prefix"], np.asarray(l["origin"], float), traits[i], np.random.default_rng([seed, 1000 + i]))
-             for i, l in enumerate(layout["lanes"])]
-    for ln in lanes:
-        ln.reset(m, d, defaults)
+    lanes = make_lanes(m, d, layout, seed, traits, onnx, brains)
     mujoco.mj_forward(m, d)
-    sess = ort.InferenceSession(str(onnx), providers=["CPUExecutionProvider"])
     direction = heat_direction(seed)
     res = [SpinLane(ln.k, ln.traits) for ln in lanes]
     turned = [0.0] * len(lanes)
@@ -79,7 +75,7 @@ def run_heat(onnx, seed: int, traits: list[Traits] | None = None) -> SpinResult:
         t = tick * dt
         for i, ln in enumerate(lanes):
             spinning = t >= START_S and not res[i].status
-            ln.control(sess, d, np.array([0.0, 0.0, direction * WZ]) if spinning else np.zeros(3))
+            ln.control(ln.sess, d, np.array([0.0, 0.0, direction * WZ]) if spinning else np.zeros(3))
         for s in range(C.DECIMATION):
             for ln in lanes:
                 ln.write_ctrl(d, s)
