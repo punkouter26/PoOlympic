@@ -1,0 +1,378 @@
+{
+ "schema": 1,
+ "brain": "r2_v4_it600.onnx",
+ "onnx_sha256": "a0b43c570397bb55164dc88fdea63dccfa53443601d1e3217a1fb03851963dd7",
+ "fingerprint_sha256": "bfd287b0ce43147ad430d90787f724d9ef7a25a4cc281730278aa3ed0bb024e8",
+ "seconds": 5.0,
+ "scene": "scene_meet8.xml",
+ "lanes": [
+  {
+   "lane": 0,
+   "command": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "disturbances": [
+    {
+     "tick": 40,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      0.3,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 100,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      0.0654,
+      0.2186,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "c8dev_L0"
+  },
+  {
+   "lane": 1,
+   "command": [
+    -1.5,
+    0.0,
+    0.0
+   ],
+   "disturbances": [
+    {
+     "tick": 45,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      -0.3,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 105,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      -2.7292,
+      -0.4797,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "c8dev_L1"
+  },
+  {
+   "lane": 2,
+   "command": [
+    0.0,
+    0.75,
+    0.0
+   ],
+   "disturbances": [
+    {
+     "tick": 50,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      0.3,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 110,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      -0.0143,
+      1.6773,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "c8dev_L2"
+  },
+  {
+   "lane": 3,
+   "command": [
+    0.0,
+    -0.75,
+    0.0
+   ],
+   "disturbances": [
+    {
+     "tick": 55,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      -0.3,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 115,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      0.0935,
+      -1.52,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "c8dev_L3"
+  },
+  {
+   "lane": 4,
+   "command": [
+    0.0,
+    0.0,
+    1.5
+   ],
+   "disturbances": [
+    {
+     "tick": 60,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      0.3,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 120,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      0.0687,
+      0.271,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "c8dev_L4"
+  },
+  {
+   "lane": 5,
+   "command": [
+    0.0,
+    0.0,
+    -1.5
+   ],
+   "disturbances": [
+    {
+     "tick": 65,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      -0.3,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 125,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      0.1096,
+      0.035,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "c8dev_L5"
+  },
+  {
+   "lane": 6,
+   "command": [
+    3.5,
+    0.0,
+    0.0
+   ],
+   "disturbances": [
+    {
+     "tick": 70,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      0.3,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 130,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      6.9736,
+      0.589,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "c8dev_L6"
+  },
+  {
+   "lane": 7,
+   "command": [
+    1.0,
+    0.0,
+    1.0
+   ],
+   "disturbances": [
+    {
+     "tick": 75,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      -0.3,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 135,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      -0.2587,
+      1.8405,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "c8dev_L7"
+  }
+ ]
+}
