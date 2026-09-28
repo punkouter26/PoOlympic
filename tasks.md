@@ -160,7 +160,7 @@ Skill gaps: events marked **S** need behaviours the current contract cannot comm
 
 Order of work (follows brain availability): 1 (8-lane) → 8, 19, 13 (rung1) → 9, 10, 11, 12, 22 (after C7/C8) → 5 → contract-v3 stance skills (2, 3, 4, 6, 7) → R3 (27) → R4 (14, 15, 16, 17, 26) → R5 (18, 20, 21) → R8 (23, 24, 25, 28, 29, 30). Per-event: MJCF props via `build_mjcf.py`, CPU scoring in `poolympic/events/`, Unity controller + `EventScenes.Build*`, 1-biped then 8-lane, parity spot-check.
 
-## Phase Z — ZOMBIE: second athlete body, trained from scratch (added 2026-09-28, awaiting "Approved")
+## Phase Z — ZOMBIE: second athlete body, trained from scratch (added 2026-09-28, **Approved** 2026-09-28)
 
 User decisions (2026-09-28): own body at **zombie size (1.1 m)**; movement personality from **style rewards** (no mocap);
 **"weaker but relentless"** (≈70 % of MATT's size-scaled torque, slower, very stable); brains **Rung 0 + Rung 2** (all 9
@@ -171,15 +171,15 @@ apply: TensorBoard + MuJoCo viewer for every run, close Unity during 30 min+ run
   misalignment fixed, bundled T-pose baked as rest with legs straightened (the file's T-pose kept a 36° knee crouch),
   twist/share/face bones merged into their limbs, 22 bones renamed to Mixamo names, metres, glTF axes. 25k verts, all
   weighted, 1.135 m, L/R skeleton symmetric to 5 mm. *Accept: renders as a clean straight-legged T-pose (done).*
-- [ ] **Z2 Body pipeline per athlete** — parametrise extract_skeleton / build_mjcf / contract / tasks / exporters / Unity
+- [x] **Z2 Body pipeline per athlete** — parametrise extract_skeleton / build_mjcf / contract / tasks / exporters / Unity
   by body id (`matt` | `zombie`) with MATT's outputs byte-identical (G0/G2–G6 unchanged). Zombie specifics: no finger
   bones (forearm capsule ends at the hand), de Leva masses scaled to the size (~22 kg), torques scaled for dynamic
   similarity × 0.7, joint speed limits human-like, full self-collision (only parent/child + touching thigh pair excluded).
   *Accept: zombie.xml / scene_zombie.xml compile, mass/inertia report, default standing pose settles (zero brain falls
   naturally, 0 penetrations), Python fingerprint written; MATT artefacts unchanged.*
-- [ ] **Z3 Size-scaled rules** — Froude scaling (L ≈ 0.62 of MATT's leg length): fall height, command envelope (top speed
+- [x] **Z3 Size-scaled rules** — Froude scaling (L ≈ 0.62 of MATT's leg length): fall height, command envelope (top speed
   ≈ 0.8 × MATT's), gait clock, push/gust and cube magnitudes, G1 drill distances/times. One table in DESIGN.md.
-- [ ] **Z4 Style rewards** — hunched trunk lean, arms held forward, wide stance, low foot clearance (shuffle), lateral
+- [x] **Z4 Style rewards** (reward terms in; tuning after the first runs) — hunched trunk lean, arms held forward, wide stance, low foot clearance (shuffle), lateral
   lurch; tuned so the gait is visibly different from MATT's at the same command without failing G1.
 - [ ] **Z5 Rung 0 zombie** — train (TensorBoard + viewer), G1 rung0 (scaled drills). *Accept: G1 10/10.*
 - [ ] **Z6 Rung 2 zombie** — curriculum (walk → run → omni + yaw) with the Rung 2 fixes (symmetry + mirror loss,
