@@ -297,13 +297,15 @@ def rung1_verdict(results: list[DashResult]) -> dict:
 #              1.5 s transition) RMS |v_xy − cmd| < 0.2 m/s and RMS |wz − cmd| < 0.3 rad/s.
 #              Envelope (independent extremes like vx 4 + wz 2.5 are not physical): sprint/back vx ∈ [−1.5, 4] with
 #              |wz| ≤ 0.5 · crab vx ∈ ±0.5, vy ∈ ±1 · turn vx ∈ [0, 1.5], wz ∈ ±2 · stop (all zero)
-#   turntable  from standing, cmd wz = ±2.2 (sign by seed): 360° in < 3 s, pelvis drift < 0.3 m
+#   turntable  from standing, cmd wz = ±2.5 (max trained rate; sign by seed): 360° in < 3 s, pelvis drift < 0.3 m
 #   brake      5 s at 3 m/s (lane keeping), then zero command: stopping distance < 2 m, no fall within 4 s
 #   backward   20 m at −1.5 m/s (lane keeping), 0.3 m/s shoves, no fall
 # ---------------------------------------------------------------------------------------------------------------
 RUNG2_LIN_TOL = 0.2
 RUNG2_YAW_TOL = 0.3
-TURNTABLE_WZ = 2.2
+# DESIGN §1 lists wz in [-2, 2] AND "360 deg < 3 s", which 2 rad/s cannot meet (3.14 s at best). Event 12 is scored
+# on rotational speed, so the drill commands the maximum trained yaw rate (Rung 2 curriculum: +-2.5). Bars unchanged.
+TURNTABLE_WZ = 2.5
 TURNTABLE_MAX_S = 3.0
 TURNTABLE_MAX_DRIFT = 0.3
 BRAKE_MAX_M = 2.0

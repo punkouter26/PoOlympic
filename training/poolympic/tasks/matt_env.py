@@ -355,3 +355,28 @@ def matt_rung2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
         last = RUNG2_STAGES[-1]
         cmd.ranges.lin_vel_x, cmd.ranges.lin_vel_y, cmd.ranges.ang_vel_z = last["lin_vel_x"], last["lin_vel_y"], last["ang_vel_z"]
     return cfg
+
+
+def matt_pedestal_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """Iron Pedestal fine-tune (Event 1 heat): Rung 0 + stepping off the 1 m x 1 m pedestal ends the episode, feet-centred
+    reward, harder and more frequent gusts (the heat escalates 0.3 → ~1 m/s every 3 s). Warm start: r0_v2 it 1000."""
+    cfg = matt_rung0_env_cfg(play=play)
+    cfg.terminations["off_pedestal"] = TerminationTermCfg(func=mdp.feet_off_pedestal, params={"half": 0.5})
+    cfg.rewards["feet_centred"] = RewardTermCfg(func=mdp.feet_centred, weight=1.0, params={"std": 0.3})
+    cfg.events["push_robot"].params["velocity_range"] = {"x": (-0.8, 0.8), "y": (-0.8, 0.8)}
+    cfg.events["push_robot"].interval_range_s = (2.0, 4.0)
+    return cfg
+
+
+def matt_rung2_sym_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """Rung 2 fine-tune with left/right symmetry augmentation (r2_v3): r2_v2 rewards, full command envelope from the
+    start (the curriculum already ran in r2_v2). Warm start: r2_v2 it 1500. Runner: symmetry.SymmetricRunner."""
+    cfg = matt_rung2_env_cfg(play=play)
+    last = RUNG2_STAGES[-1]
+    cfg.curriculum = {
+        "command_vel": CurriculumTermCfg(func=vel_mdp.commands_vel, params={
+            "command_name": "athlete", "velocity_stages": [dict(last, step=0)]}),
+    }
+    cmd = cfg.commands["athlete"]
+    cmd.ranges.lin_vel_x, cmd.ranges.lin_vel_y, cmd.ranges.ang_vel_z = last["lin_vel_x"], last["lin_vel_y"], last["ang_vel_z"]
+    return cfg

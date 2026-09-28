@@ -1,6 +1,7 @@
 """Unattended checkpoint gate: wait for model_<it>.pt of a run, export it, run G1 (CPU MuJoCo) and append a summary line.
 
-Usage: uv run python tools/watch_eval.py <run_dir> <name_prefix> --rung 2 [--every 250] [--last 1999] [--seeds 10]
+Usage: uv run python tools/watch_eval.py <run_dir> <name_prefix> --rung 2 [--every 300] [--last 1999] [--seeds 10] [--its 500,1000]
+(checkpoints exist only at multiples of the save interval, 100, plus the last)
 Writes parity/watch_<name_prefix>.jsonl (one JSON object per checkpoint).
 """
 
@@ -45,9 +46,13 @@ def main() -> int:
     ap.add_argument("--every", type=int, default=250)
     ap.add_argument("--last", type=int, default=1999)
     ap.add_argument("--seeds", type=int, default=10)
+    ap.add_argument("--its", type=str, default="", help="explicit comma list of iterations (overrides --every)")
     a = ap.parse_args()
+    SAVE_INTERVAL = 100  # matt_ppo_cfg save_interval: only multiples of 100 (and the last) exist
+    if not a.its and a.every % SAVE_INTERVAL:
+        raise SystemExit(f"--every must be a multiple of {SAVE_INTERVAL} (checkpoint save interval)")
     out = ROOT.parent / "parity" / f"watch_{a.prefix}.jsonl"
-    its = list(range(a.every, a.last, a.every)) + [a.last]
+    its = [int(x) for x in a.its.split(",")] if a.its else list(range(a.every, a.last, a.every)) + [a.last]
     for it in its:
         ckpt = a.run / f"model_{it}.pt"
         while not ckpt.exists():

@@ -274,3 +274,30 @@ def heading_yaw(qpos_quat: torch.Tensor) -> torch.Tensor:
     fx = 1.0 - 2.0 * (y * y + z * z)
     fy = 2.0 * (x * y + w * z)
     return torch.atan2(fy, fx)
+
+
+# ------------------------------------------------------------------ Iron Pedestal fine-tune (Event 1)
+FOOT_GEOMS = ("foot_l_geom0", "toe_l_geom0", "foot_r_geom0", "toe_r_geom0")
+
+
+def _foot_geom_xy(env) -> torch.Tensor:
+    """World xy of the 4 foot/toe box centres relative to the env origin (= pedestal centre). (num_envs, 4, 2)"""
+    ent = env.scene["robot"]
+    ids = getattr(env, "_poolympic_foot_geom_ids", None)
+    if ids is None:
+        local = ent.find_geoms(FOOT_GEOMS, preserve_order=True)[0]
+        ids = torch.as_tensor([ent.indexing.geom_ids[i] for i in local], device=env.device)
+        env._poolympic_foot_geom_ids = ids
+    xy = ent.data.data.geom_xpos[:, ids, :2]
+    return xy - env.scene.env_origins[:, None, :2]
+
+
+def feet_off_pedestal(env, half: float) -> torch.Tensor:
+    """Termination: a foot/toe box centre left the square pedestal (|x| or |y| > half) — on the real 1 m x 1 m block
+    more than half the foot would hang over the edge (Unity AthleteJudge: 'STEPPED OFF')."""
+    return (_foot_geom_xy(env).abs() > half).any(-1).any(-1)
+
+
+def feet_centred(env, std: float) -> torch.Tensor:
+    """Reward: feet close to the pedestal centre (mean squared foot-centre distance)."""
+    return torch.exp(-(_foot_geom_xy(env) ** 2).sum(-1).mean(-1) / std**2)
