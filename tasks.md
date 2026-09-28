@@ -108,7 +108,8 @@ Rules: every surface an athlete can touch is a MuJoCo geom generated into the MJ
   - athlete traits (contract `trait_ranges` / `obs_noise`): strength ×[0.85, 1.15] on force limits, latency 0–4 substeps (mjlab delay semantics), sensor noise ×[0, 1] of training noise — `PolicyRunner.SetTraits`, nominal = parity (EditMode 18/18)
   - rules (Python `poolympic/events/iron_pedestal.py` ≡ Unity `IronPedestalHeat`): 3 s rounds, gust 0.3 m/s + 0.05/round (own seeded direction per lane), cube every 3rd round, out = fall rule / stepped off (`AthleteJudge`), ranking by elimination time; tuned on CPU: heats 27–41 s (mean 35), first out ~17–26 s
   - Unity `Event_IronPedestal_Heat.unity` (*Build Event 1 — Iron Pedestal Heat*), `HeatHud` standings (status, out time, traits), winner banner; hub Event 1 ▸ opens the heat. Play-through: L1 wins after 31.6 s, 11 rounds (`parity/d4/heat_*.png`)
-  - [ ] odds from traits (betting layer) · Iron Pedestal fine-tune for edge margin (optional)
+  - [ ] odds from traits (betting layer)
+  - [x] Iron Pedestal fine-tune tried twice (ped_v1 fixed ±0.8 m/s gusts; ped_v2 adaptive gusts) — neither beat r0_v2_it1000 on identical heats (28.2 s mean survival); Event 1 keeps the Rung 0 brain (see log)
 - [ ] **D5 remaining Sprint Series events** 5 Gust Gauntlet · 8 30m Dash · 19 Terminal Velocity (rung1) · 9, 10, 11, 12, 22 (rung2, after C8) — then the rest of the catalogue: **Phase E** below
 - [ ] **D6** full suite re-validation + perf pass
 
