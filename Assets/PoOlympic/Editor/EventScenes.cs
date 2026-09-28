@@ -19,23 +19,38 @@ namespace PoOlympic.Editor
         public const string PedestalSource = "training/assets/scene_pedestal.xml";
         public const string IronMaterial = "Assets/PoOlympic/Materials/IronPedestal.mat";
         public const string DefaultRung0Brain = "r0_v2_it1000.onnx";
+        public const int AthleteLane = 3;
         public const string StadiumAsset = "Assets/PoOlympic/Art/Stadium/Stadium.glb";
+
+        public const string VenuesJson = "Assets/PoOlympic/Art/Stadium/venues.json";
+
+        /// <summary>(position, yaw°) of one competitor spot from venues.json (MuJoCo axes; written by build_venues.py).</summary>
+        public static (Vector3 posMj, float yawDeg) VenueLane(int eventNum, int lane)
+        {
+            var root = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(VenuesJson));
+            var l = root["events"][$"{eventNum:00}"]["lanes"][lane];
+            var p = l["pos"];
+            return (new Vector3((float)p[0], (float)p[1], (float)p[2]), (float)l["yaw_deg"]);
+        }
 
         /// <summary>
         /// Render-only stadium (SourceArt/Stadium/stadium.blend → Stadium.glb, authored in MuJoCo axes). glTF→glTFast maps
-        /// Blender (x, y, z) to Unity (−x, z, −y); a 180° yaw makes it (x, z, y) = the MuJoCo plug-in's mapping. The root is
-        /// then shifted so the named venue anchor (VENUE_*) sits on the MuJoCo origin with the infield at `groundY`.
+        /// Blender (x, y, z) to Unity (−x, z, −y); a 180° yaw makes it (x, z, y) = the MuJoCo plug-in's mapping. It is then
+        /// turned about the vertical by the lane's yaw (MuJoCo yaw ψ ≙ Unity Euler(0, −ψ, 0), so undoing ψ is Euler(0, +ψ, 0))
+        /// and shifted so the competitor spot E##_L# lands on the MuJoCo origin: the athlete (default pose facing +x) then
+        /// stands exactly on that spot facing the event direction. Spot height = surface under the athlete (pedestal top).
         /// </summary>
-        public static GameObject PlaceStadium(Scene scene, string venue, float groundY)
+        public static GameObject PlaceStadium(Scene scene, int eventNum, int lane)
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(StadiumAsset) ?? throw new FileNotFoundException(StadiumAsset);
             var st = (GameObject)PrefabUtility.InstantiatePrefab(prefab, scene);
             st.name = "Stadium";
-            st.transform.SetPositionAndRotation(Vector3.zero, Quaternion.Euler(0f, 180f, 0f));
-            var anchor = Array.Find(st.GetComponentsInChildren<Transform>(true), t => t.name == venue)
-                         ?? throw new MissingReferenceException($"venue anchor {venue} not in {StadiumAsset}");
-            var p = anchor.position;
-            st.transform.position = new Vector3(-p.x, groundY, -p.z);
+            var (_, yaw) = VenueLane(eventNum, lane);
+            st.transform.SetPositionAndRotation(Vector3.zero, Quaternion.Euler(0f, yaw, 0f) * Quaternion.Euler(0f, 180f, 0f));
+            var name = $"E{eventNum:00}_L{lane}";
+            var anchor = Array.Find(st.GetComponentsInChildren<Transform>(true), t => t.name == name)
+                         ?? throw new MissingReferenceException($"lane anchor {name} not in {StadiumAsset}");
+            st.transform.position = -anchor.position;
             foreach (var c in st.GetComponentsInChildren<Component>(true))
                 if (c is Collider || c is Rigidbody) throw new InvalidOperationException($"stadium must be render-only: {c.GetType().Name} on {c.name}");
             return st;
@@ -77,7 +92,9 @@ namespace PoOlympic.Editor
             Copy("Sun");
             EditorSceneManager.CloseScene(src, true);
             SceneManager.SetActiveScene(scene);
-            PlaceStadium(scene, "VENUE_CentreStage", -0.5f); // the MuJoCo ground sits at z = -0.5 in this scene
+            // Event 1 venue: 8 pedestals; this single athlete takes lane 4 (E01_L3). The stadium's pedestal there is the
+            // visual of the MuJoCo pedestal geom (same 1 x 1 x 0.5 m box, top at z = 0); the other 7 wait for D4.
+            PlaceStadium(scene, 1, AthleteLane);
 
             // MuJoCo geom renderers: only the pedestal and the pool cubes are shown
             var cubeMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/PoOlympic/Materials/PoolCube.mat");
@@ -86,7 +103,7 @@ namespace PoOlympic.Editor
             {
                 if (rend.GetComponent<MjGeom>() == null) continue;
                 var n = rend.gameObject.name;
-                rend.enabled = n == "pedestal" || n.StartsWith("cube");
+                rend.enabled = n.StartsWith("cube");   // the pedestal is drawn by the stadium (identical box)
                 if (n == "pedestal") rend.sharedMaterial = iron;
                 else if (n.StartsWith("cube") && cubeMat != null) rend.sharedMaterial = cubeMat;
             }
@@ -119,7 +136,7 @@ namespace PoOlympic.Editor
 
             var bc = cam.GetComponent<BroadcastCamera>();
             bc.target = Array.Find(physics.GetComponentsInChildren<MjBody>(true), b => b.name == "pelvis");
-            bc.offset = new Vector3(1.6f, 0.6f, -4.6f); // three-quarter view: the pedestal edges read on camera
+            bc.offset = new Vector3(4.4f, 0.9f, -2.2f); // front three-quarter: the athlete faces +x, the empty pedestals run along +z
 
             EditorSceneManager.SaveScene(scene, IronPedestalScene);
             var (p, rot) = binder.BindError();
