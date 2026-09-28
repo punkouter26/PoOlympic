@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PoOlympic Events</title>
+<style>
+:root {
+  --bg: #f6f7fb; --card: #ffffff; --ink: #151a26; --muted: #5d6679; --line: #e2e6ef;
+  --gold: #b88a00; --gold-bg: #fff4cc; --ok: #13795b; --ok-bg: #dcf5ea; --todo: #8a5a00; --todo-bg: #fdf0d8;
+  --chip: #eef1f7; --accent: #3056d3;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c1220; --card: #141d30; --ink: #e8ecf4; --muted: #96a2ba; --line: #22304a;
+    --gold: #ffd84a; --gold-bg: #3a3313; --ok: #5fd8a8; --ok-bg: #103a2c; --todo: #f2b451; --todo-bg: #3a2b10;
+    --chip: #1c2740; --accent: #8fa8ff;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0c1220; --card: #141d30; --ink: #e8ecf4; --muted: #96a2ba; --line: #22304a;
+  --gold: #ffd84a; --gold-bg: #3a3313; --ok: #5fd8a8; --ok-bg: #103a2c; --todo: #f2b451; --todo-bg: #3a2b10;
+  --chip: #1c2740; --accent: #8fa8ff;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Inter, sans-serif; }
+main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; }
+h1 { font-size: 2.1rem; margin: 0 0 4px; letter-spacing: .02em; }
+h1 span { color: var(--gold); }
+h2 { font-size: 1.25rem; margin: 40px 0 12px; }
+h3 { margin: 0; font-size: 1.08rem; }
+p { margin: 0 0 10px; }
+.lead { color: var(--muted); margin-bottom: 20px; }
+.stats { display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0; }
+.stat { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; min-width: 140px; }
+.stat b { display: block; font-size: 1.6rem; }
+.stat small { color: var(--muted); }
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+.panel ul { margin: 6px 0 0; padding-left: 20px; }
+.panel li { margin: 4px 0; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 28px 0 4px; }
+.filters button { font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+.filters button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.phase-note { color: var(--muted); font-size: .92rem; margin-top: -6px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; }
+.card.playable { border-color: var(--ok); box-shadow: inset 4px 0 0 var(--ok); }
+.head { display: flex; align-items: baseline; gap: 10px; }
+.num { font-weight: 700; color: var(--gold); font-variant-numeric: tabular-nums; min-width: 2ch; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: .78rem; background: var(--chip); color: var(--muted); border-radius: 6px; padding: 2px 8px; }
+.status { font-size: .8rem; font-weight: 600; border-radius: 6px; padding: 2px 8px; }
+.status.ok { background: var(--ok-bg); color: var(--ok); }
+.status.todo { background: var(--todo-bg); color: var(--todo); }
+dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-size: .93rem; }
+dt { color: var(--muted); font-weight: 600; }
+dd { margin: 0; }
+.hidden { display: none; }
+.foot { color: var(--muted); font-size: .85rem; margin-top: 40px; }
+code { background: var(--chip); padding: 1px 5px; border-radius: 4px; font-size: .88em; }
+</style>
+</head>
+<body>
+<main>
+  <h1><span>PoOlympic</span> Events</h1>
+  <p class="lead">All 30 events of the programme: how each one is played, how it is won, and whether it is playable in Unity yet. Status as of 28 Sep 2026.</p>
+
+  <div class="stats">
+    <div class="stat"><b>30</b><small>events in the programme</small></div>
+    <div class="stat"><b>9</b><small>playable end to end in Unity</small></div>
+    <div class="stat"><b>30</b><small>venues built in the stadium</small></div>
+    <div class="stat"><b>8</b><small>athletes per heat (all MATT for now)</small></div>
+  </div>
+
+  <h2>How every heat works</h2>
+  <div class="panel">
+    <p>Each event is an 8-athlete heat played by trained AI "brains" in full MuJoCo physics (Earth gravity, realistic masses and joint torques). Nobody scripts the motion: the brain decides every joint action 50 times a second; the event only gives it a command (walk this fast, turn, stop) and applies the rules.</p>
+    <ul>
+      <li><b>Flow:</b> countdown → live → result banner → a new heat starts automatically (or press <em>New heat</em>; <em>Menu</em> returns to the main menu).</li>
+      <li><b>Athlete traits</b> (drawn fresh each heat, shown in the HUD): <em>strength</em> ×0.85–1.15 on muscle force, <em>latency</em> 0–4 physics steps of reaction delay, <em>sensor noise</em> 0–100 % of the training noise. Traits are why results differ between identical athletes, which drives the betting odds.</li>
+      <li><b>Fall rule</b> (all events): pelvis below 0.55 m, torso tilted more than 60°, or any body part other than a foot touching the ground.</li>
+      <li><b>Brains:</b> <em>Rung 0</em> = stand and recover from shoves; <em>Rung 2</em> = walk and run in any direction plus turning (up to ~3.8 m/s). Future rungs add stance skills, get-up, terrain, jumps and special skills.</li>
+      <li><b>Where to play:</b> Unity scene <code>MainMenu</code> (pick 8 athletes and an event), or the <code>Stadium_Hub</code> flyover.</li>
+    </ul>
+  </div>
+
+  <div class="filters" role="group" aria-label="Filter events">
+    <button type="button" data-filter="all" aria-pressed="true">All 30</button>
+    <button type="button" data-filter="playable" aria-pressed="false">Playable (9)</button>
+    <button type="button" data-filter="todo" aria-pressed="false">Not yet (21)</button>
+  </div>
+
+  <div id="events"></div>
+
+  <p class="foot">Source: <code>Assets/PoOlympic/Art/Stadium/events_catalog.json</code> (official rules), the event controllers in <code>Assets/PoOlympic/Runtime/</code> and their CPU mirrors in <code>training/poolympic/events/</code>. Build plan: <code>tasks.md</code> Phase E.</p>
+</main>
+
+<script>
+const PHASES = {
+  1: ["Stability & Balance", "Standing skills: holding balance, upper-body control."],
+  2: ["Fundamental Track & Gait", "Basic walking and running in every direction."],
+  3: ["Omnidirectional Agility", "Turning, weaving and running on changing ground."],
+  4: ["High Impact & Jumping", "Stairs, jumps, hurdles and top speed."],
+  5: ["Heavy Athletics & Transitional Motion", "Stopping, crawling, carrying and sitting."],
+  6: ["The Extreme Decathlon", "Precision, get-ups, acrobatics, ball skills and parkour."],
+};
+// play = how a heat is played in Unity, win = how it is won; need = what is missing before it can be built
+const EVENTS = [
+  {n:1, p:1, name:"The Iron Pedestal", skill:"Standing Still", brain:"Rung 0", rules:"8 runners start on narrow 1 m × 1 m pedestals. The last runner to maintain base equilibrium without stepping off wins.",
+   play:"Each athlete stands on its own 1 m × 1 m × 0.5 m iron pedestal. Every 3 s round each one gets a wind gust of the same strength (0.3 m/s, +0.05 per round) from its own random direction; every 3rd round a 2 kg cube drops from 1.5 m above its shoulder.",
+   win:"Last one standing. Falling or a foot off the pedestal = out; the rest are ranked by how long they lasted. Heats run ~27–41 s."},
+  {n:2, p:1, name:"Torso Archer", skill:"Upper-Body Tracking", brain:"Stance skills", rules:"Athletes plant feet and track rapid overhead flight targets with upper bodies. Scored on angular accuracy and zero foot slippage.",
+   need:"A stance-skills brain that can be commanded where to point the upper body (extended command set)."},
+  {n:3, p:1, name:"Deep Squat Endurance", skill:"Squatting", brain:"Stance skills", rules:"Rhythmic squat repetitions. Lowest torso drop combined with balance retention scores maximum points.",
+   need:"A stance-skills brain with a commanded pelvis height."},
+  {n:4, p:1, name:"Precision Javelin Reach", skill:"Arm Extension", brain:"Stance skills", rules:"Single-arm extension toward dynamic targets at maximum reach while keeping stance anchored.",
+   need:"A stance-skills brain with hand-target commands."},
+  {n:5, p:1, name:"The Gust Gauntlet", skill:"Push Shock", brain:"Rung 2", rules:"Athletes endure lateral wind bursts and sudden floor shakers. Scored on recovery time back to center.",
+   play:"Each athlete stands on its own spring-mounted 1.6 m shaker platform and keeps walking back to its spot. 10 rounds, 4 s apart: a sideways wind burst for everyone (same strength, 0.5 m/s rising 0.05 per round, own random side); every 2nd round the floor also jolts at 2 m/s.",
+   win:"Lowest total recovery time (back within 15 cm and settled; each round capped at 4 s). Falling or stepping off the platform = out; athletes still in rank first. Usually 0–2 survive."},
+  {n:6, p:2, name:"The Flamingo Classic", skill:"Single-Leg Stance", brain:"Stance skills", rules:"One foot raised; time-until-touchdown determines placement.",
+   need:"A stance-skills brain with a single-leg stance command."},
+  {n:7, p:2, name:"Cadence March", skill:"Stepping In-Place", brain:"Stance skills", rules:"High-knee marching synchronized to a rising stadium metronome.",
+   need:"A stance-skills brain that can march in place to a commanded cadence."},
+  {n:8, p:2, name:"The 30m Dash", skill:"Planar Forward Walking", brain:"Rung 2", rules:"Pure forward linear sprint to the finish ribbon.",
+   play:"8 runners on the home straight sprint 30 m from a standstill at full speed (3.8 m/s command), each steering to stay in its lane.",
+   win:"Fastest time to the line (fields finish within ~9.2–9.4 s). A fall = did not finish."},
+  {n:9, p:2, name:"The Inverted Sprint", skill:"Backward Walking", brain:"Rung 2", rules:"20m reverse sprint. Disqualification upon lane drifting or backward tumbling.",
+   play:"Runners face away from the finish and run 20 m backwards (−1.5 m/s command) with lane keeping.",
+   win:"Fastest time (~14.7–15.1 s). Drifting more than half a lane (0.61 m) off the lane line = DQ; a fall = out."},
+  {n:10, p:2, name:"Crab Shuffle Relay", skill:"Lateral Shuffling", brain:"Rung 2", rules:"Side-stepping dash between parallel boundary rails without crossing legs.",
+   play:"Athletes stand sideways to the course and side-step 20 m at 1.2 m/s between real steel rails (shin height) on every lane line, holding their heading and distance to the rails.",
+   win:"Lowest time + penalties: +1 s for every leg crossing and every rail touch; a fall = out. Heats ~18.1–18.5 s."},
+  {n:11, p:3, name:"Slalom Sprint", skill:"Velocity Vectoring", brain:"Rung 2", rules:"Weaving through slalom gates; penalties added for missed gates or clipping flags.",
+   play:"7 physical poles on each lane's centre line every 4 m; runners weave left–right around them at 2.2 m/s. Each runner has its own random racing line (0.40–0.56 m swing): tight lines clip poles, wide lines risk a fall.",
+   win:"Lowest time + penalties: +0.5 s per pole clipped, +2 s per pole passed on the wrong side; a fall = out. Winners ~15.9–16.1 s on clean wide lines."},
+  {n:12, p:3, name:"The 360 Turntable", skill:"In-Place Yaw Pivot", brain:"Rung 2", rules:"Rapid rotational turns in place on a marked spot; scored on rotational speed and zero translation drift.",
+   play:"8 athletes on painted spin spots turn 3 full circles in place at 3 rad/s, all in the same direction (drawn each heat), then stop.",
+   win:"Lowest score = time for 3 turns + 2 s per metre of drift from the spot (times ~6.5–6.8 s, drift 3–12 cm). Leaving the 1.1 m ring = DQ; a fall = out."},
+  {n:13, p:3, name:"Steeplechase Jog", skill:"Flight Phase Running", brain:"Rung 2 + flight", rules:"50m sprint requiring sustained aerial flight phases between foot strikes.",
+   need:"A training run that rewards sustained flight between strides (both feet off the ground)."},
+  {n:14, p:3, name:"The Alpine Ramp", skill:"Mild Incline", brain:"Rung 4", rules:"Ascending a 15-degree ramp straight into a finish sensor.", need:"Rung 4 terrain brain (ramps, rubble, stairs)."},
+  {n:15, p:3, name:"Cross-Country Rubble", skill:"Uneven Terrain", brain:"Rung 4", rules:"Traversal across randomized mounds and ruts.", need:"Rung 4 terrain brain."},
+  {n:16, p:4, name:"The Platform Drop", skill:"Walking Down Stairs", brain:"Rung 4", rules:"Rapid descent down stepped terrain; scored on descent speed and soft-landing dissipation.", need:"Rung 4 terrain brain."},
+  {n:17, p:4, name:"Stadium Stair Climb", skill:"Ascending Stairs", brain:"Rung 4", rules:"20-step vertical climb without catching toes on step lips.", need:"Rung 4 terrain brain."},
+  {n:18, p:4, name:"The Olympic High Jump", skill:"Vertical Leap", brain:"Rung 5", rules:"Static squat jump measuring highest clearance of the pelvis.", need:"Rung 5 jumping brain."},
+  {n:19, p:4, name:"Terminal Velocity Sprint", skill:"High-Speed Limit", brain:"Rung 2", rules:"Open sprint pushing top-end velocity until motor saturation or collapse.",
+   play:"Runners sprint the whole 84.39 m back straight at the maximum command (4.0 m/s) with lane keeping.",
+   win:"Highest peak speed averaged over 1 s (fields ~3.99–4.06 m/s); fallers rank last."},
+  {n:20, p:4, name:"Low Hurdle Dash", skill:"Obstacle Step-Over", brain:"Rung 5", rules:"30m sprint incorporating 0.3m hurdles requiring coordinated high-knee clearance.", need:"Rung 5 brain (hurdle clearance)."},
+  {n:21, p:5, name:"The Sandpit Long Jump", skill:"Broad Jump", brain:"Rung 5", rules:"Run-up followed by forward horizontal launch into a sandpit.", need:"Rung 5 jumping brain."},
+  {n:22, p:5, name:"Emergency Brake", skill:"Sudden Stop", brain:"Rung 2", rules:"Full sprint toward a red stop line. Athletes must reach full standstill without crossing the boundary.",
+   play:"Runners run in at 3 m/s toward a red line 30 m away. Each has its own random \"nerve\": it hits the brakes 1.4–2.2 m before the line.",
+   win:"Smallest gap left between toe and line once stopped. Toe over the line = DQ (1–4 DQs per heat)."},
+  {n:23, p:5, name:"The Trench Crawl", skill:"Quadrupedal Crawl", brain:"Rung 8", rules:"Low ceiling tunnel forcing all-fours crawl movement.", need:"Rung 8 crawl brain (may need a motion prior)."},
+  {n:24, p:5, name:"The Courier Carry", skill:"Heavy Payload", brain:"Rung 8", rules:"Carry a weighted crate across 15m without dropping or pitching backward.", need:"Rung 8 carry brain + hand contact on the body."},
+  {n:25, p:5, name:"The Bench Relay", skill:"Sit & Re-Stand", brain:"Rung 8", rules:"Approach a bench, execute a stable seated rest, and explode back into a sprint.", need:"Rung 8 sit/stand brain."},
+  {n:26, p:6, name:"Stepping Stones", skill:"Agility Ladder", brain:"Rung 4", rules:"Narrow elevated pads with zero room for error; miss-steps result in drop out.", need:"Rung 4 terrain brain + foot-placement targets."},
+  {n:27, p:6, name:"The Resurrection Dash", skill:"Get-Up from Ground", brain:"Rung 3", rules:"Athletes start flat on their backs; fastest to rise and sprint 5m wins.", need:"Rung 3 get-up brain."},
+  {n:28, p:6, name:"Floor Acrobatic Sprint", skill:"Flip / Cartwheel", brain:"Rung 8", rules:"Full-body inversion across a gymnastics safety mat.", need:"Rung 8 acrobatics brain (likely needs a motion prior)."},
+  {n:29, p:6, name:"Striker Shootout", skill:"Moving Ball Kick", brain:"Rung 8", rules:"Intercept a rolling soccer ball mid-stride and kick past a target marker.", need:"Rung 8 kick brain with ball observation."},
+  {n:30, p:6, name:"The Grand Parkour Vault", skill:"Parkour", brain:"Rung 8", rules:"Multi-stage course: approach, wall vault, drop landing, and hurdle sprint.", need:"Rung 8 parkour brain (likely needs a motion prior)."},
+];
+
+function esc(s) { return s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function render(filter) {
+  const root = document.getElementById("events");
+  root.innerHTML = "";
+  for (const [p, [title, note]] of Object.entries(PHASES)) {
+    const list = EVENTS.filter(e => e.p == p && (filter === "all" || (filter === "playable") === !!e.play));
+    if (!list.length) continue;
+    const h = document.createElement("h2");
+    h.textContent = `Phase ${p} — ${title}`;
+    const n = document.createElement("p");
+    n.className = "phase-note";
+    n.textContent = note;
+    const grid = document.createElement("div");
+    grid.className = "grid";
+    for (const e of list) {
+      const card = document.createElement("article");
+      card.className = "card" + (e.play ? " playable" : "");
+      card.innerHTML = `
+        <div class="head"><span class="num">${String(e.n).padStart(2, "0")}</span><h3>${esc(e.name)}</h3></div>
+        <div class="chips">
+          <span class="status ${e.play ? "ok" : "todo"}">${e.play ? "Playable in Unity" : "Not built yet"}</span>
+          <span class="chip">${esc(e.skill)}</span><span class="chip">${esc(e.brain)}</span>
+        </div>
+        <p>${esc(e.rules)}</p>
+        <dl>${e.play
+          ? `<dt>Play</dt><dd>${esc(e.play)}</dd><dt>Win</dt><dd>${esc(e.win)}</dd>`
+          : `<dt>Venue</dt><dd>Built in the stadium (visible in the hub).</dd><dt>Needs</dt><dd>${esc(e.need)}</dd>`}</dl>`;
+      grid.appendChild(card);
+    }
+    root.append(h, n, grid);
+  }
+}
+
+document.querySelectorAll(".filters button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".filters button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  render(b.dataset.filter);
+}));
+render("all");
+</script>
+</body>
+</html>
