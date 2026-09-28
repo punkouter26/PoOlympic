@@ -220,3 +220,7 @@ One entry per run or decision. Newest at the bottom.
 - 02:51 r2_v5b gates: it 300 6/10 (turn 2.82/2.82 s), it 600 6/10 (2.80/2.82) — turntable now stable; misses: fast sprint + small turn (yaw), crab ~0.9–1 m/s (lin). r2_v4 it 1499's only 3 misses: sprint 3.0/3.7 m/s with wz −0.36/−0.33 (yaw RMS 0.31/0.35), crab −0.94 (lin 0.257).
 - Prepared r2_v6 option: `AthleteCommandCfg.max_lateral_accel` — |wz| ≤ a_max/|v| at resampling (task `…-Sym3`, a_max = 4 m/s²: every G1 command stays inside; 4 m/s × 3 rad/s-style combos clipped). Verified on 10 240 sampled commands: max |v|·|wz| = 4.000.
 - 03:13 r2_v5b: it 900 6/10 (turntable 2.58/2.60 s, yaw mean 0.19) · it 1200 5/10 — plateau at 5–7/10. Diagnosis on r2_v4 it 1499 (5 s holds): yaw RMS of fast sprint-turns 0.29–0.36 raw vs **0.19–0.23 stride-averaged** (0.5 s) → the yaw misses are mostly per-stride pelvis oscillation; linear misses are real: 3.69 m/s + |wz| 0.33 lin 0.34 raw / **0.26 stride-avg** (speed shortfall while turning), crab ±0.94 m/s 0.21–0.24 / 0.20–0.22. G1 keeps the raw metric (bar unchanged).
+
+## 2026-09-28 03:41 · r2_v5b final · r2_v6 (feasibility-capped commands)
+- r2_v5b gates: 300 6 · 600 6 · 900 6 · 1200 5 · **1500 7/10** (turntable 2.66/2.68 s, yaw-probe mean 0.18 — best yet) · 1800 6/10 (2.52/2.52 s). Every checkpoint from 300 on passes the turntable; remaining misses = fast sprint + turn and ~1 m/s crab.
+- **r2_v6:** task `…-Sym3` (r2_v5 envelope + `max_lateral_accel` 4 m/s²), warm start r2_v5b it 1500, 2000 its at 1.73 s/it, gates 300…1999.
