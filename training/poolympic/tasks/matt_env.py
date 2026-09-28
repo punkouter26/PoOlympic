@@ -380,3 +380,15 @@ def matt_rung2_sym_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     cmd = cfg.commands["athlete"]
     cmd.ranges.lin_vel_x, cmd.ranges.lin_vel_y, cmd.ranges.ang_vel_z = last["lin_vel_x"], last["lin_vel_y"], last["ang_vel_z"]
     return cfg
+
+
+def matt_pedestal2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """Iron Pedestal v2 (ped_v1 failed: fixed ±0.8 m/s gusts gave no learning signal). Heat-shaped gusts (fixed
+    magnitude, random direction, every 3 s like the heat) whose magnitude adapts to success: 0.3 → up to 1.2 m/s."""
+    cfg = matt_pedestal_env_cfg(play=play)
+    cfg.events["push_robot"] = EventTermCfg(func=mdp.push_gust, mode="interval", interval_range_s=(2.5, 3.5))
+    cfg.curriculum = {
+        "gust": CurriculumTermCfg(func=mdp.gust_curriculum, params={
+            "start": 0.3, "step": 0.02, "max_level": 1.2, "up": 0.6, "down": 0.3}),
+    }
+    return cfg

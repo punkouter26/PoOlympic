@@ -21,9 +21,9 @@ sys.path.insert(0, str(ROOT))
 from mjlab.envs import ManagerBasedRlEnv  # noqa: E402
 
 from poolympic import contract as C  # noqa: E402
-from poolympic.tasks.matt_env import matt_pedestal_env_cfg, matt_rung0_env_cfg, matt_rung1_env_cfg, matt_rung2_env_cfg  # noqa: E402
+from poolympic.tasks.matt_env import matt_pedestal2_env_cfg, matt_pedestal_env_cfg, matt_rung0_env_cfg, matt_rung1_env_cfg, matt_rung2_env_cfg  # noqa: E402
 
-TASKS = {"rung0": matt_rung0_env_cfg, "rung1": matt_rung1_env_cfg, "rung2": matt_rung2_env_cfg, "pedestal": matt_pedestal_env_cfg}
+TASKS = {"rung0": matt_rung0_env_cfg, "rung1": matt_rung1_env_cfg, "rung2": matt_rung2_env_cfg, "pedestal": matt_pedestal_env_cfg, "pedestal2": matt_pedestal2_env_cfg}
 
 
 def main(task: str = "rung0") -> int:

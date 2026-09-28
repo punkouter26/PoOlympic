@@ -42,12 +42,15 @@ def test_mirror_is_physical():
         qpos[ath.root_qposadr + 3: ath.root_qposadr + 7] = quat
         qpos[ath.root_qposadr: ath.root_qposadr + 2] = rng.normal(0, 3, 2)
         qvel = rng.normal(0, 1.0, m.nv)
-        cmd = rng.uniform(-2, 2, 3)
-        phase = rng.uniform()
+        standing = rng.uniform() < 0.3
+        cmd = np.zeros(3) if standing else rng.uniform(-2, 2, 3)
+        if not standing and np.linalg.norm(cmd) < C.PHASE_CMD_THRESHOLD:
+            cmd[0] = 1.0
+        phase = 0.0 if standing else rng.uniform()     # the clock is frozen at 0 while standing
         last = rng.normal(0, 1, C.NUM_ACTIONS)
         o = C.build_obs(ath, qpos, qvel, cmd, phase, last)
         qm, vm = _mirror_state(m, ath, qpos, qvel)
-        om = C.build_obs(ath, qm, vm, cmd * [1, -1, -1], (phase + 0.5) % 1.0,
+        om = C.build_obs(ath, qm, vm, cmd * [1, -1, -1], phase if standing else (phase + 0.5) % 1.0,
                          S.mirror_actions(torch.as_tensor(last)).numpy())
         pred = S.mirror_obs(torch.as_tensor(o)).numpy()
         worst = max(worst, float(np.abs(pred - om).max()))

@@ -301,3 +301,31 @@ def feet_off_pedestal(env, half: float) -> torch.Tensor:
 def feet_centred(env, std: float) -> torch.Tensor:
     """Reward: feet close to the pedestal centre (mean squared foot-centre distance)."""
     return torch.exp(-(_foot_geom_xy(env) ** 2).sum(-1).mean(-1) / std**2)
+
+
+# ------------------------------------------------------------------ Iron Pedestal v2: heat-shaped gusts + adaptive level
+def push_gust(env, env_ids, asset_cfg=None) -> None:
+    """Heat gust: instantaneous horizontal Δv of the CURRENT curriculum magnitude in a uniformly random direction
+    (IronPedestalHeat / iron_pedestal.py apply exactly this)."""
+    ids = env_ids if env_ids is not None else torch.arange(env.num_envs, device=env.device)
+    level = getattr(env, "_poolympic_gust", 0.3)
+    asset = env.scene["robot"]
+    vel = asset.data.root_link_vel_w[ids].clone()
+    a = torch.rand(len(ids), device=env.device) * 2 * math.pi
+    vel[:, 0] += level * torch.cos(a)
+    vel[:, 1] += level * torch.sin(a)
+    asset.write_root_link_velocity_to_sim(vel, env_ids=ids)
+
+
+def gust_curriculum(env, env_ids, start: float, step: float, max_level: float, up: float, down: float) -> dict:
+    """Adaptive gust magnitude: among the envs being reset, the fraction that lasted the full episode decides —
+    > up: harder (+step), < down: easier (−step). Keeps training at the edge of what the athlete can survive."""
+    if not hasattr(env, "_poolympic_gust"):
+        env._poolympic_gust = start
+    if env_ids is not None and len(env_ids) > 0:
+        full = (env.episode_length_buf[env_ids] >= env.max_episode_length - 1).float().mean().item()
+        if full > up:
+            env._poolympic_gust = min(max_level, env._poolympic_gust + step)
+        elif full < down:
+            env._poolympic_gust = max(start, env._poolympic_gust - step)
+    return {"gust_mps": torch.tensor(env._poolympic_gust)}

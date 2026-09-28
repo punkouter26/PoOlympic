@@ -6,7 +6,8 @@ joints map onto their partner with NO sign change; the midline abdomen lateral-b
 Observation (contract.OBS_LAYOUT, 84):
   lin vel (heading)  (x, y, z) -> (x, -y, z)        ang vel (pelvis)  (x, y, z) -> (-x, y, -z)
   gravity (pelvis)   (x, y, z) -> (x, -y, z)        height -> height
-  command (vx, vy, wz) -> (vx, -vy, -wz)            gait phase -> phase + 0.5  ((sin, cos) -> (-sin, -cos))
+  command (vx, vy, wz) -> (vx, -vy, -wz)            gait phase -> phase + 0.5 while moving ((sin, cos) -> (-sin, -cos));
+                                                    unchanged while standing (clock frozen at 0)
   joint pos / joint vel / last action -> partner joint (x sign)
 Verified against physically mirrored MuJoCo states in tests/test_symmetry.py.
 """
@@ -57,10 +58,24 @@ def _obs_maps() -> tuple[list[int], list[float]]:
 OBS_IDX, OBS_SIGN = _obs_maps()
 
 
+_OFF = {}
+_o = 0
+for _n, _sz in C.OBS_LAYOUT:
+    _OFF[_n] = (_o, _o + _sz)
+    _o += _sz
+CMD_SLICE, PHASE_SLICE = slice(*_OFF["command"]), slice(*_OFF["gait_phase_sincos"])
+
+
 def mirror_obs(x: torch.Tensor) -> torch.Tensor:
     idx = torch.as_tensor(OBS_IDX, device=x.device)
     sgn = torch.as_tensor(OBS_SIGN, device=x.device, dtype=x.dtype)
-    return x[..., idx] * sgn
+    y = x[..., idx] * sgn
+    # The gait clock is frozen at phase 0 while standing (|cmd| < threshold): a mirrored standing athlete is still at
+    # phase 0, so only a running clock shifts by half a stride. (r2_v3 bug: unconditional flip made every mirrored
+    # standing sample carry phase 0.5 — an impossible state.)
+    moving = x[..., CMD_SLICE].norm(dim=-1, keepdim=True) >= C.PHASE_CMD_THRESHOLD
+    y[..., PHASE_SLICE] = torch.where(moving, y[..., PHASE_SLICE], x[..., PHASE_SLICE])
+    return y
 
 
 def mirror_actions(a: torch.Tensor) -> torch.Tensor:

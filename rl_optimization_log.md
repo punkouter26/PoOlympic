@@ -193,3 +193,8 @@ One entry per run or decision. Newest at the bottom.
 - **Why:** ~90 % of training episodes ended by `off_pedestal`, episode length flat at ~500 ticks (10 s) from it 100 on — gusts up to ±0.8 m/s per axis (≈1.1 m/s) every 2–4 s from iteration 0 are beyond what the policy can recover from inside a 1 m box, so there is no learning signal (a failure curriculum, not a hard task).
 - **Decision:** keep r0_v2_it1000 as the Iron Pedestal brain. If GPU time remains: ped_v2 with a gust-magnitude curriculum that tracks success (0.3 → 1.0 m/s, like the heat itself).
 - **r2_v3** (symmetry augmentation, from r2_v2 it 1500) started 00:48, 1.82 s/it, 1500 its; initial mirror loss 0.36.
+
+## 2026-09-28 00:56 · r2_v3 stopped at it ~330 (mirror bug) → r2_v3b
+- r2_v3 it 300 gate: 0/10, turntable 3.42 / 3.22 s, yaw-probe mean 0.31 (worse than its r2_v2 it 1500 start) and the logged mirror loss ROSE 0.36 → 1.15 — the policy was getting less symmetric under symmetry augmentation.
+- **Bug:** the mirror map shifted the gait phase by half a stride unconditionally, but the contract freezes the clock at 0 while |cmd| < 0.1 — a mirrored standing athlete is still at phase 0. Every mirrored standing sample (15 % zero-command envs) carried the impossible phase 0.5. The physical test drew random phase + random commands, so it never hit the frozen-clock case.
+- **Fix:** flip the phase only when |cmd| ≥ threshold; test now includes 30 % standing states (3/3 pass). r2_v3b relaunched from the same init (r2_v2 it 1500), 1.49 s/it, gate at 300/600/900/1200/1499.

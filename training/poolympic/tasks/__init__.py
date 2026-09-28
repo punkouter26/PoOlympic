@@ -3,7 +3,7 @@
 from mjlab.rl import MjlabOnPolicyRunner
 from mjlab.tasks.registry import register_mjlab_task
 
-from .matt_env import (matt_pedestal_env_cfg, matt_ppo_cfg, matt_rung0_env_cfg, matt_rung1_env_cfg,
+from .matt_env import (matt_pedestal2_env_cfg, matt_pedestal_env_cfg, matt_ppo_cfg, matt_rung0_env_cfg, matt_rung1_env_cfg,
                        matt_rung2_env_cfg, matt_rung2_sym_env_cfg)
 from .symmetry import SymmetricRunner
 
@@ -45,4 +45,12 @@ register_mjlab_task(
     play_env_cfg=matt_rung2_sym_env_cfg(play=True),
     rl_cfg=matt_ppo_cfg("matt_rung2", max_iterations=1500),
     runner_cls=SymmetricRunner,
+)
+
+register_mjlab_task(
+    task_id="PoOlympic-Matt-Pedestal2",
+    env_cfg=matt_pedestal2_env_cfg(),
+    play_env_cfg=matt_pedestal2_env_cfg(play=True),
+    rl_cfg=matt_ppo_cfg("matt_pedestal", max_iterations=1200),
+    runner_cls=MjlabOnPolicyRunner,
 )
