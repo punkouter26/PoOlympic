@@ -86,9 +86,21 @@ In-editor authoring runs through the Unity CLI (`unity command …`, com.unity.p
 - [ ] **C7 Rung 2 — train** omnidirectional + yaw to bar. **GATE G1.**
 - [ ] **C8 Rung 2 — Unity spot-check.** G3, G5, G6 with rung2 brain; commands switchable from HUD.
 
-## Phase D — Engine Polish & Game Loop (Step 5, detailed plan written after C6 passes)
+## Phase D — Engine Polish & Game Loop (detailed plan, written 2026-09-27 after C6 passed)
 
-- [ ] D1 9:16 tracking broadcast cameras · D2 HUD anchors (TL title · TC FPS/telemetry · TR menu/behaviour selector · BL reset/shove toggle · BR version) · D3 native-API interaction (fire cubes from pool, force on MjBody, behaviour switching) · D4 auto-reset (fall/stall/finish → reset `mjData`) · D5 Sprint Series events 1, 5, 8, 9, 10, 11, 12, 19, 22 · D6 full suite re-validation + perf pass.
+Rules: every surface an athlete can touch is a MuJoCo geom generated into the MJCF (training, CPU gates and Unity share it); stadium / dressing art from Blender is render-only (no colliders — PhysXGuard). Events run on control ticks with seeded RNG (reproducible attempts). Runs in parallel with C7/C8 (GPU trains, editor builds).
+
+- [ ] **D1 Event 1 — Iron Pedestal (vertical slice, 1 biped)**
+  - [x] physics: `scene_pedestal.xml` — 1 m × 1 m × 0.5 m block, top at z = 0, ground at −0.5 (athlete pose / obs / fall rule unchanged)
+  - [x] CPU check: rung-0 brain survives 40/40 seeds on the pedestal (20 s, 0.5 m/s gusts + cubes); foot overhang ≤ 0.10 m
+  - [x] Unity: `IronPedestalEvent` (countdown → 20 s live → result → auto reset; gusts + cube drops on seeded tick schedule; out = fall rule / foot below pedestal top / non-foot contact), `EventHud` (D2 anchors), `Event_IronPedestal.unity` via *PoOlympic › Events › Build Event 1*; play-through SURVIVED 20.00 s · EditMode 18/18
+  - [ ] G0 for the pedestal scene (Python vs Unity fingerprint) + a G5-style closed-loop parity run of one attempt
+  - [ ] Iron Pedestal fine-tune (foot-on-pedestal term, trained on the pedestal geometry) for edge margin
+- [ ] **D2 Stadium (Blender MCP, Olympic realistic)** — 400 m track, 8 × 1.22 m lanes (= meet layout), infield event zones, tiered stands, floodlights, boards; GLB → glTFast render-only; placement contract: event venue origin = MuJoCo origin
+- [ ] **D3 Broadcast** — 9:16 tracking cameras per event, HUD polish (UI Toolkit), result cards
+- [ ] **D4 8-lane Iron Pedestal heat** — per-lane traits (strength / latency / obs noise) → survival odds; pedestal per lane in the meet MJCF
+- [ ] **D5 remaining Sprint Series events** 5 Gust Gauntlet · 8 30m Dash · 19 Terminal Velocity (rung1) · 9, 10, 11, 12, 22 (rung2, after C8)
+- [ ] **D6** full suite re-validation + perf pass
 
 ## Backlog (later rungs & platforms)
 

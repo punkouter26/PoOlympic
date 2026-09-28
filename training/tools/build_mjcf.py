@@ -4,6 +4,7 @@ Inputs : assets/derived/skeleton_matt.json, assets/derived/skin_matt.npz  (from 
 Outputs: assets/matt.xml         robot only (for mjlab)
          assets/scene_matt.xml   flattened: options + ground + robot + cube pool + keyframe (CPU eval, Unity import)
          assets/scene_meet8.xml  8 lane-isolated athletes (names prefixed L<k>_) + 16-cube pool (G6, events)
+         assets/scene_pedestal.xml Event 1 Iron Pedestal: solo scene on a 1 m x 1 m x 0.5 m block (top at z = 0)
          assets/meet8_layout.json lane table (prefix, origin, cube slots) shared by Python and Unity
          assets/derived/body_report.json
 
@@ -45,6 +46,10 @@ LANE = 0  # training scene is always lane 0; the meet scene gives lane k its own
 N_LANES = 8
 N_CUBES_MEET = 16  # 2 per lane for scripted disturbances; the HUD pool cycles through all of them
 LANE_WIDTH = 1.22  # m (World Athletics lane width)
+# Event 1 Iron Pedestal: 1 m x 1 m block (= the Rung 0 foot box). Its top is z = 0 and the ground drops to -PEDESTAL_H,
+# so the athlete's default pose, pelvis-height observation and fall rule are exactly those it was trained with.
+PEDESTAL_HALF = 0.5
+PEDESTAL_H = 0.5
 
 
 def lane_prefix(lane: int) -> str:
@@ -345,14 +350,25 @@ def indent(el: ET.Element) -> str:
     return ET.tostring(el, encoding="unicode")
 
 
-def compose_model(skin, geoms, inertials, with_scene: bool, n_cubes: int, default_qpos=None) -> str:
-    root = ET.Element("mujoco", {"model": "matt_scene" if with_scene else "matt"})
+def compose_model(skin, geoms, inertials, with_scene: bool, n_cubes: int, default_qpos=None,
+                  pedestal_h: float = 0.0) -> str:
+    """pedestal_h > 0: Iron Pedestal scene — ground plane at z = -pedestal_h, a static 1 m x 1 m box with its top at z = 0
+    under the athlete (same surface as the ground), parked cubes lowered onto the ground."""
+    root = ET.Element("mujoco", {"model": ("pedestal_scene" if pedestal_h else "matt_scene") if with_scene else "matt"})
     option_block(root)
     wb = ET.SubElement(root, "worldbody")
     if with_scene:
         ET.SubElement(wb, "light", {"name": "sun", "pos": "0 0 5", "dir": "0 0 -1", "directional": "true"})
-        ET.SubElement(wb, "geom", {"name": "ground", "type": "plane", "size": "0 0 0.05", "contype": str(ALL_BITS),
-                                   "conaffinity": str(ALL_BITS), "condim": "3", "friction": vec(GROUND_FRICTION)})
+        ground = {"name": "ground", "type": "plane", "size": "0 0 0.05", "contype": str(ALL_BITS),
+                  "conaffinity": str(ALL_BITS), "condim": "3", "friction": vec(GROUND_FRICTION)}
+        if pedestal_h:
+            ground["pos"] = vec([0, 0, -pedestal_h])
+        ET.SubElement(wb, "geom", ground)
+        if pedestal_h:
+            ET.SubElement(wb, "geom", {"name": "pedestal", "type": "box", "pos": vec([0, 0, -pedestal_h / 2]),
+                                       "size": vec([PEDESTAL_HALF, PEDESTAL_HALF, pedestal_h / 2]),
+                                       "contype": str(ALL_BITS), "conaffinity": str(ALL_BITS), "condim": "3",
+                                       "friction": vec(GROUND_FRICTION)})
     pelvis, actuators, joints = build_robot(skin, geoms, inertials)
     # Declare actuators in joint-tree (depth-first) order == MuJoCo joint id order. mjlab's XmlActuator pairs joint
     # targets (joint order) with ctrl slots (declaration order); any other order silently scrambles the action wiring.
@@ -362,7 +378,7 @@ def compose_model(skin, geoms, inertials, with_scene: bool, n_cubes: int, defaul
     if with_scene:
         inertia = CUBE_MASS * (2 * CUBE_HALF) ** 2 / 6.0
         for i in range(n_cubes):
-            cb = ET.SubElement(wb, "body", {"name": f"cube{i}", "pos": vec(cube_park_pos(i))})
+            cb = ET.SubElement(wb, "body", {"name": f"cube{i}", "pos": vec(cube_park_pos(i) - [0, 0, pedestal_h])})
             ET.SubElement(cb, "inertial", {"pos": "0 0 0", "mass": f(CUBE_MASS), "diaginertia": vec([inertia] * 3)})
             ET.SubElement(cb, "freejoint", {"name": f"cube{i}_free"})
             ET.SubElement(cb, "geom", {"name": f"cube{i}_geom", "type": "box", "size": vec([CUBE_HALF] * 3),
@@ -518,6 +534,11 @@ def main() -> int:
     (ASSETS / "cube.xml").write_text(header + cube_entity_xml() + "\n")
     (ASSETS / "matt.xml").write_text(header + robot_xml + "\n")
     (ASSETS / "scene_matt.xml").write_text(header + scene_xml + "\n")
+    pedestal_xml = compose_model(skin, geoms, inertials, with_scene=True, n_cubes=N_CUBES_TRAINING, pedestal_h=PEDESTAL_H,
+                                 default_qpos=np.concatenate([qdef, np.concatenate(
+                                     [np.concatenate([cube_park_pos(i) - [0, 0, PEDESTAL_H], [1, 0, 0, 0]])
+                                      for i in range(N_CUBES_TRAINING)])]))
+    (ASSETS / "scene_pedestal.xml").write_text(header + pedestal_xml + "\n")
     meet_xml, meet_layout = compose_meet(skin, geoms, inertials, qdef)
     (ASSETS / f"scene_meet{N_LANES}.xml").write_text(header + meet_xml + "\n")
     (ASSETS / f"meet{N_LANES}_layout.json").write_text(json.dumps(meet_layout, indent=1) + "\n")

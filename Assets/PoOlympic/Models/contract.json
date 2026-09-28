@@ -13,7 +13,7 @@
   "heading_gain": 2.0,
   "lane_gain": 0.3,
   "wz_limit": 0.5,
-  "law": "wz = clip(heading_gain * wrap(atan(-lane_gain * lane_offset_y) - yaw), +-wz_limit)"
+  "law": "wz = clip(heading_gain * wrap(atan(-lane_gain * lane_offset_y * dir) - yaw), +-wz_limit); dir = -1 if vx_cmd < 0 else 1"
  },
  "obs_dim": 84,
  "num_actions": 23,
