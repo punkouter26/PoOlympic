@@ -244,3 +244,8 @@ One entry per run or decision. Newest at the bottom.
 - **Every margin failure is a sprint started from ~standstill** (Δvx 2.7–3.8 m/s, lin 0.20–0.55); the one 3.7 m/s sprint that started already moving (Δv 0.29) tracks at 0.10. Standstill → speed test: r2_v8 reaches ±0.2 m/s of 3.0 / 3.5 / 4.0 after 1.96 / 2.46 / 3.32 s (~1.5 m/s² average); steady-state RMS after 2.5 s: 3.0 → 0.056, 3.5 → 0.116, 4.0 → 0.259 (top speed ≈ 3.8 m/s; ankle at its 220 Nm cap). The drill's fixed 1.5 s settle window (my evaluator choice — the spec only says "vel err < 0.2 m/s") therefore scores acceleration, not tracking.
 - **Diagnostic steady-state variant** (`rung2_episode(steady_state=True)`, settle = max(1.5, 0.5 + |Δv|/1.5 s); NOT the G1 bar): rung2.onnx 9/10 official, 25/30 margin · **r2_v8 it 600 10/10, 28/30** (2 marginal yaw).
 - Open questions for the user: (1) keep the fixed 1.5 s settle as the G1 bar, or adopt a Δv-aware settle for tracking? (2) MATT's top speed with elite-athlete torque caps is ~3.8 m/s, below the 4.0 m/s top of the Rung 2 envelope.
+
+## 2026-09-28 06:00 · rung2.onnx := r2_v8 it 600 · C8 re-run PASS · ped_v2 running
+- r2_v8 gates (20 seeds): 300 / 600 / 900 / 1200 / 1499 all **18/20** (only lin misses; turntable 2.44–2.64 s; yaw mean 0.136–0.162) — converged. Chosen it 600 (best yaw, fully evaluated: official 10/10, margin 23/30, steady-state 28/30).
+- **C8 with the new rung2.onnx:** CPU meet pre-check PASS; Unity G2 4.4e-16, G3 ≤ 3.8e-6, G4 ≤ 1.0e-6 on 8 lane refs; **G6 8/8 PASS** (1 s drift ≤ 4.0e-6; crab / spin lanes diverge chaotically by 5 s as in the CPU meet).
+- **ped_v2** (adaptive heat-shaped gusts) started 05:44 from r0_v2 it 1000 (plain warm start); gust level already 0.60 m/s by it 30.
