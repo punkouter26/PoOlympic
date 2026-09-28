@@ -110,7 +110,10 @@ class SymmetricRunner(_runner_base()):
         train_cfg["algorithm"]["symmetry_cfg"] = {
             "data_augmentation_func": augment,
             "use_data_augmentation": True,
-            "use_mirror_loss": False,
-            "mirror_loss_coeff": 0.0,
+            # r2_v3b: augmentation alone let the mirror loss rise (0.36 -> 0.70) — mirrored samples reuse the original
+            # action's old log-prob, so for an asymmetric starting policy their PPO ratios are clipped away. The explicit
+            # mirror loss penalises pi(mirror(o)) != mirror(pi(o)) directly.
+            "use_mirror_loss": True,
+            "mirror_loss_coeff": 0.5,
         }
         super().__init__(env, train_cfg, log_dir, device)

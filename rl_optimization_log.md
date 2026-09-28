@@ -198,3 +198,7 @@ One entry per run or decision. Newest at the bottom.
 - r2_v3 it 300 gate: 0/10, turntable 3.42 / 3.22 s, yaw-probe mean 0.31 (worse than its r2_v2 it 1500 start) and the logged mirror loss ROSE 0.36 → 1.15 — the policy was getting less symmetric under symmetry augmentation.
 - **Bug:** the mirror map shifted the gait phase by half a stride unconditionally, but the contract freezes the clock at 0 while |cmd| < 0.1 — a mirrored standing athlete is still at phase 0. Every mirrored standing sample (15 % zero-command envs) carried the impossible phase 0.5. The physical test drew random phase + random commands, so it never hit the frozen-clock case.
 - **Fix:** flip the phase only when |cmd| ≥ threshold; test now includes 30 % standing states (3/3 pass). r2_v3b relaunched from the same init (r2_v2 it 1500), 1.49 s/it, gate at 300/600/900/1200/1499.
+
+## 2026-09-28 01:08 · r2_v3b stopped (it ~315) → r2_v3c with explicit mirror loss
+- r2_v3b it 300: 0/10, turntable 3.06 / 3.46 s, yaw-probe mean 0.23; mirror loss still rising 0.38 → 0.70. Augmentation alone can't symmetrise an asymmetric starting policy: mirrored samples reuse the original action's old log-prob, their PPO ratios fall outside the clip range and contribute ~no gradient.
+- **r2_v3c:** augmentation + rsl_rl mirror loss (coeff 0.5); plain warm start from r2_v2 it 1500 (normalizer + action noise kept — same rung, same command distribution; the re-seed/noise floor had degraded the start). Mirror loss now falls 0.39 → 0.13 in 60 its. 2.16 s/it, 1500 its, gates at 300/600/900/1200/1499.

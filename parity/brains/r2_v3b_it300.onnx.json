@@ -1,0 +1,11 @@
+{
+ "name": "r2_v3b_it300",
+ "contract_version": "2",
+ "fingerprint_sha256": "bfd287b0ce43147ad430d90787f724d9ef7a25a4cc281730278aa3ed0bb024e8",
+ "mujoco_version": "3.11.0",
+ "timestep": "0.005",
+ "decimation": "4",
+ "actuators": "[\"abdomen_flex\", \"abdomen_lat\", \"abdomen_twist\", \"shoulder_elev_l\", \"shoulder_flex_l\", \"shoulder_twist_l\", \"elbow_l\", \"shoulder_elev_r\", \"shoulder_flex_r\", \"shoulder_twist_r\", \"elbow_r\", \"hip_flex_l\", \"hip_abd_l\", \"hip_rot_l\", \"knee_l\", \"ankle_dorsi_l\", \"ankle_inv_l\", \"hip_flex_r\", \"hip_abd_r\", \"hip_rot_r\", \"knee_r\", \"ankle_dorsi_r\", \"ankle_inv_r\"]",
+ "checkpoint": "runs\\matt_rung2\\2026-09-28_00-56-23_r2_v3b\\model_300.pt",
+ "onnx_sha256": "77f1a6f2e554fa50ec994ddbdea8cb07eb30100dbac2134340bc3f491622dadf"
+}
