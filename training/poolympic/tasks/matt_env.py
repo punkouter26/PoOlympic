@@ -411,3 +411,11 @@ def matt_rung2_sym2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     cmd.ranges.lin_vel_x, cmd.ranges.lin_vel_y, cmd.ranges.ang_vel_z = env["lin_vel_x"], env["lin_vel_y"], env["ang_vel_z"]
     cmd.rel_standing_envs = 0.20
     return cfg
+
+
+def matt_rung2_sym3_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """r2_v6 candidate: r2_v5 + feasibility-aware commands (|wz| <= 4 m/s^2 / |v|). Every G1 command stays inside
+    (turns 1.5 m/s x 2 rad/s = 3 m/s^2, sprints 4 m/s x 0.5 = 2 m/s^2); 4 m/s x 3 rad/s style combos are clipped."""
+    cfg = matt_rung2_sym2_env_cfg(play=play)
+    cfg.commands["athlete"].max_lateral_accel = 4.0
+    return cfg

@@ -149,8 +149,19 @@ class AthleteCommand(UniformVelocityCommand):
             self.phase = torch.where(moving, adv, torch.zeros_like(self.phase))
 
 
+    def _resample_command(self, env_ids):
+        super()._resample_command(env_ids)
+        a_max = getattr(self.cfg, "max_lateral_accel", None)
+        if a_max:  # |wz| <= a_max / |v|: no physically impossible sprint-and-spin commands (r2_v6)
+            v = torch.linalg.norm(self.vel_command_b[env_ids, :2], dim=-1).clamp(min=1e-3)
+            lim = a_max / v
+            self.vel_command_b[env_ids, 2] = torch.maximum(torch.minimum(self.vel_command_b[env_ids, 2], lim), -lim)
+
+
 @dataclass(kw_only=True)
 class AthleteCommandCfg(UniformVelocityCommandCfg):
+    max_lateral_accel: float | None = None  # m/s^2; None = independent uniform sampling
+
     def build(self, env):
         return AthleteCommand(self, env)
 
