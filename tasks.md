@@ -120,7 +120,7 @@ Rules: every surface an athlete can touch is a MuJoCo geom generated into the MJ
   - Unity `Event_IronPedestal_Heat.unity` (*Build Event 1 — Iron Pedestal Heat*), `HeatHud` standings (status, out time, traits), winner banner; hub Event 1 ▸ opens the heat. Play-through: L1 wins after 31.6 s, 11 rounds (`parity/d4/heat_*.png`)
   - [ ] odds from traits (betting layer)
   - [x] Iron Pedestal fine-tune tried twice (ped_v1 fixed ±0.8 m/s gusts; ped_v2 adaptive gusts) — neither beat r0_v2_it1000 on identical heats (28.2 s mean survival); Event 1 keeps the Rung 0 brain (see log)
-- [ ] **D5 remaining Sprint Series events** — done: 5, 8, 9, 10, 11, 12, 19, 22 (5 = `scene_shaker8.xml` spring platforms + `events/gauntlet.py` ≡ `GustGauntletEvent`; all 8-athlete, Rung 2 brain; pattern: venue layout → `compose_meet(origins, props)` MJCF (G0 8/8 per lane, props checked with `ParityTools.DumpProps`) → CPU rules in `poolympic/events/` ≡ Unity controller → `EventScenes.Build*` via the shared `BuildMeetScene`. 8/9/19/22 = straight-track framework (`scene_track8.xml`, `events/track.py` ≡ `TrackRaceEvent` + `RaceHud`); 10 = `scene_crab8.xml` + rails, `events/crab.py` ≡ `CrabShuffleEvent`; 11 = `scene_slalom8.xml` + poles, `events/slalom.py` ≡ `SlalomEvent`; 12 = `scene_turntable8.xml`, `events/turntable.py` ≡ `TurntableEvent`; per-tick `PolicyRunner.steer` hook; generic `StandingsHud`); todo: 13 Steeplechase Jog (needs a flight-phase training run) — then the rest of the catalogue: **Phase E** below
+- [ ] **D5 remaining Sprint Series events** — done: 5, 8, 9, 10, 11, 12, 19, 22 (5 = `scene_shaker8.xml` spring platforms + `events/gauntlet.py` ≡ `GustGauntletEvent`; all 8-athlete, Rung 2 brain; pattern: venue layout → `compose_meet(origins, props)` MJCF (G0 8/8 per lane, props checked with `ParityTools.DumpProps`) → CPU rules in `poolympic/events/` ≡ Unity controller → `EventScenes.Build*` via the shared `BuildMeetScene`. 8/9/19/22 = straight-track framework (`scene_track8.xml`, `events/track.py` ≡ `TrackRaceEvent` + `RaceHud`); 10 = `scene_crab8.xml` + rails, `events/crab.py` ≡ `CrabShuffleEvent`; 11 = `scene_slalom8.xml` + poles, `events/slalom.py` ≡ `SlalomEvent`; 12 = `scene_turntable8.xml`, `events/turntable.py` ≡ `TurntableEvent`; per-tick `PolicyRunner.steer` hook; generic `StandingsHud`); todo: 13 Steeplechase Jog — **flight brain trained 2026-09-29: `r2f_v3_it100.onnx` (G1 rung2 10/10, flights 114 ms at 3.5 m/s vs 43 ms for rung2.onnx, 8-runner 50 m CPU race clean); event scene + rules still to build** — then the rest of the catalogue: **Phase E** below
 - [ ] **D6** full suite re-validation + perf pass
 
 ## Phase E — The 30 Olympic Events (catalogue, added 2026-09-27)
@@ -194,7 +194,11 @@ apply: TensorBoard + MuJoCo viewer for every run, close Unity during 30 min+ run
 - [x] **Z5 Rung 0 zombie** — train (TensorBoard + viewer), G1 rung0 (scaled drills). *Accept: G1 10/10.*
 - [ ] **Z6 Rung 2 zombie** — curriculum (walk → run → omni + yaw) with the Rung 2 fixes (symmetry + mirror loss,
   lateral-acceleration cap, sprint focus). *Accept: G1 rung2 10/10 on the scaled drills.*
-  - **Kept (best available, not a G1 pass):** `zombie_rung2.onnx` = z2_v2 it 1500 — 0 falls, drills 30/30, speed 37/50, yaw 30/50 segments, turntable 2.54 s (bar 2.36). Hard turns reach ~70 % of the commanded rate (70 % strength body). Open: turn-rate ruling or more training.
+  - ~~Kept: z2_v2 it 1500 (0/10)~~ → **2026-09-29 night: `zombie_rung2.onnx` = z2_v11 it400 — G1 8/10, 30-seed margin
+    21/30 (23/30 with stride-averaged yaw), 0 falls**, turntable 2.21 s, runs 2.0 → 2.06 m/s. Fixes (z2_v5-v14, see log):
+    yaw terms on the stride-filtered yaw rate, lateral-accel cap 3 m/s², speed weights 3 + 1.5, yaw-wobble penalty.
+    Remaining misses: 2.4-2.85 m/s sprints 0.003-0.04 m/s over the speed bar. Unity re-validated with the new brain:
+    EditMode 36/36 (G2-G4), G6 mixed 8/8. Still open for 10/10: more sprint precision, or the yaw-averaging ruling.
 - [x] **Z7 Unity** — contract per body in PolicyRunner, zombie MATT-style visual binding, G0/G2–G5 on the zombie, mixed
   MATT + zombie meets (lane body chosen per lane → `compose_meet` with per-lane bodies), menu roster card, events read
   MeetLineup. *Accept: G6 with a mixed 8-lane meet; every playable event runs with any lineup.* — PASSED 2026-09-28:
@@ -210,6 +214,9 @@ apply: TensorBoard + MuJoCo viewer for every run, close Unity during 30 min+ run
 - [ ] Android: arm64-v8a MuJoCo build via NDK + ARM↔desktop trajectory parity + mobile perf pass
   - [x] **first device run (Pixel 9 Pro, Android 17):** `tools/build_mujoco_android.sh` builds libmujoco.so from MuJoCo 3.11.0 with Unity's NDK r27 (API 28, `_POSIX_C_SOURCE`; mujoco-bin's prebuilt .so is 3.5.0 = wrong ABI for the 3.11 plugin), `AndroidBuild.Build` (IL2CPP arm64, portrait, min API 28, link.xml) → 167 MB APK. URP post-processing shader stripping had to be turned off (stripped Uber pass = blank 3D view). Event 1 heat ran on device (winner M1 after 31.2 s). Open: ARM↔desktop trajectory parity, perf pass, InputSystem 'InputUpdateType.None' warning at startup.
 - [ ] R3 get-up · R4 ramp/rubble/stairs · R5 jumps/hurdles
+  - R3 first attempts 2026-09-29 (getup_v1-v5, tasks `PoOlympic-Matt-Getup..5`, `tools/getup_probe.py`): with a fading
+    torso assist it learns to sit up and to get onto all fours, not yet to stand. Next: reverse curriculum from
+    squat / kneel starts, or a motion prior (R7).
 - [ ] R6 bodies: rig GRANDMA (AccuRig/Mixamo/Blender), clean + rescale ZOMBIE, derive MJCFs, train variants
 - [ ] R7 optional motion-prior polish · R8+ remaining skill events
 - [ ] Game layer: betting slip & odds from lane stats, PBP ticker, records, gauntlets

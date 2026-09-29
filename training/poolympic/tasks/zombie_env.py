@@ -255,6 +255,18 @@ def zombie_rung2_wobble_sharp_env_cfg(play: bool = False) -> ManagerBasedRlEnvCf
     return cfg
 
 
+def zombie_rung2_wobble_sprint_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """z2_v14 = z2_v11 + 15 % sprint-band commands (vx 2.5-4.0 × √λ, |wz| <= 0.6 / √λ). z2_v11 it400's margin misses are
+    2.4-2.85 m/s sprints 0.003-0.04 m/s over the speed bar. z2_v3's sprint focus (30 %) came with the sharp kernel and
+    the old reward balance that let speed collapse."""
+    cfg = zombie_rung2_wobble_env_cfg(play=play)
+    cmd = cfg.commands["athlete"]
+    cmd.sprint_fraction = 0.15
+    cmd.sprint_vx = (2.5 * SS, 4.0 * SS)
+    cmd.sprint_wz = 0.6 * WS
+    return cfg
+
+
 def zombie_rung2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     """Rung 2 fine-tune — MATT's final recipe (r2_v8: symmetric runner, full widened
     envelope, lateral-acceleration cap, sharp linear tracking, sprint focus) on the scaled envelope. Warm start: the best

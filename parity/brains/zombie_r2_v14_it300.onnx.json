@@ -1,0 +1,11 @@
+{
+ "name": "zombie_r2_v14_it300",
+ "contract_version": "3",
+ "fingerprint_sha256": "5521551798c3942cb235d40a8daab9ef10151ef407fa1815d9c9f9cc80a2b379",
+ "mujoco_version": "3.11.0",
+ "timestep": "0.005",
+ "decimation": "4",
+ "actuators": "[\"abdomen_flex\", \"abdomen_lat\", \"abdomen_twist\", \"shoulder_elev_l\", \"shoulder_flex_l\", \"shoulder_twist_l\", \"elbow_l\", \"shoulder_elev_r\", \"shoulder_flex_r\", \"shoulder_twist_r\", \"elbow_r\", \"hip_flex_l\", \"hip_abd_l\", \"hip_rot_l\", \"knee_l\", \"ankle_dorsi_l\", \"ankle_inv_l\", \"hip_flex_r\", \"hip_abd_r\", \"hip_rot_r\", \"knee_r\", \"ankle_dorsi_r\", \"ankle_inv_r\"]",
+ "checkpoint": "runs\\zombie_rung2\\2026-09-29_05-37-51_z2_v14\\model_300.pt",
+ "onnx_sha256": "1f551a68f886295baf09b484988728b9e8999bcbe090755ae3fb8525f543bce2"
+}

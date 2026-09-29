@@ -269,6 +269,12 @@ def upright_linear(env) -> torch.Tensor:
     return 0.5 * (1.0 + torch.cos(torso_tilt_rad(env)))
 
 
+def rise(env, target: float) -> torch.Tensor:
+    """height_progress × upright_linear²: pays only for a pelvis that is high AND a torso that is vertical together
+    (getup_v4 raised the pelvis on all fours with the torso flat)."""
+    return height_progress(env, target) * upright_linear(env) ** 2
+
+
 def standing_tall(env, min_height: float, max_tilt_deg: float) -> torch.Tensor:
     """1 while the pelvis is above min_height and the torso within max_tilt_deg of vertical (up and done)."""
     _, qp, _ = _root(env)

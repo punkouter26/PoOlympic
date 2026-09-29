@@ -299,6 +299,18 @@ def matt_getup4_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     return cfg
 
 
+def matt_getup5_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """getup_v5 (from getup_v4 it 600): v4 raised the pelvis to ~0.5 m on all fours with the torso flat (height
+    progress 0.51, uprightness 0.5) — the next stepping stone. Height and uprightness now pay only together
+    (rise = height × upright², w 8; the separate terms go); standing_tall 3 -> 5."""
+    cfg = matt_getup4_env_cfg(play=play)
+    for k in ("height_progress", "upright_linear"):
+        cfg.rewards.pop(k)
+    cfg.rewards["rise"] = RewardTermCfg(func=mdp.rise, weight=8.0, params={"target": DEFAULT_ROOT_Z})
+    cfg.rewards["standing_tall"].weight = 5.0
+    return cfg
+
+
 def matt_ppo_cfg(experiment: str, max_iterations: int) -> RslRlOnPolicyRunnerCfg:
     return RslRlOnPolicyRunnerCfg(
         actor=RslRlModelCfg(hidden_dims=(512, 256, 128), activation="elu", obs_normalization=True,
