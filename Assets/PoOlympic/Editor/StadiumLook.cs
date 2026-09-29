@@ -87,6 +87,100 @@ namespace PoOlympic.Editor
                     data.renderPostProcessing = true;
                     data.antialiasing = AntialiasingMode.FastApproximateAntialiasing;
                 }
+            ArenaLighting(stadium);
+        }
+
+        // ---------------------------------------------------------------- indoor arena (SourceArt/Stadium/build_indoor.py)
+        public const float SpotIntensity = 450f, WashIntensity = 320f;
+        public const int FieldSpots = 24;                       // Spot_00-23 field rig, Spot_24+ crowd wash
+
+        /// <summary>
+        /// Indoor arena lighting on a placed stadium (user decision 2026-09-28: closed roof + spotlights; the open bowl put
+        /// the home straight in the canopy's shadow): nothing above 25 m casts shadows (ceiling, trusses, fixtures, roof), the
+        /// scene's directional light becomes a near-vertical shadow-casting key light, one spot light per Spot_## fixture
+        /// aimed at its SpotAim_## (no shadows; created as scene objects under Stadium/ArenaLights so they can be tuned in
+        /// the scene), the roof-ring floodlights of the open-air look are switched off, the atmosphere goes indoor
+        /// (trilight ambient), and the static stadium is marked for static batching (flags + flame stay dynamic).
+        /// </summary>
+        public static int ArenaLighting(GameObject stadium)
+        {
+            float ground = stadium.transform.position.y;
+            foreach (var r in stadium.GetComponentsInChildren<Renderer>(true))
+                if (r.bounds.min.y - ground > 25f) r.shadowCastingMode = ShadowCastingMode.Off;
+
+            foreach (var root in stadium.scene.GetRootGameObjects())
+                foreach (var l in root.GetComponentsInChildren<Light>(true))
+                    if (l.type == LightType.Directional)
+                    {
+                        l.transform.rotation = Quaternion.Euler(80f, 30f, 0f);   // near-vertical: stands cast no shade on the track
+                        l.intensity = 1.1f;
+                        l.color = new Color(1f, 0.97f, 0.93f);
+                        l.shadows = LightShadows.Soft;
+                        l.shadowStrength = 0.7f;
+                        EditorUtility.SetDirty(l);
+                    }
+
+            var old = stadium.transform.Find("ArenaLights");
+            if (old != null) UnityEngine.Object.DestroyImmediate(old.gameObject);
+            var rig = new GameObject("ArenaLights").transform;
+            rig.SetParent(stadium.transform, false);
+            var all = stadium.GetComponentsInChildren<Transform>(true);
+            int n = 0;
+            foreach (var t in all.Where(x => System.Text.RegularExpressions.Regex.IsMatch(x.name, @"^Spot_\d\d$")).OrderBy(x => x.name))
+            {
+                var aim = all.FirstOrDefault(x => x.name == "SpotAim_" + t.name.Substring(5));
+                if (aim == null) continue;
+                int k = int.Parse(t.name.Substring(5));
+                bool wash = k >= FieldSpots;
+                var l = new GameObject($"ArenaSpot_{k:00}").AddComponent<Light>();
+                l.transform.SetParent(rig, false);
+                l.transform.SetPositionAndRotation(t.position, Quaternion.LookRotation(aim.position - t.position));
+                l.type = LightType.Spot;
+                l.spotAngle = wash ? 80f : 70f;
+                l.innerSpotAngle = wash ? 50f : 40f;
+                l.range = Vector3.Distance(t.position, aim.position) * 1.8f;
+                l.intensity = wash ? WashIntensity : SpotIntensity;
+                l.color = new Color(1f, 0.97f, 0.92f);
+                l.shadows = LightShadows.None;
+                n++;
+            }
+
+            var atmo = stadium.GetComponentInChildren<StadiumAtmosphere>(true);
+            if (atmo != null)
+            {
+                var flood = atmo.transform.Find("Floodlights");
+                if (flood != null) flood.gameObject.SetActive(false);
+                atmo.indoor = true;
+                atmo.Apply();
+                EditorUtility.SetDirty(atmo);
+            }
+
+            foreach (var t in stadium.GetComponentsInChildren<Transform>(true))
+            {
+                bool animated = t.name.StartsWith("Flag_") || t.name == "Cauldron_Flame" || t.GetComponentInParent<Light>() != null
+                                || t.GetComponent<StadiumAtmosphere>() != null || t.name == "ArenaLights";
+                GameObjectUtility.SetStaticEditorFlags(t.gameObject, animated ? 0 :
+                    StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccludeeStatic | StaticEditorFlags.ReflectionProbeStatic);
+            }
+            return n;
+        }
+
+        /// <summary>Re-light every built scene that holds a placed stadium (indoor arena), without rebuilding it.</summary>
+        [MenuItem("PoOlympic/Stadium/Apply indoor arena lighting to all scenes")]
+        public static string RelightAllScenes()
+        {
+            var report = new System.Text.StringBuilder();
+            foreach (var guid in AssetDatabase.FindAssets("t:Scene", new[] { "Assets/PoOlympic/Scenes" }))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(path, UnityEditor.SceneManagement.OpenSceneMode.Single);
+                var stadium = scene.GetRootGameObjects().FirstOrDefault(g => g.name == "Stadium");
+                if (stadium == null) continue;
+                int n = ArenaLighting(stadium);
+                UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
+                report.Append($"{Path.GetFileNameWithoutExtension(path)}: {n} spots; ");
+            }
+            return report.ToString();
         }
 
         static GameObject EnsurePrefab()
