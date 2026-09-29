@@ -53,6 +53,17 @@ if bodies.current().name == "matt":
         runner_cls=MjlabOnPolicyRunner,
     )
 
+    from .stance_env import matt_stance_env_cfg
+
+    # Rung S (contract v4 stance skills, events 2/3/4/6/7): warm start = rung2 (r2_v8) expanded by tools/expand_obs.py
+    register_mjlab_task(
+        task_id="PoOlympic-Matt-RungS-Stance",
+        env_cfg=matt_stance_env_cfg(),
+        play_env_cfg=matt_stance_env_cfg(play=True),
+        rl_cfg=matt_ppo_cfg("matt_stance", max_iterations=1500),
+        runner_cls=SymmetricRunner,
+    )
+
     from .crawl_env import matt_crawl2_env_cfg, matt_crawl3_env_cfg, matt_crawl_env_cfg
 
     register_mjlab_task(

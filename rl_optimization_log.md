@@ -410,3 +410,14 @@ One entry per run or decision. Newest at the bottom.
   welded wrists / forearm-tip reach target.
 - Zombie Rung 2: yaw tracking judged on the stride-averaged yaw rate (`yaw_rms_stride`). zombie_rung2 margin 21/30 → 23/30;
   the remaining misses are sprint speed precision (training).
+
+## 2026-09-29 · Contract v4 + Rung S scaffolding (no training)
+- v4 = v3 + 11-value skill block after the 84 obs (pelvis height, lift foot l/r, march Hz + knee lift, torso yaw/pitch,
+  hand xyz + arm); v3 brains/references byte-identical (contract.json gains an additive skill_block). March cadence > 0
+  drives the gait clock at zero velocity. Unity: random_brain_v4 G2 2e-16-level, G3/G4 PASS, closed-loop G5 drift 4.3e-6.
+- Rung S task: skill mode per resample (20 % locomotion, 16 % each skill); stance skills stand still (is_standing_env);
+  rewards w 3 per skill (squat std 5 cm, flamingo clearance 10 cm, march knee profile std 6 cm, torso std 9°, reach
+  10 cm + 3 cm); height/posture/upright/phase-contact/pelvis-fall made skill-aware. Mirror symmetry extended and
+  physics-checked. C1: obs 3e-7, clock 2e-7, torch vs numpy skill measures < 1e-6.
+- Warm start rs_init = r2_v8 it600 + zero input columns (actor(obs95) == actor(obs84) exactly); 2-iteration smoke run
+  loads and trains (removed). G1 drills (evaluate_stance.py) run; the random v4 brain fails all (as it should).

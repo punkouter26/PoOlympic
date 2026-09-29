@@ -1,0 +1,56 @@
+"""Rung S — contract v4 stance skills for MATT (events 2 Torso Archer, 3 Deep Squat, 4 Javelin Reach, 6 Flamingo,
+7 Cadence March). docs/CONTRACT_V4_STANCE_PROPOSAL.md (approved 2026-09-29): ONE shared brain, warm-started from the
+final Rung 2 recipe (r2_v8 = rung2.onnx) with the 11 new input columns zero-initialised (tools/expand_obs.py), so the
+first iteration behaves exactly like Rung 2. 20 % of the command resamples stay plain locomotion (keeps the Rung 2
+skills); the rest draw one stance skill each (skill_mdp.AthleteSkillCommand).
+
+Terms that would fight a stance skill are made skill-aware: the pelvis-height reward follows the squat target, posture
+pays only in locomotion, uprightness is off while aiming the torso / squatting, the pelvis fall line drops with the
+squat, and the phase-contact reward knows the march clock and the flamingo stance.
+"""
+
+from __future__ import annotations
+
+import dataclasses
+import math
+
+from mjlab.envs import ManagerBasedRlEnvCfg
+from mjlab.managers.observation_manager import ObservationTermCfg
+from mjlab.managers.reward_manager import RewardTermCfg
+from mjlab.managers.termination_manager import TerminationTermCfg
+
+from . import skill_mdp as S
+from .matt_env import matt_rung2_sym5_env_cfg
+
+SKILL_REWARD_WEIGHT = 3.0
+
+
+def matt_stance_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    cfg = matt_rung2_sym5_env_cfg(play=play)
+
+    # command: the Rung 2 velocity command + the skill block (same fields, skill-aware class)
+    old = cfg.commands["athlete"]
+    cfg.commands["athlete"] = S.AthleteSkillCommandCfg(**{f.name: getattr(old, f.name) for f in dataclasses.fields(old)
+                                                          if f.init})
+
+    # observation: the 11-value skill block after the 84 v3 terms (contract v4 order)
+    for group in ("actor", "critic"):
+        cfg.observations[group].terms["skill"] = ObservationTermCfg(func=S.obs_skill, params={})
+
+    r = cfg.rewards
+    # skill-aware versions of the Rung 0/1/2 terms
+    r["height"] = RewardTermCfg(func=S.skill_pelvis_height, weight=r["height"].weight, params={"std": 0.15})
+    r["posture"] = RewardTermCfg(func=S.posture_locomotion, weight=r["posture"].weight, params=dict(r["posture"].params))
+    r["upright"] = RewardTermCfg(func=S.upright_unless_aiming, weight=r["upright"].weight, params=dict(r["upright"].params))
+    r["phase_contact"] = RewardTermCfg(func=S.phase_contact_v4, weight=r["phase_contact"].weight)
+    # the five skills
+    w = SKILL_REWARD_WEIGHT
+    r["skill_squat"] = RewardTermCfg(func=S.skill_squat, weight=w, params={"std": 0.05})
+    r["skill_flamingo"] = RewardTermCfg(func=S.skill_flamingo, weight=w, params={"clearance": 0.10})
+    r["skill_march"] = RewardTermCfg(func=S.skill_march, weight=w, params={"std": 0.06})
+    r["skill_torso"] = RewardTermCfg(func=S.skill_torso, weight=w, params={"std": math.radians(9)})
+    r["skill_reach"] = RewardTermCfg(func=S.skill_reach, weight=w / 2, params={"std": 0.10})
+    r["skill_reach_fine"] = RewardTermCfg(func=S.skill_reach, weight=w / 2, params={"std": 0.03})
+
+    cfg.terminations["pelvis_low"] = TerminationTermCfg(func=S.pelvis_below_skill, params={"minimum_height": 0.55})
+    return cfg

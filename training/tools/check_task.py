@@ -23,7 +23,12 @@ from mjlab.envs import ManagerBasedRlEnv  # noqa: E402
 from poolympic import contract as C  # noqa: E402
 from poolympic.tasks.matt_env import matt_rung2_sym3_env_cfg, matt_pedestal2_env_cfg, matt_pedestal_env_cfg, matt_rung0_env_cfg, matt_rung1_env_cfg, matt_rung2_env_cfg  # noqa: E402
 
-TASKS = {"rung0": matt_rung0_env_cfg, "rung1": matt_rung1_env_cfg, "rung2": matt_rung2_env_cfg, "pedestal": matt_pedestal_env_cfg, "pedestal2": matt_pedestal2_env_cfg, "rung2_sym3": matt_rung2_sym3_env_cfg}
+def _stance():
+    from poolympic.tasks.stance_env import matt_stance_env_cfg
+    return matt_stance_env_cfg()
+
+
+TASKS = {"stance": _stance, "rung0": matt_rung0_env_cfg, "rung1": matt_rung1_env_cfg, "rung2": matt_rung2_env_cfg, "pedestal": matt_pedestal_env_cfg, "pedestal2": matt_pedestal2_env_cfg, "rung2_sym3": matt_rung2_sym3_env_cfg}
 
 
 def _zombie(rung: str):
@@ -34,6 +39,31 @@ def _zombie(rung: str):
 
 
 TASKS.update({f"zombie_{r}": _zombie(r) for r in ("rung0", "rung1", "rung2", "rung2_base", "rung2_sym3")})
+
+
+def check_skill_measures(env, m) -> bool:
+    """Rung S: the torch skill measurements (tasks/skill_mdp.py) == the numpy ones (poolympic/skills.py) on the same
+    states — training rewards and G1 drills measure the same thing."""
+    from poolympic import skills as K
+    from poolympic.tasks import skill_mdp as S
+    sb = K.SkillBodies.bind(m, prefix="robot/", keyframe=None, ground="terrain")
+    d = mujoco.MjData(m)
+    qpos = env.sim.data.qpos.cpu().numpy().astype(np.float64)
+    aim = S.measure_torso_aim(env).cpu().numpy()
+    worst_aim = worst_hand = worst_knee = 0.0
+    knee = (S.measure_knee_rise(env) + torch.as_tensor(S.SKILL_GEOM["knee_z0"], device=env.device)).cpu().numpy()
+    hands = {a: S.measure_hand(env, torch.full((env.num_envs,), float(a), device=env.device)).cpu().numpy() for a in (-1, 1)}
+    for e in range(env.num_envs):
+        d.qpos[:] = qpos[e]
+        mujoco.mj_kinematics(m, d)
+        worst_aim = max(worst_aim, float(np.abs(np.array(K.torso_aim(d, sb)) - aim[e]).max()))
+        for a in (-1, 1):
+            worst_hand = max(worst_hand, float(np.abs(K.hand_in_heading(d, sb, a) - hands[a][e]).max()))
+        worst_knee = max(worst_knee, float(np.abs(np.array([d.xpos[sb.shin[0]][2], d.xpos[sb.shin[1]][2]]) - knee[e]).max()))
+    print(f"skill measures torch vs numpy: torso aim {worst_aim:.1e} rad, hand {worst_hand:.1e} m, knee {worst_knee:.1e} m")
+    modes = torch.bincount(env.command_manager.get_term("athlete").mode, minlength=len(S.SKILL_MODES)).tolist()
+    print(f"skill modes in {env.num_envs} envs: {dict(zip(S.SKILL_MODES, modes))}")
+    return worst_aim < 1e-4 and worst_hand < 1e-4 and worst_knee < 1e-4
 
 
 def main(task: str = "rung0") -> int:
@@ -78,11 +108,13 @@ def main(task: str = "rung0") -> int:
         policy_obs = obs["actor"].cpu().numpy()
         cmds = term.command.cpu().numpy().astype(np.float64)
         ep = env.episode_length_buf.cpu().numpy()
+        skills = term.skill.cpu().numpy().astype(np.float64) if hasattr(term, "skill") else None   # Rung S (v4)
         for e in range(env.num_envs):
-            py_phase[e] = C.advance_phase(0.0 if ep[e] == 0 else py_phase[e], cmds[e])
+            sk = None if skills is None else skills[e]
+            py_phase[e] = C.advance_phase(0.0 if ep[e] == 0 else py_phase[e], cmds[e], C.skill_cadence(sk))
             worst_phase = max(worst_phase, abs(py_phase[e] - float(term.phase[e])) % 1.0)
             ref_obs = C.build_obs(ath, qpos[e], qvel[e], term.command[e].cpu().numpy().astype(np.float64),
-                                  float(term.phase[e]), last[e])
+                                  float(term.phase[e]), last[e], sk)
             worst_obs = max(worst_obs, float(np.abs(policy_obs[e] - ref_obs).max()))
             # ctrl written during the last substep = clip(default + scale·a) (delay may hold older targets: skip delayed envs)
             want = C.action_to_ctrl(ath, a[e].cpu().numpy().astype(np.float64))
@@ -92,6 +124,8 @@ def main(task: str = "rung0") -> int:
     print(f"phase clock max |train - contract.advance_phase| = {worst_phase:.2e}  (commands nonzero: {bool(np.abs(cmds).sum() > 0)})")
     ok &= worst_phase < 1e-4
     print(f"actuator order: {ath_names[:4]} …")
+    if hasattr(env.command_manager.get_term("athlete"), "skill"):
+        ok &= check_skill_measures(env, m)
     env.close()
 
     # 3. wiring: action index i must move exactly ctrl of contract actuator i (no delay, no DR)

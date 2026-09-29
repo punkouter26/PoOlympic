@@ -54,5 +54,26 @@ APK size down.
 3. **Ranges as proposed.**
 4. **Physics limits accepted**: wrists stay welded, no fingers; the Javelin Reach target is the forearm tip.
 
-Next (no training): contract v4 + obs builder in Python and C#, G2 tests, the Rung S task scaffolding and G1 drills;
-then the training run.
+## Implementation status (2026-09-29) — everything but the training run is done
+
+- Contract: `training/poolympic/contract.py` (SKILL_LAYOUT, SkillCommand, cadence clock, `build_obs(skill=...)`),
+  `contract.json` "skill_block" (additive — v3 brains unchanged). Unity: `Contract.SkillBlock`, `ObservationBuilder`
+  skill block, `SkillCommand`, `PolicyRunner.skill` (the brain's sidecar version picks 84 vs 95 obs).
+- Parity: v4 test brain `random_brain_v4` + reference `random_v4` — G2/G3/G4 in EditMode, closed-loop G5 in Play mode
+  PASS (drift 4.3e-6). Mirror map for PPO symmetry covers the skill block (tests/test_symmetry.py, physics-checked).
+- Task `PoOlympic-Matt-RungS-Stance` (`tasks/stance_env.py`, `tasks/skill_mdp.py`): skill command + rewards; C1 check
+  (`tools/check_task.py stance`): obs == contract, clock == contract, torch skill measures == numpy (`poolympic/skills.py`).
+- Warm start: `tools/expand_obs.py` (rung2 r2_v8 it600 → 95 inputs, zero columns: identical function at it 0).
+- G1: `tools/eval_cpu.py <brain> --rung S` (`poolympic/evaluate_stance.py`: one drill per event, 10 seeds).
+- Export: `tools/export_brain.py` stamps contract_version 4 on 95-input checkpoints.
+
+Training run (the only remaining step):
+
+    cd training
+    uv run python tools/expand_obs.py runs/matt_rung2/2026-09-28_04-54-44_r2_v8/model_600.pt runs/matt_stance/rs_init
+    uv run train PoOlympic-Matt-RungS-Stance --log-root runs --env.scene.num-envs 4096 --agent.resume True \
+        --agent.load-run rs_init --agent.load-checkpoint model_0.pt --agent.run-name rs_v1
+    uv run python tools/export_brain.py runs/matt_stance/<run> rs_v1_itNNN
+    uv run python tools/eval_cpu.py ../parity/brains/rs_v1_itNNN.onnx --rung S
+
+After G1: the five event scenes (rules in `poolympic/events/`, Unity controllers) use `PolicyRunner.skill`.

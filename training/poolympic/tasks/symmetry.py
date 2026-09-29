@@ -9,6 +9,8 @@ Observation (contract.OBS_LAYOUT, 84):
   command (vx, vy, wz) -> (vx, -vy, -wz)            gait phase -> phase + 0.5 while moving ((sin, cos) -> (-sin, -cos));
                                                     unchanged while standing (clock frozen at 0)
   joint pos / joint vel / last action -> partner joint (x sign)
+Contract v4 skill block (95-dim obs): pelvis height, march -> same; lift foot (l, r) -> (r, l); torso aim (yaw, pitch)
+-> (-yaw, pitch); hand target (x, y, z) -> (x, -y, z); arm -> -arm. A march cadence runs the clock, so it shifts too.
 Verified against physically mirrored MuJoCo states in tests/test_symmetry.py.
 """
 
@@ -56,6 +58,12 @@ def _obs_maps() -> tuple[list[int], list[float]]:
 
 
 OBS_IDX, OBS_SIGN = _obs_maps()
+# contract v4 skill block (C.SKILL_LAYOUT order, after the 84 v3 obs)
+_S = C.OBS_DIM
+SKILL_IDX = [_S + 0, _S + 2, _S + 1, _S + 3, _S + 4, _S + 5, _S + 6, _S + 7, _S + 8, _S + 9, _S + 10]
+SKILL_SIGN = [1, 1, 1, 1, 1, -1, 1, 1, -1, 1, -1]
+assert len(SKILL_IDX) == C.SKILL_DIM
+MARCH_HZ = _S + 3
 
 
 _OFF = {}
@@ -67,13 +75,16 @@ CMD_SLICE, PHASE_SLICE = slice(*_OFF["command"]), slice(*_OFF["gait_phase_sincos
 
 
 def mirror_obs(x: torch.Tensor) -> torch.Tensor:
-    idx = torch.as_tensor(OBS_IDX, device=x.device)
-    sgn = torch.as_tensor(OBS_SIGN, device=x.device, dtype=x.dtype)
+    v4 = x.shape[-1] == C.OBS_DIM_V4
+    idx = torch.as_tensor(OBS_IDX + (SKILL_IDX if v4 else []), device=x.device)
+    sgn = torch.as_tensor(OBS_SIGN + (SKILL_SIGN if v4 else []), device=x.device, dtype=x.dtype)
     y = x[..., idx] * sgn
     # The gait clock is frozen at phase 0 while standing (|cmd| < threshold): a mirrored standing athlete is still at
     # phase 0, so only a running clock shifts by half a stride. (r2_v3 bug: unconditional flip made every mirrored
-    # standing sample carry phase 0.5 — an impossible state.)
+    # standing sample carry phase 0.5 — an impossible state.) v4: a march cadence > 0 runs the clock too.
     moving = x[..., CMD_SLICE].norm(dim=-1, keepdim=True) >= C.PHASE_CMD_THRESHOLD
+    if v4:
+        moving = moving | (x[..., MARCH_HZ:MARCH_HZ + 1] > 0)
     y[..., PHASE_SLICE] = torch.where(moving, y[..., PHASE_SLICE], x[..., PHASE_SLICE])
     return y
 

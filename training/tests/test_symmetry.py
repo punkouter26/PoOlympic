@@ -91,3 +91,68 @@ def test_mirrored_joint_map_mirrors_the_body():
             pm = dm.xpos[m.body(_partner_body(b)).id]
             worst = max(worst, float(np.abs(p - pm).max()))
     assert worst < 2e-3, worst   # MATT's skeleton is L/R-symmetric to < 1 mm
+
+
+def _mirror_skill(skill: np.ndarray) -> np.ndarray:
+    s = C.SkillCommand.from_array(skill)
+    return C.SkillCommand(s.pelvis_height, {"l": "r", "r": "l"}.get(s.lift_foot, ""), s.march_hz, s.knee_lift,
+                          -s.torso_yaw, s.torso_pitch, (s.hand[0], -s.hand[1], s.hand[2]), -s.arm).to_array()
+
+
+def test_mirror_v4_skill_block():
+    """95-dim obs: mirror(obs(state, skill)) == obs(mirrored state, mirrored skill); a march cadence runs the clock."""
+    m = mujoco.MjModel.from_xml_path(str(C.SCENE_XML))
+    d = mujoco.MjData(m)
+    ath = C.Athlete.bind(m)
+    rng = np.random.default_rng(3)
+    worst = 0.0
+    for k in range(30):
+        mujoco.mj_resetDataKeyframe(m, d, m.key("default").id)
+        qpos = d.qpos.copy()
+        qpos[ath.joint_qposadr] += rng.normal(0, 0.3, len(ath.joint_qposadr))
+        qvel = rng.normal(0, 1.0, m.nv)
+        march = k % 2 == 0
+        skill = C.SkillCommand(pelvis_height=-rng.uniform(0, 0.4), lift_foot=["", "l", "r"][k % 3],
+                               march_hz=1.2 if march else 0.0, knee_lift=0.2 if march else 0.0,
+                               torso_yaw=rng.uniform(-1, 1), torso_pitch=rng.uniform(-0.3, 0.6),
+                               hand=tuple(rng.normal(0, 0.4, 3)), arm=[-1, 0, 1][k % 3]).to_array()
+        phase = rng.uniform() if march else 0.0          # standing, no march: clock frozen at 0
+        last = rng.normal(0, 1, C.NUM_ACTIONS)
+        o = C.build_obs(ath, qpos, qvel, np.zeros(3), phase, last, skill)
+        qm, vm = _mirror_state(m, ath, qpos, qvel)
+        om = C.build_obs(ath, qm, vm, np.zeros(3), (phase + 0.5) % 1.0 if march else phase,
+                         S.mirror_actions(torch.as_tensor(last)).numpy(), _mirror_skill(skill))
+        worst = max(worst, float(np.abs(S.mirror_obs(torch.as_tensor(o)).numpy() - om).max()))
+    assert worst < 1e-5, worst
+    x = torch.randn(5, C.OBS_DIM_V4)
+    assert torch.allclose(S.mirror_obs(S.mirror_obs(x)), x)
+
+
+def test_skill_measures_mirror_physically():
+    """The quantities the skill rewards measure mirror the way the skill block does: torso aim (yaw, pitch) ->
+    (-yaw, pitch), hand of arm a (x, y, z) -> hand of arm -a (x, -y, z), knee rise / foot heights swap sides."""
+    from poolympic import skills as K
+    m = mujoco.MjModel.from_xml_path(str(C.SCENE_XML))
+    d, dm = mujoco.MjData(m), mujoco.MjData(m)
+    ath = C.Athlete.bind(m)
+    sb = K.SkillBodies.bind(m)
+    rng = np.random.default_rng(4)
+    worst = 0.0
+    for _ in range(20):
+        mujoco.mj_resetDataKeyframe(m, d, m.key("default").id)
+        d.qpos[ath.joint_qposadr] += rng.normal(0, 0.3, len(ath.joint_qposadr))
+        quat = np.zeros(4)
+        mujoco.mju_euler2Quat(quat, [0.0, 0.0, rng.uniform(-np.pi, np.pi)], "xyz")
+        d.qpos[ath.root_qposadr + 3: ath.root_qposadr + 7] = quat
+        dm.qpos[:], _ = _mirror_state(m, ath, d.qpos, d.qvel)
+        mujoco.mj_kinematics(m, d)
+        mujoco.mj_kinematics(m, dm)
+        y, p = K.torso_aim(d, sb)
+        ym, pm = K.torso_aim(dm, sb)
+        worst = max(worst, abs(ym + y), abs(pm - p))
+        for arm in (-1, 1):
+            worst = max(worst, float(np.abs(K.hand_in_heading(dm, sb, -arm) - K.hand_in_heading(d, sb, arm) * [1, -1, 1]).max()))
+        kl, kr = K.knee_rise(d, sb)
+        kml, kmr = K.knee_rise(dm, sb)
+        worst = max(worst, abs(kml - kr), abs(kmr - kl))
+    assert worst < 3e-3, worst   # skeleton L/R symmetric to < 1 mm; the forearm tip lever adds a little

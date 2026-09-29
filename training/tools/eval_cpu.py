@@ -1,6 +1,7 @@
 """C2 — Gate G1: CPU-MuJoCo evaluation of an exported brain against a rung's pass bar (10 seeds).
 
-Usage: uv run python tools/eval_cpu.py <brain.onnx> --rung 0|1|2 [--seeds 10] [--out parity/eval_<name>.json]
+Usage: uv run python tools/eval_cpu.py <brain.onnx> --rung 0|1|2|S [--seeds 10] [--out parity/eval_<name>.json]
+       (S = Rung S stance-skill drills for events 2/3/4/6/7, contract v4 brain: poolympic/evaluate_stance.py)
 """
 
 from __future__ import annotations
@@ -19,11 +20,14 @@ from poolympic import evaluate as E  # noqa: E402
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("onnx", type=Path)
-    ap.add_argument("--rung", type=int, default=0)
+    ap.add_argument("--rung", default="0", help="0, 1, 2 or S")
     ap.add_argument("--seeds", type=int, default=10)
     ap.add_argument("--first-seed", type=int, default=1000)
     ap.add_argument("--out", type=Path, default=None)
     a = ap.parse_args()
+    if str(a.rung).upper() == "S":
+        return stance(a)
+    a.rung = int(a.rung)
     sim = E.Sim(a.onnx)
     if a.rung == 2:
         results = []
@@ -66,6 +70,24 @@ def main() -> int:
     out = a.out or ROOT.parent / "parity" / f"eval_rung{a.rung}_{a.onnx.stem}.json"
     out.write_text(json.dumps(report, indent=1))
     print(f"G1 rung {a.rung}: {verdict['passed_seeds']}/{verdict['seeds']} seeds pass -> {'PASS' if verdict['PASS'] else 'FAIL'}  ({out.name})")
+    return 0 if verdict["PASS"] else 1
+
+
+def stance(a) -> int:
+    from poolympic import evaluate_stance as ES
+    sim = ES.SkillSim(a.onnx)
+    results = []
+    for s in range(a.first_seed, a.first_seed + a.seeds):
+        r = ES.stance_episode(a.onnx, s, sim=sim)
+        results.append(r)
+        print(f"seed {s}: " + " | ".join(f"{n} {'ok' if v['pass'] else 'FAIL'} "
+                                         + ",".join(f"{k}={x}" for k, x in v.items() if k != "pass") for n, v in r.drills.items()))
+    verdict = ES.stance_verdict(results)
+    report = {"onnx": str(a.onnx), **verdict, "episodes": [ES.to_json(r) for r in results]}
+    out = a.out or ROOT.parent / "parity" / f"eval_rungS_{a.onnx.stem}.json"
+    out.write_text(json.dumps(report, indent=1))
+    print(f"G1 rung S: {verdict['passed_seeds']}/{verdict['seeds']} seeds pass, per drill {verdict['per_drill']} -> "
+          f"{'PASS' if verdict['PASS'] else 'FAIL'}  ({out.name})")
     return 0 if verdict["PASS"] else 1
 
 
