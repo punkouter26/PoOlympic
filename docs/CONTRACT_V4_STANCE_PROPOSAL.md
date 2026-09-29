@@ -1,6 +1,6 @@
 # Proposal — contract v4 "stance skills" (events 2, 3, 4, 6, 7)
 
-Status: **draft for decision** (2026-09-29). Nothing is trained or changed until approved. tasks.md calls this
+Status: **approved** (user, 2026-09-29): option A (one shared brain), MATT first, ranges and physics limits as below. tasks.md calls this
 "contract v3"; v3 is already taken by the gait-clock change of 2026-09-28, so this is **v4**.
 
 ## Why
@@ -46,13 +46,13 @@ per event. Estimate: 1 run of ~2–3 h plus gate iterations.
 Recommendation: **A**. Every event scene already loads one brain per body, and one shared brain keeps parity work and
 APK size down.
 
-## Decisions needed
+## Decisions (user, 2026-09-29)
 
-1. Option A (one brain) or B (five brains)?
-2. MATT only first, or MATT + zombie in the same pass? (The zombie needs its own run with the Froude-scaled ranges.)
-3. Ranges above OK? The deepest squat and the reach sphere matter most for how the events look.
-4. Physics limits accepted: wrists stay welded (reach = shoulder + elbow only), and no fingers for Javelin Reach (the
-   target is the forearm tip).
+1. **Option A** — one shared "stance skills" brain (Rung S).
+2. **MATT first**; the zombie gets its own run with the size-scaled ranges later (until then zombie lanes cannot enter
+   events 2, 3, 4, 6, 7).
+3. **Ranges as proposed.**
+4. **Physics limits accepted**: wrists stay welded, no fingers; the Javelin Reach target is the forearm tip.
 
-Once these are answered, the implementation that needs no training (contract, obs builder in Python + C#, G2 tests,
-task scaffolding) can be done before the training run.
+Next (no training): contract v4 + obs builder in Python and C#, G2 tests, the Rung S task scaffolding and G1 drills;
+then the training run.

@@ -404,3 +404,9 @@ One entry per run or decision. Newest at the bottom.
 - **Contract v4 stance-skills proposal** → `docs/CONTRACT_V4_STANCE_PROPOSAL.md` (11-dim skill block appended to the obs,
   one Rung S brain warm-started from rung2 recommended; 4 open decisions for the user). Game APK rebuilt with events 13 +
   23, D3 broadcast layer and gauntlets, installed on the Pixel 9 Pro (216 MB; menu `parity/android/menu_2026-09-29.png`).
+
+## 2026-09-29 · User decisions
+- Contract v4 stance skills: one shared Rung S brain (warm start rung2, zero-init new inputs), MATT first, proposed ranges,
+  welded wrists / forearm-tip reach target.
+- Zombie Rung 2: yaw tracking judged on the stride-averaged yaw rate (`yaw_rms_stride`). zombie_rung2 margin 21/30 → 23/30;
+  the remaining misses are sprint speed precision (training).

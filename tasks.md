@@ -146,7 +146,7 @@ Rules: every surface an athlete can touch is a MuJoCo geom generated into the MJ
 
 All 30 events are unlocked from the start (instant exhibition play or gauntlet construction). Each event = **venue** (render-only, `Stadium.glb` anchor) + **props** (MuJoCo geoms in the event MJCF, shared by training / CPU gates / Unity) + **brain** (the rung that owns the skill) + **event controller** (rules, scoring, elimination, seeded schedule; pattern: `IronPedestalEvent`). An event is done when: CPU scoring script passes with the brain, the Unity scene plays it end-to-end (1 biped, then 8 lanes), and a G5-style parity run of one attempt passes.
 
-Skill gaps: events marked **S** need behaviours the current contract cannot command (upper-body / hand targets, pelvis height, single-leg, cadence, …) → one "stance skills" rung with an extended command block (**contract v4** — v3 is the gait-clock change; design decision before implementation: proposal in `docs/CONTRACT_V4_STANCE_PROPOSAL.md`, awaiting the user's answers). Events marked **M** likely need a motion prior (R7).
+Skill gaps: events marked **S** need behaviours the current contract cannot command (upper-body / hand targets, pelvis height, single-leg, cadence, …) → one "stance skills" rung with an extended command block (**contract v4** — v3 is the gait-clock change). **Approved 2026-09-29** (`docs/CONTRACT_V4_STANCE_PROPOSAL.md`): one shared Rung S brain warm-started from rung2, MATT first, ranges as proposed, welded wrists / forearm-tip reach target. Events marked **M** likely need a motion prior (R7).
 
 | # | Event | Rules (summary) | Venue | Props (MJCF) | Brain / rung | Status |
 |---|---|---|---|---|---|---|
@@ -217,7 +217,9 @@ apply: TensorBoard + MuJoCo viewer for every run, close Unity during 30 min+ run
     21/30 (23/30 with stride-averaged yaw), 0 falls**, turntable 2.21 s, runs 2.0 → 2.06 m/s. Fixes (z2_v5-v14, see log):
     yaw terms on the stride-filtered yaw rate, lateral-accel cap 3 m/s², speed weights 3 + 1.5, yaw-wobble penalty.
     Remaining misses: 2.4-2.85 m/s sprints 0.003-0.04 m/s over the speed bar. Unity re-validated with the new brain:
-    EditMode 36/36 (G2-G4), G6 mixed 8/8. Still open for 10/10: more sprint precision, or the yaw-averaging ruling.
+    EditMode 36/36 (G2-G4), G6 mixed 8/8. **Ruling (user, 2026-09-29): zombie yaw tracking is judged averaged over one
+    stride** (`yaw_rms_stride`) → margin 23/30; still open for 10/10: sprint precision (2.4-2.85 m/s runs 0.003-0.04 m/s
+    over the speed bar) — needs training.
 - [x] **Z7 Unity** — contract per body in PolicyRunner, zombie MATT-style visual binding, G0/G2–G5 on the zombie, mixed
   MATT + zombie meets (lane body chosen per lane → `compose_meet` with per-lane bodies), menu roster card, events read
   MeetLineup. *Accept: G6 with a mixed 8-lane meet; every playable event runs with any lineup.* — PASSED 2026-09-28:
