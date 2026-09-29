@@ -1,7 +1,7 @@
 # Proposal — contract v4 "stance skills" (events 2, 3, 4, 6, 7)
 
-Status: **approved** (user, 2026-09-29): option A (one shared brain), MATT first, ranges and physics limits as below. tasks.md calls this
-"contract v3"; v3 is already taken by the gait-clock change of 2026-09-28, so this is **v4**.
+Status: **approved** (user, 2026-09-29): option A (one shared brain), MATT first, ranges and physics limits as below.
+(Contract v3 is the gait-clock change of 2026-09-28, so this is **v4**.)
 
 ## Why
 
