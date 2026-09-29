@@ -24,7 +24,7 @@ import numpy as np
 
 from .. import bodies
 from .. import contract as C
-from .iron_pedestal import Traits, make_lanes
+from .iron_pedestal import Traits, body_command, make_lanes  # noqa: F401 (body_command re-exported)
 
 SCENE = C.ROOT / "assets" / "scene_track8.xml"
 LAYOUT = C.ROOT / "assets" / "track8_layout.json"
@@ -67,16 +67,6 @@ def crawl_steer(q: np.ndarray, lane_offset_y: float) -> float:
     return float(np.clip(C.HEADING_GAIN * err, -C.STEER_WZ_LIMIT, C.STEER_WZ_LIMIT))
 
 
-def body_command(cmd: np.ndarray, body: str) -> np.ndarray:
-    """PolicyRunner.BodyCommand in float32: k = (float)(0.8 / gait_hz_base); (x·k, y·k, z / k). Identity for MATT."""
-    if body == "matt":
-        return cmd
-    ct = json.loads(bodies.BODIES[body].contract_json.read_text())
-    k = np.float32(0.8 / ct["gait_hz_base"])
-    c = np.asarray(cmd, np.float32)
-    return np.array([c[0] * k, c[1] * k, c[2] / k], dtype=np.float64)
-
-
 def prone_start(m, d, ln) -> None:
     """Face down on the lane line, head towards +x (the finish): pitch +90° about the lane's y axis."""
     lam = bodies.BODIES[ln.body].length_scale
@@ -114,7 +104,7 @@ def run_race(brains: dict[str, Path], seed: int, traits: list[Traits] | None = N
                 cmd = np.zeros(3)
             else:
                 cmd = np.array([VX, 0.0, crawl_steer(d.qpos[r + 3:r + 7], d.qpos[r + 1] - ln.origin[1])])
-            ln.control(ln.sess, d, body_command(cmd, ln.body))
+            ln.control(ln.sess, d, cmd)            # _Lane.control scales to the body (BodyCommand)
         for s in range(C.DECIMATION):
             for ln in lanes:
                 ln.write_ctrl(d, s)

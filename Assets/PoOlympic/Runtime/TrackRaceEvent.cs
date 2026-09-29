@@ -17,12 +17,15 @@ namespace PoOlympic
     ///   AllFours  (8  30m All Fours)       crawl brains (events/all_fours.py): start face down, get onto all fours during
     ///                                      the countdown, crawl 30 m; falls never eliminate (tumbles are counted), standing
     ///                                      up for more than standDqSeconds = DQ; rank by finish time
+    ///   Steeplechase (13 Steeplechase Jog) 50 m at 3.5 m/s with the flight brain; scored on ground time = finish time −
+    ///                                      hang time (flights: both feet off the ground ≥ minFlight, counted per physics
+    ///                                      substep like track.py FootGait); rank by ground time, then finish time
     /// Runners steer with the contract's lane keeping (PolicyRunner.laneKeeping). Traits + nerve are drawn per heat.
     ///   Ready (countdown) → Live → Result → auto restart (new seed)
     /// </summary>
-    public class TrackRaceEvent : MonoBehaviour, ILaneRoster
+    public class TrackRaceEvent : MonoBehaviour, IBroadcastBoard, ILaneRoster
     {
-        public enum Mode { Dash, Terminal, Brake, Inverted, AllFours }
+        public enum Mode { Dash, Terminal, Brake, Inverted, AllFours, Steeplechase }
         public enum Phase { Ready, Live, Result }
 
         [Serializable]
@@ -37,6 +40,8 @@ namespace PoOlympic
             [NonSerialized] public int place, tumbles, torsoId = -1;
             [NonSerialized] public float standT, lambda = 1f;
             [NonSerialized] public bool wasOnFours;
+            [NonSerialized] public FootGait gait;
+            [NonSerialized] public float scoreS = float.NaN;   // steeplechase: ground time
             [NonSerialized] public readonly Queue<float> speedWindow = new();
             public bool Racing => status.Length == 0;
         }
@@ -53,6 +58,8 @@ namespace PoOlympic
         public Vector2 brakeNerve = new(1.4f, 2.2f);
         public float toeAhead = 0.25f, stoppedSpeed = 0.1f, laneHalf = 0.61f;
         public float countdownSeconds = 3f, resultHoldSeconds = 6f;
+        [Header("Steeplechase (= track.py steeple)")]
+        public float minFlight = 0.02f;
         [Header("All fours (= all_fours.py)")]
         public float standDqSeconds = 1f;
         public Vector2 crawlBand = new(0.25f, 0.8f);   // pelvis height band (m) × λ
@@ -76,6 +83,7 @@ namespace PoOlympic
             Mode.Terminal => (84.39f, 4.0f, 45f),
             Mode.Inverted => (20f, -1.5f, 30f),
             Mode.AllFours => (30f, 1.2f, 60f),
+            Mode.Steeplechase => (50f, 3.5f, 30f),
             _ => (30f, 3.0f, 25f),
         };
 
@@ -90,6 +98,7 @@ namespace PoOlympic
             {
                 r.status = ""; r.finishS = -1; r.peakMps = 0; r.gapM = float.NaN; r.braking = false; r.place = 0;
                 r.tumbles = 0; r.standT = 0; r.wasOnFours = false;
+                r.gait?.Clear(); r.scoreS = float.NaN;
                 r.speedWindow.Clear();
                 r.runner.command = Vector3.zero;
                 r.runner.laneKeeping = false;
@@ -127,6 +136,7 @@ namespace PoOlympic
             foreach (var r in runners)
             {
                 r.judge ??= new AthleteJudge(m, r.runner, "ground");
+                if (mode == Mode.Steeplechase && r.gait == null) r.gait = new FootGait(m, r.runner.athletePrefix, minFlight);
                 if (r.torsoId < 0)
                 {
                     r.torsoId = MujocoLib.mj_name2id(m, (int)MujocoLib.mjtObj.mjOBJ_BODY, r.runner.athletePrefix + "torso");
@@ -135,6 +145,7 @@ namespace PoOlympic
                 }
             }
             if (_traitsPending) { DrawTraits(); _traitsPending = false; }
+            if (mode == Mode.Steeplechase && !_stepHooked) { MjScene.Instance.postUpdateEvent += OnPostStep; _stepHooked = true; }
             PhaseTime += Time.deltaTime;
             var lead = runners[0].runner;
             float tick = (float)(lead.Contract.timestep * lead.Contract.decimation);
@@ -149,6 +160,7 @@ namespace PoOlympic
             switch (Current)
             {
                 case Phase.Ready:
+                    if (HoldStart) { PhaseTime = 0; break; }   // betting window (BroadcastHud)
                     if (PhaseTime >= countdownSeconds)
                     {
                         Current = Phase.Live;
@@ -204,16 +216,74 @@ namespace PoOlympic
             }
         }
 
+        bool _stepHooked;
+
+        /// <summary>Steeplechase: foot contacts after every mj_step (track.py FootGait.step), racing runners only.</summary>
+        unsafe void OnPostStep(object sender, MjStepArgs e)
+        {
+            if (Current != Phase.Live) return;
+            foreach (var r in runners)
+                if (r.Racing && r.gait != null) r.gait.Step(e.data);
+        }
+
+        void OnDestroy()
+        {
+            if (_stepHooked && MjScene.InstanceExists) MjScene.Instance.postUpdateEvent -= OnPostStep;
+        }
+
+        // IStandingsBoard / IBroadcastBoard (BroadcastHud)
+        public BoardPhase BoardState => (BoardPhase)(int)Current;
+        public int Heat => Attempt;
+        public bool HoldStart { get; set; }
+        public string SubtitleExtra => mode switch
+        {
+            Mode.Terminal => $"{distance:0.##} m · peak 1 s speed",
+            Mode.Brake => $"stop before the red line at {distance:0} m",
+            Mode.Inverted => $"{distance:0} m backwards",
+            Mode.AllFours => $"{distance:0} m on hands and feet",
+            Mode.Steeplechase => $"{distance:0} m · ground time = finish − air",
+            _ => $"{distance:0} m",
+        };
+        public string ClockLine => $"{LiveTime:0.00} s";
+        public string InfoLine => $"leader {LeaderX:0.0} / {distance:0.#} m";
+        public IEnumerable<(int place, string name, string result, bool bad, PolicyRunner runner)> Rows =>
+            Standings.Select(x => (x.place, x.name,
+                Current == Phase.Result || !x.Racing ? Describe(x)
+                    : mode == Mode.Steeplechase ? $"{x.x:0.0} m · air {x.gait?.Hang ?? 0:0.0} s" : $"{x.x:0.0} m · {x.v:0.0} m/s",
+                x.status is "DQ" or "FELL", x.runner));
+        public string Banner => Current switch
+        {
+            Phase.Ready => Mathf.CeilToInt(countdownSeconds - PhaseTime).ToString(),
+            Phase.Result => $"{runners.First(x => x.place == 1).name} WINS\n{Describe(runners.First(x => x.place == 1))}",
+            _ => LiveTime < 0.8f ? "GO!" : "",
+        };
+        public bool TryWinningMark(out double value, out bool lowerIsBetter, out string text)
+        {
+            var w = runners.FirstOrDefault(r => r.place == 1);
+            value = 0; text = ""; lowerIsBetter = mode != Mode.Terminal;
+            if (Current != Phase.Result || w == null) return false;
+            switch (mode)
+            {
+                case Mode.Terminal: if (w.status == "FELL") return false; value = w.peakMps; text = $"{w.peakMps:0.00} m/s"; return true;
+                case Mode.Brake: if (w.status != "STOPPED") return false; value = w.gapM; text = $"{w.gapM * 100f:0} cm short"; return true;
+                case Mode.Steeplechase: if (w.status != "FINISHED") return false; value = w.scoreS; text = $"{w.scoreS:0.00} s ground"; return true;
+                default: if (w.status != "FINISHED") return false; value = w.finishS; text = $"{w.finishS:0.00} s"; return true;
+            }
+        }
+
         void Out(Runner r, string status) { r.status = status; Stand(r); }
         void Stand(Runner r) { r.runner.command = Vector3.zero; r.runner.laneKeeping = false; }
 
         void Finish()
         {
             foreach (var r in runners.Where(r => r.Racing)) { r.status = "DNF"; Stand(r); }
+            if (mode == Mode.Steeplechase)
+                foreach (var r in runners.Where(r => r.status == "FINISHED")) r.scoreS = r.finishS - (float)r.gait.Hang;
             IEnumerable<Runner> order = mode switch
             {
                 Mode.Dash or Mode.Inverted => runners.OrderBy(r => r.status == "FINISHED" ? 0 : 1).ThenBy(r => r.finishS),
                 Mode.AllFours => runners.OrderBy(r => r.status == "FINISHED" ? 0 : r.status == "DNF" ? 1 : 2).ThenBy(r => r.finishS),
+                Mode.Steeplechase => runners.OrderBy(r => r.status == "FINISHED" ? 0 : 1).ThenBy(r => r.status == "FINISHED" ? r.scoreS : 0f).ThenBy(r => r.finishS),
                 Mode.Terminal => runners.OrderBy(r => r.status == "FELL" ? 1 : 0).ThenByDescending(r => r.peakMps),
                 _ => runners.OrderBy(r => r.status == "STOPPED" ? 0 : 1).ThenBy(r => r.status == "STOPPED" ? r.gapM : 0f),
             };
@@ -232,7 +302,53 @@ namespace PoOlympic
             Mode.AllFours => (r.status == "FINISHED" ? $"{r.finishS:0.00} s" : r.status == "DQ" ? "DQ (stood up)" : r.status)
                              + (r.tumbles > 0 ? $" · {r.tumbles} tumble" + (r.tumbles > 1 ? "s" : "") : ""),
             Mode.Terminal => $"{r.peakMps:0.00} m/s" + (r.status == "FELL" ? " FELL" : ""),
+            Mode.Steeplechase => r.status == "FINISHED"
+                ? (float.IsNaN(r.scoreS) ? $"{r.finishS:0.00} s" : $"{r.scoreS:0.00} s ground") + $" · air {r.gait.Hang:0.0} s"
+                : r.status == "" ? $"air {r.gait?.Hang ?? 0:0.0} s · {r.gait?.Flights ?? 0} flights" : r.status,
             _ => r.status == "STOPPED" ? $"{r.gapM * 100f:0} cm short" : r.status == "DQ" ? "DQ (crossed)" : r.status,
         };
+    }
+
+    /// <summary>Steeplechase flights of one athlete (= track.py FootGait): after every mj_step, is any foot/toe geom of
+    /// the athlete touching the ground? Both feet off for ≥ minFlight = one flight (contact chatter ignored).</summary>
+    public sealed unsafe class FootGait
+    {
+        readonly int _ground;
+        readonly int[] _feet;
+        readonly int _minSubsteps;
+        readonly double _dt;
+        int _air;
+        public int Flights { get; private set; }
+        public double Hang { get; private set; }
+        public double Longest { get; private set; }
+
+        public FootGait(MujocoLib.mjModel_* m, string prefix, float minFlight)
+        {
+            var geoms = AthleteBinding.NameIndex(m, (int)MujocoLib.mjtObj.mjOBJ_GEOM, (int)m->ngeom);   // as AthleteJudge
+            _ground = geoms["ground"];
+            _feet = new[] { "foot_l_geom0", "toe_l_geom0", "foot_r_geom0", "toe_r_geom0" }.Select(n => geoms[prefix + n]).ToArray();
+            _dt = m->opt.timestep;
+            _minSubsteps = (int)Math.Round(minFlight / _dt);
+        }
+
+        public void Clear() { _air = 0; Flights = 0; Hang = Longest = 0; }
+
+        public void Step(MujocoLib.mjData_* d)
+        {
+            bool on = false;
+            for (int i = 0; i < d->ncon && !on; i++)
+            {
+                var c = d->contact[i];
+                on = (c.geom1 == _ground && Array.IndexOf(_feet, c.geom2) >= 0) || (c.geom2 == _ground && Array.IndexOf(_feet, c.geom1) >= 0);
+            }
+            if (!on) { _air++; return; }
+            if (_air >= _minSubsteps)
+            {
+                Flights++;
+                Hang += _air * _dt;
+                Longest = Math.Max(Longest, _air * _dt);
+            }
+            _air = 0;
+        }
     }
 }

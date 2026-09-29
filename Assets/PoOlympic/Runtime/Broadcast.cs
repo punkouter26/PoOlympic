@@ -1,0 +1,167 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+
+namespace PoOlympic
+{
+    /// <summary>What an 8-athlete event shows on the broadcast HUD.</summary>
+    public interface IStandingsBoard
+    {
+        string SubtitleExtra { get; }
+        string ClockLine { get; }
+        string InfoLine { get; }
+        /// <summary>In display order: place (0 while live), name, result text, highlight (out / DQ), the athlete.</summary>
+        IEnumerable<(int place, string name, string result, bool bad, PolicyRunner runner)> Rows { get; }
+        /// <summary>Countdown / GO / winner text, empty for none.</summary>
+        string Banner { get; }
+        void Restart();
+    }
+
+    public enum BoardPhase { Ready, Live, Result }
+
+    /// <summary>Game-layer view of an event (D3 broadcast + betting): phase, heat counter, a start hold for the betting
+    /// window, and the winner's mark for the records table.</summary>
+    public interface IBroadcastBoard : IStandingsBoard
+    {
+        BoardPhase BoardState { get; }
+        int Heat { get; }
+        /// <summary>While true the event stays in Ready with its countdown reset (betting window).</summary>
+        bool HoldStart { get; set; }
+        /// <summary>Result phase only: the winner's mark (false when the heat has no valid mark, e.g. everyone DQ).</summary>
+        bool TryWinningMark(out double value, out bool lowerIsBetter, out string text);
+    }
+
+    /// <summary>
+    /// Betting odds from athlete traits (tasks.md D4). Per event a Plackett-Luce rating fitted on CPU heats
+    /// (training/tools/fit_odds.py → Models/odds_model.json):
+    ///   rating = w · [zombie, strength − 1, latency substeps, obs noise],  P(win) = softmax(rating)
+    /// P is shrunk 10 % towards uniform; decimal odds = (1 − margin) / P, clamped to [1.01, 50].
+    /// </summary>
+    public static class Odds
+    {
+        [Serializable] public class EventWeights { public int number; public string name; public float[] weights; public int heats; public float favourite_wins; }
+        [Serializable] public class Model { public float margin = 0.1f; public EventWeights[] events; }
+
+        public static Model Parse(TextAsset json) => json == null ? null : JsonUtility.FromJson<Model>(json.text);
+
+        public static bool IsZombie(PolicyRunner r) => r.athletePrefix.StartsWith("Z") || (r.contractJson != null && r.contractJson.name.Contains("zombie"));
+
+        public static float Rating(float[] w, PolicyRunner r) =>
+            w[0] * (IsZombie(r) ? 1f : 0f) + w[1] * (r.strength - 1f) + w[2] * r.latencySubsteps + w[3] * r.obsNoise;
+
+        /// <summary>Win probability per runner (same order); uniform when the event has no fitted weights.</summary>
+        public static float[] WinProbabilities(Model model, int eventNumber, IReadOnlyList<PolicyRunner> runners)
+        {
+            var w = model?.events?.FirstOrDefault(e => e.number == eventNumber)?.weights;
+            var p = new float[runners.Count];
+            if (w == null || w.Length < 4)
+            {
+                for (int i = 0; i < p.Length; i++) p[i] = 1f / p.Length;
+                return p;
+            }
+            var r = runners.Select(x => Rating(w, x)).ToArray();
+            float m = r.Max(), z = 0;
+            for (int i = 0; i < p.Length; i++) z += p[i] = Mathf.Exp(r[i] - m);
+            // shrink towards uniform: the fit is in-sample on 60 heats per event, so no athlete is ever a sure loss
+            for (int i = 0; i < p.Length; i++) p[i] = (1f - Shrink) * p[i] / z + Shrink / p.Length;
+            return p;
+        }
+
+        public const float Shrink = 0.1f, MaxOdds = 50f;
+
+        public static float Decimal(float p, float margin) =>
+            Mathf.Clamp(Mathf.Round((1f - margin) / Mathf.Max(p, 1e-4f) * 20f) / 20f, 1.01f, MaxOdds);
+
+        public static string Format(float odds) => odds < 10f ? odds.ToString("0.00") : odds.ToString("0.0");
+    }
+
+    /// <summary>Virtual coins for the betting slip (PlayerPrefs: per device, never real money).</summary>
+    public static class Wallet
+    {
+        const string Key = "poolympic.wallet";
+        public const int StartCoins = 100, Stake = 10;
+        public static int Coins
+        {
+            get => PlayerPrefs.GetInt(Key, StartCoins);
+            set { PlayerPrefs.SetInt(Key, Mathf.Max(0, value)); PlayerPrefs.Save(); }
+        }
+        /// <summary>Broke: top up so the game can always go on.</summary>
+        public static void EnsureStake() { if (Coins < Stake) Coins = StartCoins; }
+    }
+
+    /// <summary>Best winning mark per event (PlayerPrefs).</summary>
+    public static class Records
+    {
+        static string Key(int ev) => $"poolympic.record.{ev:00}";
+        public static bool TryGet(int ev, out double value, out string text)
+        {
+            var s = PlayerPrefs.GetString(Key(ev), "");
+            int bar = s.IndexOf('|');
+            value = 0; text = "";
+            if (bar < 0 || !double.TryParse(s.Substring(0, bar), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out value)) return false;
+            text = s.Substring(bar + 1);
+            return true;
+        }
+        /// <summary>Stores the mark if it beats the record; true = new record.</summary>
+        public static bool Submit(int ev, double value, bool lowerIsBetter, string text, string who)
+        {
+            if (TryGet(ev, out var best, out _) && (lowerIsBetter ? value >= best : value <= best)) return false;
+            PlayerPrefs.SetString(Key(ev), value.ToString("R", System.Globalization.CultureInfo.InvariantCulture) + "|" + $"{text} · {who}");
+            PlayerPrefs.Save();
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Play-by-play ticker lines from a board, by diffing its rows frame to frame (works for every event without
+    /// per-event hooks): start, lead changes (debounced), athletes going out, the result.
+    /// </summary>
+    public sealed class Commentary
+    {
+        public readonly List<string> Lines = new();
+        public int MaxLines = 4;
+        readonly Dictionary<string, bool> _bad = new();
+        BoardPhase _phase = BoardPhase.Ready;
+        int _heat = -1;
+        string _leader = "", _pending = "";
+        float _pendingSince, _lastLeadCall = -99f;
+        public float LeadCooldown = 4f;                  // s between lead-change calls (neck-and-neck races flip often)
+
+        public void Add(string line)
+        {
+            Lines.Add(line);
+            while (Lines.Count > MaxLines) Lines.RemoveAt(0);
+        }
+
+        public void Update(IBroadcastBoard b, float time)
+        {
+            if (b.Heat != _heat) { _heat = b.Heat; _bad.Clear(); _leader = _pending = ""; Add($"Heat {b.Heat + 1} — athletes to their marks"); }
+            var rows = b.Rows.ToList();
+            if (b.BoardState != _phase)
+            {
+                if (b.BoardState == BoardPhase.Live) Add("And they're off!");
+                _phase = b.BoardState;
+            }
+            if (b.BoardState == BoardPhase.Live && rows.Count > 0)
+            {
+                var top = rows.FirstOrDefault(r => !r.bad).name ?? "";
+                if (top != _leader)
+                {
+                    if (top != _pending) { _pending = top; _pendingSince = time; }
+                    else if (time - _pendingSince > 1.2f && top.Length > 0 && time - _lastLeadCall > LeadCooldown)
+                    {
+                        if (_leader.Length > 0) { Add($"{top} takes the lead from {_leader}"); _lastLeadCall = time; }
+                        _leader = top;
+                    }
+                }
+            }
+            foreach (var r in rows)
+            {
+                _bad.TryGetValue(r.name, out var was);
+                if (r.bad && !was && b.BoardState != BoardPhase.Ready) Add($"{r.name} is out — {r.result}");
+                _bad[r.name] = r.bad;
+            }
+        }
+    }
+}

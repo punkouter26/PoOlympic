@@ -14,7 +14,7 @@ namespace PoOlympic
     /// foot to the right of the right foot in the pelvis frame) and every new rail contact add seconds; a fall = out.
     ///   Ready (countdown) → Live → Result → auto restart (new seed)
     /// </summary>
-    public class CrabShuffleEvent : MonoBehaviour, IStandingsBoard, ILaneRoster
+    public class CrabShuffleEvent : MonoBehaviour, IBroadcastBoard, ILaneRoster
     {
         public enum Phase { Ready, Live, Result }
 
@@ -136,6 +136,7 @@ namespace PoOlympic
             switch (Current)
             {
                 case Phase.Ready:
+                    if (HoldStart) { PhaseTime = 0; break; }   // betting window (BroadcastHud)
                     if (PhaseTime >= countdownSeconds)
                     {
                         Current = Phase.Live;
@@ -204,6 +205,21 @@ namespace PoOlympic
                 "" => $"{r.progress:0.0} m{faults}",
                 _ => r.status,
             };
+        }
+
+        // IBroadcastBoard (BroadcastHud: betting window, records)
+        public BoardPhase BoardState => (BoardPhase)(int)Current;
+        public int Heat => Attempt;
+        public bool HoldStart { get; set; }
+        public bool TryWinningMark(out double value, out bool lowerIsBetter, out string text)
+        {
+            var w = racers.FirstOrDefault(r => r.place == 1);
+            lowerIsBetter = true;
+            value = 0; text = "";
+            if (Current != Phase.Result || w == null || !(w.status == "FINISHED")) return false;
+            value = w.score;
+            text = $"{w.score:0.00} s";
+            return true;
         }
 
         public string SubtitleExtra => $"{distance:0} m side-step between rails";

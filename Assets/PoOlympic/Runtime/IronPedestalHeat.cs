@@ -14,7 +14,7 @@ namespace PoOlympic
     /// contract ranges — the lanes' "form" that odds are built on. Ranking = elimination order.
     ///   Ready (countdown) → Live → Result → auto restart (new seed, new traits)
     /// </summary>
-    public class IronPedestalHeat : MonoBehaviour, ILaneRoster
+    public class IronPedestalHeat : MonoBehaviour, IBroadcastBoard, ILaneRoster
     {
         public enum Phase { Ready, Live, Result }
 
@@ -113,6 +113,7 @@ namespace PoOlympic
             switch (Current)
             {
                 case Phase.Ready:
+                    if (HoldStart) { PhaseTime = 0; break; }   // betting window (BroadcastHud)
                     if (PhaseTime >= countdownSeconds)
                     {
                         Current = Phase.Live;
@@ -148,6 +149,31 @@ namespace PoOlympic
                     if (autoRestart && PhaseTime >= resultHoldSeconds) Restart();
                     break;
             }
+        }
+
+        // IStandingsBoard / IBroadcastBoard (BroadcastHud)
+        public BoardPhase BoardState => (BoardPhase)(int)Current;
+        public int Heat => Attempt;
+        public bool HoldStart { get; set; }
+        public string SubtitleExtra => $"round {Round} · gust {GustNow:0.00} m/s";
+        public string ClockLine => $"{LiveTime:0.0} s";
+        public string InfoLine => $"{StillIn} of {runners.Count} still standing";
+        public IEnumerable<(int place, string name, string result, bool bad, PolicyRunner runner)> Rows =>
+            Standings.Select(x => (x.place, x.name,
+                x.In ? (Current == Phase.Result ? "WINNER" : "IN") : $"{(x.reason == "STEPPED OFF" ? "OFF" : "FELL")} {x.outAt:0.0} s",
+                !x.In, x.runner));
+        public string Banner => Current switch
+        {
+            Phase.Ready => Mathf.CeilToInt(countdownSeconds - PhaseTime).ToString(),
+            Phase.Result => $"{string.Join(" & ", runners.Where(x => x.place == 1).Select(x => x.name))} WINS\n{LiveTime:0.0} s",
+            _ => LiveTime < 0.8f ? "GO!" : "",
+        };
+        /// <summary>Record = how long the last one stood (the heat's length).</summary>
+        public bool TryWinningMark(out double value, out bool lowerIsBetter, out string text)
+        {
+            lowerIsBetter = false;
+            value = LiveTime; text = $"{LiveTime:0.0} s standing";
+            return Current == Phase.Result;
         }
 
         void Finish()

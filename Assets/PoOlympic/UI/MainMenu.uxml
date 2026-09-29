@@ -14,11 +14,15 @@
             </ui:VisualElement>
             <ui:Label text="LANES" class="section-title" />
             <ui:VisualElement name="slots" class="slots" />
-            <ui:Label text="EVENT" class="section-title" />
+            <ui:VisualElement class="section-head">
+                <ui:Label text="EVENT" class="section-title" />
+                <ui:Button name="gauntletButton" text="GAUNTLET: OFF" class="gauntlet-toggle" />
+            </ui:VisualElement>
             <ui:ScrollView name="eventList" class="event-list" />
             <ui:Label name="eventRules" class="event-rules" />
             <ui:Button name="playButton" text="PLAY" class="play-button" />
             <ui:Label name="status" class="status" />
+            <ui:Label name="coins" class="coins" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

@@ -112,15 +112,27 @@ Rules: every surface an athlete can touch is a MuJoCo geom generated into the MJ
     keeps the glTF scene name "Scene"). Unity `StadiumLook.ArenaLighting`: roof casts no shadows, near-vertical key
     light, 36 spot lights under Stadium/ArenaLights, trilight ambient, static batching; all 11 stadium scenes relit;
     Mobile renderer → Forward+. APK 207 MB re-deployed to the Pixel 9 Pro (`parity/lighting/android_menu.png`).
-- [ ] **D3 Broadcast** — 9:16 tracking cameras per event, HUD polish (UI Toolkit), result cards
+- [x] **D3 Broadcast** — 9:16 tracking cameras per event, HUD polish (UI Toolkit), result cards (2026-09-29)
+  - `BroadcastHud` (UI Toolkit, `UI/BroadcastHud.uss`, authored 1080 wide, scaled onto the letterboxed camera rect) replaces
+    the IMGUI RaceHud / StandingsHud / HeatHud in all 10 event scenes: top bar, standings with body chip + win odds,
+    countdown banner, play-by-play ticker (`Commentary`: start, lead changes with 4 s cooldown, athletes out, winner,
+    records, bets), result card (podium, bet payout, record, gauntlet points / Next event)
+  - `IBroadcastBoard` (Broadcast.cs) on every 8-lane event: phase, heat, `HoldStart` (betting window), winner's mark
+  - `BroadcastDirector` tracking cameras: races follow the leader along the race axis (trackside / head-on / high-wide
+    cuts every 5 s), arenas hold the establishing shot then orbit, result = winner close-up
+  - `CaptureTools` (Game view pinned to 1080 x 1920, screenshots outside Assets/); annotated before/after:
+    `parity/ui/d3_hud_before_after.png`, `parity/ui/menu_gauntlet_before_after.png`; play-throughs `parity/d3/`
 - [x] **D4 8-lane Iron Pedestal heat** — rules per catalogue: 8 runners, **last one standing wins**
   - physics `scene_pedestal8.xml` (+ `pedestal8_layout.json`): 8 lane-isolated athletes, each on its own 1 × 1 × 0.5 m pedestal; lane origins from `venues.json` (E01, relative to lane 4) → physics pedestals ≡ stadium pedestals · **G0 pedestal8 PASS 8/8**
   - athlete traits (contract `trait_ranges` / `obs_noise`): strength ×[0.85, 1.15] on force limits, latency 0–4 substeps (mjlab delay semantics), sensor noise ×[0, 1] of training noise — `PolicyRunner.SetTraits`, nominal = parity (EditMode 18/18)
   - rules (Python `poolympic/events/iron_pedestal.py` ≡ Unity `IronPedestalHeat`): 3 s rounds, gust 0.3 m/s + 0.05/round (own seeded direction per lane), cube every 3rd round, out = fall rule / stepped off (`AthleteJudge`), ranking by elimination time; tuned on CPU: heats 27–41 s (mean 35), first out ~17–26 s
   - Unity `Event_IronPedestal_Heat.unity` (*Build Event 1 — Iron Pedestal Heat*), `HeatHud` standings (status, out time, traits), winner banner; hub Event 1 ▸ opens the heat. Play-through: L1 wins after 31.6 s, 11 rounds (`parity/d4/heat_*.png`)
-  - [ ] odds from traits (betting layer)
+  - [x] odds from traits (betting layer): `training/tools/fit_odds.py` — 600 CPU heats (60 per playable event, mixed
+    MATT/zombie lineups, random traits) → Plackett-Luce rating per event (zombie, strength, latency, noise) →
+    `Models/odds_model.json`; Unity `Odds` (softmax, 10 % shrink to uniform, 10 % margin, odds 1.01-50). Favourite win
+    rate: 23-83 % (uniform 12.5 %); Emergency Brake / Iron Pedestal ≈ uniform (traits do not predict the winner)
   - [x] Iron Pedestal fine-tune tried twice (ped_v1 fixed ±0.8 m/s gusts; ped_v2 adaptive gusts) — neither beat r0_v2_it1000 on identical heats (28.2 s mean survival); Event 1 keeps the Rung 0 brain (see log)
-- [ ] **D5 remaining Sprint Series events** — done: 5, 8, 9, 10, 11, 12, 19, 22 (5 = `scene_shaker8.xml` spring platforms + `events/gauntlet.py` ≡ `GustGauntletEvent`; all 8-athlete, Rung 2 brain; pattern: venue layout → `compose_meet(origins, props)` MJCF (G0 8/8 per lane, props checked with `ParityTools.DumpProps`) → CPU rules in `poolympic/events/` ≡ Unity controller → `EventScenes.Build*` via the shared `BuildMeetScene`. 8/9/19/22 = straight-track framework (`scene_track8.xml`, `events/track.py` ≡ `TrackRaceEvent` + `RaceHud`); 10 = `scene_crab8.xml` + rails, `events/crab.py` ≡ `CrabShuffleEvent`; 11 = `scene_slalom8.xml` + poles, `events/slalom.py` ≡ `SlalomEvent`; 12 = `scene_turntable8.xml`, `events/turntable.py` ≡ `TurntableEvent`; per-tick `PolicyRunner.steer` hook; generic `StandingsHud`); todo: 13 Steeplechase Jog — **flight brain trained 2026-09-29: `r2f_v3_it100.onnx` (G1 rung2 10/10, flights 114 ms at 3.5 m/s vs 43 ms for rung2.onnx, 8-runner 50 m CPU race clean); event scene + rules still to build** — then the rest of the catalogue: **Phase E** below
+- [x] **D5 remaining Sprint Series events** — done: 5, 8, 9, 10, 11, 12, 13, 19, 22 (5 = `scene_shaker8.xml` spring platforms + `events/gauntlet.py` ≡ `GustGauntletEvent`; all 8-athlete, Rung 2 brain; pattern: venue layout → `compose_meet(origins, props)` MJCF (G0 8/8 per lane, props checked with `ParityTools.DumpProps`) → CPU rules in `poolympic/events/` ≡ Unity controller → `EventScenes.Build*` via the shared `BuildMeetScene`. 8/9/19/22 = straight-track framework (`scene_track8.xml`, `events/track.py` ≡ `TrackRaceEvent` + `RaceHud`); 10 = `scene_crab8.xml` + rails, `events/crab.py` ≡ `CrabShuffleEvent`; 11 = `scene_slalom8.xml` + poles, `events/slalom.py` ≡ `SlalomEvent`; 12 = `scene_turntable8.xml`, `events/turntable.py` ≡ `TurntableEvent`; per-tick `PolicyRunner.steer` hook; generic `StandingsHud`); 13 Steeplechase Jog (2026-09-29) = `track.py` steeple ≡ `TrackRaceEvent` Steeplechase: 50 m at 3.5 m/s, flight brain `r2f_v3_it100.onnx` (zombie: zombie_rung2), scored on **ground time** = finish − hang time (flights ≥ 20 ms counted per physics substep, `FootGait`), `Event_SteeplechaseJog.unity` on venue E13; CPU winners ≈ 8.9-9.1 s ground (air 6.7-6.9 s), Unity heats 9.0-9.1 s — the rest of the catalogue: **Phase E** below
 - [ ] **D6** full suite re-validation + perf pass
 
 ## Phase E — The 30 Olympic Events (catalogue, added 2026-09-27)
@@ -146,7 +158,7 @@ Skill gaps: events marked **S** need behaviours the current contract cannot comm
 | **Phase 3 — Omnidirectional Agility** |
 | 11 | Slalom Sprint | weave through gates; penalties for missed gates / clipped flags | Agility | gate poles + flags | R2 + gate-following steering | **playable** (7 physical poles on each lane's centre line, weave at 2.2 m/s on a seeded racing line; +0.5 s per clip, +2 s per wrong side, `Event_SlalomSprint.unity`) |
 | 12 | The 360 Turntable | rapid in-place turns on a marked spot; rotational speed, zero drift | Agility (turntable pads) | — | R2 | **playable** (8 spots, 3 turns at 3 rad/s, seeded direction, score = time + 2 s/m drift, `Event_360Turntable.unity`) |
-| 13 | Steeplechase Jog | 50 m run with sustained aerial flight phases between strikes | HomeStraight | — | R1/R2 + flight-phase reward | todo |
+| 13 | Steeplechase Jog | 50 m run with sustained aerial flight phases between strikes | HomeStraight | — | R2 flight (`r2f_v3_it100.onnx`) | **playable** (8 runners, 50 m at 3.5 m/s, ranked by ground time = finish − air, `Event_SteeplechaseJog.unity`) |
 | 14 | The Alpine Ramp | ascend a 15° ramp into a finish sensor | Terrain | 15° ramp | R4 | todo |
 | 15 | Cross-Country Rubble | traverse randomized mounds and ruts | Terrain | heightfield / box rubble (seeded) | R4 | todo |
 | **Phase 4 — High Impact & Jumping** |
@@ -219,5 +231,10 @@ apply: TensorBoard + MuJoCo viewer for every run, close Unity during 30 min+ run
     squat / kneel starts, or a motion prior (R7).
 - [ ] R6 bodies: rig GRANDMA (AccuRig/Mixamo/Blender), clean + rescale ZOMBIE, derive MJCFs, train variants
 - [ ] R7 optional motion-prior polish · R8+ remaining skill events
-- [ ] Game layer: betting slip & odds from lane stats, PBP ticker, records, gauntlets
-- [ ] Licensing review (Avaturn, Hunyuan3D) before any commercial release
+- [x] Game layer: betting slip & odds from lane stats, PBP ticker, records, gauntlets (2026-09-29): virtual-coin
+  `Wallet` (100 start, 10-coin stake, top-up when broke), betting slip before every heat (12 s window), `Records` (best
+  winning mark per event, PlayerPrefs), `Gauntlet` series (menu GAUNTLET toggle: tap events to order them; one heat per
+  event, 10-8-6-5-4-3-2-1 points per lane; final podium back on the menu)
+- [x] Licensing review (Avaturn, Hunyuan3D) before any commercial release → `docs/LICENSING.md` (2026-09-29). Blockers
+  to act on before a store release: Olympic rings / name, Hunyuan3D territory (EU / UK / KR), Avaturn notification +
+  attribution; checklist in the doc

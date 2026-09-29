@@ -10,7 +10,8 @@ namespace PoOlympic
     /// <summary>
     /// Main menu (UI Toolkit, Assets/PoOlympic/UI/MainMenu.uxml): a roster of athlete cards (MeetLineup.Roster), 8 lane
     /// tiles (tap a lane, then an athlete; "Fill all 8" puts the last tapped athlete in every lane), the playable events
-    /// (filled in by EventScenes.BuildMainMenu from the catalogue); PLAY loads the event scene. Runs in edit mode too,
+    /// (filled in by EventScenes.BuildMainMenu from the catalogue); PLAY loads the event scene. GAUNTLET mode: tapping
+    /// events builds an ordered series (Gauntlet), PLAY runs it (one heat per event, points per place). Runs in edit mode too,
     /// so the full layout shows in the Game view / Device Simulator without entering Play mode.
     /// </summary>
     [ExecuteAlways]
@@ -33,6 +34,11 @@ namespace PoOlympic
         readonly string[] _lineup = new string[8];
         readonly List<(Button tile, Label name)> _slots = new();
         readonly List<Button> _eventButtons = new();
+        readonly List<Label> _orderBadges = new();
+        readonly List<MenuEvent> _gauntlet = new();
+        bool _gauntletMode;
+        Button _gauntletButton;
+        Label _coins;
         VisualElement _slotsRoot;
         MenuEvent _selected;
         int _lane;
@@ -60,12 +66,15 @@ namespace PoOlympic
             _status = root.Q<Label>("status");
             _play = root.Q<Button>("playButton");
             _fillAll = root.Q<Button>("fillAllButton");
+            _gauntletButton = root.Q<Button>("gauntletButton");
+            _coins = root.Q<Label>("coins");
             _slotsRoot = slots;
             slots.Clear();
             roster.Clear();
             list.Clear();
             _slots.Clear();
             _eventButtons.Clear();
+            _orderBadges.Clear();
             _lastAthlete = MeetLineup.Roster[0];
             _lane = 0;
 
@@ -109,17 +118,27 @@ namespace PoOlympic
                 title.AddToClassList("event-name");
                 var brain = new Label(ev.brain);
                 brain.AddToClassList("event-brain");
+                var order = new Label();
+                order.AddToClassList("event-order");
+                order.style.display = DisplayStyle.None;
                 button.Add(number);
                 button.Add(title);
                 button.Add(brain);
+                button.Add(order);
                 list.Add(button);
                 _eventButtons.Add(button);
+                _orderBadges.Add(order);
             }
 
             _play.clicked -= Play;
             _play.clicked += Play;
             _fillAll.clicked -= FillAll;
             _fillAll.clicked += FillAll;
+            if (_gauntletButton != null)
+            {
+                _gauntletButton.clicked -= ToggleGauntlet;
+                _gauntletButton.clicked += ToggleGauntlet;
+            }
             RefreshSlots();
             SelectEvent(events.FirstOrDefault(e => e.number == MeetLineup.EventNumber) ?? events.FirstOrDefault());
         }
@@ -164,8 +183,37 @@ namespace PoOlympic
             UpdateStatus();
         }
 
+        void ToggleGauntlet()
+        {
+            _gauntletMode = !_gauntletMode;
+            _gauntlet.Clear();
+            if (_gauntletMode && _selected != null) _gauntlet.Add(_selected);
+            RefreshGauntlet();
+        }
+
+        void RefreshGauntlet()
+        {
+            if (_gauntletButton == null) return;
+            _gauntletButton.text = _gauntletMode ? $"GAUNTLET: {_gauntlet.Count}" : "GAUNTLET: OFF";
+            _gauntletButton.EnableInClassList("gauntlet-toggle--on", _gauntletMode);
+            for (int i = 0; i < _orderBadges.Count && i < events.Count; i++)
+            {
+                int at = _gauntlet.IndexOf(events[i]);
+                _orderBadges[i].style.display = _gauntletMode && at >= 0 ? DisplayStyle.Flex : DisplayStyle.None;
+                _orderBadges[i].text = (at + 1).ToString();
+                _eventButtons[i].EnableInClassList("event-button--in-gauntlet", _gauntletMode && at >= 0);
+            }
+            if (_play != null) _play.text = _gauntletMode ? $"PLAY GAUNTLET ({_gauntlet.Count})" : "PLAY";
+            UpdateStatus();
+        }
+
         void SelectEvent(MenuEvent ev)
         {
+            if (_gauntletMode && ev != null)
+            {
+                if (!_gauntlet.Remove(ev)) _gauntlet.Add(ev);   // tap = add to the end / remove
+                RefreshGauntlet();
+            }
             _selected = ev;
             if (LineupFixed)   // the scene's own lineup
             {
@@ -182,17 +230,30 @@ namespace PoOlympic
         {
             if (_play == null) return;
             bool full = _lineup.All(a => a != null);
-            bool loadable = _selected != null && (!Application.isPlaying || Application.CanStreamedLevelBeLoaded(_selected.scene));
+            bool loadable = _gauntletMode
+                ? _gauntlet.Count > 0 && _gauntlet.All(e => !Application.isPlaying || Application.CanStreamedLevelBeLoaded(e.scene))
+                : _selected != null && (!Application.isPlaying || Application.CanStreamedLevelBeLoaded(_selected.scene));
             _play.SetEnabled(full && loadable);
             _status.text = _selected == null ? "No playable events"
                 : !full ? "Fill all 8 lanes"
                 : !loadable ? $"{_selected.scene} is not in Build Settings"
+                : _gauntletMode ? (_gauntlet.Count == 0 ? "Tap events to build the gauntlet"
+                    : $"Gauntlet: {string.Join(" → ", _gauntlet.Select(e => e.number.ToString("00")))}  ·  10-8-6-5-4-3-2-1 points")
                 : $"{string.Join(" · ", _lineup.GroupBy(a => a).Select(g => $"{g.Count()}× {g.Key}"))}  ·  event {_selected.number}";
+            if (_coins != null)
+                _coins.text = $"{Wallet.Coins} coins" + (Gauntlet.LastResult.Length > 0 ? $"\nLast gauntlet:\n{Gauntlet.LastResult}" : "");
         }
 
         void Play()
         {
             if (_selected == null || !Application.isPlaying) return;
+            if (_gauntletMode && _gauntlet.Count > 0)
+            {
+                MeetLineup.Set(_lineup, _gauntlet[0].number);
+                Gauntlet.Begin(_gauntlet.Select(e => e.number).ToArray(), _gauntlet.Select(e => e.scene).ToArray());
+                return;
+            }
+            Gauntlet.Abandon();
             MeetLineup.Set(_lineup, _selected.number);
             SceneManager.LoadScene(_selected.scene);
         }

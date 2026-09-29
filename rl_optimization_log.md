@@ -360,3 +360,27 @@ One entry per run or decision. Newest at the bottom.
 - **Rules** (`poolympic/events/all_fours.py` ≡ Unity `TrackRaceEvent` mode AllFours): face-down start on the lane line (head to the finish), 3 s countdown to get on all fours, GO 1.2 m/s (MATT units; zombies × √λ like `PolicyRunner.BodyCommand`), lane keeping on the crawl heading (`Contract.CrawlSteerYawRate`), 30 m, rank by time; tumbles counted, never eliminate; standing up > 1 s = DQ. CPU mixed heats (MZMZMZMZ): all finish, MATT 25.7-26.2 s, zombies 31.6-32.0 s, 0 tumbles.
 - **Unity:** `Event_30mAllFours.unity` (Event_30mDash deleted), hub + main menu rebuilt (catalogue, roster cards "Rung 0/2 · Crawl"), stadium label "08 30M ALL FOURS" (Blender, export_stadium), venues.json name. Mixed play-through via the menu: winner L7 (MATT) 25.52 s, heat over at 32.0 s. EditMode 36/36. Annotated UI before/after: `parity/ui/menu_allfours_before_after.png`; TensorBoard review charts: `parity/tensorboard/`.
 - Note: size-scaled commands mean zombies always trail MATTs in mixed heats (0.94 vs 1.2 m/s) — a design choice to revisit (same absolute speed would sit at the zombie's crawl envelope top, 1.18 m/s).
+
+## 2026-09-29 · Non-training block: Event 13 playable, D3 broadcast layer, betting / records / gauntlets, licensing (no training)
+- **Event 13 Steeplechase Jog** (`track.py` mode `steeple` ≡ `TrackRaceEvent.Mode.Steeplechase`): 50 m at 3.5 m/s,
+  MATT = flight brain `r2f_v3_it100.onnx`, zombie = `zombie_rung2.onnx`. First rule tried — +0.5 s per "grounded" stride
+  (double support ≥ 20 ms after a 5 m take-off zone) — never fires: no brain ever has double support at running pace.
+  And on finish time alone the plain Rung 2 brain wins (15.4-15.6 s vs 15.7-16.0 s: short hops are faster). Final rule:
+  **ground time = finish time − hang time** (flights = both feet off ≥ 20 ms, counted per physics substep, `FootGait`).
+  CPU 8-MATT heats: ground 8.9-9.3 s (air 6.6-6.9 s, 54-61 flights, longest 130-150 ms); rung2.onnx would score ~13.7 s,
+  zombies ~19.8 s. Unity heats (4 seeds): winners 9.01-9.10 s ground, air 6.7-6.8 s — matches. pytest 31/31.
+- **CPU commands now body-scaled in `_Lane.control`** (= Unity `PolicyRunner.BodyCommand`, identity for MATT): before, only
+  the crawl race scaled zombie commands on the CPU, so mixed CPU heats of events 5, 9-12, 19, 22 ran zombies at MATT's
+  speeds. MATT runs byte-identical; the mixed all-fours heat reproduces the logged times (MATT 25.9-26.2 s, zombie 31.6-32.0).
+- **Odds from traits** (`tools/fit_odds.py`): 600 CPU heats (60 per event, MZMZMZMZ lineups from `compose_mixed.py`
+  for turntable8 / crab8 / shaker8 / slalom8 too), Plackett-Luce fit on the full order (L2 0.5, L-BFGS). Weights
+  [zombie, strength−1, latency, noise] + favourite win rate (in-sample, uniform 12.5 %): E01 ≈ 0 (23 %), E05 zombie +3.9
+  (37 %), E08 zombie −6.4 / strength +6.8 (63 %), E09 zombie −10.7 (83 %), E10 −5.4 (38 %), E11 −2.3 (23 %), E12 zombie
+  **+7.2** (65 %: the small body spins tighter), E13 −5.2 (12 %: MATTs within 0.3 s), E19 −6.8 (60 %), E22 ≈ 0 (8 %).
+  Unity shrinks P 10 % towards uniform and clamps odds to 1.01-50 (raw fit gave 9000.00 for MATTs on the turntable).
+- **D3 broadcast** (`BroadcastHud`, `BroadcastDirector`, `IBroadcastBoard`, `Commentary`, `Wallet`, `Records`, `Gauntlet`):
+  see tasks.md D3. Lead-change calls needed a 4 s cooldown (neck-and-neck sprinters flipped the lead every second).
+  Winner close-up first too tight (3.2 m) → 5.5 m ahead / 3.2 m aside. Played: Steeplechase (bet, result card, new
+  record), mixed Turntable (zombies 1-4 as the odds said), 3-event gauntlet 13 → 12 → 05 (points carried, final podium on
+  the menu). EditMode PoOlympic 36/36.
+- **Licensing** → `docs/LICENSING.md` (Avaturn conditional, Hunyuan3D outputs barred in EU/UK/KR, Olympic marks, notices).

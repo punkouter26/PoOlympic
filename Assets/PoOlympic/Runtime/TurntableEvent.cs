@@ -14,7 +14,7 @@ namespace PoOlympic
     /// (`ringRadius`) = DQ. Traits + direction are drawn per heat.
     ///   Ready (countdown) → Live → Result → auto restart (new seed)
     /// </summary>
-    public class TurntableEvent : MonoBehaviour, IStandingsBoard, ILaneRoster
+    public class TurntableEvent : MonoBehaviour, IBroadcastBoard, ILaneRoster
     {
         public enum Phase { Ready, Live, Result }
 
@@ -123,6 +123,7 @@ namespace PoOlympic
             switch (Current)
             {
                 case Phase.Ready:
+                    if (HoldStart) { PhaseTime = 0; break; }   // betting window (BroadcastHud)
                     if (PhaseTime >= countdownSeconds)
                     {
                         Current = Phase.Live;
@@ -170,6 +171,21 @@ namespace PoOlympic
             "" => $"{s.turned / (2f * Mathf.PI):0.00} turns",
             _ => s.status,
         };
+
+        // IBroadcastBoard (BroadcastHud: betting window, records)
+        public BoardPhase BoardState => (BoardPhase)(int)Current;
+        public int Heat => Attempt;
+        public bool HoldStart { get; set; }
+        public bool TryWinningMark(out double value, out bool lowerIsBetter, out string text)
+        {
+            var w = spinners.FirstOrDefault(s => s.place == 1);
+            lowerIsBetter = true;
+            value = 0; text = "";
+            if (Current != Phase.Result || w == null || !(w.status == "DONE")) return false;
+            value = w.score;
+            text = $"{w.score:0.00} s";
+            return true;
+        }
 
         public string SubtitleExtra => $"{turns} turns {(Direction > 0 ? "anticlockwise" : "clockwise")}";
         public string ClockLine => $"{LiveTime:0.00} s";

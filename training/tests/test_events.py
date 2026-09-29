@@ -99,3 +99,21 @@ def test_crab_command_holds_the_course():
     assert vx < 0
     half = math.radians(20) / 2                            # turned 20° left → turn right
     assert crab.crab_command([math.cos(half), 0.0, 0.0, math.sin(half)], 0.0)[2] < 0
+
+
+FLIGHT = C.ROOT.parent / "parity" / "brains" / "r2f_v3_it100.onnx"
+
+
+@pytest.mark.skipif(not FLIGHT.exists(), reason="r2f_v3_it100.onnx not exported")
+def test_steeplechase_heat():
+    res = track.run_race(FLIGHT, "steeple", seed=1)
+    assert sorted(l.place for l in res.lanes) == list(range(1, 9))
+    finished = [l for l in res.lanes if l.status == "FINISHED"]
+    assert len(finished) >= 6
+    for l in finished:
+        # 50 m at a 3.5 m/s command from standstill; the flight brain spends ~40 % of the race airborne
+        assert 14.0 < l.finish_s < 18.0
+        assert l.flights >= 30 and l.longest_ms >= 80.0
+        assert l.score_s == pytest.approx(l.finish_s - l.hang_s, abs=1e-3)
+    by_place = sorted(finished, key=lambda l: l.place)
+    assert all(a.score_s <= b.score_s for a, b in zip(by_place, by_place[1:]))

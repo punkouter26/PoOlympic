@@ -8,6 +8,10 @@
   inverted  (9  The Inverted Sprint)   20 m backwards (runners face away from the finish: the finish is at x = -20 in the
                                        runner's frame; Unity turns the stadium 180 deg); leaving the lane (|y| > half a
                                        lane) = DQ, a fall = out; rank by finish time
+  steeple   (13 Steeplechase Jog)      50 m at 3.5 m/s with the flight brain (MATT: r2f_v3_it100); scored on GROUND
+                                       TIME = finish time - hang time (total of the flights, both feet off the ground
+                                       for >= MIN_FLIGHT): the clock only runs while a foot touches the track; a fall =
+                                       out; rank by ground time, then finish time
 Runners steer with the contract's lane keeping (contract.steer_yaw_rate); traits as in the Iron Pedestal heat.
 """
 
@@ -32,7 +36,9 @@ MODES = {
     "terminal": {"distance": 84.39, "vx": 4.0, "max_s": 45.0},   # the whole back straight (stadium venue E19)
     "brake": {"distance": 30.0, "vx": 3.0, "max_s": 25.0},
     "inverted": {"distance": 20.0, "vx": -1.5, "max_s": 30.0},   # vx = the Rung 2 envelope's backward limit
+    "steeple": {"distance": 50.0, "vx": 3.5, "max_s": 30.0},
 }
+MIN_FLIGHT = 0.02     # s — steeple: both feet off the ground at least this long = a flight (contact chatter ignored)
 LANE_HALF = 0.61      # m — inverted sprint: pelvis further than this from the lane centre line = DQ (lane drift)
 BRAKE_NERVE = (1.4, 2.2)   # m before the line at which a runner hits the brakes — per-runner "nerve" (seeded); the
                            # brain stops from 3 m/s with the toe ~1.6 m past its trigger point → late = DQ, early = big gap
@@ -50,6 +56,35 @@ class RaceLane:
     status: str = ""                 # FINISHED / FELL / DQ / STOPPED / DNF
     nerve_m: float | None = None     # brake: trigger distance before the line
     place: int = 0
+    body: str = "matt"
+    flights: int = 0                 # steeple: flights >= MIN_FLIGHT
+    hang_s: float = 0.0              # steeple: total airborne time (flights >= MIN_FLIGHT)
+    longest_ms: float = 0.0          # steeple: longest flight
+    score_s: float | None = None     # steeple: ground time = finish time - hang time
+
+
+class FootGait:
+    """Steeple: per-substep foot contact of one lane (foot + toe geoms of both legs vs the ground) → flights (both feet
+    off for >= MIN_FLIGHT): count, total hang time, longest. Mirror of Unity TrackRaceEvent.FootGait."""
+
+    def __init__(self, m, prefix: str, dt: float):
+        self.feet = {m.geom(prefix + n).id for n in ("foot_l_geom0", "toe_l_geom0", "foot_r_geom0", "toe_r_geom0")}
+        self.ground = m.geom("ground").id
+        self.dt = dt
+        self.air = 0                 # substeps airborne in the current flight
+        self.flights = 0
+        self.hang = self.longest = 0.0
+
+    def step(self, contacts) -> None:
+        on = any((g1 == self.ground and g2 in self.feet) or (g2 == self.ground and g1 in self.feet) for g1, g2 in contacts)
+        if not on:
+            self.air += 1
+            return
+        if self.air >= round(MIN_FLIGHT / self.dt):
+            self.flights += 1
+            self.hang += self.air * self.dt
+            self.longest = max(self.longest, self.air * self.dt)
+        self.air = 0
 
 
 @dataclass
@@ -69,7 +104,8 @@ def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = Non
     traits = traits or [Traits.sample(rng) for _ in range(len(layout["lanes"]))]
     lanes = make_lanes(m, d, layout, seed, traits, onnx, brains)
     mujoco.mj_forward(m, d)
-    res = [RaceLane(ln.k, ln.traits) for ln in lanes]
+    res = [RaceLane(ln.k, ln.traits, body=ln.body) for ln in lanes]
+    gait = [FootGait(m, ln.prefix, m.opt.timestep) for ln in lanes] if mode == "steeple" else None
     nerve = [float(np.random.default_rng([seed, 2000 + i]).uniform(*BRAKE_NERVE)) for i in range(len(lanes))]
     braking = [False] * len(lanes)
     speed_hist = [[] for _ in lanes]
@@ -96,6 +132,11 @@ def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = Non
             for ln in lanes:
                 ln.write_ctrl(d, s)
             mujoco.mj_step(m, d)
+            if gait is not None:
+                pairs = [(int(c.geom1), int(c.geom2)) for c in d.contact[:d.ncon]]
+                for i, g in enumerate(gait):
+                    if not res[i].status:
+                        g.step(pairs)
         tick += 1
         t = tick * dt
         for i, ln in enumerate(lanes):
@@ -115,7 +156,7 @@ def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = Non
             if mode == "inverted" and abs(d.qpos[ra + 1] - ln.origin[1]) > LANE_HALF:
                 r.status = "DQ"
                 continue
-            if mode in ("dash", "terminal", "inverted") and x >= cfg["distance"]:
+            if mode in ("dash", "terminal", "inverted", "steeple") and x >= cfg["distance"]:
                 r.status, r.finish_s = "FINISHED", t
             if mode == "brake":
                 toe = x + TOE_AHEAD
@@ -129,9 +170,16 @@ def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = Non
         r.status = r.status or "DNF"
         if mode == "brake":
             r.nerve_m = nerve[i]
+        if gait is not None:
+            g = gait[i]
+            r.flights, r.hang_s, r.longest_ms = g.flights, round(g.hang, 3), round(1000 * g.longest, 1)
+            if r.status == "FINISHED":
+                r.score_s = round(r.finish_s - g.hang, 3)
     # ranking
     if mode in ("dash", "inverted"):
         key = lambda r: (0, r.finish_s) if r.status == "FINISHED" else (1, 0)
+    elif mode == "steeple":
+        key = lambda r: (0, r.score_s, r.finish_s) if r.status == "FINISHED" else (1, 0)
     elif mode == "terminal":
         key = lambda r: (0 if r.status != "FELL" else 1, -r.peak_mps)
     else:

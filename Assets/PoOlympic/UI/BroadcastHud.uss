@@ -1,0 +1,209 @@
+/* D3 broadcast HUD (BroadcastHud.cs) — authored at 1080 px wide, scaled onto the 9:16 camera rect. */
+
+.bh-frame {
+    position: absolute;
+    justify-content: space-between;
+    padding: 28px 28px 24px 28px;
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-Regular.ttf");
+    color: rgb(240, 243, 248);
+}
+
+/* ---------- top bar ---------- */
+.bh-top {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+.bh-titles {
+    flex-shrink: 1;
+    padding: 12px 22px;
+    background-color: rgba(10, 16, 30, 0.78);
+    border-left-width: 8px;
+    border-left-color: rgb(255, 216, 74);
+    border-radius: 6px;
+}
+.bh-title {
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
+    font-size: 52px;
+    color: rgb(255, 255, 255);
+    letter-spacing: 2px;
+}
+.bh-sub {
+    font-size: 26px;
+    color: rgb(175, 188, 212);
+}
+.bh-clockbox {
+    min-width: 250px;
+    padding: 12px 20px;
+    align-items: flex-end;
+    background-color: rgba(10, 16, 30, 0.78);
+    border-radius: 6px;
+}
+.bh-clock {
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
+    font-size: 50px;
+    color: rgb(255, 216, 74);
+}
+.bh-info {
+    font-size: 22px;
+    color: rgb(175, 188, 212);
+}
+
+/* ---------- standings ---------- */
+.bh-standings {
+    position: absolute;
+    top: 190px;
+    left: 28px;
+    width: 700px;
+    padding: 8px 10px;
+    background-color: rgba(10, 16, 30, 0.72);
+    border-radius: 8px;
+}
+.bh-row {
+    flex-direction: row;
+    align-items: center;
+    height: 44px;
+    padding: 0 6px;
+    border-radius: 4px;
+}
+.bh-head {
+    height: 34px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(255, 255, 255, 0.15);
+    margin-bottom: 4px;
+}
+.bh-head > Label {
+    font-size: 18px;
+    color: rgb(140, 152, 176);
+    letter-spacing: 2px;
+}
+.bh-row > Label { font-size: 26px; }
+.bh-c-place { width: 44px; -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
+.bh-c-chip {
+    width: 34px;
+    height: 30px;
+    margin-right: 10px;
+    -unity-text-align: middle-center;
+    font-size: 18px;
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
+    border-radius: 4px;
+}
+.bh-chip-matt { background-color: rgb(52, 120, 220); color: rgb(255, 255, 255); }
+.bh-chip-zombie { background-color: rgb(92, 170, 70); color: rgb(12, 24, 8); }
+.bh-c-name { width: 80px; -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
+.bh-c-result { flex-grow: 1; overflow: hidden; }
+.bh-c-odds { width: 90px; -unity-text-align: middle-right; color: rgb(255, 216, 74); }
+.bh-row-first { background-color: rgba(255, 216, 74, 0.18); }
+.bh-row-bad > Label { color: rgb(255, 120, 120); }
+.bh-row-bet { border-width: 2px; border-color: rgb(120, 220, 255); }
+
+/* ---------- banner ---------- */
+.bh-banner {
+    position: absolute;
+    top: 38%;
+    left: 0;
+    right: 0;
+    -unity-text-align: middle-center;
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
+    font-size: 150px;
+    color: rgb(255, 255, 255);
+    -unity-text-outline-width: 3px;
+    -unity-text-outline-color: rgba(0, 0, 0, 0.8);
+}
+
+/* ---------- bottom: ticker + controls ---------- */
+.bh-bottom { }
+.bh-ticker {
+    padding: 10px 18px;
+    margin-bottom: 12px;
+    background-color: rgba(10, 16, 30, 0.72);
+    border-left-width: 8px;
+    border-left-color: rgb(120, 220, 255);
+    border-radius: 6px;
+    font-size: 26px;
+    white-space: normal;
+}
+.bh-bar {
+    flex-direction: row;
+    align-items: center;
+}
+.bh-btn-small, .bh-btn {
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
+    color: rgb(12, 18, 32);
+    background-color: rgb(255, 216, 74);
+    border-width: 0;
+    border-radius: 10px;
+}
+.bh-btn-small { font-size: 24px; height: 60px; padding: 0 22px; margin-right: 14px; }
+.bh-btn { font-size: 32px; height: 84px; padding: 0 34px; margin: 10px 14px 0 0; }
+.bh-btn-small:hover, .bh-btn:hover { background-color: rgb(255, 230, 130); }
+.bh-coins {
+    flex-grow: 1;
+    font-size: 24px;
+    color: rgb(120, 220, 255);
+}
+.bh-version {
+    font-size: 18px;
+    color: rgb(140, 152, 176);
+}
+
+/* ---------- overlays: betting slip + result card ---------- */
+.bh-overlay {
+    position: absolute;
+    left: 50px;
+    right: 50px;
+    top: 22%;
+    padding: 30px 34px;
+    background-color: rgba(10, 16, 30, 0.93);
+    border-width: 3px;
+    border-color: rgb(255, 216, 74);
+    border-radius: 18px;
+}
+.bh-overlay-title {
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
+    font-size: 56px;
+    color: rgb(255, 216, 74);
+    letter-spacing: 3px;
+}
+.bh-overlay-sub {
+    font-size: 24px;
+    color: rgb(175, 188, 212);
+    margin-bottom: 16px;
+}
+.bh-slip-row {
+    flex-direction: row;
+    align-items: center;
+    height: 70px;
+    margin: 4px 0;
+    padding: 0 16px;
+    background-color: rgb(28, 39, 63);
+    border-width: 0;
+    border-radius: 10px;
+    color: rgb(240, 243, 248);
+}
+.bh-slip-row:hover { background-color: rgb(44, 60, 94); }
+.bh-slip-name { width: 90px; font-size: 30px; -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
+.bh-slip-traits { flex-grow: 1; font-size: 22px; color: rgb(175, 188, 212); }
+.bh-slip-odds { width: 110px; font-size: 34px; -unity-text-align: middle-right; color: rgb(255, 216, 74); -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
+.bh-slip-bar { flex-direction: row; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+.bh-slip-timer { font-size: 26px; color: rgb(175, 188, 212); margin-top: 10px; }
+
+.bh-card { top: 44%; }
+.bh-card-body { margin-top: 12px; }
+.bh-podium {
+    flex-direction: row;
+    align-items: center;
+    height: 76px;
+    margin: 5px 0;
+    padding: 0 16px;
+    border-radius: 10px;
+    background-color: rgb(28, 39, 63);
+}
+.bh-podium-gold { border-left-width: 10px; border-left-color: rgb(255, 205, 60); }
+.bh-podium-silver { border-left-width: 10px; border-left-color: rgb(200, 206, 216); }
+.bh-podium-bronze { border-left-width: 10px; border-left-color: rgb(205, 127, 60); }
+.bh-podium-place { width: 54px; font-size: 40px; -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
+.bh-podium-name { width: 110px; font-size: 34px; -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
+.bh-podium-result { flex-grow: 1; font-size: 28px; white-space: normal; }
+.bh-card-line { font-size: 26px; color: rgb(175, 188, 212); margin-top: 8px; }
+.bh-card-good { font-size: 30px; color: rgb(120, 230, 140); margin-top: 10px; -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }

@@ -13,7 +13,7 @@
   {"number": 10, "phase": 2, "name": "Crab Shuffle Relay", "skill": "Lateral Shuffling", "brain": "rung2", "rules": "Side-stepping dash between parallel boundary rails without crossing legs."},
   {"number": 11, "phase": 3, "name": "Slalom Sprint", "skill": "Velocity Vectoring", "brain": "rung2", "rules": "Weaving through slalom gates; penalties added for missed gates or clipping flags."},
   {"number": 12, "phase": 3, "name": "The 360 Turntable", "skill": "In-Place Yaw Pivot", "brain": "rung2", "rules": "Rapid rotational turns in place on a marked spot; scored on rotational speed and zero translation drift."},
-  {"number": 13, "phase": 3, "name": "Steeplechase Jog", "skill": "Flight Phase Running", "brain": "rung1", "rules": "50m sprint requiring sustained aerial flight phases between foot strikes."},
+  {"number": 13, "phase": 3, "name": "Steeplechase Jog", "skill": "Flight Phase Running", "brain": "flight", "rules": "50m sprint requiring sustained aerial flight phases between foot strikes; scored on ground time (finish time minus hang time)."},
   {"number": 14, "phase": 3, "name": "The Alpine Ramp", "skill": "Mild Incline", "brain": "rung4", "rules": "Ascending a 15-degree ramp straight into a finish sensor."},
   {"number": 15, "phase": 3, "name": "Cross-Country Rubble", "skill": "Uneven Terrain", "brain": "rung4", "rules": "Traversal across randomized mounds and ruts."},
   {"number": 16, "phase": 4, "name": "The Platform Drop", "skill": "Walking Down Stairs", "brain": "rung4", "rules": "Rapid descent down stepped terrain; scored on descent speed and soft-landing dissipation."},

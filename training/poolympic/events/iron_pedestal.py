@@ -111,7 +111,8 @@ class _Lane:
             d.qvel[m.jnt_dofadr[j]: m.jnt_dofadr[j] + nv] = 0
 
     def control(self, sess, d, cmd=None):
-        cmd = np.zeros(3) if cmd is None else np.asarray(cmd, float)
+        """cmd in MATT units: scaled to this lane's body like Unity PolicyRunner.BodyCommand (identity for MATT)."""
+        cmd = np.zeros(3) if cmd is None else body_command(np.asarray(cmd, float), self.body)
         self.phase = self.advance_phase(cmd)
         obs = C.build_obs(self.ath, d.qpos, d.qvel, cmd, self.phase, self.last)
         if self.traits.obs_noise > 0:
@@ -147,6 +148,15 @@ class _Lane:
             if other is not None and other not in self.feet and m.body_rootid[m.geom_bodyid[other]] == self.pelvis:
                 return "FELL"
         return None
+
+
+def body_command(cmd: np.ndarray, body: str) -> np.ndarray:
+    """PolicyRunner.BodyCommand in float32: k = (float)(0.8 / gait_hz_base); (x·k, y·k, z / k). Identity for MATT."""
+    if body == "matt":
+        return cmd
+    k = np.float32(0.8 / body_contract(body)["gait_hz_base"])
+    c = np.asarray(cmd, np.float32)
+    return np.array([c[0] * k, c[1] * k, c[2] / k], dtype=np.float64)
 
 
 def body_contract(body: str) -> dict:

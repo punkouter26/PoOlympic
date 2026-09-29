@@ -169,9 +169,7 @@ namespace PoOlympic.Editor
                 if (k == AthleteLane && body == "matt") focusPelvis = pelvis;
             }
             pool.runner = heat.runners[0].runner;
-            var hud = new GameObject("HeatHUD").AddComponent<HeatHud>();
-            hud.heat = heat;
-            hud.version = lineup.Distinct().Count() > 1
+            string version = lineup.Distinct().Count() > 1
                 ? $"v0 · {Path.GetFileNameWithoutExtension(brainFile)} + {Path.GetFileNameWithoutExtension(zombieBrain)}"
                 : $"v0 · {Path.GetFileNameWithoutExtension(brainFile)} · 8 runners";
             lanes.broadcastCamera = cam.GetComponent<BroadcastCamera>();
@@ -183,6 +181,7 @@ namespace PoOlympic.Editor
             bc.target = focusPelvis;
             bc.focusOffset = new Vector3(0f, 0f, 1.5f);      // centre of the row (lanes 1..8 at Unity z = -9 .. +12)
             bc.offset = new Vector3(8f, 3.4f, -17f);         // front-left end of the row: all 8 pedestals recede in a 9:16 frame
+            AddBroadcast(heat, "IRON PEDESTAL", "Event 1 · last one standing", 1, version, cam, BroadcastDirector.Kind.Arena, Vector3.right);
             EditorSceneManager.SaveScene(scene, IronPedestalHeatScene);
             return $"{IronPedestalHeatScene}: {heat.runners.Count} athletes ({string.Join(",", lineup)}), brains {string.Join(" / ", brains.Values)}";
         }
@@ -194,15 +193,20 @@ namespace PoOlympic.Editor
         public const string AllFoursScene = "Assets/PoOlympic/Scenes/Event_30mAllFours.unity";
         public const string CrawlMattBrain = "crawl_matt.onnx";
         public const string CrawlZombieBrain = "crawl_zombie.onnx";
+        // Event 13 (Steeplechase Jog): MATT's flight brain (tasks PoOlympic-Matt-Rung2-Flight, r2f_v3 it100); the zombie
+        // keeps its Rung 2 brain
+        public const string SteepleScene = "Assets/PoOlympic/Scenes/Event_SteeplechaseJog.unity";
+        public const string FlightMattBrain = "r2f_v3_it100.onnx";
         public static readonly (int ev, TrackRaceEvent.Mode mode, string title, string scene)[] TrackEvents =
         {
             (8, TrackRaceEvent.Mode.AllFours, "30m ALL FOURS", AllFoursScene),   // replaced The 30m Dash (2026-09-29)
             (19, TrackRaceEvent.Mode.Terminal, "TERMINAL VELOCITY", "Assets/PoOlympic/Scenes/Event_TerminalVelocity.unity"),
             (22, TrackRaceEvent.Mode.Brake, "EMERGENCY BRAKE", "Assets/PoOlympic/Scenes/Event_EmergencyBrake.unity"),
             (9, TrackRaceEvent.Mode.Inverted, "INVERTED SPRINT", "Assets/PoOlympic/Scenes/Event_InvertedSprint.unity"),
+            (13, TrackRaceEvent.Mode.Steeplechase, "STEEPLECHASE JOG", SteepleScene),
         };
 
-        [MenuItem("PoOlympic/Events/Build Track Races (8, 9, 19, 22)")]
+        [MenuItem("PoOlympic/Events/Build Track Races (8, 9, 13, 19, 22)")]
         public static string BuildTrackRaces()
         {
             var sb = new System.Text.StringBuilder();
@@ -220,8 +224,12 @@ namespace PoOlympic.Editor
         {
             bool reversed = mode == TrackRaceEvent.Mode.Inverted;
             bool crawl = mode == TrackRaceEvent.Mode.AllFours;
-            var brains = crawl ? new System.Collections.Generic.Dictionary<string, string> { { "matt", CrawlMattBrain }, { "zombie", CrawlZombieBrain } } : null;
+            bool steeple = mode == TrackRaceEvent.Mode.Steeplechase;
+            var brains = crawl ? new System.Collections.Generic.Dictionary<string, string> { { "matt", CrawlMattBrain }, { "zombie", CrawlZombieBrain } }
+                       : steeple ? new System.Collections.Generic.Dictionary<string, string> { { "matt", FlightMattBrain }, { "zombie", DefaultZombieRung2Brain } }
+                       : null;
             if (crawl) brainFile = CrawlMattBrain;
+            if (steeple) brainFile = FlightMattBrain;
             var meet = BuildMeetScene(TrackSource, TrackLayout, eventNum, reversed ? 7 - AthleteLane : AthleteLane, reversed ? 180f : 0f, brainFile, brains);
             var race = new GameObject("TrackRaceEvent").AddComponent<TrackRaceEvent>();
             race.mode = mode;
@@ -240,17 +248,14 @@ namespace PoOlympic.Editor
                 }
             }
             meet.Pool.runner = race.runners[0].runner;
-            var hud = new GameObject("RaceHUD").AddComponent<RaceHud>();
-            hud.race = race;
-            hud.title = title;
-            hud.subtitle = $"Event {eventNum} · 8 runners";
-            hud.version = BrainsLabel(brainFile);
 
             var bc = meet.Camera.GetComponent<BroadcastCamera>();
             bc.target = meet.FocusPelvis;
             bc.focusOffset = new Vector3(reversed ? -1.0f : 1.0f, 0f, -0.6f);   // centre of the 8 lanes (Unity z = +3.66 .. -4.88), a bit ahead
             bc.offset = new Vector3(reversed ? 3.5f : -3.5f, 3.2f, -13f);      // trackside, slightly behind the pack (backward runners face it)
             if (crawl) { bc.offset = new Vector3(-3.0f, 2.0f, -9f); bc.lookHeight = 0.4f; }   // crawlers are ~0.5 m tall
+            AddBroadcast(race, title, $"Event {eventNum}", eventNum, BrainsLabel(brainFile), meet.Camera, BroadcastDirector.Kind.Race,
+                         reversed ? Vector3.left : Vector3.right);
             EditorSceneManager.SaveScene(meet.Scene, scenePath);
             return $"{scenePath}: {mode}, {race.runners.Count} runners, {race.distance} m, brain {brainFile}";
         }
@@ -269,16 +274,12 @@ namespace PoOlympic.Editor
             var ev = new GameObject("TurntableEvent").AddComponent<TurntableEvent>();
             foreach (var (k, r) in meet.Lanes) ev.spinners.Add(new TurntableEvent.Spinner { runner = r, name = LaneLabel($"S{k + 1}", r) });
             meet.Pool.runner = ev.spinners[0].runner;
-            var hud = new GameObject("StandingsHUD").AddComponent<StandingsHud>();
-            hud.board = ev;
-            hud.title = "THE 360 TURNTABLE";
-            hud.subtitle = "Event 12";
-            hud.version = BrainsLabel(brainFile);
 
             var bc = meet.Camera.GetComponent<BroadcastCamera>();
             bc.target = meet.FocusPelvis;
             bc.focusOffset = new Vector3(-4.5f, 0f, -2f);    // centre of the 2 x 4 grid (spot S4 is the origin)
             bc.offset = new Vector3(10.5f, 5.2f, -8.5f);     // front three-quarter: the athletes start facing +x
+            AddBroadcast(ev, "THE 360 TURNTABLE", "Event 12", 12, BrainsLabel(brainFile), meet.Camera, BroadcastDirector.Kind.Arena, Vector3.right);
             EditorSceneManager.SaveScene(meet.Scene, TurntableScene);
             return $"{TurntableScene}: {ev.spinners.Count} athletes, {ev.turns} turns at {ev.spinRate} rad/s, brain {brainFile}";
         }
@@ -300,16 +301,12 @@ namespace PoOlympic.Editor
             ev.railGeoms = layout["props"].Select(pr => (string)pr["name"]).ToArray();
             foreach (var (k, r) in meet.Lanes) ev.racers.Add(new CrabShuffleEvent.Racer { runner = r, name = LaneLabel($"L{k + 1}", r) });
             meet.Pool.runner = ev.racers[0].runner;
-            var hud = new GameObject("StandingsHUD").AddComponent<StandingsHud>();
-            hud.board = ev;
-            hud.title = "CRAB SHUFFLE";
-            hud.subtitle = "Event 10";
-            hud.version = BrainsLabel(brainFile);
 
             var bc = meet.Camera.GetComponent<BroadcastCamera>();
             bc.target = meet.FocusPelvis;
             bc.focusOffset = new Vector3(-0.6f, 0f, -1.5f);  // centre of the 8 lanes (Unity x = +3.66 .. -4.88), a bit down the course
             bc.offset = new Vector3(9.5f, 4f, -5.5f);        // in front of lane 1, down the course: the row recedes, faces + rails
+            AddBroadcast(ev, "CRAB SHUFFLE", "Event 10", 10, BrainsLabel(brainFile), meet.Camera, BroadcastDirector.Kind.Race, Vector3.right);
             EditorSceneManager.SaveScene(meet.Scene, CrabScene);
             return $"{CrabScene}: {ev.racers.Count} athletes, {ev.distance} m at {ev.sideSpeed} m/s, {ev.railGeoms.Length} rails, brain {brainFile}";
         }
@@ -329,16 +326,12 @@ namespace PoOlympic.Editor
             var ev = new GameObject("SlalomEvent").AddComponent<SlalomEvent>();
             foreach (var (k, r) in meet.Lanes) ev.racers.Add(new SlalomEvent.Racer { runner = r, name = LaneLabel($"L{k + 1}", r), lane = k });
             meet.Pool.runner = ev.racers[0].runner;
-            var hud = new GameObject("StandingsHUD").AddComponent<StandingsHud>();
-            hud.board = ev;
-            hud.title = "SLALOM SPRINT";
-            hud.subtitle = "Event 11";
-            hud.version = BrainsLabel(brainFile);
 
             var bc = meet.Camera.GetComponent<BroadcastCamera>();
             bc.target = meet.FocusPelvis;
             bc.focusOffset = new Vector3(1.5f, 0f, -0.6f);   // centre of the 8 lanes (Unity z = +3.66 .. -4.88), ahead of the pack
             bc.offset = new Vector3(-4f, 3.4f, -12f);        // trackside, outside lane 8, slightly behind the pack
+            AddBroadcast(ev, "SLALOM SPRINT", "Event 11", 11, BrainsLabel(brainFile), meet.Camera, BroadcastDirector.Kind.Race, Vector3.right);
             EditorSceneManager.SaveScene(meet.Scene, SlalomScene);
             return $"{SlalomScene}: {ev.racers.Count} runners, {ev.nPoles} poles, {ev.speed} m/s, brain {brainFile}";
         }
@@ -373,18 +366,44 @@ namespace PoOlympic.Editor
             var ev = new GameObject("GustGauntletEvent").AddComponent<GustGauntletEvent>();
             foreach (var (k, r) in meet.Lanes) ev.athletes.Add(new GustGauntletEvent.Athlete { runner = r, name = LaneLabel($"S{k + 1}", r), lane = k });
             meet.Pool.runner = ev.athletes[0].runner;
-            var hud = new GameObject("StandingsHUD").AddComponent<StandingsHud>();
-            hud.board = ev;
-            hud.title = "THE GUST GAUNTLET";
-            hud.subtitle = "Event 5";
-            hud.version = BrainsLabel(brainFile);
 
             var bc = meet.Camera.GetComponent<BroadcastCamera>();
             bc.target = meet.FocusPelvis;
             bc.focusOffset = new Vector3(-4.5f, 0f, -2f);    // centre of the 2 x 4 grid (platform S4 is the origin)
             bc.offset = new Vector3(10.5f, 5.2f, -8.5f);     // front three-quarter, as the turntable
+            AddBroadcast(ev, "THE GUST GAUNTLET", "Event 5", 5, BrainsLabel(brainFile), meet.Camera, BroadcastDirector.Kind.Arena, Vector3.right);
             EditorSceneManager.SaveScene(meet.Scene, GauntletScene);
             return $"{GauntletScene}: {ev.athletes.Count} athletes, {ev.rounds} rounds, brain {brainFile}";
+        }
+
+        public const string HudStyle = "Assets/PoOlympic/UI/BroadcastHud.uss";
+        public const string OddsModel = "Assets/PoOlympic/Models/odds_model.json";
+
+        /// <summary>D3 broadcast layer of an 8-athlete event scene: UI Toolkit BroadcastHud (standings + odds, betting slip,
+        /// ticker, result card, records, gauntlet) and a BroadcastDirector on the camera (tracking shots; the authored
+        /// BroadcastCamera offset becomes the establishing shot).</summary>
+        static BroadcastHud AddBroadcast(MonoBehaviour board, string title, string subtitle, int eventNum, string version, GameObject cam,
+                                         BroadcastDirector.Kind kind, Vector3 forward)
+        {
+            var go = new GameObject("BroadcastHUD");
+            var doc = go.AddComponent<UIDocument>();
+            doc.panelSettings = AssetDatabase.LoadAssetAtPath<PanelSettings>(MenuPanelSettings) ?? throw new FileNotFoundException(MenuPanelSettings);
+            var hud = go.AddComponent<BroadcastHud>();
+            hud.board = board;
+            hud.title = title;
+            hud.subtitle = subtitle;
+            hud.eventNumber = eventNum;
+            hud.version = version;
+            hud.style = AssetDatabase.LoadAssetAtPath<StyleSheet>(HudStyle) ?? throw new FileNotFoundException(HudStyle);
+            hud.oddsModel = AssetDatabase.LoadAssetAtPath<TextAsset>(OddsModel);
+            var bc = cam.GetComponent<BroadcastCamera>();
+            var dir = cam.GetComponent<BroadcastDirector>() ?? cam.AddComponent<BroadcastDirector>();
+            dir.board = board;
+            dir.kind = kind;
+            dir.forward = forward;
+            dir.establishing = bc.offset;
+            dir.lookHeight = bc.lookHeight;
+            return hud;
         }
 
         /// <summary>HUD lane label: the zombie's lanes read Z&lt;n&gt; (roster prefix Z&lt;k&gt;_), MATT keeps the event's own label.</summary>
@@ -499,6 +518,7 @@ namespace PoOlympic.Editor
             { 10, CrabScene },
             { 11, SlalomScene },
             { 12, TurntableScene },
+            { 13, SteepleScene },
             { 19, "Assets/PoOlympic/Scenes/Event_TerminalVelocity.unity" },
             { 22, "Assets/PoOlympic/Scenes/Event_EmergencyBrake.unity" },
         };

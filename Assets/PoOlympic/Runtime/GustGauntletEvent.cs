@@ -15,7 +15,7 @@ namespace PoOlympic
     /// a fall or a foot off the platform = out. Rank: still in by total recovery time, then eliminated (later = better).
     ///   Ready (countdown) → Live → Result → auto restart (new seed)
     /// </summary>
-    public class GustGauntletEvent : MonoBehaviour, IStandingsBoard, ILaneRoster
+    public class GustGauntletEvent : MonoBehaviour, IBroadcastBoard, ILaneRoster
     {
         public enum Phase { Ready, Live, Result }
 
@@ -137,6 +137,7 @@ namespace PoOlympic
             switch (Current)
             {
                 case Phase.Ready:
+                    if (HoldStart) { PhaseTime = 0; break; }   // betting window (BroadcastHud)
                     if (PhaseTime >= countdownSeconds)
                     {
                         Current = Phase.Live;
@@ -216,6 +217,21 @@ namespace PoOlympic
         public string Describe(Athlete a) => a.In
             ? $"{a.total:0.0} s" + (Current == Phase.Live && a.burstAt >= 0 ? $"  {a.offset * 100f:0} cm" : "")
             : $"OUT {a.outAt:0.0} s {(a.reason == "FELL" ? "fell" : "off")}";
+
+        // IBroadcastBoard (BroadcastHud: betting window, records)
+        public BoardPhase BoardState => (BoardPhase)(int)Current;
+        public int Heat => Attempt;
+        public bool HoldStart { get; set; }
+        public bool TryWinningMark(out double value, out bool lowerIsBetter, out string text)
+        {
+            var w = athletes.FirstOrDefault(a => a.place == 1);
+            lowerIsBetter = true;
+            value = 0; text = "";
+            if (Current != Phase.Result || w == null || !(true)) return false;
+            value = w.total;
+            text = $"{w.total:0.0} s recovery";
+            return true;
+        }
 
         public string SubtitleExtra => $"round {Round}/{rounds} · gust {GustNow:0.00} m/s";
         public string ClockLine => $"{LiveTime:0.00} s";

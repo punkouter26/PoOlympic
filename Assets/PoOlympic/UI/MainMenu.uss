@@ -230,3 +230,41 @@
     -unity-text-align: middle-center;
     margin-top: 12px;
 }
+
+/* gauntlet builder + wallet (game layer) */
+.gauntlet-toggle {
+    height: 44px;
+    padding: 0 20px;
+    font-size: 22px;
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
+    letter-spacing: 2px;
+    color: rgb(232, 236, 244);
+    background-color: rgb(34, 45, 70);
+    border-width: 0;
+    border-radius: 10px;
+}
+.gauntlet-toggle--on {
+    color: rgb(12, 18, 32);
+    background-color: rgb(120, 220, 255);
+}
+.event-order {
+    width: 44px;
+    height: 44px;
+    margin-left: 12px;
+    font-size: 24px;
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
+    -unity-text-align: middle-center;
+    color: rgb(12, 18, 32);
+    background-color: rgb(120, 220, 255);
+    border-radius: 22px;
+}
+.event-button--in-gauntlet {
+    border-color: rgb(120, 220, 255);
+}
+.coins {
+    font-size: 20px;
+    color: rgb(120, 220, 255);
+    -unity-text-align: middle-center;
+    margin-top: 6px;
+    white-space: normal;
+}
