@@ -1,0 +1,275 @@
+{
+ "n_lanes": 8,
+ "lane_width": 1.22,
+ "n_cubes": 16,
+ "lanes": [
+  {
+   "lane": 0,
+   "prefix": "L0_",
+   "body": "matt",
+   "origin": [
+    -9.0,
+    0.0,
+    0.0
+   ],
+   "cubes": [
+    0,
+    1
+   ]
+  },
+  {
+   "lane": 0,
+   "prefix": "Z0_",
+   "body": "zombie",
+   "origin": [
+    -9.0,
+    0.0,
+    0.0
+   ],
+   "cubes": [
+    0,
+    1
+   ]
+  },
+  {
+   "lane": 1,
+   "prefix": "L1_",
+   "body": "matt",
+   "origin": [
+    -6.0,
+    0.0,
+    0.0
+   ],
+   "cubes": [
+    2,
+    3
+   ]
+  },
+  {
+   "lane": 1,
+   "prefix": "Z1_",
+   "body": "zombie",
+   "origin": [
+    -6.0,
+    0.0,
+    0.0
+   ],
+   "cubes": [
+    2,
+    3
+   ]
+  },
+  {
+   "lane": 2,
+   "prefix": "L2_",
+   "body": "matt",
+   "origin": [
+    -3.0,
+    0.0,
+    0.0
+   ],
+   "cubes": [
+    4,
+    5
+   ]
+  },
+  {
+   "lane": 2,
+   "prefix": "Z2_",
+   "body": "zombie",
+   "origin": [
+    -3.0,
+    0.0,
+    0.0
+   ],
+   "cubes": [
+    4,
+    5
+   ]
+  },
+  {
+   "lane": 3,
+   "prefix": "L3_",
+   "body": "matt",
+   "origin": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cubes": [
+    6,
+    7
+   ]
+  },
+  {
+   "lane": 3,
+   "prefix": "Z3_",
+   "body": "zombie",
+   "origin": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cubes": [
+    6,
+    7
+   ]
+  },
+  {
+   "lane": 4,
+   "prefix": "L4_",
+   "body": "matt",
+   "origin": [
+    -9.0,
+    -4.0,
+    0.0
+   ],
+   "cubes": [
+    8,
+    9
+   ]
+  },
+  {
+   "lane": 4,
+   "prefix": "Z4_",
+   "body": "zombie",
+   "origin": [
+    -9.0,
+    -4.0,
+    0.0
+   ],
+   "cubes": [
+    8,
+    9
+   ]
+  },
+  {
+   "lane": 5,
+   "prefix": "L5_",
+   "body": "matt",
+   "origin": [
+    -6.0,
+    -4.0,
+    0.0
+   ],
+   "cubes": [
+    10,
+    11
+   ]
+  },
+  {
+   "lane": 5,
+   "prefix": "Z5_",
+   "body": "zombie",
+   "origin": [
+    -6.0,
+    -4.0,
+    0.0
+   ],
+   "cubes": [
+    10,
+    11
+   ]
+  },
+  {
+   "lane": 6,
+   "prefix": "L6_",
+   "body": "matt",
+   "origin": [
+    -3.0,
+    -4.0,
+    0.0
+   ],
+   "cubes": [
+    12,
+    13
+   ]
+  },
+  {
+   "lane": 6,
+   "prefix": "Z6_",
+   "body": "zombie",
+   "origin": [
+    -3.0,
+    -4.0,
+    0.0
+   ],
+   "cubes": [
+    12,
+    13
+   ]
+  },
+  {
+   "lane": 7,
+   "prefix": "L7_",
+   "body": "matt",
+   "origin": [
+    0.0,
+    -4.0,
+    0.0
+   ],
+   "cubes": [
+    14,
+    15
+   ]
+  },
+  {
+   "lane": 7,
+   "prefix": "Z7_",
+   "body": "zombie",
+   "origin": [
+    0.0,
+    -4.0,
+    0.0
+   ],
+   "cubes": [
+    14,
+    15
+   ]
+  }
+ ],
+ "pedestal_h": 0.0,
+ "lineup": [
+  [
+   "matt",
+   "zombie"
+  ],
+  [
+   "matt",
+   "zombie"
+  ],
+  [
+   "matt",
+   "zombie"
+  ],
+  [
+   "matt",
+   "zombie"
+  ],
+  [
+   "matt",
+   "zombie"
+  ],
+  [
+   "matt",
+   "zombie"
+  ],
+  [
+   "matt",
+   "zombie"
+  ],
+  [
+   "matt",
+   "zombie"
+  ]
+ ],
+ "note": "lane k: names prefixed L<k>_, athlete body per lane (assets/<body>.xml), pelvis shifted by origin",
+ "shaker": {
+  "half": 0.8,
+  "h": 0.1,
+  "mass": 150.0,
+  "stiffness": 36300.0,
+  "damping": 1160.0,
+  "range": 0.25
+ }
+}

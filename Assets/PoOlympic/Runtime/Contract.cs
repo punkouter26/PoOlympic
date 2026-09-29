@@ -91,6 +91,13 @@ namespace PoOlympic
 
         public const double MattRootZ = 0.9549291;   // scene_matt.xml keyframe "default"
 
+        /// <summary>Froude speed scale √λ of this body vs MATT (λ = height ratio): event commands are written in MATT
+        /// units and scaled per body (speeds × √λ, yaw rates ÷ √λ), matching the body's training envelope. Recovered from
+        /// the gait clock: training/poolympic/contract.py GAIT_HZ_BASE = 0.8 / √λ.</summary>
+        public double SpeedScale => BodyName == "matt" ? 1.0 : MattGaitHzBase / gait_hz_base;
+
+        public const double MattGaitHzBase = 0.8;
+
         public static Contract Parse(string json)
         {
             var c = JsonUtility.FromJson<Contract>(json);

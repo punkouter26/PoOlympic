@@ -14,7 +14,7 @@ namespace PoOlympic
     /// contract ranges — the lanes' "form" that odds are built on. Ranking = elimination order.
     ///   Ready (countdown) → Live → Result → auto restart (new seed, new traits)
     /// </summary>
-    public class IronPedestalHeat : MonoBehaviour
+    public class IronPedestalHeat : MonoBehaviour, ILaneRoster
     {
         public enum Phase { Ready, Live, Result }
 
@@ -32,6 +32,9 @@ namespace PoOlympic
         }
 
         public List<Runner> runners = new();
+
+        /// <summary>Roster scenes: drop the athletes LaneLineup switched off (list order stays lane order).</summary>
+        public void DropInactiveLanes() => runners.RemoveAll(x => x.runner == null || !x.runner.gameObject.activeInHierarchy);
         public MjCubePool cubes;
         [Header("Rules (= iron_pedestal.py)")]
         public float countdownSeconds = 3f;

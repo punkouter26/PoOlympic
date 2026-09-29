@@ -17,7 +17,7 @@ namespace PoOlympic
     /// Runners steer with the contract's lane keeping (PolicyRunner.laneKeeping). Traits + nerve are drawn per heat.
     ///   Ready (countdown) → Live → Result → auto restart (new seed)
     /// </summary>
-    public class TrackRaceEvent : MonoBehaviour
+    public class TrackRaceEvent : MonoBehaviour, ILaneRoster
     {
         public enum Mode { Dash, Terminal, Brake, Inverted }
         public enum Phase { Ready, Live, Result }
@@ -38,6 +38,9 @@ namespace PoOlympic
 
         public Mode mode = Mode.Dash;
         public List<Runner> runners = new();
+
+        /// <summary>Roster scenes: drop the athletes LaneLineup switched off (list order stays lane order).</summary>
+        public void DropInactiveLanes() => runners.RemoveAll(x => x.runner == null || !x.runner.gameObject.activeInHierarchy);
         [Header("Rules (= track.py MODES)")]
         public float distance = 30f;
         public float commandSpeed = 3.8f;

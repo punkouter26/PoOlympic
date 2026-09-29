@@ -6,8 +6,7 @@ namespace PoOlympic
 {
     /// <summary>
     /// The meet chosen in the main menu: the athlete in each of the 8 lanes and the event. Survives scene loads (static).
-    /// Event scenes are built for a fixed lineup (Event 1: MATT + zombie alternating, the others 8 MATTs); the menu shows
-    /// each event's lineup.
+    /// Event scenes are roster scenes (every roster body in every lane); LaneLineup keeps the picked body per lane.
     /// </summary>
     public static class MeetLineup
     {
@@ -17,7 +16,7 @@ namespace PoOlympic
         public static string Stats(string athlete) => athlete switch
         {
             "MATT" => "1.84 m · 80 kg\nRung 0 + Rung 2",
-            "ZOMBIE" => "1.10 m · 22 kg\nRung 0 (Event 1)",
+            "ZOMBIE" => "1.10 m · 22 kg\nRung 0 + Rung 2",
             _ => "",
         };
         public static string[] Athletes { get; private set; } = Enumerable.Repeat(Roster[0], 8).ToArray();

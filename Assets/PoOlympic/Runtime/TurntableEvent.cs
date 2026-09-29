@@ -14,7 +14,7 @@ namespace PoOlympic
     /// (`ringRadius`) = DQ. Traits + direction are drawn per heat.
     ///   Ready (countdown) → Live → Result → auto restart (new seed)
     /// </summary>
-    public class TurntableEvent : MonoBehaviour, IStandingsBoard
+    public class TurntableEvent : MonoBehaviour, IStandingsBoard, ILaneRoster
     {
         public enum Phase { Ready, Live, Result }
 
@@ -31,6 +31,9 @@ namespace PoOlympic
         }
 
         public List<Spinner> spinners = new();
+
+        /// <summary>Roster scenes: drop the athletes LaneLineup switched off (list order stays lane order).</summary>
+        public void DropInactiveLanes() => spinners.RemoveAll(x => x.runner == null || !x.runner.gameObject.activeInHierarchy);
         [Header("Rules (= turntable.py)")]
         public float spinRate = 3.0f;
         public int turns = 3;

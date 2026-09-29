@@ -239,6 +239,14 @@ namespace PoOlympic
             if (_substep % Contract.decimation == 0) ControlTick++;
         }
 
+        /// <summary>Event command (MATT units) → this body's command: speeds × √λ, yaw rate ÷ √λ (Contract.SpeedScale).
+        /// Identity for MATT.</summary>
+        public Vector3 BodyCommand(Vector3 c)
+        {
+            float k = (float)Contract.SpeedScale;
+            return k == 1f ? c : new Vector3(c.x * k, c.y * k, c.z / k);
+        }
+
         void ControlStep(MujocoLib.mjModel_* m, MujocoLib.mjData_* d)
         {
             if (_rec != null && _recFrames < recordTicks) RecordStateHead(m, d);
@@ -255,8 +263,9 @@ namespace PoOlympic
                 double yaw = Math.Atan2(2.0 * (w * qz + qx * qy), 1.0 - 2.0 * (qy * qy + qz * qz));
                 command = steer(d->qpos[r] - laneOriginX, d->qpos[r + 1] - laneOriginY, yaw, command);
             }
-            _phase = Contract.AdvancePhase(_phase, command);
-            ObservationBuilder.Build(Contract, Binding, d->qpos, d->qvel, command, _phase, _lastAction, _obs);
+            var bodyCommand = BodyCommand(command);
+            _phase = Contract.AdvancePhase(_phase, bodyCommand);
+            ObservationBuilder.Build(Contract, Binding, d->qpos, d->qvel, bodyCommand, _phase, _lastAction, _obs);
             if (obsNoise > 0f && Contract.obs_noise != null)
                 foreach (var t in Contract.obs_noise)
                     for (int i = 0; i < t.size; i++)

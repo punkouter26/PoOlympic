@@ -6,6 +6,11 @@ the identical model (checked by `--verify`).
 
 Usage:  uv run python tools/compose_mixed.py pedestal8 matt,zombie,matt,zombie,matt,zombie,matt,zombie
         uv run python tools/compose_mixed.py --verify          (all-MATT pedestal8 == scene_pedestal8.xml)
+        uv run python tools/compose_mixed.py track8 roster     (roster scene: MATT L<k>_ + zombie Z<k>_ in every lane)
+        uv run python tools/compose_mixed.py --roster-all      (roster scenes for every event scene)
+Roster scenes back the Unity menu: every lane holds every roster body (same lane collision bits, shared pedestal / props /
+cubes); Unity's LaneLineup switches off the bodies not picked before MuJoCo compiles, leaving compose(scene, lineup) up to
+name prefixes (checked by --verify).
 Output: assets/scene_<scene>_<tag>.xml + <scene>_<tag>_layout.json   (tag = lineup, e.g. "mz" for alternating)
 """
 
@@ -25,6 +30,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 import build_mjcf as B  # noqa: E402  (MATT profile: only the scene helpers / constants are used here)
 
 ASSETS = ROOT / "assets"
+ROSTER = ["matt", "zombie"]      # = Unity MeetLineup.Roster (lower case)
 SCENES = {  # scene -> the build_mjcf.compose_meet arguments of that event scene
     "pedestal8": dict(event=1, pedestal_h=B.PEDESTAL_H),
     "track8": dict(event=8, park_offset=(0.0, -30.0, 0.0)),
@@ -55,7 +61,13 @@ def body_parts(body: str):
     return pelvis, acts, excl, qdef
 
 
-def compose(scene: str, lineup: list[str]) -> tuple[str, dict]:
+def athlete_prefix(lane: int, body: str, roster: bool) -> str:
+    """L<k>_ for MATT and for any body in a one-body-per-lane scene; <B><k>_ (Z<k>_ …) for the other roster bodies."""
+    return B.lane_prefix(lane) if not roster or body == "matt" else f"{body[0].upper()}{lane}_"
+
+
+def compose(scene: str, lineup: list) -> tuple[str, dict]:
+    """lineup: one body per lane, or a list of bodies per lane (roster scene)."""
     sc = SCENES[scene]
     ped_h, shaker = sc.get("pedestal_h", 0.0), sc.get("shaker")
     props = sc["props"]() if "props" in sc else []
@@ -78,7 +90,9 @@ def compose(scene: str, lineup: list[str]) -> tuple[str, dict]:
     contact = ET.Element("contact")
     actuator = ET.Element("actuator")
     key_qpos, lanes = [], []
-    for k, body in enumerate(lineup):
+    for k, bodies in enumerate(lineup):
+        roster = not isinstance(bodies, str)          # roster scene: every roster body in this lane
+        bodies = list(bodies) if roster else [bodies]
         p, o = B.lane_prefix(k), np.asarray(origins[k], float)
         if ped_h:
             ET.SubElement(wb, "geom", {"name": p + "pedestal", "type": "box", "pos": B.vec(o + [0, 0, -ped_h / 2]),
@@ -100,27 +114,29 @@ def compose(scene: str, lineup: list[str]) -> tuple[str, dict]:
                                          "contype": str(B.ALL_BITS), "conaffinity": str(B.ALL_BITS), "condim": "3",
                                          "friction": B.vec(B.GROUND_FRICTION)})
             key_qpos.append(np.zeros(2))
-        pelvis, acts, excl, qdef = body_parts(body)
-        pelvis = copy.deepcopy(pelvis)
-        for el in pelvis.iter():
-            if "name" in el.attrib:
-                el.set("name", p + el.get("name"))
-            if el.tag == "geom":
-                el.set("contype", str(shift_bits(int(el.get("contype")), k)))
-                el.set("conaffinity", str(shift_bits(int(el.get("conaffinity")), k)))
-        pelvis.set("pos", B.vec(np.array([float(x) for x in pelvis.get("pos").split()]) + o))
-        wb.append(pelvis)
-        for e in excl:
-            ET.SubElement(contact, "exclude", {"body1": p + e.get("body1"), "body2": p + e.get("body2")})
-        for a in acts:
-            a = copy.deepcopy(a)
-            a.set("name", p + a.get("name"))
-            a.set("joint", p + a.get("joint"))
-            actuator.append(a)
-        q = qdef.copy()
-        q[0:3] += o
-        key_qpos.append(q)
-        lanes.append({"lane": k, "prefix": p, "body": body, "origin": o.tolist(), "cubes": [2 * k, 2 * k + 1]})
+        for body in bodies:
+            p = athlete_prefix(k, body, roster)
+            pelvis, acts, excl, qdef = body_parts(body)
+            pelvis = copy.deepcopy(pelvis)
+            for el in pelvis.iter():
+                if "name" in el.attrib:
+                    el.set("name", p + el.get("name"))
+                if el.tag == "geom":
+                    el.set("contype", str(shift_bits(int(el.get("contype")), k)))
+                    el.set("conaffinity", str(shift_bits(int(el.get("conaffinity")), k)))
+            pelvis.set("pos", B.vec(np.array([float(x) for x in pelvis.get("pos").split()]) + o))
+            wb.append(pelvis)
+            for e in excl:
+                ET.SubElement(contact, "exclude", {"body1": p + e.get("body1"), "body2": p + e.get("body2")})
+            for a in acts:
+                a = copy.deepcopy(a)
+                a.set("name", p + a.get("name"))
+                a.set("joint", p + a.get("joint"))
+                actuator.append(a)
+            q = qdef.copy()
+            q[0:3] += o
+            key_qpos.append(q)
+            lanes.append({"lane": k, "prefix": p, "body": body, "origin": o.tolist(), "cubes": [2 * k, 2 * k + 1]})
     inertia = B.CUBE_MASS * (2 * B.CUBE_HALF) ** 2 / 6.0
     n_cubes = B.N_CUBES_MEET
     for i in range(n_cubes):
@@ -147,7 +163,9 @@ def compose(scene: str, lineup: list[str]) -> tuple[str, dict]:
     return B.indent(root), layout
 
 
-def tag_of(lineup: list[str]) -> str:
+def tag_of(lineup: list) -> str:
+    if not isinstance(lineup[0], str):
+        return "roster"
     return "".join(b[0] for b in lineup) if len(set(lineup)) > 1 else lineup[0]
 
 
@@ -171,19 +189,39 @@ def verify() -> int:
     return 0 if ok_all else 1
 
 
+def verify_roster() -> int:
+    """Every athlete of every roster scene == the same body in that lane of a one-body-per-lane composition
+    (per-lane fingerprint incl. its cube slot): switching the other bodies off leaves exactly compose(scene, lineup)."""
+    from poolympic.fingerprint import canonical_bytes, fingerprint
+    ok_all = True
+    for scene in SCENES:
+        xml, _ = compose(scene, [list(ROSTER)] * 8)
+        r = mujoco.MjModel.from_xml_string(xml)
+        for body in ROSTER:
+            m = mujoco.MjModel.from_xml_string(compose(scene, [[body]] * 8)[0])   # same prefixes, one body per lane
+            same = all(canonical_bytes(fingerprint(r, athlete_prefix(k, body, True), f"cube{2 * k}"))
+                       == canonical_bytes(fingerprint(m, athlete_prefix(k, body, True), f"cube{2 * k}")) for k in range(8))
+            print(f"roster {scene} {body}:", "PASS" if same else "FAIL")
+            ok_all &= same
+    return 0 if ok_all else 1
+
+
 def main(argv: list[str]) -> int:
     if argv and argv[0] == "--verify":
-        return verify()
-    scene, lineup = argv[0], argv[1].split(",")
+        return verify() | verify_roster()
+    if argv and argv[0] == "--roster-all":
+        return max(main([sc, "roster"]) for sc in SCENES)
+    scene = argv[0]
+    lineup = [list(ROSTER)] * 8 if argv[1] == "roster" else argv[1].split(",")
     assert len(lineup) == 8, "8 lanes"
     xml, layout = compose(scene, lineup)
     tag = tag_of(lineup)
-    header = f"<!-- GENERATED by training/tools/compose_mixed.py ({scene}, lineup {','.join(lineup)}). Do not edit. -->\n"
+    header = f"<!-- GENERATED by training/tools/compose_mixed.py ({scene}, lineup {tag_of(lineup) if tag_of(lineup) == 'roster' else ','.join(lineup)}). Do not edit. -->\n"
     out = ASSETS / f"scene_{scene}_{tag}.xml"
     out.write_text(header + xml + "\n")
     (ASSETS / f"{scene}_{tag}_layout.json").write_text(json.dumps(layout, indent=1) + "\n")
     m = mujoco.MjModel.from_xml_path(str(out))
-    print(f"{out.name}: nq={m.nq} nu={m.nu} ngeom={m.ngeom}  lineup {lineup}")
+    print(f"{out.name}: nq={m.nq} nu={m.nu} ngeom={m.ngeom}  lineup {tag}")
     return 0
 
 

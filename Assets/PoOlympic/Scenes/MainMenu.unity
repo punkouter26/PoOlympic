@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &625875539
+--- !u!1 &624032236
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,8 +127,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 625875541}
-  - component: {fileID: 625875540}
+  - component: {fileID: 624032238}
+  - component: {fileID: 624032237}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -136,13 +136,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!20 &625875540
+--- !u!20 &624032237
 Camera:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 625875539}
+  m_GameObject: {fileID: 624032236}
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
@@ -187,13 +187,13 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!4 &625875541
+--- !u!4 &624032238
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 625875539}
+  m_GameObject: {fileID: 624032236}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -202,7 +202,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &936523733
+--- !u!1 &877523843
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -210,9 +210,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 936523736}
-  - component: {fileID: 936523735}
-  - component: {fileID: 936523734}
+  - component: {fileID: 877523846}
+  - component: {fileID: 877523845}
+  - component: {fileID: 877523844}
   m_Layer: 0
   m_Name: MainMenu
   m_TagString: Untagged
@@ -220,13 +220,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &936523734
+--- !u!114 &877523844
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 936523733}
+  m_GameObject: {fileID: 877523843}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 213e7403b4b52c348978b1782a2866f3, type: 3}
@@ -236,136 +236,64 @@ MonoBehaviour:
   - number: 1
     name: The Iron Pedestal
     rules: 8 runners start on narrow 1m x 1m pedestals. The last runner to maintain base equilibrium without stepping off wins.
-    brain: "rung0 \xB7 MATT + ZOMBIE"
+    brain: rung0
     scene: Event_IronPedestal_Heat
-    lineup:
-    - MATT
-    - ZOMBIE
-    - MATT
-    - ZOMBIE
-    - MATT
-    - ZOMBIE
-    - MATT
-    - ZOMBIE
+    lineup: []
   - number: 5
     name: The Gust Gauntlet
     rules: Athletes endure lateral wind bursts and sudden floor shakers. Scored on recovery time back to center.
     brain: rung2
     scene: Event_GustGauntlet
-    lineup:
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
+    lineup: []
   - number: 8
     name: The 30m Dash
     rules: Pure forward linear sprint to the finish ribbon.
     brain: rung2
     scene: Event_30mDash
-    lineup:
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
+    lineup: []
   - number: 9
     name: The Inverted Sprint
     rules: 20m reverse sprint. Disqualification upon lane drifting or backward tumbling.
     brain: rung2
     scene: Event_InvertedSprint
-    lineup:
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
+    lineup: []
   - number: 10
     name: Crab Shuffle Relay
     rules: Side-stepping dash between parallel boundary rails without crossing legs.
     brain: rung2
     scene: Event_CrabShuffle
-    lineup:
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
+    lineup: []
   - number: 11
     name: Slalom Sprint
     rules: Weaving through slalom gates; penalties added for missed gates or clipping flags.
     brain: rung2
     scene: Event_SlalomSprint
-    lineup:
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
+    lineup: []
   - number: 12
     name: The 360 Turntable
     rules: Rapid rotational turns in place on a marked spot; scored on rotational speed and zero translation drift.
     brain: rung2
     scene: Event_360Turntable
-    lineup:
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
+    lineup: []
   - number: 19
     name: Terminal Velocity Sprint
     rules: Open sprint pushing top-end velocity until motor saturation or collapse.
     brain: rung2
     scene: Event_TerminalVelocity
-    lineup:
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
+    lineup: []
   - number: 22
     name: Emergency Brake
     rules: Full sprint toward a red stop line. Athletes must reach full standstill without crossing the boundary.
     brain: rung2
     scene: Event_EmergencyBrake
-    lineup:
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
-    - MATT
---- !u!114 &936523735
+    lineup: []
+--- !u!114 &877523845
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 936523733}
+  m_GameObject: {fileID: 877523843}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
@@ -382,13 +310,13 @@ MonoBehaviour:
   m_PivotReferenceSize: 0
   m_Pivot: 0
   m_WorldSpaceCollider: {fileID: 0}
---- !u!4 &936523736
+--- !u!4 &877523846
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 936523733}
+  m_GameObject: {fileID: 877523843}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -401,5 +329,5 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 625875541}
-  - {fileID: 936523736}
+  - {fileID: 624032238}
+  - {fileID: 877523846}

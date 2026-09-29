@@ -15,7 +15,7 @@ namespace PoOlympic
     /// Penalties: wrong side of a pole, pole contacts; a fall = out. Rank by time + penalties.
     ///   Ready (countdown) → Live → Result → auto restart (new seed)
     /// </summary>
-    public class SlalomEvent : MonoBehaviour, IStandingsBoard
+    public class SlalomEvent : MonoBehaviour, IStandingsBoard, ILaneRoster
     {
         public enum Phase { Ready, Live, Result }
 
@@ -36,6 +36,9 @@ namespace PoOlympic
         }
 
         public List<Racer> racers = new();
+
+        /// <summary>Roster scenes: drop the athletes LaneLineup switched off (list order stays lane order).</summary>
+        public void DropInactiveLanes() => racers.RemoveAll(x => x.runner == null || !x.runner.gameObject.activeInHierarchy);
         [Header("Rules (= slalom.py)")]
         public float distance = 32f;
         public float poleX0 = 3f, poleDx = 4f;

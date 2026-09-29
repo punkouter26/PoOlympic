@@ -14,7 +14,7 @@ namespace PoOlympic
     /// foot to the right of the right foot in the pelvis frame) and every new rail contact add seconds; a fall = out.
     ///   Ready (countdown) → Live → Result → auto restart (new seed)
     /// </summary>
-    public class CrabShuffleEvent : MonoBehaviour, IStandingsBoard
+    public class CrabShuffleEvent : MonoBehaviour, IStandingsBoard, ILaneRoster
     {
         public enum Phase { Ready, Live, Result }
 
@@ -33,6 +33,9 @@ namespace PoOlympic
         }
 
         public List<Racer> racers = new();
+
+        /// <summary>Roster scenes: drop the athletes LaneLineup switched off (list order stays lane order).</summary>
+        public void DropInactiveLanes() => racers.RemoveAll(x => x.runner == null || !x.runner.gameObject.activeInHierarchy);
         [Header("Rules (= crab.py)")]
         public float distance = 20f;
         public float sideSpeed = 1.2f;

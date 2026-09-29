@@ -15,7 +15,7 @@ namespace PoOlympic
     /// a fall or a foot off the platform = out. Rank: still in by total recovery time, then eliminated (later = better).
     ///   Ready (countdown) → Live → Result → auto restart (new seed)
     /// </summary>
-    public class GustGauntletEvent : MonoBehaviour, IStandingsBoard
+    public class GustGauntletEvent : MonoBehaviour, IStandingsBoard, ILaneRoster
     {
         public enum Phase { Ready, Live, Result }
 
@@ -24,6 +24,9 @@ namespace PoOlympic
         {
             public PolicyRunner runner;
             public string name;
+            [Tooltip("Lane index: the shaker platform belongs to the lane (L<k>_shaker), whichever body stands on it.")]
+            public int lane;
+            public string ShakerPrefix => $"L{lane}_";
             [NonSerialized] public AthleteJudge judge;
             [NonSerialized] public readonly List<float> recoveries = new();
             [NonSerialized] public float total, outAt = -1, burstAt = -1, calm, offset, speed;
@@ -33,6 +36,9 @@ namespace PoOlympic
         }
 
         public List<Athlete> athletes = new();
+
+        /// <summary>Roster scenes: drop the athletes LaneLineup switched off (list order stays lane order).</summary>
+        public void DropInactiveLanes() => athletes.RemoveAll(x => x.runner == null || !x.runner.gameObject.activeInHierarchy);
         [Header("Rules (= gauntlet.py)")]
         public float startSeconds = 1f, roundSeconds = 4f;
         public int rounds = 10;
@@ -116,7 +122,7 @@ namespace PoOlympic
             if (!MjScene.InstanceExists || MjScene.Instance.Data == null) return;
             var m = MjScene.Instance.Model;
             var d = MjScene.Instance.Data;
-            foreach (var a in athletes) a.judge ??= new AthleteJudge(m, a.runner, "ground", a.runner.athletePrefix + "shaker");
+            foreach (var a in athletes) a.judge ??= new AthleteJudge(m, a.runner, "ground", a.ShakerPrefix + "shaker");
             if (_traitsPending) { DrawTraits(); _traitsPending = false; }
             PhaseTime += Time.deltaTime;
             var lead = athletes[0].runner;
@@ -154,10 +160,11 @@ namespace PoOlympic
                             double sa = _rng.NextDouble() * 2 * Math.PI;
                             if (!a.In) continue;
                             if (a.burstAt >= 0) a.recoveries.Add(roundSeconds);
-                            a.runner.Request(new Disturbance { kind = "shove", target = "root", dqvel = new[] { dv * Math.Cos(ang), dv * Math.Sin(ang), 0 } });
+                            double bdv = dv * a.runner.Contract.SpeedScale;   // Froude: gusts scale with the body like its speeds
+                            a.runner.Request(new Disturbance { kind = "shove", target = "root", dqvel = new[] { bdv * Math.Cos(ang), bdv * Math.Sin(ang), 0 } });
                             if (shake)
                             {
-                                var p = a.runner.athletePrefix;
+                                var p = a.ShakerPrefix;
                                 a.runner.Request(new Disturbance { kind = "kick", target = p + "shaker_x", dqvel = new[] { shakeSpeed * Math.Cos(sa) } });
                                 a.runner.Request(new Disturbance { kind = "kick", target = p + "shaker_y", dqvel = new[] { shakeSpeed * Math.Sin(sa) } });
                             }
