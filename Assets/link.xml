@@ -1,0 +1,7 @@
+<!-- IL2CPP managed code stripping: keep the MuJoCo plugin (components are found by type and bound through reflection-free
+     P/Invoke, but its serialized component fields must survive), the game runtime and the inference engine. -->
+<linker>
+  <assembly fullname="Mujoco.Runtime" preserve="all" />
+  <assembly fullname="PoOlympic.Runtime" preserve="all" />
+  <assembly fullname="Unity.InferenceEngine" preserve="all" />
+</linker>

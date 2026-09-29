@@ -196,6 +196,7 @@ apply: TensorBoard + MuJoCo viewer for every run, close Unity during 30 min+ run
 
   - **Menu lineups (roster scenes):** `compose_mixed.py <scene> roster` puts MATT (L<k>_) + zombie (Z<k>_) in every lane of every event scene (verify: every roster athlete == its one-body composition, 18/18); `LaneLineup` keeps the menu's pick per lane before MuJoCo compiles (bodies, actuators, excludes off), events drop the others, camera/pool follow. Zombie commands = MATT's × √λ (speeds) / ÷ √λ (yaw), `PolicyRunner.BodyCommand`; gauntlet gusts × √λ; shaker is the lane's (L<k>_shaker). All 9 events rebuilt; mixed 30m Dash + Gust Gauntlet played clean.
 - [ ] Android: arm64-v8a MuJoCo build via NDK + ARM↔desktop trajectory parity + mobile perf pass
+  - [x] **first device run (Pixel 9 Pro, Android 17):** `tools/build_mujoco_android.sh` builds libmujoco.so from MuJoCo 3.11.0 with Unity's NDK r27 (API 28, `_POSIX_C_SOURCE`; mujoco-bin's prebuilt .so is 3.5.0 = wrong ABI for the 3.11 plugin), `AndroidBuild.Build` (IL2CPP arm64, portrait, min API 28, link.xml) → 167 MB APK. URP post-processing shader stripping had to be turned off (stripped Uber pass = blank 3D view). Event 1 heat ran on device (winner M1 after 31.2 s). Open: ARM↔desktop trajectory parity, perf pass, InputSystem 'InputUpdateType.None' warning at startup.
 - [ ] R3 get-up · R4 ramp/rubble/stairs · R5 jumps/hurdles
 - [ ] R6 bodies: rig GRANDMA (AccuRig/Mixamo/Blender), clean + rescale ZOMBIE, derive MJCFs, train variants
 - [ ] R7 optional motion-prior polish · R8+ remaining skill events
