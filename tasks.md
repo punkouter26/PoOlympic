@@ -277,6 +277,11 @@ apply: TensorBoard + MuJoCo viewer for every run, close Unity during 30 min+ run
   - built into every event scene by *PoOlympic › Broadcast › Upgrade broadcast FX* (`BroadcastFx.Install`, also called by
     `EventScenes.AddBroadcast`); EditMode 47/47 PoOlympic tests (5 new: records, hull geometry, confidence model, scene
     rig + no PhysX); before/after `parity/ui/broadcast_fx_before_after.html`
+  - **Docked HUD** (user, 2026-09-29: "HUD on top and bottom so the gameplay is not covered"): top dock (title, clock,
+    standings) + bottom dock (one-row stats card, ticker, buttons) on the screen's safe area; the camera renders only into
+    the gap (`BroadcastCamera.SetViewport`, replaces the 9:16 letterbox in event scenes). Only the countdown banner and the
+    result card / betting slip sit over the game; the winner close-up is framed below the result card. Before/after
+    `parity/ui/dock_before_after.png` (in the same HTML page)
   - [ ] Android: rebuild the APK and re-measure (VFX Graph, 8 critics at 10 Hz, audio) on the Pixel 9 Pro
 - [x] Licensing review (Avaturn, Hunyuan3D) before any commercial release → `docs/LICENSING.md` (2026-09-29). Blockers
   to act on before a store release: Olympic rings / name, Hunyuan3D territory (EU / UK / KR), Avaturn notification +

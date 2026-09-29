@@ -20,6 +20,29 @@ FONT = "C:/Windows/Fonts/segoeui.ttf"
 FONT_B = "C:/Windows/Fonts/segoeuib.ttf"
 
 SPECS = {
+    "dock_before_after": {
+        "title": "Docked broadcast HUD — before (drawn over the game) vs after (top + bottom docks, game in between)",
+        "panels": [
+            ("BEFORE · live", UI / "before" / "dock_race_live.png", None,
+             [(8, (27, 638, 733, 1004)), (9, (440, 1683, 940, 1967)), (10, (0, 0, 960, 470))]),
+            ("BEFORE · result", UI / "before" / "dock_pedestal_result.png", None, []),
+            ("AFTER · race live", UI / "after" / "dock_race_live.png", None,
+             [(1, (0, 93, 960, 566)), (2, (0, 570, 960, 2352)), (3, (0, 2355, 960, 2658))]),
+            ("AFTER · Iron Pedestal live", UI / "after" / "dock_pedestal_live.png", None, [(4, (20, 2365, 938, 2477))]),
+            ("AFTER · result", UI / "after" / "dock_race_result.png", None, [(5, (0, 1556, 960, 2352)), (6, (20, 2365, 938, 2477))]),
+        ],
+        "legend": [
+            "1  Top dock: title, clock, standings (CONF + ODDS) on an opaque panel above the game",
+            "2  The camera renders only between the docks (BroadcastCamera.SetViewport): no HUD over the athletes",
+            "3  Bottom dock: stats card, play-by-play ticker, New heat / Menu",
+            "4  Stats card is one compact row of 6 tiles (speed, power, cadence, contact, joint load, confidence)",
+            "5  Result: the winner close-up is framed below the result card",
+            "6  Result: the stats card shows the winner",
+            "8  BEFORE: standings drawn over the game",
+            "9  BEFORE: stats card drawn over the game",
+            "10 BEFORE: letterbox bands (black) above and below the 9:16 frame were unused",
+        ],
+    },
     "fx_hud_before_after": {
         "title": "Broadcast FX (features 2, 3, 5, 6, 7, 10 + world records) — before vs after",
         "panels": [

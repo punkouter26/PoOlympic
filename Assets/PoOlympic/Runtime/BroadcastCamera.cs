@@ -19,6 +19,13 @@ namespace PoOlympic
         public Vector3 focusOffset;
         public float followSharpness = 6f;
         Camera _cam;
+        bool _hasViewport;
+        Rect _viewport;
+
+        /// <summary>Render into this normalised rect instead of the letterboxed 9:16 one (BroadcastHud: the gap between
+        /// its top and bottom docks, so the HUD never covers the game).</summary>
+        public void SetViewport(Rect r) { _viewport = r; _hasViewport = true; }
+        public void ClearViewport() => _hasViewport = false;
 
         void Awake()
         {
@@ -48,6 +55,7 @@ namespace PoOlympic
         void ApplyLetterbox()
         {
             if (_cam.targetTexture != null) { _cam.rect = new Rect(0, 0, 1, 1); return; }
+            if (_hasViewport) { _cam.rect = _viewport; return; }
             float target = aspect.x / aspect.y;
             float window = (float)Screen.width / Mathf.Max(1, Screen.height);
             if (window > target)

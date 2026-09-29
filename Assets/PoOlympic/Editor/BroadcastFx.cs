@@ -98,7 +98,7 @@ namespace PoOlympic.Editor
             var winner = Child(rig, "WinnerProxy").transform;
             var noise = AssetDatabase.LoadAssetAtPath<NoiseSettings>(NoiseProfile);
             var lens = LensSettings.FromCamera(cam);
-            CinemachineCamera Cam(string name, Transform target, float damping, bool handheld, int priority)
+            CinemachineCamera Cam(string name, Transform target, float damping, bool handheld, int priority, float screenY = 0f)
             {
                 var go = Child(rig, name);
                 go.transform.position = cam.transform.position;
@@ -114,9 +114,9 @@ namespace PoOlympic.Editor
                 follow.TrackerSettings.PositionDamping = Vector3.one * damping;
                 var aim = go.AddComponent<CinemachineRotationComposer>();
                 aim.Damping = new Vector2(damping * 0.5f, damping * 0.5f);
-                // 9:16 frame with the standings on top: keep athletes a little below the centre
+                // the HUD docks above / below the viewport (BroadcastHud), so nothing overlaps: centred framing
                 var comp = aim.Composition;
-                comp.ScreenPosition = new Vector2(0f, -0.06f);
+                comp.ScreenPosition = new Vector2(0f, screenY);
                 aim.Composition = comp;
                 if (handheld && noise != null)
                 {
@@ -134,7 +134,7 @@ namespace PoOlympic.Editor
             director.headOn = Cam("CM_HeadOn", focus, 0.3f, true, 10);
             director.high = Cam("CM_HighWide", focus, 0.5f, false, 10);
             director.hot = Cam("CM_Hot_Closeup", hot, 0.25f, true, 10);
-            director.winner = Cam("CM_Winner", winner, 0.6f, false, 10);
+            director.winner = Cam("CM_Winner", winner, 0.6f, false, 10, 0.22f);    // below the result card (CM3: +y = lower on screen)
             director.focusProxy = focus;
             director.hotProxy = hot;
             director.winnerProxy = winner;

@@ -20,7 +20,11 @@ namespace PoOlympic
     ///                winner): speed + peak, power, cadence, ground contact, joint load, confidence (feature 7)
     ///   result card  podium · bet outcome · world records (top 3, new-record highlight, the record to beat) · heat bests
     ///                · gauntlet points (Gauntlet) · New heat / Next / Menu
-    /// The layout is authored at 1080 px wide and scaled onto the letterboxed camera rect (BroadcastCamera).
+    /// Docked layout (user, 2026-09-29: "HUD on top and bottom so the gameplay is not covered"): the layout is authored
+    /// at 1080 px wide and scaled onto the screen's safe area; the top dock (top bar + standings) and the bottom dock
+    /// (stats card + ticker + buttons) are opaque panels, and the camera renders only into the gap between them
+    /// (BroadcastCamera.SetViewport). Only the countdown banner and the modal overlays (betting slip, result card) sit
+    /// over the game.
     /// </summary>
     [RequireComponent(typeof(UIDocument))]
     public class BroadcastHud : MonoBehaviour
@@ -43,7 +47,8 @@ namespace PoOlympic
         IBroadcastBoard B => board as IBroadcastBoard;
         Odds.Model _odds;
         readonly Commentary _pbp = new();
-        VisualElement _root, _frame, _slip, _card, _rowsBox, _slipRows, _cardBody;
+        VisualElement _root, _frame, _slip, _card, _rowsBox, _slipRows, _cardBody, _dockTop, _hole, _dockBottom;
+        BroadcastCamera _viewCam;
         Label _title, _sub, _clock, _info, _banner, _ticker, _version, _coins, _slipTimer, _cardTitle;
         Button _cardNewHeat;
         List<(int place, string name, string result, bool bad, PolicyRunner runner)> _frozen;   // gauntlet: the scored heat
@@ -73,7 +78,11 @@ namespace PoOlympic
             _frame = Add(_root, "bh-frame");
             _frame.pickingMode = PickingMode.Ignore;
 
-            var top = Add(_frame, "bh-top");
+            _dockTop = Add(_frame, "bh-dock-top");
+            _hole = Add(_frame, "bh-hole");
+            _hole.pickingMode = PickingMode.Ignore;
+            _dockBottom = Add(_frame, "bh-dock-bottom");
+            var top = Add(_dockTop, "bh-top");
             var titles = Add(top, "bh-titles");
             _title = AddLabel(titles, "bh-title", title);
             _sub = AddLabel(titles, "bh-sub", subtitle);
@@ -81,7 +90,7 @@ namespace PoOlympic
             _clock = AddLabel(clockBox, "bh-clock", "0.00 s");
             _info = AddLabel(clockBox, "bh-info", "");
 
-            var standings = Add(_frame, "bh-standings");
+            var standings = Add(_dockTop, "bh-standings");
             var head = Add(standings, "bh-row", "bh-head");
             AddLabel(head, "bh-c-place", "#");
             AddLabel(head, "bh-c-chip", "");
@@ -91,11 +100,11 @@ namespace PoOlympic
             AddLabel(head, "bh-c-odds", "ODDS");
             _rowsBox = Add(standings, "bh-rows");
 
-            _banner = AddLabel(_frame, "bh-banner", "");
+            _banner = AddLabel(_hole, "bh-banner", "");
             _banner.pickingMode = PickingMode.Ignore;
             BuildStatsCard();
 
-            var bottom = Add(_frame, "bh-bottom");
+            var bottom = Add(_dockBottom, "bh-bottom");
             _ticker = AddLabel(bottom, "bh-ticker", "");
             var bar = Add(bottom, "bh-bar");
             Button(bar, "New heat", () => { CloseSlip(); B?.Restart(); }, "bh-btn-small");
@@ -151,7 +160,7 @@ namespace PoOlympic
         {
             var b = B;
             if (b == null || _frame == null) return;
-            FitToCamera();
+            FitToScreen();
             if (b.Heat != _heatSeen) NewHeat(b);
             var rows = b.Rows.ToList();
             bool stageDone = Gauntlet.Active && Gauntlet.CurrentHeatPlayed && _frozen != null;   // wait for Next ▸
@@ -394,7 +403,7 @@ namespace PoOlympic
 
         void BuildStatsCard()
         {
-            _stats = Add(_frame, "bh-stats");
+            _stats = Add(_dockBottom, "bh-stats");
             _stats.pickingMode = PickingMode.Ignore;
             var head = Add(_stats, "bh-stats-head");
             _statsChip = AddLabel(head, "bh-c-chip", "");
@@ -413,13 +422,13 @@ namespace PoOlympic
             (_sContact, _) = Tile("CONTACT");
             (_sLoad, _sLoadSub) = Tile("JOINT LOAD");
             var conf = Add(grid, "bh-tile", "bh-tile-conf");
-            AddLabel(conf, "bh-tile-title", "BRAIN CONFIDENCE");
+            AddLabel(conf, "bh-tile-title", "CONFIDENCE");
             var row = Add(conf, "bh-tile-conf-row");
             _sConf = AddLabel(row, "bh-tile-value", "—");
             _statsSpark = new Sparkline { capacity = 60 };
             _statsSpark.AddToClassList("bh-stats-spark");
             row.Add(_statsSpark);
-            _stats.style.display = DisplayStyle.None;
+            _stats.style.visibility = Visibility.Hidden;
         }
 
         void UpdateStats(IBroadcastBoard b, List<(int place, string name, string result, bool bad, PolicyRunner runner)> rows)
@@ -431,8 +440,8 @@ namespace PoOlympic
             else if (tension != null && tension.Hot != null && tension.HotDanger >= 0.45f) { who = tension.Hot; tag = "IN TROUBLE"; }
             else { who = rows.FirstOrDefault(r => !r.bad).runner; tag = b.BoardState == BoardPhase.Live ? "LEADER" : "LANE CAM"; }
             var t = Telemetry(who);
-            bool show = t != null && t.Ready && b.BoardState != BoardPhase.Result && !_slipOpen;
-            _stats.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+            bool show = t != null && t.Ready && !_slipOpen;          // docked: shows the winner at the result too
+            _stats.style.visibility = show ? Visibility.Visible : Visibility.Hidden;
             if (!show) { _statsFor = null; return; }
             if (who != _statsFor)
             {
@@ -495,15 +504,15 @@ namespace PoOlympic
             if (tension != null) { tension.NearFall -= OnNearFall; tension.Save -= OnSave; }
         }
 
-        /// <summary>Scale the 1080-wide layout onto the camera's (letterboxed) pixel rect.</summary>
-        void FitToCamera()
+        /// <summary>Scale the 1080-wide layout onto the screen's safe area and give the camera the gap between the
+        /// docks (in screen pixels → normalised viewport).</summary>
+        void FitToScreen()
         {
             var panel = _root.panel;
-            var cam = Camera.main;
             if (panel == null) return;
-            var r = cam != null ? cam.pixelRect : new Rect(0, 0, Screen.width, Screen.height);
-            var tl = RuntimePanelUtils.ScreenToPanel(panel, new Vector2(r.xMin, Screen.height - r.yMax));
-            var br = RuntimePanelUtils.ScreenToPanel(panel, new Vector2(r.xMax, Screen.height - r.yMin));
+            var safe = Screen.safeArea;
+            var tl = RuntimePanelUtils.ScreenToPanel(panel, new Vector2(safe.xMin, Screen.height - safe.yMax));
+            var br = RuntimePanelUtils.ScreenToPanel(panel, new Vector2(safe.xMax, Screen.height - safe.yMin));
             float w = br.x - tl.x, h = br.y - tl.y;
             if (w <= 1 || h <= 1) return;
             float s = w / DesignWidth;
@@ -513,6 +522,17 @@ namespace PoOlympic
             _frame.style.height = h / s;
             _frame.style.transformOrigin = new TransformOrigin(0, 0);
             _frame.style.scale = new Scale(new Vector3(s, s, 1));
+
+            float topH = _dockTop.layout.height, botH = _dockBottom.layout.height;
+            if (float.IsNaN(topH) || float.IsNaN(botH) || topH <= 0f) return;      // first frame: not laid out yet
+            float px = safe.height / h * s;                                          // design units → screen pixels
+            float y0 = safe.yMin + botH * px, y1 = safe.yMax - topH * px;
+            if (y1 - y0 < 64f) return;
+            if (_viewCam == null && Camera.main != null) _viewCam = Camera.main.GetComponent<BroadcastCamera>();
+            if (_viewCam != null)
+                _viewCam.SetViewport(new Rect(safe.xMin / Screen.width, y0 / Screen.height, safe.width / Screen.width, (y1 - y0) / Screen.height));
         }
+
+        void OnDestroy() { if (_viewCam != null) _viewCam.ClearViewport(); }
     }
 }
