@@ -216,6 +216,65 @@ def torso_upright(env, std: float) -> torch.Tensor:
     return torch.exp(-(torso_tilt_rad(env) ** 2) / std**2)
 
 
+def reset_lying(env, env_ids, prone_fraction: float = 0.5, z: tuple[float, float] = (0.2, 0.25),
+                roll: float = 0.3, pitch_jitter: float = 0.2, asset_cfg=None) -> None:
+    """Get-up reset: each env lying on its back (pitch -90°) or, with probability prone_fraction, on its front (+90°),
+    pitch ± pitch_jitter, roll ± roll, any yaw, pelvis at z metres; zero velocity (mjlab reset_root_state_uniform can
+    only sample one interval per angle, not two poses)."""
+    from mjlab.utils.lab_api.math import quat_from_euler_xyz, quat_mul
+    asset = env.scene["robot" if asset_cfg is None else asset_cfg.name]
+    if env_ids is None:
+        env_ids = torch.arange(env.num_envs, device=env.device)
+    n = len(env_ids)
+    u = lambda lo, hi: lo + (hi - lo) * torch.rand(n, device=env.device)
+    prone = torch.rand(n, device=env.device) < prone_fraction
+    pitch = torch.where(prone, torch.full((n,), math.pi / 2, device=env.device),
+                        torch.full((n,), -math.pi / 2, device=env.device)) + u(-pitch_jitter, pitch_jitter)
+    q = quat_from_euler_xyz(u(-roll, roll), pitch, u(-math.pi, math.pi))
+    root = asset.data.default_root_state[env_ids].clone()
+    pos = root[:, 0:3] + env.scene.env_origins[env_ids]
+    pos[:, 2] = u(*z)
+    asset.write_root_link_pose_to_sim(torch.cat([pos, quat_mul(root[:, 3:7], q)], dim=-1), env_ids=env_ids)
+    asset.write_root_link_velocity_to_sim(torch.zeros(n, 6, device=env.device), env_ids=env_ids)
+
+
+def getup_assist(env, env_ids, asset_cfg, max_fraction: float = 0.6, decay_steps: int = 36000,
+                 body_weight_n: float = 80.0 * 9.81) -> None:
+    """Get-up curriculum (reset event): a constant upward world force on the torso for the whole episode,
+    U(0, current max) × body weight, the max fading linearly from max_fraction to 0 over decay_steps env steps
+    (1500 its × 24). From flat on the floor no small motion changes height or uprightness — getup_v1/v2 lay still
+    (action std 0.5 -> 0.04) — the lift makes the first rising motions pay. Afterwards: unassisted, as in Unity."""
+    asset = env.scene[asset_cfg.name]
+    if env_ids is None:
+        env_ids = torch.arange(env.num_envs, device=env.device)
+    n = len(env_ids)
+    cur = max(0.0, max_fraction * (1.0 - float(env.common_step_counter) / decay_steps))
+    fz = torch.rand(n, device=env.device) * cur * body_weight_n
+    nb = len(asset_cfg.body_ids) if isinstance(asset_cfg.body_ids, list) else 1
+    force = torch.zeros(n, nb, 3, device=env.device)
+    force[:, :, 2] = fz[:, None]
+    asset.write_external_wrench_to_sim(force, torch.zeros_like(force), env_ids=env_ids, body_ids=asset_cfg.body_ids)
+    env.extras.setdefault("log", {})["Metrics/getup_assist_max"] = cur
+
+
+def height_progress(env, target: float) -> torch.Tensor:
+    """clip(pelvis z / target, 0, 1): a get-up reward with a gradient all the way from lying to standing (the exp
+    height kernel is ~0 below ~0.7 m)."""
+    _, qp, _ = _root(env)
+    return torch.clamp(qp[:, 2] / target, 0.0, 1.0)
+
+
+def upright_linear(env) -> torch.Tensor:
+    """(1 + cos(torso tilt)) / 2: 0 upside down, 0.5 lying flat, 1 upright."""
+    return 0.5 * (1.0 + torch.cos(torso_tilt_rad(env)))
+
+
+def standing_tall(env, min_height: float, max_tilt_deg: float) -> torch.Tensor:
+    """1 while the pelvis is above min_height and the torso within max_tilt_deg of vertical (up and done)."""
+    _, qp, _ = _root(env)
+    return ((qp[:, 2] > min_height) & (torso_tilt_rad(env) < math.radians(max_tilt_deg))).float()
+
+
 # ---- terminations --------------------------------------------------------------------------------------------
 def torso_tilt_exceeds(env, limit_deg: float) -> torch.Tensor:
     return torso_tilt_rad(env) > math.radians(limit_deg)
@@ -328,6 +387,14 @@ def yaw_rate_filtered_l1(env, tau: float = 0.5, command_name: str = "athlete") -
     return torch.abs(_filtered_yaw_error(env, command_name, tau))
 
 
+def yaw_wobble_l2(env, tau: float = 0.5, command_name: str = "athlete") -> torch.Tensor:
+    """(yaw rate − its stride-filtered value)²: the per-stride pelvis rotation only (use with a negative weight).
+    Sustained turning and the steering error are left to the filtered terms."""
+    _filtered_yaw_error(env, command_name, tau)                 # advances the shared EMA state for this step
+    rate = env.scene["robot"].data.root_link_ang_vel_b[:, 2]
+    return torch.square(rate - env._poolympic_yaw_ema[0])
+
+
 def flight_phase(env, command_name: str = "athlete", speed_threshold: float = 2.2) -> torch.Tensor:
     """1 while both feet are off the ground and the commanded planar speed is above speed_threshold (running with an
     aerial phase — Event 13, Steeplechase Jog); 0 otherwise. phase_contact keeps the footfalls alternating."""
@@ -335,6 +402,25 @@ def flight_phase(env, command_name: str = "athlete", speed_threshold: float = 2.
     airborne = ~_foot_contact(env).any(dim=-1)
     fast = torch.linalg.norm(term.command[:, :2], dim=-1) > speed_threshold
     return (airborne & fast).float()
+
+
+def flight_landing(env, command_name: str = "athlete", speed_threshold: float = 2.2, min_s: float = 0.04,
+                   cap_s: float = 0.2) -> torch.Tensor:
+    """Paid once per flight, at touchdown: (flight duration − min_s) clipped to [0, cap_s − min_s], divided by the step
+    length (the reward manager multiplies by dt, so each flight earns its seconds above min_s × weight). r2f_v1's
+    per-step airborne reward bought airborne time with many ~50 ms hops (4.8 flights/s at 3.5 m/s); this pays for
+    long flights, not for many."""
+    term = env.command_manager.get_term(command_name)
+    airborne = ~_foot_contact(env).any(dim=-1)
+    t = getattr(env, "_poolympic_flight_t", None)
+    if t is None or t.shape != airborne.shape:
+        t = torch.zeros(airborne.shape, device=airborne.device)
+    fresh = env.episode_length_buf <= 1
+    landed = (~airborne) & (t > 0) & ~fresh
+    fast = torch.linalg.norm(term.command[:, :2], dim=-1) > speed_threshold
+    pay = torch.where(landed & fast, torch.clamp(t - min_s, 0.0, cap_s - min_s), torch.zeros_like(t)) / env.step_dt
+    env._poolympic_flight_t = torch.where(airborne & ~fresh, t + env.step_dt, torch.zeros_like(t))
+    return pay
 
 
 def foot_slip(env) -> torch.Tensor:

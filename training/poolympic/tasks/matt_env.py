@@ -237,6 +237,68 @@ def matt_rung0_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     return cfg
 
 
+def matt_getup_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """R3 get-up (Event 27, The Resurrection Dash: start flat on the back, rise, then sprint): Rung 0 with every episode
+    starting supine (pitch -90° ± 11°, roll ± 17°, any yaw; standing joint pose) and no fall terminations (only the
+    10 s time-out). Rewards with a gradient from the floor up — linear pelvis-height progress, linear uprightness, a
+    per-step bonus once standing tall — on top of Rung 0's height / upright kernels and effort penalties. No shoves or
+    cube drops. Same contract (obs/actions), so the brain runs in Unity like any other."""
+    cfg = matt_rung0_env_cfg(play=play)
+    cfg.episode_length_s = 10.0
+    ev = cfg.events
+    ev.pop("push_robot")
+    ev.pop("drop_cube")
+    ev["reset_base"].params["pose_range"] = {
+        "x": (-0.05, 0.05), "y": (-0.05, 0.05), "z": (0.2 - DEFAULT_ROOT_Z, 0.25 - DEFAULT_ROOT_Z),
+        "roll": (-0.3, 0.3), "pitch": (-math.pi / 2 - 0.2, -math.pi / 2 + 0.2), "yaw": (-math.pi, math.pi)}
+    ev["reset_base"].params["velocity_range"] = {}
+    for k in ("pelvis_low", "torso_tilt", "nonfoot_contact"):
+        cfg.terminations.pop(k)
+    rw = cfg.rewards
+    rw["near_origin"].params["std"] = 1.0             # getting up moves the pelvis
+    rw["height_progress"] = RewardTermCfg(func=mdp.height_progress, weight=2.0, params={"target": DEFAULT_ROOT_Z})
+    rw["upright_linear"] = RewardTermCfg(func=mdp.upright_linear, weight=1.0)
+    rw["standing_tall"] = RewardTermCfg(func=mdp.standing_tall, weight=2.0,
+                                        params={"min_height": 0.85, "max_tilt_deg": 20.0})
+    return cfg
+
+
+def matt_getup2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """getup_v2: getup_v1 lay still for 600 its (action std 0.5 -> 0.04, no reward moved) — Rung 0's stillness terms
+    (still_lin / still_ang / near_origin / posture toward the standing pose) pay ~3.6 per step for lying motionless.
+    Drop them, weight the get-up terms up, and start half the episodes prone (a push-up is the easier way into a
+    crouch; rolling over is allowed)."""
+    cfg = matt_getup_env_cfg(play=play)
+    for k in ("still_lin", "still_ang", "near_origin", "posture"):
+        cfg.rewards.pop(k)
+    cfg.rewards["height_progress"].weight = 3.0
+    cfg.rewards["upright_linear"].weight = 2.0
+    cfg.rewards["standing_tall"].weight = 3.0
+    cfg.events["reset_base"] = EventTermCfg(func=mdp.reset_lying, mode="reset",
+                                            params={"prone_fraction": 0.5, "z": (0.2, 0.25)})
+    return cfg
+
+
+def matt_getup3_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """getup_v3: getup_v2 + a fading upward torso force (mdp.getup_assist: U(0, max) × body weight per episode, max
+    60 % -> 0 over the first 1500 its). getup_v2 still lay flat at it 200 (action std 0.5 -> 0.18)."""
+    cfg = matt_getup2_env_cfg(play=play)
+    if not play:
+        cfg.events["getup_assist"] = EventTermCfg(func=mdp.getup_assist, mode="reset", params={
+            "asset_cfg": SceneEntityCfg("robot", body_names=("torso",)), "max_fraction": 0.6, "decay_steps": 1500 * 24})
+    return cfg
+
+
+def matt_getup4_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """getup_v4 (from getup_v3 it 500): v3 learned to sit up (torso upright, upright_linear 1.95 / 2) but settled
+    sitting — pelvis on the floor, action std 0.5 -> 0.17. Uprightness is saturated: weight 2 -> 0.5; rising pays
+    most (height_progress 3 -> 6)."""
+    cfg = matt_getup3_env_cfg(play=play)
+    cfg.rewards["upright_linear"].weight = 0.5
+    cfg.rewards["height_progress"].weight = 6.0
+    return cfg
+
+
 def matt_ppo_cfg(experiment: str, max_iterations: int) -> RslRlOnPolicyRunnerCfg:
     return RslRlOnPolicyRunnerCfg(
         actor=RslRlModelCfg(hidden_dims=(512, 256, 128), activation="elu", obs_normalization=True,
@@ -440,6 +502,26 @@ def matt_rung2_flight_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     cfg.commands["athlete"].sprint_fraction = 0.5
     cfg.rewards["flight"] = RewardTermCfg(func=mdp.flight_phase, weight=1.0,
                                           params={"command_name": "athlete", "speed_threshold": 2.2})
+    return cfg
+
+
+def matt_rung2_flight2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """r2f_v2: r2f_v1 (G1 10/10 kept, airborne 29 % at 3.5 m/s but 56 ms flights at 4.8/s — many hops) + a touchdown
+    reward for the flight's length above 40 ms (w 10: a 100 ms flight earns 0.6, a 50 ms hop 0.1); per-step airborne
+    reward halved."""
+    cfg = matt_rung2_flight_env_cfg(play=play)
+    cfg.rewards["flight"].weight = 0.5
+    cfg.rewards["flight_landing"] = RewardTermCfg(func=mdp.flight_landing, weight=10.0,
+                                                  params={"command_name": "athlete", "speed_threshold": 2.2})
+    return cfg
+
+
+def matt_rung2_flight3_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """r2f_v3: r2f_v2 overshot into bounding (it 200: 190 ms flights at the 200 ms cap, airborne 65 %, 3.5 m/s -> 2.6 m/s,
+    G1 3/10). Touchdown reward capped at 120 ms (a jog's flight is ~100 ms), weight 10 -> 4."""
+    cfg = matt_rung2_flight2_env_cfg(play=play)
+    cfg.rewards["flight_landing"].weight = 4.0
+    cfg.rewards["flight_landing"].params["cap_s"] = 0.12
     return cfg
 
 

@@ -225,6 +225,36 @@ def zombie_rung2_yawfilt_cap3_env_cfg(play: bool = False) -> ManagerBasedRlEnvCf
     return cfg
 
 
+def zombie_rung2_yawfilt_cap3_lin3_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """z2_v10 = z2_v9 + speed weights up (track_lin 2 -> 3, track_lin_coarse 1 -> 1.5). z2_v9 it 200 was the first seed
+    pass and still ran (2.0 m/s -> 1.79) but by it 400 it had drifted to standing again (0.66 m/s): the zombie style
+    rewards (low feet, hunch, arms forward, wide stance) are all easier slow, so once yaw pays, speed (2 + 1) loses.
+    Warm start: z2_v9 it 200."""
+    cfg = zombie_rung2_yawfilt_cap3_env_cfg(play=play)
+    cfg.rewards["track_lin"].weight = 3.0
+    cfg.rewards["track_lin_coarse"].weight = 1.5
+    return cfg
+
+
+def zombie_rung2_wobble_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """z2_v11 = z2_v10 + yaw-wobble penalty (per-tick yaw rate minus its stride-filtered value, squared, w -1.0).
+    z2_v10 runs (2.0 -> 1.98 m/s, 2.8 -> 2.67) and steers (stride-averaged yaw 0.05-0.15, turntable 1.9 s); what fails
+    the official per-tick bar (0.382) is the sprint wobble: per-tick 0.41-0.44 on segments at 0.07-0.15 averaged."""
+    cfg = zombie_rung2_yawfilt_cap3_lin3_env_cfg(play=play)
+    cfg.rewards["yaw_wobble"] = RewardTermCfg(func=mdp.yaw_wobble_l2, weight=-1.0,
+                                              params={"command_name": "athlete", "tau": 0.5})
+    return cfg
+
+
+def zombie_rung2_wobble_sharp_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """z2_v13 = z2_v11 + track_lin std 0.5 -> 0.35. z2_v11 it400 (21/30 margin) misses are steady 0.16-0.20 m/s speed
+    shortfalls on 2.4-2.85 m/s sprints — the 0.5 kernel pays ~90 % there (MATT's r2_v7 lesson). The heavier speed
+    weights (3 + coarse 1.5) keep a gradient at large errors, which z2_v3's sharp kernel lacked."""
+    cfg = zombie_rung2_wobble_env_cfg(play=play)
+    cfg.rewards["track_lin"].params["std"] = 0.35
+    return cfg
+
+
 def zombie_rung2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     """Rung 2 fine-tune — MATT's final recipe (r2_v8: symmetric runner, full widened
     envelope, lateral-acceleration cap, sharp linear tracking, sprint focus) on the scaled envelope. Warm start: the best
