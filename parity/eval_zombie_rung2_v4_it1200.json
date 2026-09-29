@@ -1,0 +1,723 @@
+{
+ "onnx": "..\\parity\\brains\\zombie_r2_v4_it1200.onnx",
+ "rung": 2,
+ "seeds": 10,
+ "passed_seeds": 0,
+ "PASS": false,
+ "per_seed_pass": [
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false
+ ],
+ "per_seed_checks": [
+  {
+   "no_fall": true,
+   "tracking_lin": true,
+   "tracking_yaw": false,
+   "turntable": false,
+   "brake": true,
+   "backward": true,
+   "joint_vel": true
+  },
+  {
+   "no_fall": true,
+   "tracking_lin": false,
+   "tracking_yaw": false,
+   "turntable": false,
+   "brake": true,
+   "backward": true,
+   "joint_vel": true
+  },
+  {
+   "no_fall": true,
+   "tracking_lin": false,
+   "tracking_yaw": false,
+   "turntable": false,
+   "brake": true,
+   "backward": true,
+   "joint_vel": true
+  },
+  {
+   "no_fall": true,
+   "tracking_lin": false,
+   "tracking_yaw": false,
+   "turntable": false,
+   "brake": true,
+   "backward": true,
+   "joint_vel": true
+  },
+  {
+   "no_fall": true,
+   "tracking_lin": false,
+   "tracking_yaw": false,
+   "turntable": false,
+   "brake": true,
+   "backward": true,
+   "joint_vel": true
+  },
+  {
+   "no_fall": true,
+   "tracking_lin": false,
+   "tracking_yaw": false,
+   "turntable": false,
+   "brake": true,
+   "backward": true,
+   "joint_vel": true
+  },
+  {
+   "no_fall": true,
+   "tracking_lin": true,
+   "tracking_yaw": false,
+   "turntable": false,
+   "brake": true,
+   "backward": true,
+   "joint_vel": true
+  },
+  {
+   "no_fall": true,
+   "tracking_lin": true,
+   "tracking_yaw": false,
+   "turntable": false,
+   "brake": true,
+   "backward": true,
+   "joint_vel": true
+  },
+  {
+   "no_fall": true,
+   "tracking_lin": true,
+   "tracking_yaw": false,
+   "turntable": false,
+   "brake": true,
+   "backward": true,
+   "joint_vel": true
+  },
+  {
+   "no_fall": true,
+   "tracking_lin": false,
+   "tracking_yaw": false,
+   "turntable": false,
+   "brake": true,
+   "backward": true,
+   "joint_vel": true
+  }
+ ],
+ "episodes": [
+  {
+   "seed": 1000,
+   "fell": null,
+   "segments": [
+    {
+     "kind": "turn",
+     "cmd": [
+      0.555,
+      0.0,
+      -1.51
+     ],
+     "lin_rms": 0.13730357992431808,
+     "yaw_rms": 0.5312589231900173
+    },
+    {
+     "kind": "sprint",
+     "cmd": [
+      1.961,
+      0.0,
+      0.066
+     ],
+     "lin_rms": 0.13646134631297882,
+     "yaw_rms": 0.653984899580307
+    },
+    {
+     "kind": "sprint",
+     "cmd": [
+      -0.388,
+      0.0,
+      0.616
+     ],
+     "lin_rms": 0.10102406900603132,
+     "yaw_rms": 0.44159361199084995
+    },
+    {
+     "kind": "sprint",
+     "cmd": [
+      1.425,
+      0.0,
+      0.194
+     ],
+     "lin_rms": 0.14145339805744675,
+     "yaw_rms": 0.40998525555580745
+    },
+    {
+     "kind": "sprint",
+     "cmd": [
+      1.733,
+      0.0,
+      -0.067
+     ],
+     "lin_rms": 0.1177987630682464,
+     "yaw_rms": 0.5497094841830383
+    }
+   ],
+   "turntable_s": 2.92,
+   "turntable_drift_m": 0.05385446818470919,
+   "brake_m": 0.9556733066011537,
+   "backward_m": 20.00630562919516,
+   "joint_vel_over_fraction": 0.0
+  },
+  {
+   "seed": 1001,
+   "fell": null,
+   "segments": [
+    {
+     "kind": "sprint",
+     "cmd": [
+      -0.397,
+      0.0,
+      0.455
+     ],
+     "lin_rms": 0.1129129603643749,
+     "yaw_rms": 0.47019204030084655
+    },
+    {
+     "kind": "turn",
+     "cmd": [
+      0.116,
+      0.0,
+      -1.77
+     ],
+     "lin_rms": 0.11614395514894284,
+     "yaw_rms": 0.33650358620209847
+    },
+    {
+     "kind": "stop",
+     "cmd": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "lin_rms": 0.09853064574912404,
+     "yaw_rms": 0.23045650558252942
+    },
+    {
+     "kind": "crab",
+     "cmd": [
+      0.325,
+      -0.687,
+      0.0
+     ],
+     "lin_rms": 0.16270124756820323,
+     "yaw_rms": 0.6439100345429609
+    },
+    {
+     "kind": "stop",
+     "cmd": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "lin_rms": 0.04416982541357757,
+     "yaw_rms": 0.06253888440938245
+    }
+   ],
+   "turntable_s": 2.86,
+   "turntable_drift_m": 0.08182625648170239,
+   "brake_m": 0.9556733066011537,
+   "backward_m": 20.008793862159475,
+   "joint_vel_over_fraction": 0.0
+  },
+  {
+   "seed": 1002,
+   "fell": null,
+   "segments": [
+    {
+     "kind": "crab",
+     "cmd": [
+      0.195,
+      -0.174,
+      0.0
+     ],
+     "lin_rms": 0.11415481700618295,
+     "yaw_rms": 0.4465044002967754
+    },
+    {
+     "kind": "sprint",
+     "cmd": [
+      -0.681,
+      0.0,
+      0.433
+     ],
+     "lin_rms": 0.14305923662657147,
+     "yaw_rms": 0.4407464314723361
+    },
+    {
+     "kind": "sprint",
+     "cmd": [
+      0.346,
+      0.0,
+      0.623
+     ],
+     "lin_rms": 0.10098365422178739,
+     "yaw_rms": 0.4739077356505171
+    },
+    {
+     "kind": "sprint",
+     "cmd": [
+      2.225,
+      0.0,
+      -0.453
+     ],
+     "lin_rms": 0.1571259177865776,
+     "yaw_rms": 0.7641036531767491
+    },
+    {
+     "kind": "sprint",
+     "cmd": [
+      -0.867,
+      0.0,
+      0.12
+     ],
+     "lin_rms": 0.17985206785776658,
+     "yaw_rms": 0.498739617637355
+    }
+   ],
+   "turntable_s": 2.92,
+   "turntable_drift_m": 0.05385446818470919,
+   "brake_m": 0.9556733066011537,
+   "backward_m": 20.007516695391352,
+   "joint_vel_over_fraction": 0.0
+  },
+  {
+   "seed": 1003,
+   "fell": null,
+   "segments": [
+    {
+     "kind": "sprint",
+     "cmd": [
+      0.882,
+      0.0,
+      0.205
+     ],
+     "lin_rms": 0.08939568711594581,
+     "yaw_rms": 0.5169751749884758
+    },
+    {
+     "kind": "sprint",
+     "cmd": [
+      1.31,
+      0.0,
+      0.599
+     ],
+     "lin_rms": 0.12847041588616054,
+     "yaw_rms": 0.6124033540639956
+    },
+    {
+     "kind": "sprint",
+     "cmd": [
+      1.767,
+      0.0,
+      0.462
+     ],
+     "lin_rms": 0.1300100269684522,
+     "yaw_rms": 0.6019770242347289
+    },
+    {
+     "kind": "turn",
+     "cmd": [
+      0.129,
+      0.0,
+      2.392
+     ],
+     "lin_rms": 0.12177015754042084,
+     "yaw_rms": 0.6352968776611903
+    },
+    {
+     "kind": "turn",
+     "cmd": [
+      0.563,
+      0.0,
+      1.101
+     ],
+     "lin_rms": 0.1679681038291403,
+     "yaw_rms": 0.6134193565139301
+    }
+   ],
+   "turntable_s": 2.86,
+   "turntable_drift_m": 0.08182625648170239,
+   "brake_m": 0.9556733066011537,
+   "backward_m": 20.01725319913285,
+   "joint_vel_over_fraction": 0.0
+  },
+  {
+   "seed": 1004,
+   "fell": null,
+   "segments": [
+    {
+     "kind": "sprint",
+     "cmd": [
+      -0.602,
+      0.0,
+      -0.152
+     ],
+     "lin_rms": 0.11078749589680698,
+     "yaw_rms": 0.49916495410483236
+    },
+    {
+     "kind": "sprint",
+     "cmd": [
+      1.156,
+      0.0,
+      -0.287
+     ],
+     "lin_rms": 0.1425785557774227,
+     "yaw_rms": 0.45070404221846255
+    },
+    {
+     "kind": "sprint",
+     "cmd": [
+      -1.01,
+      0.0,
+      -0.011
+     ],
+     "lin_rms": 0.20204817738546782,
+     "yaw_rms": 0.6160975684851733
+    },
+    {
+     "kind": "turn",
+     "cmd": [
+      0.892,
+      0.0,
+      2.528
+     ],
+     "lin_rms": 0.1604679354376882,
+     "yaw_rms": 1.408023899668406
+    },
+    {
+     "kind": "crab",
+     "cmd": [
+      -0.087,
+      -0.648,
+      0.0
+     ],
+     "lin_rms": 0.19417479581041672,
+     "yaw_rms": 0.7947435926018146
+    }
+   ],
+   "turntable_s": 2.92,
+   "turntable_drift_m": 0.05385446818470919,
+   "brake_m": 0.9556733066011537,
+   "backward_m": 20.013536596056436,
+   "joint_vel_over_fraction": 0.0
+  },
+  {
+   "seed": 1005,
+   "fell": null,
+   "segments": [
+    {
+     "kind": "stop",
+     "cmd": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "lin_rms": 0.03967495295686967,
+     "yaw_rms": 0.07635037586359293
+    },
+    {
+     "kind": "turn",
+     "cmd": [
+      1.152,
+      0.0,
+      -1.719
+     ],
+     "lin_rms": 0.1099623689929262,
+     "yaw_rms": 1.2589946518169945
+    },
+    {
+     "kind": "sprint",
+     "cmd": [
+      2.756,
+      0.0,
+      -0.419
+     ],
+     "lin_rms": 0.20040840002206514,
+     "yaw_rms": 0.9046429153043039
+    },
+    {
+     "kind": "crab",
+     "cmd": [
+      0.357,
+      0.384,
+      0.0
+     ],
+     "lin_rms": 0.09767022823144882,
+     "yaw_rms": 0.5726101902738444
+    },
+    {
+     "kind": "turn",
+     "cmd": [
+      0.605,
+      0.0,
+      -2.431
+     ],
+     "lin_rms": 0.11407302039813146,
+     "yaw_rms": 1.0289705247664713
+    }
+   ],
+   "turntable_s": 2.86,
+   "turntable_drift_m": 0.08182625648170239,
+   "brake_m": 0.9556733066011537,
+   "backward_m": 20.0114588364752,
+   "joint_vel_over_fraction": 0.0
+  },
+  {
+   "seed": 1006,
+   "fell": null,
+   "segments": [
+    {
+     "kind": "turn",
+     "cmd": [
+      0.351,
+      0.0,
+      -1.335
+     ],
+     "lin_rms": 0.10892811956641889,
+     "yaw_rms": 0.41375043966693587
+    },
+    {
+     "kind": "crab",
+     "cmd": [
+      -0.113,
+      0.275,
+      0.0
+     ],
+     "lin_rms": 0.08419799184985165,
+     "yaw_rms": 0.6967925994053605
+    },
+    {
+     "kind": "turn",
+     "cmd": [
+      0.098,
+      0.0,
+      -0.178
+     ],
+     "lin_rms": 0.10709780805535417,
+     "yaw_rms": 0.4973187723825995
+    },
+    {
+     "kind": "crab",
+     "cmd": [
+      0.304,
+      0.08,
+      0.0
+     ],
+     "lin_rms": 0.09272600536416857,
+     "yaw_rms": 0.4500428091924986
+    },
+    {
+     "kind": "crab",
+     "cmd": [
+      0.0,
+      -0.38,
+      0.0
+     ],
+     "lin_rms": 0.09419529834519258,
+     "yaw_rms": 0.66418420688678
+    }
+   ],
+   "turntable_s": 2.92,
+   "turntable_drift_m": 0.05385446818470919,
+   "brake_m": 0.9556733066011537,
+   "backward_m": 20.013697161722725,
+   "joint_vel_over_fraction": 0.0
+  },
+  {
+   "seed": 1007,
+   "fell": null,
+   "segments": [
+    {
+     "kind": "turn",
+     "cmd": [
+      0.758,
+      0.0,
+      -1.544
+     ],
+     "lin_rms": 0.1322851200505097,
+     "yaw_rms": 0.848423677340848
+    },
+    {
+     "kind": "crab",
+     "cmd": [
+      -0.238,
+      -0.223,
+      0.0
+     ],
+     "lin_rms": 0.08684272581624174,
+     "yaw_rms": 0.6622406881333737
+    },
+    {
+     "kind": "crab",
+     "cmd": [
+      0.243,
+      0.094,
+      0.0
+     ],
+     "lin_rms": 0.10272186227399997,
+     "yaw_rms": 0.4487152834832829
+    },
+    {
+     "kind": "turn",
+     "cmd": [
+      0.269,
+      0.0,
+      1.707
+     ],
+     "lin_rms": 0.11090679995566625,
+     "yaw_rms": 0.3894546805469617
+    },
+    {
+     "kind": "turn",
+     "cmd": [
+      0.852,
+      0.0,
+      -0.437
+     ],
+     "lin_rms": 0.10164352152540218,
+     "yaw_rms": 0.5912661197850393
+    }
+   ],
+   "turntable_s": 2.86,
+   "turntable_drift_m": 0.08182625648170239,
+   "brake_m": 0.9556733066011537,
+   "backward_m": 20.011166226456602,
+   "joint_vel_over_fraction": 0.0
+  },
+  {
+   "seed": 1008,
+   "fell": null,
+   "segments": [
+    {
+     "kind": "turn",
+     "cmd": [
+      0.256,
+      0.0,
+      2.462
+     ],
+     "lin_rms": 0.10754835137216302,
+     "yaw_rms": 0.792560737722504
+    },
+    {
+     "kind": "crab",
+     "cmd": [
+      -0.375,
+      -0.363,
+      0.0
+     ],
+     "lin_rms": 0.11231990336255143,
+     "yaw_rms": 0.8685362319130925
+    },
+    {
+     "kind": "sprint",
+     "cmd": [
+      0.569,
+      0.0,
+      0.44
+     ],
+     "lin_rms": 0.09243170550078655,
+     "yaw_rms": 0.516762843914547
+    },
+    {
+     "kind": "crab",
+     "cmd": [
+      -0.14,
+      -0.367,
+      0.0
+     ],
+     "lin_rms": 0.10278912698807251,
+     "yaw_rms": 0.7376286050509814
+    },
+    {
+     "kind": "turn",
+     "cmd": [
+      0.299,
+      0.0,
+      -0.711
+     ],
+     "lin_rms": 0.09156945137539153,
+     "yaw_rms": 0.42270245956680824
+    }
+   ],
+   "turntable_s": 2.92,
+   "turntable_drift_m": 0.05385446818470919,
+   "brake_m": 0.9556733066011537,
+   "backward_m": 20.014782421347803,
+   "joint_vel_over_fraction": 0.0
+  },
+  {
+   "seed": 1009,
+   "fell": null,
+   "segments": [
+    {
+     "kind": "sprint",
+     "cmd": [
+      -0.971,
+      0.0,
+      -0.278
+     ],
+     "lin_rms": 0.22626849749270905,
+     "yaw_rms": 0.4964651166295181
+    },
+    {
+     "kind": "crab",
+     "cmd": [
+      -0.002,
+      -0.742,
+      0.0
+     ],
+     "lin_rms": 0.23043324598884352,
+     "yaw_rms": 0.7740339962885511
+    },
+    {
+     "kind": "sprint",
+     "cmd": [
+      1.97,
+      0.0,
+      -0.29
+     ],
+     "lin_rms": 0.12789607119134835,
+     "yaw_rms": 0.688737106772852
+    },
+    {
+     "kind": "turn",
+     "cmd": [
+      0.576,
+      0.0,
+      -1.21
+     ],
+     "lin_rms": 0.14122964758107373,
+     "yaw_rms": 0.5660340937378306
+    },
+    {
+     "kind": "stop",
+     "cmd": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "lin_rms": 0.03594021729608148,
+     "yaw_rms": 0.05514777295259937
+    }
+   ],
+   "turntable_s": 2.86,
+   "turntable_drift_m": 0.08182625648170239,
+   "brake_m": 0.9556733066011537,
+   "backward_m": 20.00355870400067,
+   "joint_vel_over_fraction": 0.0
+  }
+ ]
+}

@@ -102,6 +102,9 @@ Rules: every surface an athlete can touch is a MuJoCo geom generated into the MJ
   - [x] **Stadium Hub** `Stadium_Hub.unity` (*PoOlympic › Events › Build Stadium Hub*): all 30 events as `EventVenue` objects (catalogue `events_catalog.json` = user rules, phase, skill, brain + the 8 competitor anchors), `StadiumDirector` event picker (flies the camera to a venue, rules card, Play ▸ when the event scene exists); Build Settings = hub + built event scenes. Captures `parity/d2/hub_E*.png`.
   - [x] **z-fighting fixed**: decal layers ≥ 1 cm apart (`Z_PAD … Z_LABEL` in build_venues.py; shell lane / finish lines + start extension lifted), redundant pedestal cap removed, audit = 0 overlapping different-material decals < 8 mm; event camera near plane 0.05 → 0.2 m (hub 0.5 m).
   - [x] `EventScenes.PlaceStadium(event, lane)`: stadium turned + shifted so the competitor spot lands on the MuJoCo origin facing +x; Event 1 athlete = lane 4 (`E01_L3`), stadium pedestal ≡ MuJoCo pedestal (bounds verified), 7 pedestals ready for D4 · `parity/d1/event1_venue.png` · EditMode 18/18
+  - [x] **dressing pass** `build_dressing.py` (render-only): calm crowd in home colours, scoreboard / LED branding, Olympic rings + gates + roof flags + cauldron, venue materials, plaza / park / skyline. GLB 6.5 MB, 415 anchors unchanged.
+  - [x] **realism pass, Blender half** `build_realism.py` (textures: `fetch_textures.py`, Poly Haven CC0 1K): PBR (albedo + OpenGL normal + ARM → glTF ORM) on 18 materials + generated striped turf; world-scale box UVs on textured faces (crowd UVs kept) + `UVLightmap`; bevel + weighted normals on 233 props; albedo clamp 0.04–0.9; alpha glass ribbon; kerb, plinth, tree soil, start-line wear; 13 flags + cauldron flame split out with pivots. Export with tangents, 26.5 MB (8.8 MB textures), 415 anchors identical.
+  - [ ] **realism pass, Unity half** `StadiumLook.cs` (hooked into `PlaceStadium`): `StadiumAtmosphere.prefab` (procedural sky + linear fog + ambient, global Volume = ACES / bloom / colour adjustments / vignette, realtime-on-awake reflection probe, 4 floodlight banks), `FlagWave` / `FlameFlicker`, camera post + FXAA. SSAO already on the PC renderer (not added to Mobile: cost). **Todo: compile, rebuild event scenes, check the camera views.**
 - [ ] **D3 Broadcast** — 9:16 tracking cameras per event, HUD polish (UI Toolkit), result cards
 - [x] **D4 8-lane Iron Pedestal heat** — rules per catalogue: 8 runners, **last one standing wins**
   - physics `scene_pedestal8.xml` (+ `pedestal8_layout.json`): 8 lane-isolated athletes, each on its own 1 × 1 × 0.5 m pedestal; lane origins from `venues.json` (E01, relative to lane 4) → physics pedestals ≡ stadium pedestals · **G0 pedestal8 PASS 8/8**
@@ -181,9 +184,10 @@ apply: TensorBoard + MuJoCo viewer for every run, close Unity during 30 min+ run
   ≈ 0.8 × MATT's), gait clock, push/gust and cube magnitudes, G1 drill distances/times. One table in DESIGN.md.
 - [x] **Z4 Style rewards** (reward terms in; tuning after the first runs) — hunched trunk lean, arms held forward, wide stance, low foot clearance (shuffle), lateral
   lurch; tuned so the gait is visibly different from MATT's at the same command without failing G1.
-- [ ] **Z5 Rung 0 zombie** — train (TensorBoard + viewer), G1 rung0 (scaled drills). *Accept: G1 10/10.*
+- [x] **Z5 Rung 0 zombie** — train (TensorBoard + viewer), G1 rung0 (scaled drills). *Accept: G1 10/10.*
 - [ ] **Z6 Rung 2 zombie** — curriculum (walk → run → omni + yaw) with the Rung 2 fixes (symmetry + mirror loss,
   lateral-acceleration cap, sprint focus). *Accept: G1 rung2 10/10 on the scaled drills.*
+  - **Kept (best available, not a G1 pass):** `zombie_rung2.onnx` = z2_v2 it 1500 — 0 falls, drills 30/30, speed 37/50, yaw 30/50 segments, turntable 2.54 s (bar 2.36). Hard turns reach ~70 % of the commanded rate (70 % strength body). Open: turn-rate ruling or more training.
 - [ ] **Z7 Unity** — contract per body in PolicyRunner, zombie MATT-style visual binding, G0/G2–G5 on the zombie, mixed
   MATT + zombie meets (lane body chosen per lane → `compose_meet` with per-lane bodies), menu roster card, events read
   MeetLineup. *Accept: G6 with a mixed 8-lane meet; every playable event runs with any lineup.*
