@@ -146,7 +146,7 @@ Rules: every surface an athlete can touch is a MuJoCo geom generated into the MJ
 
 All 30 events are unlocked from the start (instant exhibition play or gauntlet construction). Each event = **venue** (render-only, `Stadium.glb` anchor) + **props** (MuJoCo geoms in the event MJCF, shared by training / CPU gates / Unity) + **brain** (the rung that owns the skill) + **event controller** (rules, scoring, elimination, seeded schedule; pattern: `IronPedestalEvent`). An event is done when: CPU scoring script passes with the brain, the Unity scene plays it end-to-end (1 biped, then 8 lanes), and a G5-style parity run of one attempt passes.
 
-Skill gaps: events marked **S** need behaviours the current contract cannot command (upper-body / hand targets, pelvis height, single-leg, cadence, …) → one "stance skills" rung with an extended command block (**contract v3**, design decision before implementation). Events marked **M** likely need a motion prior (R7).
+Skill gaps: events marked **S** need behaviours the current contract cannot command (upper-body / hand targets, pelvis height, single-leg, cadence, …) → one "stance skills" rung with an extended command block (**contract v4** — v3 is the gait-clock change; design decision before implementation: proposal in `docs/CONTRACT_V4_STANCE_PROPOSAL.md`, awaiting the user's answers). Events marked **M** likely need a motion prior (R7).
 
 | # | Event | Rules (summary) | Venue | Props (MJCF) | Brain / rung | Status |
 |---|---|---|---|---|---|---|

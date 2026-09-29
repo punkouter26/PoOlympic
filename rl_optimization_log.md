@@ -401,3 +401,6 @@ One entry per run or decision. Newest at the bottom.
   ceiling translucent (TrenchGlass) so the broadcast cameras see the crawlers; `build_venues.py` updated to match (the
   current stadium GLB still has the old 0.60 m render-only trench, hidden in the event scene).
 - TrackRaceEvent live standings: finishers by finish time (they stop past the line and were sorted by position).
+- **Contract v4 stance-skills proposal** → `docs/CONTRACT_V4_STANCE_PROPOSAL.md` (11-dim skill block appended to the obs,
+  one Rung S brain warm-started from rung2 recommended; 4 open decisions for the user). Game APK rebuilt with events 13 +
+  23, D3 broadcast layer and gauntlets, installed on the Pixel 9 Pro (216 MB; menu `parity/android/menu_2026-09-29.png`).
