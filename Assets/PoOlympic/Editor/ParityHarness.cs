@@ -24,12 +24,18 @@ namespace PoOlympic.Editor
         /// <summary>Solo testbed per athlete body (Phase Z7): the scene whose compiled model the body's references
         /// were recorded on (training/assets/scene_&lt;body&gt;.xml).</summary>
         public static string TestbedSceneOf(string body) => body == "matt" ? TestbedScene : ZombieTestbed.ScenePath;
+
+        /// <summary>Unity scene holding the reference's MJCF: the solo pedestal (Event 1 practice scene) or the body's testbed.</summary>
+        public static string SceneFor(RefMeta meta, string body) =>
+            meta.scene == "scene_pedestal.xml" ? EventScenes.IronPedestalScene : TestbedSceneOf(body);
         public const string ModelsFolder = "Assets/PoOlympic/Models";
         public const double G2Tol = 1e-5, G3Tol = 1e-4, G4Tol = 1e-3;
         public const int G4Ticks = 50;
 
         [Serializable] public class RefJoint { public string name; public int type; public int qposadr; public int dofadr; }
-        [Serializable] public class RefMeta { public string body; public string onnx; public string fingerprint_sha256; public double[] command; public RefJoint[] joints; public int nq; public int nv; }
+        [Serializable] public class RefMeta { public string body; public string onnx; public string fingerprint_sha256; public double[] command; public RefJoint[] joints; public int nq; public int nv;
+                                              public int contract_version; public double[] skill;   // v4 references: stance-skill block
+                                              public string scene; }                                // MJCF the reference was rolled out on
         [Serializable] public class RefFrame { public int tick; public double t; public double phase; public double[] qpos; public double[] qvel; public double[] obs; public double[] action_raw; public double[] ctrl; public double[] actuator_force; }
         [Serializable] public class Reference { public RefMeta meta; public Disturbance[] disturbances; public RefFrame[] frames; }
 
@@ -69,7 +75,7 @@ namespace PoOlympic.Editor
         {
             var reference = LoadReference(name);
             var body = string.IsNullOrEmpty(reference.meta.body) ? "matt" : reference.meta.body;
-            if (openScene) EditorSceneManager.OpenScene(TestbedSceneOf(body), OpenSceneMode.Single);
+            if (openScene) EditorSceneManager.OpenScene(SceneFor(reference.meta, body), OpenSceneMode.Single);
             var contract = LoadContract(body);
             if (reference.meta.fingerprint_sha256 != contract.fingerprint_sha256)
                 throw new InvalidOperationException("reference was recorded on a different model than the contract");
@@ -91,13 +97,16 @@ namespace PoOlympic.Editor
                 var frames = reference.frames;
                 int n = contract.num_actions;
 
-                // ---- G2: observation builder
-                var obs = new float[contract.obs_dim];
+                // ---- G2: observation builder (v4 references: + the stance-skill block, march cadence drives the clock)
+                bool v4 = reference.meta.contract_version >= 4;
+                if (v4 && !contract.SupportsSkills) throw new InvalidOperationException("v4 reference but the contract has no skill block");
+                float[] skill = v4 ? Array.ConvertAll(reference.meta.skill, x => (float)x) : null;
+                var obs = new float[contract.ObsDimFor(v4 ? 4 : 3)];
                 var last = new float[n];
                 foreach (var f in frames)
                 {
                     InjectState(d, f, qmap, vmap);
-                    ObservationBuilder.Build(contract, bind, d->qpos, d->qvel, cmd, f.phase, last, obs);
+                    ObservationBuilder.Build(contract, bind, d->qpos, d->qvel, cmd, f.phase, last, obs, skill);
                     for (int i = 0; i < obs.Length; i++) report.g2MaxAbs = Math.Max(report.g2MaxAbs, Math.Abs(obs[i] - f.obs[i]));
                     for (int i = 0; i < n; i++) last[i] = (float)f.action_raw[i];
                 }
@@ -105,7 +114,7 @@ namespace PoOlympic.Editor
                 // ---- G3: policy replay
                 var asset = AssetDatabase.LoadAssetAtPath<ModelAsset>($"{ModelsFolder}/Brains/{reference.meta.onnx}");
                 if (asset == null) throw new FileNotFoundException($"brain {reference.meta.onnx} not synced into {ModelsFolder}/Brains");
-                using (var brain = new PolicyBrain(asset, contract.obs_dim))
+                using (var brain = new PolicyBrain(asset, obs.Length))
                 {
                     var ctrl = new float[n];
                     var act = new float[n];

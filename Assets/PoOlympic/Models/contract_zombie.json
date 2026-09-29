@@ -561,5 +561,57 @@
   "root_ang_vel": "pelvis local (free joint qvel[3:6])",
   "projected_gravity": "R_pelvis^T @ (0,0,-1)"
  },
- "fingerprint_sha256": "5521551798c3942cb235d40a8daab9ef10151ef407fa1815d9c9f9cc80a2b379"
+ "fingerprint_sha256": "5521551798c3942cb235d40a8daab9ef10151ef407fa1815d9c9f9cc80a2b379",
+ "skill_block": {
+  "version": 4,
+  "offset": 84,
+  "size": 11,
+  "obs_dim": 95,
+  "layout": {
+   "pelvis_height": {
+    "offset": 84,
+    "size": 1
+   },
+   "lift_foot": {
+    "offset": 85,
+    "size": 2
+   },
+   "march": {
+    "offset": 87,
+    "size": 2
+   },
+   "torso_aim": {
+    "offset": 89,
+    "size": 2
+   },
+   "hand_target": {
+    "offset": 91,
+    "size": 4
+   }
+  },
+  "ranges": {
+   "pelvis_height": [
+    -0.2780348394120849,
+    0.0
+   ],
+   "march_hz": [
+    1.0177629437602993,
+    2.544407359400748
+   ],
+   "knee_lift": [
+    0.061785519869352205,
+    0.2162493195427327
+   ],
+   "torso_yaw": [
+    -1.0471975511965976,
+    1.0471975511965976
+   ],
+   "torso_pitch": [
+    -0.3490658503988659,
+    0.6981317007977318
+   ],
+   "hand_reach": 0.4633913990201415
+  },
+  "phase_clock": "march cadence > 0: phase += cadence * decimation * timestep (mod 1), whatever the command"
+ }
 }

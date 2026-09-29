@@ -2,6 +2,7 @@
 
   zero_brain.onnx    action_raw == 0 -> ctrl == default pose (passive PD hold)
   random_brain.onnx  seeded random weights + random normaliser stats (exercises the whole graph)
+  random_brain_v4.onnx  the same with the contract v4 input (95 obs: stance-skill block) — G2/G3/G4 of the v4 builder
 
 Verifies onnxruntime == torch (< 1e-6) on 1000 random observations.
 Usage: uv run python tools/make_test_brains.py
@@ -25,19 +26,19 @@ from poolympic.policy_export import ExportedPolicy, export, make_mlp, standard_m
 OUT = ROOT.parent / "parity" / "brains"
 
 
-def build(kind: str, ath: C.Athlete) -> ExportedPolicy:
+def build(kind: str, ath: C.Athlete, obs_dim: int = C.OBS_DIM) -> ExportedPolicy:
     torch.manual_seed(1234)
-    mlp = make_mlp()
+    mlp = make_mlp(obs_dim)
     rng = np.random.default_rng(1234)
     if kind == "zero":
         last = mlp[-1]
         torch.nn.init.zeros_(last.weight)
         torch.nn.init.zeros_(last.bias)
-        mean, std = np.zeros(C.OBS_DIM), np.ones(C.OBS_DIM)
+        mean, std = np.zeros(obs_dim), np.ones(obs_dim)
     else:
         # PyTorch default init keeps action_raw O(1), like a trained policy
-        mean = rng.normal(0, 0.2, C.OBS_DIM)
-        std = rng.uniform(0.5, 2.0, C.OBS_DIM)
+        mean = rng.normal(0, 0.2, obs_dim)
+        std = rng.uniform(0.5, 2.0, obs_dim)
     return ExportedPolicy(mlp, mean, std, ath.default_pos, ath.range_lo, ath.range_hi)
 
 
@@ -49,11 +50,12 @@ def main() -> int:
     ath = C.Athlete.bind(mujoco.MjModel.from_xml_path(str(C.SCENE_XML)))
     print(f"fingerprint {fp_path.name} sha256={sha[:16]}…  contract.json written")
     ok = True
-    for kind in ("zero", "random"):
-        pol = build(kind, ath).eval()
-        path = export(pol, OUT / f"{kind}_brain.onnx", standard_metadata(contract, f"{kind}_brain"))
+    for kind, dim, version, name in (("zero", C.OBS_DIM, None, "zero_brain"), ("random", C.OBS_DIM, None, "random_brain"),
+                                     ("random", C.OBS_DIM_V4, C.SKILL_VERSION, "random_brain_v4")):
+        pol = build(kind, ath, dim).eval()
+        path = export(pol, OUT / f"{name}.onnx", standard_metadata(contract, name, version))
         sess = ort.InferenceSession(str(path), providers=["CPUExecutionProvider"])
-        obs = np.random.default_rng(7).normal(0, 1, (1000, C.OBS_DIM)).astype(np.float32)
+        obs = np.random.default_rng(7).normal(0, 1, (1000, dim)).astype(np.float32)
         worst, worst_contract, act_max = 0.0, 0.0, 0.0
         for o in obs:
             ctrl_o, act_o = sess.run(None, {"obs": o[None]})

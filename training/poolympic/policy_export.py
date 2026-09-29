@@ -1,6 +1,6 @@
 """A11 — ONNX policy export (DESIGN.md §3).
 
-Graph:  obs[1,84] --(obs - mean) / std, clip ±CLIP_OBS--> MLP 512-256-128 ELU --> action_raw[1,23]
+Graph:  obs[1,84] (contract v4 brains: obs[1,95], the stance-skill block appended) --(obs - mean) / std, clip ±CLIP_OBS--> MLP 512-256-128 ELU --> action_raw[1,23]
         ctrl[1,23] = clip(default + ACTION_SCALE * action_raw, range_lo, range_hi)
 Unity copies ctrl straight into mjData.ctrl and feeds action_raw back as the next `last_action` obs term.
 Metadata carries the contract + fingerprint hash; Unity refuses to run on mismatch.
@@ -56,7 +56,7 @@ class ExportedPolicy(nn.Module):
 
 def export(policy: ExportedPolicy, path: Path, metadata: dict[str, str]) -> Path:
     policy = policy.eval().cpu()
-    dummy = torch.zeros(1, C.OBS_DIM)
+    dummy = torch.zeros(1, policy.obs_mean.shape[1])      # 84 (v3) or 95 (v4) inputs
     path.parent.mkdir(parents=True, exist_ok=True)
     torch.onnx.export(policy, (dummy,), str(path), input_names=["obs"], output_names=["ctrl", "action_raw"],
                       opset_version=OPSET, dynamic_axes=None, dynamo=False)
@@ -73,10 +73,11 @@ def export(policy: ExportedPolicy, path: Path, metadata: dict[str, str]) -> Path
     return path
 
 
-def standard_metadata(contract: dict, name: str) -> dict[str, str]:
+def standard_metadata(contract: dict, name: str, contract_version: int | None = None) -> dict[str, str]:
+    """contract_version: 4 for stance-skill brains (95 obs); default = the contract's base version (3, 84 obs)."""
     return {
         "poolympic.name": name,
-        "poolympic.contract_version": str(contract["contract_version"]),
+        "poolympic.contract_version": str(contract_version or contract["contract_version"]),
         "poolympic.fingerprint_sha256": contract["fingerprint_sha256"] or "",
         "poolympic.mujoco_version": contract["mujoco_version"],
         "poolympic.timestep": repr(contract["timestep"]),

@@ -1,0 +1,26 @@
+{
+ "reference": "random_v4",
+ "unity_run": "random_v4_play",
+ "body": "matt",
+ "frames": 250,
+ "fall_time_ref": 2.12,
+ "fall_time_unity": 2.12,
+ "pelvis_height_rms_m": 3.933927946072175e-07,
+ "mean_abs_torque_ref": 5.997766925849573,
+ "mean_abs_torque_unity": 5.997770325229023,
+ "torque_ratio": 1.0000005667741831,
+ "cadence_ref_hz": 0.8426966292134831,
+ "cadence_unity_hz": 0.8426966292134831,
+ "qpos_max_abs_drift_1s": 3.9573366313137154e-07,
+ "qpos_max_abs_drift_5s": 4.333527442161589e-06,
+ "cube_qpos_max_abs_drift_after_fire": 0.0008267804256055847,
+ "obs_max_abs_diff": 6.723403930664062e-05,
+ "action_raw_max_abs_diff": 1.430511474609375e-06,
+ "checks": {
+  "same_fall_outcome": true,
+  "pelvis_height_rms_lt_3cm": true,
+  "mean_abs_torque_within_10pct": true,
+  "cadence_within_5pct": true
+ },
+ "G5_pass": true
+}

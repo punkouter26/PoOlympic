@@ -52,6 +52,17 @@ namespace PoOlympic
             public double[] qpos;
         }
 
+        /// <summary>Contract v4 stance-skill command block (docs/CONTRACT_V4_STANCE_PROPOSAL.md): appended after the v3
+        /// obs for brains whose sidecar says contract_version 4. JsonUtility leaves version 0 when the key is absent.</summary>
+        [Serializable]
+        public class SkillBlock
+        {
+            public int version;
+            public int offset;
+            public int size;
+            public int obs_dim;
+        }
+
         public string body;                   // athlete body (Phase Z); absent = MATT
         public int contract_version;
         public string mujoco_version;
@@ -73,6 +84,13 @@ namespace PoOlympic
         public double[] default_qpos_scene;
         public JointQpos[] default_joint_qpos;
         public string fingerprint_sha256;
+        public SkillBlock skill_block;
+
+        public bool SupportsSkills => skill_block != null && skill_block.version > contract_version && skill_block.size == ObservationBuilder.SkillDim
+                                      && skill_block.offset == obs_dim;
+
+        /// <summary>Policy input size for a brain of `brainVersion`: the v3 obs, or v3 + skill block for v4 brains.</summary>
+        public int ObsDimFor(int brainVersion) => brainVersion >= 4 && SupportsSkills ? skill_block.obs_dim : obs_dim;
 
         public string BodyName => string.IsNullOrEmpty(body) ? "matt" : body;
 
@@ -109,9 +127,15 @@ namespace PoOlympic
         }
 
         /// <summary>Phase clock update, called once per control tick before building the observation
-        /// (contract.py::advance_phase / gait_hz).</summary>
-        public double AdvancePhase(double phase, Vector3 command)
+        /// (contract.py::advance_phase / gait_hz). v4: a march cadence &gt; 0 (Hz) drives the clock at that rate whatever
+        /// the command (marching in place).</summary>
+        public double AdvancePhase(double phase, Vector3 command, double cadence = 0.0)
         {
+            if (cadence > 0.0)
+            {
+                double q = phase + cadence * decimation * timestep;
+                return q - Math.Floor(q);
+            }
             double n = Math.Sqrt((double)command.x * command.x + (double)command.y * command.y + (double)command.z * command.z);
             if (n < phase_cmd_threshold) return 0.0;
             double p = phase + GaitHz(command) * decimation * timestep;

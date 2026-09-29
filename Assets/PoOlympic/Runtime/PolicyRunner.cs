@@ -37,6 +37,10 @@ namespace PoOlympic
         /// Same tick as the Python event loops, so event commands stay tick-exact. Runs after laneKeeping.</summary>
         public Func<double, double, double, Vector3, Vector3> steer;
 
+        [Header("Stance skills (contract v4 brains only)")]
+        [Tooltip("Stance-skill command (body units) appended to the observation of a contract v4 brain; ignored by v3 brains.")]
+        public SkillCommand skill;
+
         [Header("All-fours events (30m All Fours)")]
         [Tooltip("Reset face down on the lane line, head towards +x (the finish), pelvis at proneHeight — " +
                  "training/poolympic/events/all_fours.py prone_start.")]
@@ -73,13 +77,15 @@ namespace PoOlympic
         public Contract Contract { get; private set; }
         public AthleteBinding Binding { get; private set; }
         public float[] LastObs => _obs;
+        /// <summary>Contract version of the loaded brain (sidecar): 3 = 84 obs, 4 = + stance-skill block.</summary>
+        public int BrainVersion { get; private set; } = 3;
 
         PolicyBrain _brain;
         Dictionary<string, int> _jointIndex;
         readonly Dictionary<int, List<Disturbance>> _byTick = new();
         readonly List<Disturbance> _pending = new();
         bool _resetRequested;
-        float[] _obs, _ctrlF, _actionRaw, _lastAction;
+        float[] _obs, _ctrlF, _actionRaw, _lastAction, _skill;
         double[] _ctrl, _ctrlPrev, _baseForceRange;
         System.Random _noiseRng;
         double _phase;
@@ -109,8 +115,10 @@ namespace PoOlympic
             var sc = JsonUtility.FromJson<BrainSidecar>(brainSidecar.text);
             if (sc.fingerprint_sha256 != Contract.fingerprint_sha256)
                 throw new InvalidOperationException($"Brain '{sc.name}' was trained on model {sc.fingerprint_sha256[..12]}…, contract is {Contract.fingerprint_sha256[..12]}… — refusing to run.");
-            if (sc.contract_version != Contract.contract_version.ToString())
-                throw new InvalidOperationException("Brain contract version mismatch");
+            BrainVersion = int.Parse(sc.contract_version, CultureInfo.InvariantCulture);
+            bool ok = BrainVersion == Contract.contract_version || (BrainVersion == 4 && Contract.SupportsSkills);
+            if (!ok) throw new InvalidOperationException($"Brain '{sc.name}' contract version {sc.contract_version} does not match contract {Contract.contract_version}" +
+                                                        (Contract.SupportsSkills ? " (+ skill block v4)" : ""));
             if (int.Parse(sc.decimation) != Contract.decimation || Math.Abs(double.Parse(sc.timestep, CultureInfo.InvariantCulture) - Contract.timestep) > 0)
                 throw new InvalidOperationException("Brain timestep/decimation mismatch");
         }
@@ -129,7 +137,8 @@ namespace PoOlympic
             ResetToDefault(m, d);
 
             int n = Contract.num_actions;
-            _obs = new float[Contract.obs_dim];
+            _obs = new float[Contract.ObsDimFor(BrainVersion)];
+            _skill = BrainVersion >= 4 ? new float[ObservationBuilder.SkillDim] : null;
             _ctrlF = new float[n];
             _actionRaw = new float[n];
             _lastAction = new float[n];
@@ -144,7 +153,7 @@ namespace PoOlympic
                 _baseForceRange[2 * i + 1] = m->actuator_forcerange[2 * Binding.ActuatorIds[i] + 1];
             }
             ApplyTraits(m);
-            if (!holdDefaultPose) _brain = new PolicyBrain(brain, Contract.obs_dim);
+            if (!holdDefaultPose) _brain = new PolicyBrain(brain, _obs.Length);
             if (!string.IsNullOrEmpty(recordName)) BeginRecording(m);
             ControlTick = 0;
             _substep = 0;
@@ -281,8 +290,9 @@ namespace PoOlympic
                 command = steer(d->qpos[r] - laneOriginX, d->qpos[r + 1] - laneOriginY, yaw, command);
             }
             var bodyCommand = BodyCommand(command);
-            _phase = Contract.AdvancePhase(_phase, bodyCommand);
-            ObservationBuilder.Build(Contract, Binding, d->qpos, d->qvel, bodyCommand, _phase, _lastAction, _obs);
+            if (_skill != null) skill.ToArray(_skill);
+            _phase = Contract.AdvancePhase(_phase, bodyCommand, _skill != null ? skill.marchHz : 0.0);
+            ObservationBuilder.Build(Contract, Binding, d->qpos, d->qvel, bodyCommand, _phase, _lastAction, _obs, _skill);
             if (obsNoise > 0f && Contract.obs_noise != null)
                 foreach (var t in Contract.obs_noise)
                     for (int i = 0; i < t.size; i++)

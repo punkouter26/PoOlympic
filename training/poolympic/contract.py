@@ -64,6 +64,61 @@ OBS_NOISE = {"base_lin_vel_heading": 0.1, "base_ang_vel_local": 0.2, "projected_
 TRAIT_RANGES = {"strength": (0.85, 1.15), "latency_substeps": (0, 4), "obs_noise": (0.0, 1.0)}
 NUM_ACTIONS = 23
 
+# ---------------------------------------------------------------- contract v4: stance-skill command block
+# docs/CONTRACT_V4_STANCE_PROPOSAL.md (approved 2026-09-29). v4 = v3 + SKILL_DIM values appended after the 84 v3 obs;
+# every v3 offset is unchanged and v3 brains keep their 84-dim input (the brain's sidecar contract_version picks the
+# layout). A zero block = plain v3 behaviour (stand / locomote on the (vx, vy, wz) command).
+SKILL_VERSION = 4
+SKILL_LAYOUT = [  # (name, size) — order is the contract
+    ("pelvis_height", 1),   # target pelvis height relative to the default standing height (m, <= 0)      event 3
+    ("lift_foot", 2),       # one-hot (left, right): stand on the other leg                                event 6
+    ("march", 2),           # (cadence Hz, knee lift m); cadence > 0 drives the gait clock at zero velocity  event 7
+    ("torso_aim", 2),       # chest (yaw, pitch) relative to the pelvis heading (rad; pitch > 0 = forward)  event 2
+    ("hand_target", 4),     # (x, y, z) in the heading frame relative to the pelvis (m), arm (-1 L, +1 R, 0 none)  event 4
+]
+SKILL_DIM = sum(s for _, s in SKILL_LAYOUT)
+OBS_DIM_V4 = OBS_DIM + SKILL_DIM
+# Command ranges in MATT units (approved). Lengths scale with the body (x λ), cadence with its gait clock (/ √λ).
+SKILL_RANGES = {
+    "pelvis_height": (-0.45, 0.0),
+    "march_hz": (0.8, 2.0),
+    "knee_lift": (0.10, 0.35),
+    "torso_yaw": (-math.radians(60), math.radians(60)),
+    "torso_pitch": (-math.radians(20), math.radians(40)),
+    "hand_reach": 0.75,     # m from the shoulder of the selected arm (target = forearm tip; wrists are welded)
+}
+
+
+@dataclass(frozen=True)
+class SkillCommand:
+    """One stance-skill request; to_array() is the SKILL_DIM obs block. Zero = no skill (v3 behaviour)."""
+    pelvis_height: float = 0.0
+    lift_foot: str = ""                  # "", "l" or "r"
+    march_hz: float = 0.0
+    knee_lift: float = 0.0
+    torso_yaw: float = 0.0
+    torso_pitch: float = 0.0
+    hand: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    arm: int = 0                         # -1 left, +1 right, 0 none
+
+    def to_array(self) -> np.ndarray:
+        return np.array([self.pelvis_height,
+                         1.0 if self.lift_foot == "l" else 0.0, 1.0 if self.lift_foot == "r" else 0.0,
+                         self.march_hz, self.knee_lift,
+                         self.torso_yaw, self.torso_pitch,
+                         *self.hand, float(self.arm)], dtype=np.float64)
+
+    @staticmethod
+    def from_array(a) -> "SkillCommand":
+        a = np.asarray(a, float)
+        return SkillCommand(float(a[0]), "l" if a[1] > 0.5 else "r" if a[2] > 0.5 else "", float(a[3]), float(a[4]),
+                            float(a[5]), float(a[6]), (float(a[7]), float(a[8]), float(a[9])), int(round(a[10])))
+
+
+def skill_cadence(skill: np.ndarray | None) -> float:
+    """March cadence (Hz) of a skill block, 0 when absent — the v4 gait-clock override."""
+    return 0.0 if skill is None else float(skill[3])
+
 
 @dataclass(frozen=True)
 class Athlete:
@@ -127,16 +182,21 @@ def steer_yaw_rate(quat: np.ndarray, lane_offset_y: float, vx_command: float = 1
     return float(np.clip(HEADING_GAIN * err, -STEER_WZ_LIMIT, STEER_WZ_LIMIT))
 
 
-def advance_phase(phase: float, command: np.ndarray) -> float:
-    """Phase clock update, called once per control tick BEFORE building the observation."""
+def advance_phase(phase: float, command: np.ndarray, cadence: float = 0.0) -> float:
+    """Phase clock update, called once per control tick BEFORE building the observation. v4: a march cadence > 0 (Hz)
+    drives the clock at that rate whatever the command (marching in place); 0 = the v3 clock."""
+    if cadence > 0.0:
+        return (phase + cadence * DECIMATION * 0.005) % 1.0
     if float(np.linalg.norm(command)) < PHASE_CMD_THRESHOLD:
         return 0.0
     return (phase + gait_hz(command) * DECIMATION * 0.005) % 1.0
 
 
-def advance_phase_clock(phase: float, command: np.ndarray, gait: tuple[float, float, float]) -> float:
+def advance_phase_clock(phase: float, command: np.ndarray, gait: tuple[float, float, float], cadence: float = 0.0) -> float:
     """advance_phase with another body's clock (base Hz, Hz per m/s, yaw weight) — same arithmetic, so the process
     body's own constants reproduce advance_phase bit for bit."""
+    if cadence > 0.0:
+        return (phase + cadence * DECIMATION * 0.005) % 1.0
     if float(np.linalg.norm(command)) < PHASE_CMD_THRESHOLD:
         return 0.0
     base, per_mps, yaw_w = gait
@@ -154,8 +214,9 @@ def gait_hz(command: np.ndarray) -> float:
 
 
 def build_obs(ath: Athlete, qpos: np.ndarray, qvel: np.ndarray, command: np.ndarray, phase: float,
-              last_action: np.ndarray) -> np.ndarray:
-    """84-dim observation, computed in float64 then cast to float32 (the ONNX input dtype)."""
+              last_action: np.ndarray, skill: np.ndarray | None = None) -> np.ndarray:
+    """84-dim (v3) observation, computed in float64 then cast to float32 (the ONNX input dtype). skill: the v4 block
+    (SKILL_DIM values, SkillCommand.to_array) appended after the v3 terms -> OBS_DIM_V4."""
     r = ath.root_qposadr
     dv = ath.root_dofadr
     quat = qpos[r + 3 : r + 7]
@@ -178,12 +239,35 @@ def build_obs(ath: Athlete, qpos: np.ndarray, qvel: np.ndarray, command: np.ndar
         last_action,
     ])
     assert obs.shape == (OBS_DIM,)
+    if skill is not None:
+        skill = np.asarray(skill, dtype=np.float64)
+        assert skill.shape == (SKILL_DIM,)
+        obs = np.concatenate([obs, skill])
     return obs.astype(np.float32)
 
 
 def action_to_ctrl(ath: Athlete, action: np.ndarray) -> np.ndarray:
     """Reference implementation of the mapping baked into the ONNX graph (C# never does this)."""
     return np.clip(ath.default_pos + ACTION_SCALE * action, ath.range_lo, ath.range_hi)
+
+
+def skill_block() -> dict:
+    """contract.json "skill_block": layout, body-scaled ranges and clock rule of the v4 stance-skill command."""
+    lam = BODY.length_scale
+    layout, o = {}, OBS_DIM
+    for name, size in SKILL_LAYOUT:
+        layout[name] = {"offset": o, "size": size}
+        o += size
+    r = SKILL_RANGES
+    return {
+        "version": SKILL_VERSION, "offset": OBS_DIM, "size": SKILL_DIM, "obs_dim": OBS_DIM_V4, "layout": layout,
+        "ranges": {"pelvis_height": [r["pelvis_height"][0] * lam, 0.0],
+                   "march_hz": [r["march_hz"][0] / math.sqrt(lam), r["march_hz"][1] / math.sqrt(lam)],
+                   "knee_lift": [r["knee_lift"][0] * lam, r["knee_lift"][1] * lam],
+                   "torso_yaw": list(r["torso_yaw"]), "torso_pitch": list(r["torso_pitch"]),
+                   "hand_reach": r["hand_reach"] * lam},
+        "phase_clock": "march cadence > 0: phase += cadence * decimation * timestep (mod 1), whatever the command",
+    }
 
 
 def export_contract(fingerprint_sha256: str | None = None) -> dict:
@@ -233,6 +317,8 @@ def export_contract(fingerprint_sha256: str | None = None) -> dict:
                    "root_ang_vel": "pelvis local (free joint qvel[3:6])",
                    "projected_gravity": "R_pelvis^T @ (0,0,-1)"},
         "fingerprint_sha256": fingerprint_sha256,
+        # contract v4 (additive: v3 brains ignore it). A brain whose sidecar says contract_version 4 reads OBS_DIM_V4 obs.
+        "skill_block": skill_block(),
     }
     CONTRACT_JSON.parent.mkdir(exist_ok=True)
     CONTRACT_JSON.write_text(json.dumps(contract, indent=1))
