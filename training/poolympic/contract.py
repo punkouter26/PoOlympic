@@ -134,6 +134,20 @@ def advance_phase(phase: float, command: np.ndarray) -> float:
     return (phase + gait_hz(command) * DECIMATION * 0.005) % 1.0
 
 
+def advance_phase_clock(phase: float, command: np.ndarray, gait: tuple[float, float, float]) -> float:
+    """advance_phase with another body's clock (base Hz, Hz per m/s, yaw weight) — same arithmetic, so the process
+    body's own constants reproduce advance_phase bit for bit."""
+    if float(np.linalg.norm(command)) < PHASE_CMD_THRESHOLD:
+        return 0.0
+    base, per_mps, yaw_w = gait
+    speed = math.hypot(float(command[0]), float(command[1])) + yaw_w * abs(float(command[2]))
+    return (phase + (base + per_mps * speed) * DECIMATION * 0.005) % 1.0
+
+
+def body_gait(contract: dict) -> tuple[float, float, float]:
+    return contract["gait_hz_base"], contract["gait_hz_per_mps"], contract["gait_hz_yaw_weight"]
+
+
 def gait_hz(command: np.ndarray) -> float:
     speed = math.hypot(float(command[0]), float(command[1])) + GAIT_HZ_YAW_WEIGHT * abs(float(command[2]))
     return GAIT_HZ_BASE + GAIT_HZ_PER_MPS * speed

@@ -86,7 +86,7 @@ namespace PoOlympic
             var scene = MjScene.Instance;
             scene.postInitEvent += OnPostInit;
             scene.preUpdateEvent += OnPreStep;
-            var list = useStandardParityScript ? Disturbance.StandardParityScript() : disturbances;
+            var list = useStandardParityScript ? Disturbance.StandardParityScript(Contract.SpeedScale) : disturbances;
             foreach (var local in list)
             {
                 var d = local.InLane(athletePrefix, cubeSlots, laneOriginX, laneOriginY);

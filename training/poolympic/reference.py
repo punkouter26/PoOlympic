@@ -16,6 +16,7 @@ import mujoco
 import numpy as np
 import onnxruntime as ort
 
+from . import bodies
 from . import contract as C
 
 PARITY = C.ROOT.parent / "parity"
@@ -42,10 +43,12 @@ class Disturbance:
             raise ValueError(self.kind)
 
 
-def default_disturbances() -> list[Disturbance]:
-    """Standard parity script: lateral 0.5 m/s shove at 1.0 s, 2 kg cube dropped from 1.5 m above the shoulder at 2.0 s."""
+def default_disturbances(body: bodies.Body | None = None) -> list[Disturbance]:
+    """Standard parity script: lateral 0.5 m/s shove at 1.0 s (other bodies: Froude-scaled), 2 kg cube dropped from
+    z = 3 m at 2.0 s."""
+    dv = 0.5 if body is None or body.name == "matt" else round(0.5 * body.speed_scale, 4)
     return [
-        Disturbance(50, "shove", "root", dqvel=[0.0, 0.5, 0.0]),
+        Disturbance(50, "shove", "root", dqvel=[0.0, dv, 0.0]),
         Disturbance(100, "cube", "cube0_free", qpos=[0.0, 0.2, 3.0, 1.0, 0.0, 0.0, 0.0], qvel=[0.0] * 6),
     ]
 
@@ -56,14 +59,19 @@ class Rollout:
 
 
 def rollout(onnx_path: Path, seconds: float = 5.0, disturbances: list[Disturbance] | None = None,
-            command=(0.0, 0.0, 0.0), scene_xml: Path = C.SCENE_XML) -> dict:
+            command=(0.0, 0.0, 0.0), scene_xml: Path | None = None, body: str | None = None) -> dict:
+    """body: athlete body (bodies.BODIES key) to roll out solo — its scene, gait clock and fingerprint; default = the
+    process body ($POOLYMPIC_BODY)."""
+    b = bodies.BODIES[body] if body else C.BODY
+    scene_xml = scene_xml or b.scene_xml
+    gait = C.body_gait(json.loads(b.contract_json.read_text())) if b.name != C.BODY.name else None
     m = mujoco.MjModel.from_xml_path(str(scene_xml))
     d = mujoco.MjData(m)
     mujoco.mj_resetDataKeyframe(m, d, m.key("default").id)
     mujoco.mj_forward(m, d)
     ath = C.Athlete.bind(m)
     sess = ort.InferenceSession(str(onnx_path), providers=["CPUExecutionProvider"])
-    disturbances = default_disturbances() if disturbances is None else disturbances
+    disturbances = default_disturbances(b) if disturbances is None else disturbances
     by_tick = {}
     for dist in disturbances:
         by_tick.setdefault(dist.tick, []).append(dist)
@@ -75,7 +83,7 @@ def rollout(onnx_path: Path, seconds: float = 5.0, disturbances: list[Disturbanc
     n_ticks = int(round(seconds / (m.opt.timestep * C.DECIMATION)))
     for tick in range(n_ticks):
         qpos, qvel = d.qpos.copy(), d.qvel.copy()
-        phase = C.advance_phase(phase, command)
+        phase = C.advance_phase(phase, command) if gait is None else C.advance_phase_clock(phase, command, gait)
         obs = C.build_obs(ath, qpos, qvel, command, phase, last_action)
         ctrl, action_raw = sess.run(None, {"obs": obs[None]})
         ctrl64 = ctrl[0].astype(np.float64)
@@ -92,10 +100,11 @@ def rollout(onnx_path: Path, seconds: float = 5.0, disturbances: list[Disturbanc
         })
         last_action = action_raw[0].astype(np.float64)
 
-    fp_sha = (PARITY / "fingerprint_python.sha256").read_text().strip()
+    fp_sha = b.fingerprint_json.with_suffix(".sha256").read_text().strip()
     onnx_sha = hashlib.sha256(Path(onnx_path).read_bytes()).hexdigest()
     return {
         "meta": {
+            **({} if b.name == "matt" else {"body": b.name}),
             "schema": 1, "mujoco_version": mujoco.__version__, "timestep": m.opt.timestep, "decimation": C.DECIMATION,
             "fingerprint_sha256": fp_sha, "onnx": Path(onnx_path).name, "onnx_sha256": onnx_sha,
             "scene": scene_xml.name, "keyframe": "default", "command": command.tolist(), "seconds": seconds,

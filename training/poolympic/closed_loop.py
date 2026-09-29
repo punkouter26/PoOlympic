@@ -1,7 +1,8 @@
 """G5 / G6 — closed-loop comparison of a recorded run against a golden CPU-MuJoCo reference (DESIGN.md §4).
 
 Pass criteria (all over the 5 s window):
-  * same fall outcome (fall = pelvis z < 0.55 m); if both fall, fall times within 0.1 s
+  * same fall outcome (fall = pelvis z < 0.55 m for MATT; other bodies the same fraction of their standing height,
+    events.iron_pedestal.body_fall_z); if both fall, fall times within 0.1 s
   * pelvis-height RMS difference < 3 cm
   * mean |actuator torque| within ±10 %
   * step cadence within ±5 % (only when the reference actually steps; statues/fallers skip it)
@@ -15,6 +16,8 @@ from pathlib import Path
 
 import numpy as np
 
+from . import bodies
+from .events.iron_pedestal import body_fall_z
 from .meet import SOLO, Lane
 from .reference import PARITY
 
@@ -58,8 +61,8 @@ def qpos_map(ref_meta: dict, run_meta: dict) -> tuple[np.ndarray, np.ndarray, np
     return np.array(ir), np.array(iu), np.array(off), np.array(names)
 
 
-def fall_time(z: np.ndarray, t: np.ndarray) -> float | None:
-    idx = np.nonzero(z < FALL_Z)[0]
+def fall_time(z: np.ndarray, t: np.ndarray, fall_z: float = FALL_Z) -> float | None:
+    idx = np.nonzero(z < fall_z)[0]
     return float(t[idx[0]]) if len(idx) else None
 
 
@@ -90,8 +93,10 @@ def g5_compare(ref: dict, uni: dict, ref_name: str, uni_name: str) -> dict:
     for dist in ref.get("disturbances", []):
         if dist["kind"] == "cube" and np.any(names == dist["target"]):
             cube_drift = max(cube_drift, float(err[ticks > dist["tick"]][:, names == dist["target"]].max(initial=0.0)))
+    body = ref["meta"].get("body", "matt")
+    fall_z = FALL_Z if body == "matt" else body_fall_z(body)
     rz, uz = rq[:, 2], uq[:, 2]
-    fr, fu = fall_time(rz, t), fall_time(uz, t)
+    fr, fu = fall_time(rz, t, fall_z), fall_time(uz, t, fall_z)
     same_fall = (fr is None) == (fu is None) and (fr is None or abs(fr - fu) <= 0.1)
     height_rms = float(np.sqrt(np.mean((rz - uz) ** 2)))
 
@@ -106,7 +111,7 @@ def g5_compare(ref: dict, uni: dict, ref_name: str, uni_name: str) -> dict:
     hip = ref["meta"]["actuators"].index("hip_flex_l"), ref["meta"]["actuators"].index("hip_flex_r")
     ro = np.array([f["obs"] for f in rf[:n]])
     uo = np.array([f["obs"] for f in uf[:n]])
-    jp = load(PARITY / "contract.json")["obs_layout"]["joint_pos_rel"]["offset"]
+    jp = load(bodies.BODIES[body].contract_json)["obs_layout"]["joint_pos_rel"]["offset"]
     cr = cadence_hz(ro[:, jp + hip[0]] - ro[:, jp + hip[1]], dt)
     cu = cadence_hz(uo[:, jp + hip[0]] - uo[:, jp + hip[1]], dt)
     cadence_ok = True if cr is None else (cu is not None and abs(cu - cr) / cr <= 0.05)
@@ -118,7 +123,7 @@ def g5_compare(ref: dict, uni: dict, ref_name: str, uni_name: str) -> dict:
         "cadence_within_5pct": cadence_ok,
     }.items()}
     report = {
-        "reference": ref_name, "unity_run": uni_name, "frames": n,
+        "reference": ref_name, "unity_run": uni_name, "body": body, "frames": n,
         "fall_time_ref": fr, "fall_time_unity": fu,
         "pelvis_height_rms_m": height_rms, "mean_abs_torque_ref": float(rt), "mean_abs_torque_unity": float(ut),
         "torque_ratio": torque_ratio, "cadence_ref_hz": cr, "cadence_unity_hz": cu,

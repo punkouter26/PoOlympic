@@ -21,12 +21,15 @@ namespace PoOlympic.Editor
     public static unsafe class ParityHarness
     {
         public const string TestbedScene = "Assets/PoOlympic/Scenes/Testbed_ZeroBrain.unity";
+        /// <summary>Solo testbed per athlete body (Phase Z7): the scene whose compiled model the body's references
+        /// were recorded on (training/assets/scene_&lt;body&gt;.xml).</summary>
+        public static string TestbedSceneOf(string body) => body == "matt" ? TestbedScene : ZombieTestbed.ScenePath;
         public const string ModelsFolder = "Assets/PoOlympic/Models";
         public const double G2Tol = 1e-5, G3Tol = 1e-4, G4Tol = 1e-3;
         public const int G4Ticks = 50;
 
         [Serializable] public class RefJoint { public string name; public int type; public int qposadr; public int dofadr; }
-        [Serializable] public class RefMeta { public string onnx; public string fingerprint_sha256; public double[] command; public RefJoint[] joints; public int nq; public int nv; }
+        [Serializable] public class RefMeta { public string body; public string onnx; public string fingerprint_sha256; public double[] command; public RefJoint[] joints; public int nq; public int nv; }
         [Serializable] public class RefFrame { public int tick; public double t; public double phase; public double[] qpos; public double[] qvel; public double[] obs; public double[] action_raw; public double[] ctrl; public double[] actuator_force; }
         [Serializable] public class Reference { public RefMeta meta; public Disturbance[] disturbances; public RefFrame[] frames; }
 
@@ -56,17 +59,18 @@ namespace PoOlympic.Editor
             AssetDatabase.Refresh();
         }
 
-        public static Contract LoadContract() =>
-            Contract.Parse(File.ReadAllText(Path.Combine(ProjectRoot, ModelsFolder, "contract.json")));
+        public static Contract LoadContract(string body = "matt") =>
+            Contract.Parse(File.ReadAllText(Path.Combine(ProjectRoot, ModelsFolder, body == "matt" ? "contract.json" : $"contract_{body}.json")));
 
         public static Reference LoadReference(string name) =>
             JsonUtility.FromJson<Reference>(File.ReadAllText(Path.Combine(ProjectRoot, "parity", $"reference_trajectory_{name}.json")));
 
         public static Report Run(string name, bool openScene = true)
         {
-            if (openScene) EditorSceneManager.OpenScene(TestbedScene, OpenSceneMode.Single);
-            var contract = LoadContract();
             var reference = LoadReference(name);
+            var body = string.IsNullOrEmpty(reference.meta.body) ? "matt" : reference.meta.body;
+            if (openScene) EditorSceneManager.OpenScene(TestbedSceneOf(body), OpenSceneMode.Single);
+            var contract = LoadContract(body);
             if (reference.meta.fingerprint_sha256 != contract.fingerprint_sha256)
                 throw new InvalidOperationException("reference was recorded on a different model than the contract");
 

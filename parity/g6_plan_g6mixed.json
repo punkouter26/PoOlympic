@@ -1,0 +1,445 @@
+{
+ "schema": 2,
+ "scene": "scene_meet8_mzmzmzmz.xml",
+ "layout": "meet8_mzmzmzmz_layout.json",
+ "seconds": 5.0,
+ "lanes": [
+  {
+   "lane": 0,
+   "body": "matt",
+   "brain": "rung2.onnx",
+   "command": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "body_command": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "disturbances": [
+    {
+     "tick": 40,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      0.3,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 100,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      0.0355,
+      0.204,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "g6mixed_L0"
+  },
+  {
+   "lane": 1,
+   "body": "zombie",
+   "brain": "zombie_rung2.onnx",
+   "command": [
+    -1.5,
+    0.0,
+    0.0
+   ],
+   "body_command": [
+    -1.1790565252304077,
+    0.0,
+    0.0
+   ],
+   "disturbances": [
+    {
+     "tick": 45,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      -0.2358,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 105,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      -1.9522,
+      -0.2682,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "g6mixed_L1"
+  },
+  {
+   "lane": 2,
+   "body": "matt",
+   "brain": "rung2.onnx",
+   "command": [
+    0.0,
+    0.75,
+    0.0
+   ],
+   "body_command": [
+    0.0,
+    0.75,
+    0.0
+   ],
+   "disturbances": [
+    {
+     "tick": 50,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      0.3,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 110,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      0.2503,
+      2.0496,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "g6mixed_L2"
+  },
+  {
+   "lane": 3,
+   "body": "zombie",
+   "brain": "zombie_rung2.onnx",
+   "command": [
+    0.0,
+    -0.75,
+    0.0
+   ],
+   "body_command": [
+    0.0,
+    -0.5895282626152039,
+    0.0
+   ],
+   "disturbances": [
+    {
+     "tick": 55,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      -0.2358,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 115,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      0.4786,
+      -1.0765,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "g6mixed_L3"
+  },
+  {
+   "lane": 4,
+   "body": "matt",
+   "brain": "rung2.onnx",
+   "command": [
+    0.0,
+    0.0,
+    1.5
+   ],
+   "body_command": [
+    0.0,
+    0.0,
+    1.5
+   ],
+   "disturbances": [
+    {
+     "tick": 60,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      0.3,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 120,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      0.0791,
+      0.2564,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "g6mixed_L4"
+  },
+  {
+   "lane": 5,
+   "body": "zombie",
+   "brain": "zombie_rung2.onnx",
+   "command": [
+    0.0,
+    0.0,
+    -1.5
+   ],
+   "body_command": [
+    0.0,
+    0.0,
+    -1.9083054065704346
+   ],
+   "disturbances": [
+    {
+     "tick": 65,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      -0.2358,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 125,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      0.0303,
+      0.036,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "g6mixed_L5"
+  },
+  {
+   "lane": 6,
+   "body": "matt",
+   "brain": "rung2.onnx",
+   "command": [
+    3.5,
+    0.0,
+    0.0
+   ],
+   "body_command": [
+    3.5,
+    0.0,
+    0.0
+   ],
+   "disturbances": [
+    {
+     "tick": 70,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      0.3,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 130,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      6.5375,
+      0.6071,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "g6mixed_L6"
+  },
+  {
+   "lane": 7,
+   "body": "zombie",
+   "brain": "zombie_rung2.onnx",
+   "command": [
+    1.0,
+    0.0,
+    1.0
+   ],
+   "body_command": [
+    0.7860376834869385,
+    0.0,
+    1.2722036838531494
+   ],
+   "disturbances": [
+    {
+     "tick": 75,
+     "kind": "shove",
+     "target": "root",
+     "dqvel": [
+      0.0,
+      -0.2358,
+      0.0
+     ],
+     "qpos": null,
+     "qvel": null
+    },
+    {
+     "tick": 135,
+     "kind": "cube",
+     "target": "cube0_free",
+     "dqvel": null,
+     "qpos": [
+      -0.2249,
+      1.2032,
+      3.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "qvel": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "reference": "g6mixed_L7"
+  }
+ ],
+ "brains": {
+  "matt": "rung2.onnx",
+  "zombie": "zombie_rung2.onnx"
+ },
+ "onnx_sha256": {
+  "matt": "9d2605d04bee8e89676f844a8b8f46e7b4aa838aa14937ce4d43b2629bcd96ec",
+  "zombie": "13278b182017ce7fc4c3a44e17e1993ff77af352051307444f6c4bb7c9121b98"
+ },
+ "fingerprint_sha256": {
+  "matt": "bfd287b0ce43147ad430d90787f724d9ef7a25a4cc281730278aa3ed0bb024e8",
+  "zombie": "5521551798c3942cb235d40a8daab9ef10151ef407fa1815d9c9f9cc80a2b379"
+ },
+ "brain": "rung2.onnx"
+}

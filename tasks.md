@@ -188,9 +188,14 @@ apply: TensorBoard + MuJoCo viewer for every run, close Unity during 30 min+ run
 - [ ] **Z6 Rung 2 zombie** — curriculum (walk → run → omni + yaw) with the Rung 2 fixes (symmetry + mirror loss,
   lateral-acceleration cap, sprint focus). *Accept: G1 rung2 10/10 on the scaled drills.*
   - **Kept (best available, not a G1 pass):** `zombie_rung2.onnx` = z2_v2 it 1500 — 0 falls, drills 30/30, speed 37/50, yaw 30/50 segments, turntable 2.54 s (bar 2.36). Hard turns reach ~70 % of the commanded rate (70 % strength body). Open: turn-rate ruling or more training.
-- [ ] **Z7 Unity** — contract per body in PolicyRunner, zombie MATT-style visual binding, G0/G2–G5 on the zombie, mixed
+- [x] **Z7 Unity** — contract per body in PolicyRunner, zombie MATT-style visual binding, G0/G2–G5 on the zombie, mixed
   MATT + zombie meets (lane body chosen per lane → `compose_meet` with per-lane bodies), menu roster card, events read
-  MeetLineup. *Accept: G6 with a mixed 8-lane meet; every playable event runs with any lineup.*
+  MeetLineup. *Accept: G6 with a mixed 8-lane meet; every playable event runs with any lineup.* — PASSED 2026-09-28:
+  `Testbed_Zombie.unity` (`ZombieTestbed`): **G0** 0 mismatches · **G2** ≤ 4.4e-16 · **G3** ≤ 3.8e-6 · **G4** (1 s) ≤ 1.3e-6
+  on zombie_rung0 / zombie_rung2 + the 8 mixed-plan lane refs · **G5** zombie_rung0 closed loop drift 7e-7 @ 5 s, torque
+  1.0000. `Testbed_Mixed.unity` (`MeetTestbed.BuildMixed`, `scene_meet8_mzmzmzmz.xml`): **G0 8/8** (each lane == its body's
+  solo athlete) · **G6 8/8** (`make_g6.py mixed g6mixed`: Rung 2 commands in MATT units, zombie lanes × √λ exactly as
+  `PolicyRunner.BodyCommand`; 1 s drift ≤ 4e-6, height RMS ≤ 4e-4 m, same outcomes). Lineups: roster scenes (backlog).
 
 ## Backlog (later rungs & platforms)
 

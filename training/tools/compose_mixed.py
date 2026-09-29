@@ -32,6 +32,7 @@ import build_mjcf as B  # noqa: E402  (MATT profile: only the scene helpers / co
 ASSETS = ROOT / "assets"
 ROSTER = ["matt", "zombie"]      # = Unity MeetLineup.Roster (lower case)
 SCENES = {  # scene -> the build_mjcf.compose_meet arguments of that event scene
+    "meet8": dict(),                                  # G6 testbed (Testbed_Rung1): 1.22 m lanes, no venue
     "pedestal8": dict(event=1, pedestal_h=B.PEDESTAL_H),
     "track8": dict(event=8, park_offset=(0.0, -30.0, 0.0)),
     "turntable8": dict(event=12),
@@ -72,7 +73,8 @@ def compose(scene: str, lineup: list) -> tuple[str, dict]:
     ped_h, shaker = sc.get("pedestal_h", 0.0), sc.get("shaker")
     props = sc["props"]() if "props" in sc else []
     park_offset = np.asarray(sc.get("park_offset", (0.0, 0.0, 0.0)), float)
-    origins = B.venue_lane_origins(sc["event"], 3, sc.get("yaw", 0.0))
+    origins = (B.venue_lane_origins(sc["event"], 3, sc.get("yaw", 0.0)) if "event" in sc
+               else [B.lane_origin(k) for k in range(len(lineup))])
     root = ET.Element("mujoco", {"model": f"{scene}_mixed"})
     B.option_block(root)
     wb = ET.SubElement(root, "worldbody")

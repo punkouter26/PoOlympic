@@ -71,9 +71,12 @@ namespace PoOlympic
         }
 
         /// <summary>The standard parity script — identical to reference.default_disturbances().</summary>
-        public static List<Disturbance> StandardParityScript() => new()
+        /// <summary>training/poolympic/reference.py default_disturbances: 0.5 m/s lateral shove at 1 s (other bodies:
+        /// × the Froude speed scale √λ, rounded to 4 decimals like Python), 2 kg cube from z = 3 m at 2 s.</summary>
+        public static List<Disturbance> StandardParityScript(double speedScale = 1.0) => new()
         {
-            new Disturbance { tick = 50, kind = "shove", target = "root", dqvel = new[] { 0.0, 0.5, 0.0 } },
+            new Disturbance { tick = 50, kind = "shove", target = "root",
+                              dqvel = new[] { 0.0, speedScale == 1.0 ? 0.5 : Math.Round(0.5 * speedScale, 4, MidpointRounding.ToEven), 0.0 } },
             new Disturbance { tick = 100, kind = "cube", target = "cube0_free",
                               qpos = new[] { 0.0, 0.2, 3.0, 1.0, 0.0, 0.0, 0.0 }, qvel = new double[6] },
         };
