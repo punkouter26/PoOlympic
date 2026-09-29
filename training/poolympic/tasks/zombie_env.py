@@ -166,6 +166,18 @@ def zombie_rung2_base_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     return cfg
 
 
+def zombie_rung2_sym3_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """Rung 2 fine-tune = MATT's r2_v6 recipe (Sym3, his first G1 10/10): the final recipe WITHOUT the sharp linear
+    kernel and WITHOUT sprint focus — symmetric runner, full widened envelope, lateral-acceleration cap, track_lin std
+    0.5. On the zombie the sharp kernel + 30 % sprints (z2_v1, z2_v3) wrecked linear tracking (sprint RMS 0.15 -> 0.68)
+    while the cap fixed yaw (turntable 2.5 -> 2.0 s, yaw segments 30 -> 50 / 50)."""
+    cfg = zombie_rung2_env_cfg(play=play)
+    cfg.commands["athlete"].sprint_fraction = 0.0
+    cfg.rewards["track_lin"] = RewardTermCfg(func=vel_mdp.track_linear_velocity, weight=2.0,
+                                             params={"command_name": "athlete", "std": 0.5})
+    return cfg
+
+
 def zombie_rung2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     """Rung 2 fine-tune — MATT's final recipe (r2_v8: symmetric runner, full widened
     envelope, lateral-acceleration cap, sharp linear tracking, sprint focus) on the scaled envelope. Warm start: the best

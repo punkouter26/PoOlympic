@@ -96,7 +96,8 @@ if bodies.current().name == "matt":
 if bodies.current().name == "zombie":
     from .matt_env import matt_ppo_cfg
     from .symmetry import SymmetricRunner
-    from .zombie_env import zombie_rung0_env_cfg, zombie_rung1_env_cfg, zombie_rung2_base_env_cfg, zombie_rung2_env_cfg
+    from .zombie_env import (zombie_rung0_env_cfg, zombie_rung1_env_cfg, zombie_rung2_base_env_cfg, zombie_rung2_env_cfg,
+                             zombie_rung2_sym3_env_cfg)
 
     register_mjlab_task(
         task_id="PoOlympic-Zombie-Rung0-Stand",
@@ -127,5 +128,13 @@ if bodies.current().name == "zombie":
         env_cfg=zombie_rung2_env_cfg(),
         play_env_cfg=zombie_rung2_env_cfg(play=True),
         rl_cfg=matt_ppo_cfg("zombie_rung2", max_iterations=3000),
+        runner_cls=SymmetricRunner,
+    )
+
+    register_mjlab_task(
+        task_id="PoOlympic-Zombie-Rung2-Omni-Sym3",
+        env_cfg=zombie_rung2_sym3_env_cfg(),
+        play_env_cfg=zombie_rung2_sym3_env_cfg(play=True),
+        rl_cfg=matt_ppo_cfg("zombie_rung2", max_iterations=2000),
         runner_cls=SymmetricRunner,
     )

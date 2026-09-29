@@ -33,7 +33,7 @@ def _zombie(rung: str):
     return make
 
 
-TASKS.update({f"zombie_{r}": _zombie(r) for r in ("rung0", "rung1", "rung2", "rung2_base")})
+TASKS.update({f"zombie_{r}": _zombie(r) for r in ("rung0", "rung1", "rung2", "rung2_base", "rung2_sym3")})
 
 
 def main(task: str = "rung0") -> int:
