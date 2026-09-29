@@ -431,6 +431,18 @@ def matt_rung2_sym4_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     return cfg
 
 
+def matt_rung2_flight_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """r2f (Event 13, Steeplechase Jog: sustained aerial phases between strikes): the final Rung 2 recipe (r2_v8) plus a
+    flight reward (both feet airborne while commanded above 2.2 m/s) and 50 % sprint-band commands. rung2.onnx already
+    has short flights at speed (3.5 m/s: 19 % of the time, 25 ms mean, 60 ms max — contact chatter, not a stride);
+    a jog has ~100 ms per step. Separate brain for Event 13; the Rung 2 brain stays as it is."""
+    cfg = matt_rung2_sym5_env_cfg(play=play)
+    cfg.commands["athlete"].sprint_fraction = 0.5
+    cfg.rewards["flight"] = RewardTermCfg(func=mdp.flight_phase, weight=1.0,
+                                          params={"command_name": "athlete", "speed_threshold": 2.2})
+    return cfg
+
+
 def matt_rung2_sym5_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     """r2_v8: r2_v7 + 30 % of command resamples from the sprint band (vx 2.5-4.0, |wz| <= 0.6). r2_v6/v7 margin misses
     are almost all 3.2-3.8 m/s sprints with a mild turn; uniform sampling put ~12 % of commands in that band, spread

@@ -178,6 +178,53 @@ def zombie_rung2_sym3_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     return cfg
 
 
+def zombie_rung2_sym3yaw_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """Rung 2 fine-tune (z2_v5 / z2_v6, 2026-09-29) = Sym3 with a stronger, sharper yaw-rate kernel. z2_v3 (sharp linear
+    kernel) tracked yaw (RMS 0.10) but gave up on speed (0.4-0.7 m/s); z2_v4 (wide linear kernel, same init) tracked
+    speed (0.10-0.14) but let a gait yaw wobble grow to 0.56-0.77 rad/s (bar 0.382): reward balance, not capability.
+    Keep the wide linear kernel, raise track_ang 2 -> 3 and sharpen it 0.5 -> 0.35 (× √λ-scaled rate)."""
+    cfg = zombie_rung2_sym3_env_cfg(play=play)
+    cfg.rewards["track_ang"] = RewardTermCfg(func=vel_mdp.track_angular_velocity, weight=3.0,
+                                             params={"command_name": "athlete", "std": 0.35 * WS})
+    return cfg
+
+
+def zombie_rung2_yawgrad_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """Rung 2 fine-tune (z2_v7, 2026-09-29) = Sym3 (keeps z2_v4's running: 2.82 m/s at the 3.14 envelope top) + yaw
+    terms with a gradient everywhere. On the z2_v4 line the yaw kernels paid ~nothing in training (track_ang 0.15 / 2.0,
+    yaw error ~4x MATT's) — the misses are large, and mjlab's kernel also counts the roll/pitch rates of the shuffle.
+    Adds a yaw-only kernel (std 1.0 x the scaled rate) and an L1 yaw-rate penalty. (z2_v6 from the z2_v3 line kept
+    its precise steering but had stopped running: 0.14 m/s at a 2.0 m/s command.)"""
+    cfg = zombie_rung2_sym3_env_cfg(play=play)
+    cfg.rewards["track_yaw_only"] = RewardTermCfg(func=mdp.track_yaw_rate, weight=1.5,
+                                                  params={"command_name": "athlete", "std": 1.0 * WS})
+    cfg.rewards["yaw_l1"] = RewardTermCfg(func=mdp.yaw_rate_l1, weight=-0.5, params={"command_name": "athlete"})
+    return cfg
+
+
+def zombie_rung2_yawfilt_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """Rung 2 fine-tune (z2_v8) = Sym3 + yaw terms on the stride-filtered yaw rate (EMA tau 0.5 s). z2_v7's per-tick
+    yaw-only kernel + L1 penalty fixed the turns (turntable 1.97 s, yaw fails 2/10) but the zombie stopped running
+    (0.65 m/s at a 2.0 m/s command): a fast shuffle rocks the pelvis every stride and every per-tick yaw term charges for
+    that wobble, so standing still was the cheapest way to cut "yaw error". Filtered terms punish sustained turn
+    errors only."""
+    cfg = zombie_rung2_sym3_env_cfg(play=play)
+    cfg.rewards["track_yaw_filt"] = RewardTermCfg(func=mdp.track_yaw_rate_filtered, weight=2.0,
+                                                  params={"command_name": "athlete", "std": 0.5 * WS, "tau": 0.5})
+    cfg.rewards["yaw_filt_l1"] = RewardTermCfg(func=mdp.yaw_rate_filtered_l1, weight=-0.5,
+                                               params={"command_name": "athlete", "tau": 0.5})
+    return cfg
+
+
+def zombie_rung2_yawfilt_cap3_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """z2_v9 = z2_v8 + lateral-acceleration cap 4 -> 3 m/s² (|wz| <= 3 / |v|). Every z2 fine-tune that pushed yaw
+    (v5, v7, v8) slowed the zombie down: at 70 % strength the physical way to follow a hard turn at speed is to brake.
+    The G1 drill needs <= 3.0 m/s² (turns vx <= 1.5·√λ at |wz| <= 2·/√λ; 2.25 m/s² seen), MATT's cap was 4."""
+    cfg = zombie_rung2_yawfilt_env_cfg(play=play)
+    cfg.commands["athlete"].max_lateral_accel = 3.0
+    return cfg
+
+
 def zombie_rung2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     """Rung 2 fine-tune — MATT's final recipe (r2_v8: symmetric runner, full widened
     envelope, lateral-acceleration cap, sharp linear tracking, sprint focus) on the scaled envelope. Warm start: the best

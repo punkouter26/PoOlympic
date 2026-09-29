@@ -422,9 +422,14 @@ def rung2_episode(onnx_path: Path, seed: int, sim: Sim | None = None, shove_dv: 
                 vx, vy, wz = _vel_heading(sim)
                 lin.append(math.hypot(vx - cmd[0], vy - cmd[1]))
                 yaw.append(wz - cmd[2])
+        # report-only (not a pass criterion): yaw error averaged over one stride of the body's gait clock — the
+        # pelvis' natural transverse rotation (~±5° per step) shows up in the per-tick RMS as a yaw-rate wobble
+        period = max(1, int(round(1.0 / (C.gait_hz(cmd) * dt)))) if np.linalg.norm(cmd) >= C.PHASE_CMD_THRESHOLD else 1
+        yaw_avg = np.convolve(yaw, np.ones(period) / period, mode="valid") if len(yaw) >= period else np.array(yaw)
         segments.append({"kind": kind, "cmd": cmd.round(3).tolist(),
                          "lin_rms": float(np.sqrt(np.mean(np.square(lin)))) if lin else None,
-                         "yaw_rms": float(np.sqrt(np.mean(np.square(yaw)))) if yaw else None})
+                         "yaw_rms": float(np.sqrt(np.mean(np.square(yaw)))) if yaw else None,
+                         "yaw_rms_stride": float(np.sqrt(np.mean(np.square(yaw_avg)))) if len(yaw_avg) else None})
         if fell:
             break
 

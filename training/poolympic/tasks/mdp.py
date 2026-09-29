@@ -284,6 +284,59 @@ def phase_contact(env, command_name: str = "athlete") -> torch.Tensor:
     return (contact == want).float().mean(-1)
 
 
+def _yaw_rate_error(env, command_name: str) -> torch.Tensor:
+    command = env.command_manager.get_command(command_name)
+    return command[:, 2] - env.scene["robot"].data.root_link_ang_vel_b[:, 2]
+
+
+def track_yaw_rate(env, std: float, command_name: str = "athlete") -> torch.Tensor:
+    """exp(-e²/std²) on the yaw-rate error only. mjlab's track_angular_velocity adds the roll/pitch rates to the error:
+    the zombie's rocking shuffle keeps that term near zero even when it turns at the commanded rate."""
+    return torch.exp(-torch.square(_yaw_rate_error(env, command_name)) / std**2)
+
+
+def yaw_rate_l1(env, command_name: str = "athlete") -> torch.Tensor:
+    """|yaw-rate error| (use with a negative weight): a gradient that does not vanish at large errors, where the kernels
+    pay nothing (z2_v4: training yaw error ~4x MATT's, track_ang 0.15 of 2.0)."""
+    return torch.abs(_yaw_rate_error(env, command_name))
+
+
+def _filtered_yaw_error(env, command_name: str, tau: float) -> torch.Tensor:
+    """Commanded minus actual yaw rate, the actual one low-pass filtered (EMA, time constant tau ≈ one stride): the
+    pelvis' natural per-step rotation averages out, a sustained turn error does not. One EMA state per env, reset to the
+    current rate on the first step of an episode; advanced once per env step (reward terms run once per step — both
+    filtered terms share the state, only the first call of a step advances it)."""
+    rate = env.scene["robot"].data.root_link_ang_vel_b[:, 2]
+    st = getattr(env, "_poolympic_yaw_ema", None)
+    step = int(env.common_step_counter)
+    if st is None or st[0].shape != rate.shape:
+        st = [rate.clone(), -1]
+        env._poolympic_yaw_ema = st
+    if st[1] != step:
+        alpha = min(1.0, env.step_dt / tau)
+        fresh = env.episode_length_buf <= 1
+        st[0] = torch.where(fresh, rate, st[0] + alpha * (rate - st[0]))
+        st[1] = step
+    return env.command_manager.get_command(command_name)[:, 2] - st[0]
+
+
+def track_yaw_rate_filtered(env, std: float, tau: float = 0.5, command_name: str = "athlete") -> torch.Tensor:
+    return torch.exp(-torch.square(_filtered_yaw_error(env, command_name, tau)) / std**2)
+
+
+def yaw_rate_filtered_l1(env, tau: float = 0.5, command_name: str = "athlete") -> torch.Tensor:
+    return torch.abs(_filtered_yaw_error(env, command_name, tau))
+
+
+def flight_phase(env, command_name: str = "athlete", speed_threshold: float = 2.2) -> torch.Tensor:
+    """1 while both feet are off the ground and the commanded planar speed is above speed_threshold (running with an
+    aerial phase — Event 13, Steeplechase Jog); 0 otherwise. phase_contact keeps the footfalls alternating."""
+    term = env.command_manager.get_term(command_name)
+    airborne = ~_foot_contact(env).any(dim=-1)
+    fast = torch.linalg.norm(term.command[:, :2], dim=-1) > speed_threshold
+    return (airborne & fast).float()
+
+
 def foot_slip(env) -> torch.Tensor:
     ent = env.scene["robot"]
     ids = getattr(env, "_poolympic_foot_ids", None)
