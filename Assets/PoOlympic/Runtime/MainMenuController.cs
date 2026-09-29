@@ -241,7 +241,7 @@ namespace PoOlympic
                     : $"Gauntlet: {string.Join(" → ", _gauntlet.Select(e => e.number.ToString("00")))}  ·  10-8-6-5-4-3-2-1 points")
                 : $"{string.Join(" · ", _lineup.GroupBy(a => a).Select(g => $"{g.Count()}× {g.Key}"))}  ·  event {_selected.number}";
             if (_coins != null)
-                _coins.text = $"{Wallet.Coins} coins" + (Gauntlet.LastResult.Length > 0 ? $"\nLast gauntlet:\n{Gauntlet.LastResult}" : "");
+                _coins.text = Gauntlet.LastResult.Length > 0 ? $"Last gauntlet:\n{Gauntlet.LastResult}" : "";   // no betting: just play
         }
 
         void Play()

@@ -72,7 +72,7 @@ namespace PoOlympic
         void OnLoaded(Scene s, LoadSceneMode mode)
         {
             SceneManager.sceneLoaded -= OnLoaded;
-            foreach (var hud in FindObjectsByType<BroadcastHud>(FindObjectsSortMode.None)) hud.bettingWindow = false;
+            foreach (var hud in FindObjectsByType<BroadcastHud>(FindObjectsSortMode.None)) hud.offerBets = false;
         }
 
         static unsafe double BenchStep(int n)

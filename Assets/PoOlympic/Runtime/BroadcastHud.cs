@@ -9,8 +9,8 @@ namespace PoOlympic
     /// D3 broadcast HUD (UI Toolkit, 9:16): replaces the IMGUI placeholders for every 8-athlete event.
     ///   top bar      event title · subtitle · clock + info line
     ///   standings    place · lane (body chip) · live result · win odds (from traits, Odds) · your bet
-    ///   betting slip each new heat waits in Ready (IBroadcastBoard.HoldStart) until a bet is placed / skipped, or
-    ///                betWindowSeconds pass; stake Wallet.Stake coins on one athlete, paid at the decimal odds
+    ///   betting slip (optional, offerBets; off by default) each new heat waits in Ready (IBroadcastBoard.HoldStart)
+    ///                until a bet is placed / skipped, or betWindowSeconds pass; stake Wallet.Stake coins, paid at the odds
     ///   banner       countdown / GO
     ///   ticker       play-by-play lines (Commentary: start, lead changes, athletes out, result)
     ///   result card  podium · bet outcome · record (Records) · gauntlet points (Gauntlet) · New heat / Next / Menu
@@ -26,7 +26,9 @@ namespace PoOlympic
         public string version = "v0";
         public TextAsset oddsModel;
         public StyleSheet style;
-        public bool bettingWindow = true;
+        [Tooltip("Betting slip before every heat (holds the start up to betWindowSeconds). Off by default (user, " +
+                 "2026-09-29: \"just play\") — heats start straight away; the odds column stays as information.")]
+        public bool offerBets;
         public float betWindowSeconds = 12f;
 
         IBroadcastBoard B => board as IBroadcastBoard;
@@ -145,7 +147,7 @@ namespace PoOlympic
             _info.text = b.InfoLine;
             _banner.text = _slipOpen || stageDone || b.BoardState == BoardPhase.Result ? "" : b.Banner;
             _ticker.text = string.Join("\n", _pbp.Lines.AsEnumerable().Reverse().Take(3));
-            _coins.text = $"{Wallet.Coins} coins" + (_bet != null ? $" · bet {Short(_bet, rows)} @ {Odds.Format(_betOdds)}" : "");
+            _coins.text = offerBets ? $"{Wallet.Coins} coins" + (_bet != null ? $" · bet {Short(_bet, rows)} @ {Odds.Format(_betOdds)}" : "") : "";
             DrawRows(rows);
 
             if (b.BoardState == BoardPhase.Result && _settledHeat != b.Heat) Settle(b, rows);
@@ -159,7 +161,7 @@ namespace PoOlympic
             _heldFor = 0;
             _oddsBy.Clear();
             if (Gauntlet.Active && Gauntlet.CurrentHeatPlayed) { b.HoldStart = true; return; }   // one heat per gauntlet stage
-            if (bettingWindow) { b.HoldStart = true; _slipOpen = true; _slip.style.display = DisplayStyle.Flex; _slipBuilt = false; }
+            if (offerBets) { b.HoldStart = true; _slipOpen = true; _slip.style.display = DisplayStyle.Flex; _slipBuilt = false; }
         }
 
         bool _slipBuilt;

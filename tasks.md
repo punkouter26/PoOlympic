@@ -247,7 +247,7 @@ apply: TensorBoard + MuJoCo viewer for every run, close Unity during 30 min+ run
 - [ ] R6 bodies: rig GRANDMA (AccuRig/Mixamo/Blender), clean + rescale ZOMBIE, derive MJCFs, train variants
 - [ ] R7 optional motion-prior polish · R8+ remaining skill events
 - [x] Game layer: betting slip & odds from lane stats, PBP ticker, records, gauntlets (2026-09-29): virtual-coin
-  `Wallet` (100 start, 10-coin stake, top-up when broke), betting slip before every heat (12 s window), `Records` (best
+  `Wallet` (100 start, 10-coin stake, top-up when broke), betting slip before every heat (12 s window; **off by default since 2026-09-29, user: "just play"** — `BroadcastHud.offerBets`, odds column still shown), `Records` (best
   winning mark per event, PlayerPrefs), `Gauntlet` series (menu GAUNTLET toggle: tap events to order them; one heat per
   event, 10-8-6-5-4-3-2-1 points per lane; final podium back on the menu)
 - [x] Licensing review (Avaturn, Hunyuan3D) before any commercial release → `docs/LICENSING.md` (2026-09-29). Blockers
