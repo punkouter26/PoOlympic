@@ -124,6 +124,11 @@ namespace PoOlympic
             SelectEvent(events.FirstOrDefault(e => e.number == MeetLineup.EventNumber) ?? events.FirstOrDefault());
         }
 
+        /// <summary>The selected event's scene fixes the lineup (athlete taps are ignored). Unity serialises a null
+        /// array as an empty one, so "any lineup" (roster scenes) arrives here as lineup = [] — only a full 8-lane
+        /// lineup is fixed.</summary>
+        bool LineupFixed => _selected?.lineup != null && _selected.lineup.Length == _lineup.Length;
+
         void SelectLane(int lane)
         {
             _lane = lane;
@@ -133,7 +138,7 @@ namespace PoOlympic
         /// <summary>Put `athlete` in the selected lane and move the selection on to the next lane.</summary>
         void Assign(string athlete)
         {
-            if (_selected?.lineup != null) return;       // lineup fixed by the event scene
+            if (LineupFixed) return;                     // lineup fixed by the event scene
             _lastAthlete = athlete;
             _lineup[_lane] = athlete;
             _lane = (_lane + 1) % _lineup.Length;
@@ -142,7 +147,7 @@ namespace PoOlympic
 
         void FillAll()
         {
-            if (_selected?.lineup != null) return;
+            if (LineupFixed) return;
             for (int k = 0; k < _lineup.Length; k++) _lineup[k] = _lastAthlete;
             RefreshSlots();
         }
@@ -162,7 +167,7 @@ namespace PoOlympic
         void SelectEvent(MenuEvent ev)
         {
             _selected = ev;
-            if (ev?.lineup != null && ev.lineup.Length == _lineup.Length)   // the scene's own lineup (fixed for now)
+            if (LineupFixed)   // the scene's own lineup
             {
                 Array.Copy(ev.lineup, _lineup, _lineup.Length);
                 RefreshSlots();
