@@ -105,6 +105,13 @@ Rules: every surface an athlete can touch is a MuJoCo geom generated into the MJ
   - [x] **dressing pass** `build_dressing.py` (render-only): calm crowd in home colours, scoreboard / LED branding, Olympic rings + gates + roof flags + cauldron, venue materials, plaza / park / skyline. GLB 6.5 MB, 415 anchors unchanged.
   - [x] **realism pass, Blender half** `build_realism.py` (textures: `fetch_textures.py`, Poly Haven CC0 1K): PBR (albedo + OpenGL normal + ARM → glTF ORM) on 18 materials + generated striped turf; world-scale box UVs on textured faces (crowd UVs kept) + `UVLightmap`; bevel + weighted normals on 233 props; albedo clamp 0.04–0.9; alpha glass ribbon; kerb, plinth, tree soil, start-line wear; 13 flags + cauldron flame split out with pivots. Export with tangents, 26.5 MB (8.8 MB textures), 415 anchors identical.
   - [x] **realism pass, Unity half** `StadiumLook.cs` (hooked into `PlaceStadium`): `StadiumAtmosphere.prefab` (procedural sky + linear fog + ambient, global Volume = ACES / bloom / colour adjustments / vignette, realtime-on-awake reflection probe, 4 floodlight banks), `FlagWave` / `FlameFlicker`, camera post + FXAA. SSAO already on the PC renderer (not added to Mobile: cost). Verified in the rebuilt event scenes; floodlights moved 3 m in / 2 m down from the roof ring at 150 (on the ring they blew the roof out and bloom washed the frame), Neutral tonemapping, bloom clamp 8 (`StadiumLook.Retune` edits the assets in place).
+  - [x] **indoor arena + polish pass** (2026-09-28, user: the canopy shadow made the home straight too dark → closed
+    roof + spotlights): `build_indoor.py` (domed ceiling, facade seal, truss grid, 24 field + 12 crowd-wash spot fixtures
+    with `Spot_##`/`SpotAim_##` anchors) + `build_polish.py` (rest of the 20-point list: n-gons triangulated, prop pivots,
+    drain + pad edging, tint/grime/baked AO in COLOR_0, grunge detail maps, binary metal, more bevels; `export_stadium()`
+    keeps the glTF scene name "Scene"). Unity `StadiumLook.ArenaLighting`: roof casts no shadows, near-vertical key
+    light, 36 spot lights under Stadium/ArenaLights, trilight ambient, static batching; all 11 stadium scenes relit;
+    Mobile renderer → Forward+. APK 207 MB re-deployed to the Pixel 9 Pro (`parity/lighting/android_menu.png`).
 - [ ] **D3 Broadcast** — 9:16 tracking cameras per event, HUD polish (UI Toolkit), result cards
 - [x] **D4 8-lane Iron Pedestal heat** — rules per catalogue: 8 runners, **last one standing wins**
   - physics `scene_pedestal8.xml` (+ `pedestal8_layout.json`): 8 lane-isolated athletes, each on its own 1 × 1 × 0.5 m pedestal; lane origins from `venues.json` (E01, relative to lane 4) → physics pedestals ≡ stadium pedestals · **G0 pedestal8 PASS 8/8**
