@@ -11,7 +11,9 @@ namespace PoOlympic
     /// Main menu (UI Toolkit, Assets/PoOlympic/UI/MainMenu.uxml): a roster of athlete cards (MeetLineup.Roster), 8 lane
     /// tiles (tap a lane, then an athlete; "Fill all 8" puts the last tapped athlete in every lane), the playable events
     /// (filled in by EventScenes.BuildMainMenu from the catalogue); PLAY loads the event scene. GAUNTLET mode: tapping
-    /// events builds an ordered series (Gauntlet), PLAY runs it (one heat per event, points per place). Runs in edit mode too,
+    /// events builds an ordered series (Gauntlet), PLAY runs it (one heat per event, points per place). WORLD RECORDS opens
+    /// the records board (Records: world record per event, tap for the all-time top 5); the selected event's world
+    /// record shows under its rules. Runs in edit mode too,
     /// so the full layout shows in the Game view / Device Simulator without entering Play mode.
     /// </summary>
     [ExecuteAlways]
@@ -43,8 +45,11 @@ namespace PoOlympic
         MenuEvent _selected;
         int _lane;
         string _lastAthlete;
-        Label _rules, _status;
-        Button _play, _fillAll;
+        Label _rules, _status, _eventRecord;
+        Button _play, _fillAll, _recordsButton, _recordsClose;
+        VisualElement _recordsPanel;
+        ScrollView _recordsList;
+        int _recordsOpenEvent = -1;
 
         void OnEnable() => Populate();
 
@@ -68,6 +73,11 @@ namespace PoOlympic
             _fillAll = root.Q<Button>("fillAllButton");
             _gauntletButton = root.Q<Button>("gauntletButton");
             _coins = root.Q<Label>("coins");
+            _eventRecord = root.Q<Label>("eventRecord");
+            _recordsButton = root.Q<Button>("recordsButton");
+            _recordsClose = root.Q<Button>("recordsClose");
+            _recordsPanel = root.Q<VisualElement>("recordsPanel");
+            _recordsList = root.Q<ScrollView>("recordsList");
             _slotsRoot = slots;
             slots.Clear();
             roster.Clear();
@@ -138,6 +148,13 @@ namespace PoOlympic
             {
                 _gauntletButton.clicked -= ToggleGauntlet;
                 _gauntletButton.clicked += ToggleGauntlet;
+            }
+            if (_recordsButton != null)
+            {
+                _recordsButton.clicked -= OpenRecords;
+                _recordsButton.clicked += OpenRecords;
+                _recordsClose.clicked -= CloseRecords;
+                _recordsClose.clicked += CloseRecords;
             }
             RefreshSlots();
             SelectEvent(events.FirstOrDefault(e => e.number == MeetLineup.EventNumber) ?? events.FirstOrDefault());
@@ -223,6 +240,8 @@ namespace PoOlympic
             for (int i = 0; i < _eventButtons.Count; i++)
                 _eventButtons[i].EnableInClassList("event-button--selected", events[i] == ev);
             _rules.text = ev?.rules ?? "";
+            if (_eventRecord != null)
+                _eventRecord.text = ev != null && Records.TryGet(ev.number, out _, out var wr) ? $"WORLD RECORD  {wr}" : ev != null ? "WORLD RECORD  none yet" : "";
             UpdateStatus();
         }
 
@@ -242,6 +261,64 @@ namespace PoOlympic
                 : $"{string.Join(" · ", _lineup.GroupBy(a => a).Select(g => $"{g.Count()}× {g.Key}"))}  ·  event {_selected.number}";
             if (_coins != null)
                 _coins.text = Gauntlet.LastResult.Length > 0 ? $"Last gauntlet:\n{Gauntlet.LastResult}" : "";   // no betting: just play
+        }
+
+        void OpenRecords()
+        {
+            _recordsOpenEvent = -1;
+            FillRecords();
+            _recordsPanel?.AddToClassList("records-panel--open");
+        }
+
+        void CloseRecords() => _recordsPanel?.RemoveFromClassList("records-panel--open");
+
+        /// <summary>One card per playable event: world record + holder; the tapped event expands to its top 5.</summary>
+        void FillRecords()
+        {
+            if (_recordsList == null) return;
+            _recordsList.Clear();
+            foreach (var ev in events)
+            {
+                var top = Records.Top(ev.number);
+                int number = ev.number;
+                var card = new Button(() => { _recordsOpenEvent = _recordsOpenEvent == number ? -1 : number; FillRecords(); });
+                card.AddToClassList("record-event");
+                var head = new VisualElement();
+                head.AddToClassList("record-event-head");
+                head.Add(MakeLabel($"{ev.number:00}", "record-event-number"));
+                head.Add(MakeLabel(ev.name, "record-event-name"));
+                var mark = MakeLabel(top.Count > 0 ? top[0].mark : "no mark yet", "record-event-mark");
+                mark.EnableInClassList("record-event-mark--none", top.Count == 0);
+                head.Add(mark);
+                card.Add(head);
+                if (top.Count > 0)
+                    card.Add(MakeLabel($"{top[0].holder}" + (string.IsNullOrEmpty(top[0].body) ? "" : $" · {top[0].body}") +
+                                   (string.IsNullOrEmpty(top[0].date) ? "" : $" · {top[0].date}"), "record-event-holder"));
+                if (_recordsOpenEvent == number && top.Count > 0)
+                {
+                    var list = new VisualElement();
+                    list.AddToClassList("record-top");
+                    for (int i = 0; i < top.Count; i++)
+                    {
+                        var row = new VisualElement();
+                        row.AddToClassList("record-top-row");
+                        row.Add(MakeLabel((i + 1).ToString(), "record-top-rank"));
+                        row.Add(MakeLabel(top[i].mark, "record-top-mark"));
+                        row.Add(MakeLabel(top[i].holder + (string.IsNullOrEmpty(top[i].body) ? "" : $" · {top[i].body}"), "record-top-who"));
+                        row.Add(MakeLabel(top[i].date ?? "", "record-top-date"));
+                        list.Add(row);
+                    }
+                    card.Add(list);
+                }
+                _recordsList.Add(card);
+            }
+        }
+
+        static Label MakeLabel(string text, string cls)
+        {
+            var l = new Label(text);
+            l.AddToClassList(cls);
+            return l;
         }
 
         void Play()

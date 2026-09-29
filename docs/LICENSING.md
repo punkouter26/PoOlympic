@@ -16,6 +16,10 @@ below, read on that date. **Not legal advice** — the blockers need a lawyer's 
 | Unity Inference Engine | `com.unity.ai.inference` | Unity ToS + its Third Party Notices | yes | include its notices |
 | glTFast | package | Apache-2.0 | yes | ship licence |
 | Input System | package | Unity Companion License | yes | ok |
+| Cinemachine 3 (`com.unity.cinemachine` 6.6.0), Visual Effect Graph 17.6.0 + its "Additions" sample (Sparks.vfx) | packages, `Assets/Samples/Visual Effect Graph/` | Unity Companion License | yes | ok |
+| PrimeTween 1.4.11 (Kyrylo Kuzyk) | npm scoped registry (`Packages/manifest.json`) | PrimeTween licence: free in commercial games; do not redistribute its source / tarball | yes | ok (installed as an npm package, as the licence asks) |
+| Impact + interface sounds (Kenney) | `Assets/PoOlympic/Audio/Sfx/`, `Audio/Ui/` | CC0 | yes, credit optional | ok (credit "Kenney.nl" in the credits screen) |
+| Crowd cheering / ambience (Gregor Quendel, "Free Crowd Cheering Sounds", opengameart.org) | `Assets/PoOlympic/Audio/Crowd/` (trimmed loops + stingers) | CC-BY 4.0 | yes, **attribution required** | **credit needed**: "Crowd sounds by Gregor Quendel (CC-BY 4.0)" in the credits / store page |
 | "Olympic" rings / cauldron / name | `SourceArt/Stadium/build_dressing.py`, stadium signage, "POOLYMPICS" | protected marks (e.g. 36 U.S.C. §220506) | **no** without consent | **blocker** |
 
 ## Details
@@ -50,7 +54,8 @@ protected elsewhere; the stadium dressing builds a five-ring emblem in the offic
 3. Avaturn: notify hello@avaturn.me with the store links; get written OK for commercial use and re-rigging; check the
    outfit's licence.
 4. Likeness release, if MATT is based on a real person.
-5. In-game credits screen: Avaturn credit + link + "modified"; optionally "Powered by Tencent Hunyuan".
+5. In-game credits screen: Avaturn credit + link + "modified"; optionally "Powered by Tencent Hunyuan"; **"Crowd sounds
+   by Gregor Quendel (CC-BY 4.0)"** (required); "Sounds by Kenney.nl" (optional, CC0).
 6. `THIRD_PARTY_NOTICES` in the build: MuJoCo (Apache-2.0 + its bundled deps: qhull, lodepng, tinyxml2, …), Inter
    (OFL 1.1), glTFast (Apache-2.0), Unity Inference Engine third-party notices, Hunyuan Notice if those assets ship.
 7. Check that the Unity plan's revenue cap fits the business.

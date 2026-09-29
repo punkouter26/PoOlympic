@@ -90,27 +90,86 @@ namespace PoOlympic
         public static void EnsureStake() { if (Coins < Stake) Coins = StartCoins; }
     }
 
-    /// <summary>Best winning mark per event (PlayerPrefs).</summary>
+    /// <summary>
+    /// World records: the best winning marks per event (top <see cref="Keep"/>, PlayerPrefs JSON), each with the mark
+    /// text, holder (lane label), body, heat and date. Rank 1 = the world record. The pre-list single record
+    /// (poolympic.record.NN = "value|text · who") is migrated on first read.
+    /// </summary>
     public static class Records
     {
-        static string Key(int ev) => $"poolympic.record.{ev:00}";
+        public const int Keep = 5;
+
+        [Serializable] public class Entry { public double value; public string mark; public string holder; public string body; public string date; public int heat; }
+        [Serializable] class Table { public bool lowerIsBetter; public List<Entry> entries = new(); }
+
+        static string Key(int ev) => $"poolympic.records.{ev:00}";
+        static string OldKey(int ev) => $"poolympic.record.{ev:00}";
+
+        static Table Load(int ev)
+        {
+            var json = PlayerPrefs.GetString(Key(ev), "");
+            if (json.Length > 0)
+            {
+                try { return JsonUtility.FromJson<Table>(json) ?? new Table(); } catch (ArgumentException) { return new Table(); }
+            }
+            var t = new Table();
+            var s = PlayerPrefs.GetString(OldKey(ev), "");
+            int bar = s.IndexOf('|');
+            if (bar > 0 && double.TryParse(s.Substring(0, bar), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var v))
+            {
+                var rest = s.Substring(bar + 1);
+                int dot = rest.LastIndexOf(" · ", StringComparison.Ordinal);
+                t.entries.Add(new Entry { value = v, mark = dot > 0 ? rest.Substring(0, dot) : rest, holder = dot > 0 ? rest.Substring(dot + 3) : "", body = "", date = "" });
+            }
+            return t;
+        }
+
+        static void Save(int ev, Table t)
+        {
+            PlayerPrefs.SetString(Key(ev), JsonUtility.ToJson(t));
+            PlayerPrefs.Save();
+        }
+
+        /// <summary>Best first; empty when the event has no record yet.</summary>
+        public static IReadOnlyList<Entry> Top(int ev) => Load(ev).entries;
+
+        /// <summary>The world record: "mark · holder" text.</summary>
         public static bool TryGet(int ev, out double value, out string text)
         {
-            var s = PlayerPrefs.GetString(Key(ev), "");
-            int bar = s.IndexOf('|');
+            var top = Load(ev).entries;
             value = 0; text = "";
-            if (bar < 0 || !double.TryParse(s.Substring(0, bar), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out value)) return false;
-            text = s.Substring(bar + 1);
+            if (top.Count == 0) return false;
+            value = top[0].value;
+            text = Describe(top[0]);
             return true;
         }
-        /// <summary>Stores the mark if it beats the record; true = new record.</summary>
-        public static bool Submit(int ev, double value, bool lowerIsBetter, string text, string who)
+
+        public static string Describe(Entry e) =>
+            e.mark + (string.IsNullOrEmpty(e.holder) ? "" : $" · {e.holder}") + (string.IsNullOrEmpty(e.body) ? "" : $" ({e.body})");
+
+        /// <summary>Stores the mark if it makes the top <see cref="Keep"/>. Returns its rank (1 = new world record) or 0.</summary>
+        public static int Submit(int ev, double value, bool lowerIsBetter, string mark, string holder, string body = "", int heat = 0)
         {
-            if (TryGet(ev, out var best, out _) && (lowerIsBetter ? value >= best : value <= best)) return false;
-            PlayerPrefs.SetString(Key(ev), value.ToString("R", System.Globalization.CultureInfo.InvariantCulture) + "|" + $"{text} · {who}");
-            PlayerPrefs.Save();
-            return true;
+            var t = Load(ev);
+            t.lowerIsBetter = lowerIsBetter;
+            int rank = t.entries.Count(e => lowerIsBetter ? e.value <= value : e.value >= value) + 1;   // ties: the older mark stays ahead
+            if (rank > Keep) return 0;
+            t.entries.Insert(rank - 1, new Entry { value = value, mark = mark, holder = holder, body = body, heat = heat,
+                                                    date = DateTime.Now.ToString("d MMM yyyy", System.Globalization.CultureInfo.InvariantCulture) });
+            while (t.entries.Count > Keep) t.entries.RemoveAt(t.entries.Count - 1);
+            Save(ev, t);
+            return rank;
         }
+
+        /// <summary>Signed gap of a mark to the world record in the mark's own unit, "better" = negative for lower-is-better
+        /// events. NaN without a record.</summary>
+        public static double GapToRecord(int ev, double value)
+        {
+            var top = Load(ev).entries;
+            return top.Count == 0 ? double.NaN : value - top[0].value;
+        }
+
+        public static void Clear(int ev) { PlayerPrefs.DeleteKey(Key(ev)); PlayerPrefs.DeleteKey(OldKey(ev)); PlayerPrefs.Save(); }
     }
 
     /// <summary>

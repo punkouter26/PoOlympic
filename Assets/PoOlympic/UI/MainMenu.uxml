@@ -16,13 +16,25 @@
             <ui:VisualElement name="slots" class="slots" />
             <ui:VisualElement class="section-head">
                 <ui:Label text="EVENT" class="section-title" />
-                <ui:Button name="gauntletButton" text="GAUNTLET: OFF" class="gauntlet-toggle" />
+                <ui:VisualElement class="section-buttons">
+                    <ui:Button name="recordsButton" text="WORLD RECORDS" class="records-button" />
+                    <ui:Button name="gauntletButton" text="GAUNTLET: OFF" class="gauntlet-toggle" />
+                </ui:VisualElement>
             </ui:VisualElement>
             <ui:ScrollView name="eventList" class="event-list" />
             <ui:Label name="eventRules" class="event-rules" />
+            <ui:Label name="eventRecord" class="event-record" />
             <ui:Button name="playButton" text="PLAY" class="play-button" />
             <ui:Label name="status" class="status" />
             <ui:Label name="coins" class="coins" />
+        </ui:VisualElement>
+        <ui:VisualElement name="recordsPanel" class="records-panel">
+            <ui:VisualElement class="records-head">
+                <ui:Label text="WORLD RECORDS" class="records-title" />
+                <ui:Button name="recordsClose" text="CLOSE" class="records-close" />
+            </ui:VisualElement>
+            <ui:Label text="Best winning marks per event · tap an event for its all-time top 5" class="records-hint" />
+            <ui:ScrollView name="recordsList" class="records-list" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

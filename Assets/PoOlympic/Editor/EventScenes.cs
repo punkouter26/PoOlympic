@@ -464,6 +464,8 @@ namespace PoOlympic.Editor
             dir.forward = forward;
             dir.establishing = bc.offset;
             dir.lookHeight = bc.lookHeight;
+            // features 2/3/5/6/7/10: tension meter, Cinemachine rig, impact FX, audio, per-athlete telemetry + overlays
+            BroadcastFx.Install(hud, dir, UnityEngine.Object.FindObjectsByType<PolicyRunner>(FindObjectsInactive.Include));
             return hud;
         }
 

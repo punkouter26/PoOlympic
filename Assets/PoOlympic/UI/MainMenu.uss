@@ -268,3 +268,83 @@
     margin-top: 6px;
     white-space: normal;
 }
+
+/* ---------- world records (menu) ---------- */
+.section-buttons { flex-direction: row; align-items: center; }
+.records-button {
+    height: 44px;
+    padding: 0 20px;
+    margin-right: 12px;
+    font-size: 22px;
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
+    letter-spacing: 2px;
+    color: rgb(12, 18, 32);
+    background-color: rgb(255, 216, 74);
+    border-width: 0;
+    border-radius: 10px;
+}
+.records-button:hover { background-color: rgb(255, 230, 130); }
+.event-record {
+    font-size: 22px;
+    color: rgb(255, 216, 74);
+    margin: -6px 4px 12px 4px;
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
+}
+.records-panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    padding: 56px 40px 40px 40px;
+    background-color: rgb(8, 12, 24);
+    display: none;
+}
+.records-panel--open { display: flex; }
+.records-head { flex-direction: row; align-items: center; justify-content: space-between; }
+.records-title {
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
+    font-size: 50px;
+    letter-spacing: 2px;
+    color: rgb(255, 216, 74);
+    flex-shrink: 1;
+    white-space: nowrap;
+}
+.records-close {
+    -unity-text-align: middle-center;
+    flex-shrink: 0;
+    white-space: nowrap;
+    height: 64px;
+    padding: 0 26px;
+    font-size: 26px;
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
+    color: rgb(12, 18, 32);
+    background-color: rgb(255, 216, 74);
+    border-width: 0;
+    border-radius: 10px;
+}
+.records-hint { white-space: normal; font-size: 22px; color: rgb(150, 162, 186); margin: 8px 0 18px 0; }
+.records-list { flex-grow: 1; }
+.record-event {
+    margin: 5px 0;
+    padding: 14px 18px;
+    border-width: 0;
+    border-radius: 12px;
+    background-color: rgb(24, 33, 54);
+    color: rgb(232, 236, 244);
+    flex-direction: column;
+    align-items: stretch;
+}
+.record-event:hover { background-color: rgb(34, 47, 76); }
+.record-event-head { flex-direction: row; align-items: center; }
+.record-event-number { width: 64px; font-size: 30px; color: rgb(255, 216, 74); -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
+.record-event-name { flex-grow: 1; font-size: 28px; }
+.record-event-mark { font-size: 30px; color: rgb(120, 230, 140); -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
+.record-event-mark--none { color: rgb(110, 122, 146); }
+.record-event-holder { margin-left: 64px; font-size: 20px; color: rgb(150, 162, 186); }
+.record-top { margin: 10px 0 0 64px; }
+.record-top-row { flex-direction: row; height: 38px; align-items: center; }
+.record-top-rank { width: 40px; font-size: 22px; color: rgb(255, 216, 74); }
+.record-top-mark { flex-grow: 1; font-size: 24px; -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
+.record-top-who { width: 150px; white-space: nowrap; font-size: 20px; color: rgb(200, 210, 228); }
+.record-top-date { width: 130px; white-space: nowrap; -unity-text-align: middle-right; font-size: 16px; color: rgb(140, 152, 176); }

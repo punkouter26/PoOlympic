@@ -20,6 +20,47 @@ FONT = "C:/Windows/Fonts/segoeui.ttf"
 FONT_B = "C:/Windows/Fonts/segoeuib.ttf"
 
 SPECS = {
+    "fx_hud_before_after": {
+        "title": "Broadcast FX (features 2, 3, 5, 6, 7, 10 + world records) — before vs after",
+        "panels": [
+            ("BEFORE · Terminal Velocity live", UI / "before" / "fx_race_live.png", FRAME, []),
+            ("BEFORE · result card", UI / "before" / "fx_race_result.png", FRAME, []),
+            ("AFTER · Terminal Velocity live", UI / "after" / "fx_race_live_1.png", FRAME,
+             [(1, (487, 656, 647, 993)), (2, (440, 1683, 940, 1967)), (3, (24, 2000, 940, 2104)), (4, (0, 1173, 960, 1627))]),
+            ("AFTER · Iron Pedestal, hot close-up", UI / "after" / "fx_pedestal_hot_1.png", FRAME,
+             [(5, (387, 840, 587, 1613)), (6, (360, 1590, 560, 1650)), (7, (600, 1060, 960, 1600)), (8, (24, 2000, 940, 2104))]),
+            ("AFTER · result card", UI / "after" / "fx_pedestal_result.png", FRAME,
+             [(9, (77, 1573, 887, 1780)), (10, (77, 1787, 887, 1847))]),
+        ],
+        "legend": [
+            "1  NEW CONF column: brain confidence (PPO critic → P(still on its feet in 2 s)), sparkline + %, per athlete",
+            "2  NEW stats card (PrimeTween pop): speed + peak, power (W), cadence, ground contact, joint load + joint, confidence",
+            "3  Ticker gains telemetry calls: a new heat top speed (after the start phase); near falls and saves in panel 8",
+            "4  NEW foot-strike dust from MuJoCo contacts (Shuriken pool); body slams add a dust ring + shockwave",
+            "5  NEW Cinemachine hot close-up: the director cuts to the athlete in danger (TensionMeter), hand-held noise",
+            "6  NEW balance overlay: support polygon + centre-of-mass ring (green safe, amber edge, red off balance)",
+            "7  NEW VFX Graph sparks where a cube strikes (impulse shake + 70 ms hit-stop on big hits); crowd audio follows tension",
+            "8  NEW near-fall / save calls: 'M7 is wobbling — brain confidence 16%!' → 'What a save by M7!'",
+            "9  NEW WORLD RECORDS panel: top 3 (holder, body, date), new record highlighted and pulsing, else the record to beat",
+            "10 NEW heat bests from telemetry: top speed, peak power, closest call (lowest confidence of a survivor)",
+        ],
+    },
+    "fx_menu_before_after": {
+        "title": "Main menu — world records (before vs after)",
+        "panels": [
+            ("BEFORE", UI / "before" / "fx_menu.png", None, []),
+            ("AFTER · menu", UI / "after" / "fx_menu.png", None, [(1, (260, 1133, 593, 1196)), (2, (53, 2380, 727, 2420))]),
+            ("AFTER · WORLD RECORDS board", UI / "after" / "fx_menu_records.png", None,
+             [(3, (53, 73, 913, 167)), (4, (53, 284, 909, 687)), (5, (53, 700, 909, 1890))]),
+        ],
+        "legend": [
+            "1  NEW WORLD RECORDS button next to the gauntlet toggle",
+            "2  NEW world record of the selected event under its rules",
+            "3  NEW records board (full-screen overlay, CLOSE)",
+            "4  Tap an event: its all-time top 5 (mark, holder · body, date)",
+            "5  One card per playable event: world record + holder, or 'no mark yet'",
+        ],
+    },
     "d3_hud_before_after": {
         "title": "D3 broadcast HUD — before (IMGUI placeholder) vs after (UI Toolkit BroadcastHud + BroadcastDirector)",
         "panels": [

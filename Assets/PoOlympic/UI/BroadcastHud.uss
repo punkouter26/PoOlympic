@@ -54,7 +54,7 @@
     position: absolute;
     top: 190px;
     left: 28px;
-    width: 700px;
+    width: 800px;
     padding: 8px 10px;
     background-color: rgba(10, 16, 30, 0.72);
     border-radius: 8px;
@@ -93,6 +93,11 @@
 .bh-c-name { width: 80px; -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
 .bh-c-result { flex-grow: 1; overflow: hidden; }
 .bh-c-odds { width: 90px; -unity-text-align: middle-right; color: rgb(255, 216, 74); }
+.bh-c-conf { width: 170px; flex-direction: row; align-items: center; }
+.bh-head > .bh-c-conf { -unity-text-align: middle-left; }
+.bh-spark { width: 96px; height: 28px; margin-right: 8px; }
+.bh-conf-pct { width: 64px; font-size: 22px; -unity-text-align: middle-right; -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
+.bh-row-hot { border-width: 2px; border-color: rgb(255, 110, 90); background-color: rgba(255, 90, 70, 0.16); }
 .bh-row-first { background-color: rgba(255, 216, 74, 0.18); }
 .bh-row-bad > Label { color: rgb(255, 120, 120); }
 .bh-row-bet { border-width: 2px; border-color: rgb(120, 220, 255); }
@@ -207,3 +212,60 @@
 .bh-podium-result { flex-grow: 1; font-size: 28px; white-space: normal; }
 .bh-card-line { font-size: 26px; color: rgb(175, 188, 212); margin-top: 8px; }
 .bh-card-good { font-size: 30px; color: rgb(120, 230, 140); margin-top: 10px; -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
+
+/* ---------- feature 7: live stats card (athlete the story is about) ---------- */
+.bh-stats {
+    position: absolute;
+    right: 28px;
+    bottom: 250px;
+    width: 560px;
+    padding: 14px 18px 16px 18px;
+    background-color: rgba(10, 16, 30, 0.82);
+    border-left-width: 8px;
+    border-left-color: rgb(120, 220, 255);
+    border-radius: 10px;
+    transform-origin: right bottom;
+}
+.bh-stats-head { flex-direction: row; align-items: center; margin-bottom: 8px; }
+.bh-stats-name { flex-grow: 1; font-size: 30px; -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
+.bh-stats-tag {
+    font-size: 18px;
+    letter-spacing: 2px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    color: rgb(12, 18, 32);
+    background-color: rgb(120, 220, 255);
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
+}
+.bh-stats-tag-hot { background-color: rgb(255, 110, 90); }
+.bh-stats-grid { flex-direction: row; flex-wrap: wrap; }
+.bh-tile {
+    width: 33.3%;
+    padding: 6px 8px;
+}
+.bh-tile-title { font-size: 16px; letter-spacing: 1px; color: rgb(140, 152, 176); }
+.bh-tile-value { font-size: 30px; -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
+.bh-tile-sub { font-size: 16px; color: rgb(140, 152, 176); }
+.bh-tile-conf { width: 100%; }
+.bh-tile-conf-row { flex-direction: row; align-items: center; }
+.bh-tile-conf-row > .bh-tile-value { width: 100px; }
+.bh-stats-spark { flex-grow: 1; height: 40px; margin: 0; }
+
+/* ---------- result card: world records ---------- */
+.bh-wr {
+    margin-top: 14px;
+    padding: 12px 16px;
+    background-color: rgba(255, 216, 74, 0.08);
+    border-width: 1px;
+    border-color: rgba(255, 216, 74, 0.45);
+    border-radius: 10px;
+}
+.bh-wr-head { flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.bh-wr-title { font-size: 22px; letter-spacing: 3px; color: rgb(255, 216, 74); -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
+.bh-wr-tag { font-size: 26px; color: rgb(120, 230, 140); -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); transform-origin: right center; }
+.bh-wr-row { flex-direction: row; align-items: center; height: 44px; padding: 0 8px; border-radius: 6px; }
+.bh-wr-row-new { background-color: rgba(120, 230, 140, 0.2); }
+.bh-wr-rank { width: 36px; font-size: 24px; color: rgb(255, 216, 74); -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
+.bh-wr-mark { width: 250px; font-size: 26px; -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
+.bh-wr-who { flex-grow: 1; font-size: 22px; color: rgb(200, 210, 228); }
+.bh-wr-date { font-size: 18px; color: rgb(140, 152, 176); }

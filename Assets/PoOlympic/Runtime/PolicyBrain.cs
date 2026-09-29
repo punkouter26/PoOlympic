@@ -39,4 +39,37 @@ namespace PoOlympic
             _worker?.Dispose();
         }
     }
+
+    /// <summary>
+    /// The brain's PPO critic (tools/export_critic.py → &lt;brain&gt;.critic.onnx): obs → value, the return the policy
+    /// expects from here on. Read-only telemetry for the broadcast (brain confidence) — never feeds back into ctrl.
+    /// </summary>
+    public sealed class PolicyCritic : IDisposable
+    {
+        readonly Worker _worker;
+        readonly Tensor<float> _input;
+        public readonly int ObsDim;
+
+        public PolicyCritic(ModelAsset asset)
+        {
+            var model = ModelLoader.Load(asset);
+            ObsDim = model.inputs[0].shape.Get(1);
+            _worker = new Worker(model, BackendType.CPU);
+            _input = new Tensor<float>(new TensorShape(1, ObsDim));
+        }
+
+        public float Run(float[] obs)
+        {
+            _input.Upload(obs);
+            _worker.Schedule(_input);
+            using var v = (_worker.PeekOutput("value") as Tensor<float>).ReadbackAndClone();
+            return v.DownloadToArray()[0];
+        }
+
+        public void Dispose()
+        {
+            _input?.Dispose();
+            _worker?.Dispose();
+        }
+    }
 }

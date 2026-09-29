@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Broadcast FX before/after</title>
+<style>
+  :root { --bg: #0c1220; --panel: #151d31; --ink: #eef1f7; --muted: #a3aec4; --accent: #ffd84a; --new: #ff5a4a; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 1400px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { color: var(--accent); font-size: 26px; margin: 0 0 4px; }
+  h2 { font-size: 20px; margin: 36px 0 8px; }
+  p, li { color: var(--muted); }
+  figure { margin: 12px 0 0; background: var(--panel); border-radius: 10px; padding: 12px; }
+  figure img { width: 100%; height: auto; display: block; border-radius: 6px; }
+  figcaption { margin-top: 8px; color: var(--muted); font-size: 14px; }
+  .tag { color: var(--new); font-weight: 600; }
+  code { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Broadcast FX: before vs after</h1>
+  <p>Features 2 (tension-driven Cinemachine director), 3 (impact VFX, shake, hit-stop), 5 (brain confidence),
+     6 (balance overlay), 7 (live stats card), 10 (reactive stadium audio), plus world records on the result card and
+     in the main menu. Red numbered boxes mark what changed. Captured in the editor Game view (portrait), 29 Sep 2026.</p>
+
+  <h2>Event broadcast HUD</h2>
+  <figure>
+    <img src="fx_hud_before_after.png" alt="Before and after screenshots of the event HUD with numbered changes">
+    <figcaption>Left two panels: before. Right three: after (Terminal Velocity live, Iron Pedestal hot close-up,
+      Iron Pedestal result card). Legend under the image.</figcaption>
+  </figure>
+  <ul>
+    <li><span class="tag">1</span> CONF column: the brain's own confidence (PPO critic, calibrated to P(still on its feet in 2 s)).</li>
+    <li><span class="tag">2</span> Stats card for the athlete the story is about: speed, power, cadence, contact time, joint load, confidence.</li>
+    <li><span class="tag">3, 8</span> Ticker calls from telemetry: heat top speed, "is wobbling", "What a save by…".</li>
+    <li><span class="tag">4</span> Foot-strike dust (slams add a dust ring and shockwave).</li>
+    <li><span class="tag">5</span> Cinemachine hot close-up on the athlete in danger.</li>
+    <li><span class="tag">6</span> Balance overlay: support polygon + centre-of-mass ring.</li>
+    <li><span class="tag">7</span> VFX Graph sparks at cube hits, camera shake, 70 ms hit-stop; crowd audio follows the tension.</li>
+    <li><span class="tag">9, 10</span> World records (top 3, new record pulses) and heat bests on the result card.</li>
+  </ul>
+
+  <h2>Main menu</h2>
+  <figure>
+    <img src="fx_menu_before_after.png" alt="Before and after screenshots of the main menu and the world records board">
+    <figcaption>Left: before. Middle: menu with the WORLD RECORDS button and the selected event's record. Right: the
+      records board with event 1 expanded to its all-time top 5.</figcaption>
+  </figure>
+
+  <p>Sources: <code>parity/ui/before/fx_*.png</code>, <code>parity/ui/after/fx_*.png</code>; rendered by
+     <code>training/tools/annotate_ui.py fx_hud_before_after fx_menu_before_after</code>.</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,41 @@
+  stand seed 0: r0_v2_it1000 25866, zombie_rung0 22282
+  stand seed 1: r0_v2_it1000 25189, zombie_rung0 22328
+  stand seed 2: r0_v2_it1000 24793, zombie_rung0 22502
+  stand seed 3: r0_v2_it1000 25414, zombie_rung0 22009
+  stand seed 4: r0_v2_it1000 25207, zombie_rung0 22121
+  stand seed 5: r0_v2_it1000 24911, zombie_rung0 22529
+  stand seed 6: r0_v2_it1000 24811, zombie_rung0 22774
+  stand seed 7: r0_v2_it1000 25041, zombie_rung0 22421
+  rung2 seed 0: rung2 28754, zombie_rung2 28904
+  rung2 seed 1: rung2 28654, zombie_rung2 28803
+  rung2 seed 2: rung2 29004, zombie_rung2 28904
+  rung2 seed 3: rung2 28904, zombie_rung2 28804
+  rung2 seed 4: rung2 29126, zombie_rung2 28604
+  rung2 seed 5: rung2 29004, zombie_rung2 29004
+  rung2 seed 6: rung2 28954, zombie_rung2 28316
+  rung2 seed 7: rung2 28854, zombie_rung2 29004
+  flight seed 0: r2f_v3_it100 29404
+  flight seed 1: r2f_v3_it100 29304
+  flight seed 2: r2f_v3_it100 29404
+  flight seed 3: r2f_v3_it100 29404
+  flight seed 4: r2f_v3_it100 29404
+  flight seed 5: r2f_v3_it100 29354
+  flight seed 6: r2f_v3_it100 29404
+  flight seed 7: r2f_v3_it100 29404
+  crawl seed 0: crawl_matt 23586, crawl_zombie 25594
+  crawl seed 1: crawl_matt 24816, crawl_zombie 24804
+  crawl seed 2: crawl_matt 25891, crawl_zombie 25307
+  crawl seed 3: crawl_matt 24544, crawl_zombie 25669
+  crawl seed 4: crawl_matt 24789, crawl_zombie 26152
+  crawl seed 5: crawl_matt 25254, crawl_zombie 24768
+  crawl seed 6: crawl_matt 23450, crawl_zombie 24728
+  crawl seed 7: crawl_matt 24204, crawl_zombie 25677
+crawl_matt     n= 196534 danger= 24367 AUC=0.681 (value only 0.663) w=(+0.5196, +0.3433, +0.0000) b=-4.281 calibrated=True
+crawl_zombie   n= 202699 danger= 19744 AUC=0.643 (value only 0.641) w=(+0.2626, +0.2104, +0.0000) b=-3.002 calibrated=True
+r0_v2_it1000   n= 201232 danger= 63860 AUC=0.716 (value only 0.716) w=(+0.4760, +0.0162, +0.0000) b=-2.383 calibrated=True
+r2f_v3_it100   n= 235082 danger=   300 AUC=0.844 (value only 0.729) w=(+0.9727, +0.1115, +4.3242) b=-17.000 calibrated=True
+rung2          n= 231254 danger=  7830 AUC=0.759 (value only 0.491) w=(+0.0448, +0.5298, +1.1976) b=+2.443 calibrated=True
+zombie_rung0   n= 178966 danger= 95291 AUC=0.688 (value only 0.664) w=(+0.1017, +0.4300, +0.0000) b=-0.636 calibrated=True
+zombie_rung2   n= 230343 danger=  9588 AUC=0.624 (value only 0.516) w=(+0.1827, +0.1025, +0.4653) b=+0.773 calibrated=True
+-> C:\Users\punko\Downloads\PoOlympic\Assets\PoOlympic\Models\confidence_model.json
+-> C:\Users\punko\Downloads\PoOlympic\parity\confidence\report.json

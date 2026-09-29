@@ -68,6 +68,13 @@ namespace PoOlympic
         public bool useStandardParityScript = true;
         public List<Disturbance> disturbances = new();
 
+        [Header("Brain confidence (broadcast telemetry; tools/export_critic.py)")]
+        [Tooltip("The brain's PPO critic (<brain>.critic.onnx). Optional and read-only: it sees the brain's observation " +
+                 "but never touches ctrl, so parity is unaffected.")]
+        public ModelAsset critic;
+        [Tooltip("Critic rate: every N control ticks (5 = 10 Hz), staggered per lane.")]
+        public int criticEvery = 5;
+
         [Header("Recording (parity G5)")]
         public string recordName = "";
         public int recordTicks = 250;
@@ -79,8 +86,13 @@ namespace PoOlympic
         public float[] LastObs => _obs;
         /// <summary>Contract version of the loaded brain (sidecar): 3 = 84 obs, 4 = + stance-skill block.</summary>
         public int BrainVersion { get; private set; } = 3;
+        /// <summary>Latest critic value (NaN without a critic) and how many times it has been evaluated.</summary>
+        public float CriticValue { get; private set; } = float.NaN;
+        public int CriticEvaluations { get; private set; }
 
         PolicyBrain _brain;
+        PolicyCritic _critic;
+        int _criticStagger;
         Dictionary<string, int> _jointIndex;
         readonly Dictionary<int, List<Disturbance>> _byTick = new();
         readonly List<Disturbance> _pending = new();
@@ -154,6 +166,12 @@ namespace PoOlympic
             }
             ApplyTraits(m);
             if (!holdDefaultPose) _brain = new PolicyBrain(brain, _obs.Length);
+            if (!holdDefaultPose && critic != null && _critic == null)
+            {
+                _critic = new PolicyCritic(critic);
+                if (_critic.ObsDim != _obs.Length) { _critic.Dispose(); _critic = null; }   // e.g. a v4 brain with a v3 critic
+                foreach (var ch in athletePrefix) _criticStagger += ch;
+            }
             if (!string.IsNullOrEmpty(recordName)) BeginRecording(m);
             ControlTick = 0;
             _substep = 0;
@@ -309,6 +327,11 @@ namespace PoOlympic
                 for (int i = 0; i < _ctrl.Length; i++) _ctrl[i] = _ctrlF[i];
             }
             Array.Copy(_actionRaw, _lastAction, _lastAction.Length);
+            if (_critic != null && (ControlTick + _criticStagger) % Math.Max(1, criticEvery) == 0)
+            {
+                CriticValue = _critic.Run(_obs);
+                CriticEvaluations++;
+            }
             if (_rec != null && _recFrames < recordTicks) RecordTail();
         }
 
@@ -427,6 +450,7 @@ namespace PoOlympic
         {
             FlushRecording();
             _brain?.Dispose();
+            _critic?.Dispose();
             if (MjScene.InstanceExists)
             {
                 MjScene.Instance.postInitEvent -= OnPostInit;

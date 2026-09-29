@@ -421,3 +421,17 @@ One entry per run or decision. Newest at the bottom.
   physics-checked. C1: obs 3e-7, clock 2e-7, torch vs numpy skill measures < 1e-6.
 - Warm start rs_init = r2_v8 it600 + zero input columns (actor(obs95) == actor(obs84) exactly); 2-iteration smoke run
   loads and trains (removed). G1 drills (evaluate_stance.py) run; the random v4 brain fails all (as it should).
+
+## 2026-09-29 · Brain confidence (broadcast feature 5, no training)
+- `tools/export_critic.py`: the PPO critic of each event brain → `parity/brains/<brain>.critic.onnx` (84 obs → value;
+  critic obs normalizer = actor's 84 terms, no privileged inputs). ORT vs rsl_rl math ≤ 1e-5. Actor brains untouched.
+- `tools/fit_confidence.py`: CPU rollouts on the mixed track8 scene (8 seeds × 150 s per group, envelope / sprint / crawl
+  commands + random shoves 0.3-2.4 m/s × √λ) → logistic P(no fall within 2 s) per brain → `Models/confidence_model.json`.
+  Value alone ranks danger for standing / crawl brains (AUC r0 0.72, zombie_rung0 0.66, crawl 0.64-0.66) but not for the
+  running brains (rung2 0.49, zombie_rung2 0.52: V scales with the command). Adding the value drop against its 1 s EMA and
+  |cmd| fixes it: **AUC rung2 0.76, zombie_rung2 0.62, r2f_v3 0.84, r0 0.72, zombie_rung0 0.69, crawl_matt 0.68,
+  crawl_zombie 0.64** (report `parity/confidence/report.json`, reliability tables inside). Constant features are dropped
+  from the fit (the crawl's fixed 1.2 m/s command made the IRLS weights blow up).
+- Unity: PolicyRunner runs the critic every 5th control tick (10 Hz, staggered per lane) on the brain's own observation;
+  never feeds ctrl. EditMode parity gates (G2-G4) unchanged: PASS.
+

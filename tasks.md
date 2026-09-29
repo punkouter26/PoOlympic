@@ -250,6 +250,34 @@ apply: TensorBoard + MuJoCo viewer for every run, close Unity during 30 min+ run
   `Wallet` (100 start, 10-coin stake, top-up when broke), betting slip before every heat (12 s window; **off by default since 2026-09-29, user: "just play"** — `BroadcastHud.offerBets`, odds column still shown), `Records` (best
   winning mark per event, PlayerPrefs), `Gauntlet` series (menu GAUNTLET toggle: tap events to order them; one heat per
   event, 10-8-6-5-4-3-2-1 points per lane; final podium back on the menu)
+- [x] **Broadcast FX** (features 2, 3, 5, 6, 7, 10 + world records; 2026-09-29). Free add-ons: Cinemachine 3 (6.6.0),
+  Visual Effect Graph 17.6.0 (+ "Additions" sample), PrimeTween 1.4.11 (npm), Kenney CC0 sounds + Gregor Quendel crowd
+  (CC-BY 4.0, credit required — docs/LICENSING.md). All render / audio only, read from mjData (parity untouched).
+  - `AthleteTelemetry` per athlete (after every mj_step): joint stress |τ|/limit, power Σ|τ·ω|, speed + peak, cadence,
+    ground contact, CoM vs support polygon (balance margin), impacts (foot strike / body slam / cube hit, peak contact
+    force over 30 ms), brain confidence
+  - **5 brain confidence**: `tools/export_critic.py` (critic ONNX beside each event brain) + `tools/fit_confidence.py`
+    (P(still up in 2 s), AUC 0.62-0.84, see log); PolicyRunner runs the critic at 10 Hz, never touching ctrl
+  - `TensionMeter`: danger per athlete (confidence, smoothed balance, tilt), race closeness, athletes out → tension 0..1,
+    hot athlete, near-fall / save / fall events (debounced)
+  - **2** `BroadcastDirector` on Cinemachine: 5 CinemachineCameras (establishing/trackside, head-on, high-wide, hot close-up
+    with hand-held noise, winner) following director-moved proxies; tension shortens race cuts; a real near fall eases to
+    the athlete in trouble (5 s cooldown); phase changes hard-cut; scenes without the rig keep the old framing
+  - **3** `ImpactFx`: pooled foot dust / slam dust + shockwave (Shuriken), VFX Graph sparks at cube hits (Shuriken
+    fallback without compute), Cinemachine impulse shake, 70 ms hit-stop (timeScale 0; physics just pauses)
+  - **6** `BalanceOverlay`: support polygon + CoM ring + plumb line (green / amber / red); stationary events all athletes,
+    races only the hot athlete
+  - **7** HUD: CONF column (sparkline + %), stats card (PrimeTween pop) for the hot athlete / leader, telemetry
+    commentary (top speed, "is wobbling", "What a save"), result card heat bests
+  - **10** `ArenaAudio`: crowd bed + rhythmic tension layer following tension, reactions on near falls / falls / saves,
+    cheers at the result and for records, 3D thuds / cube hits by contact force, hot athlete's footsteps, countdown ticks
+  - **World records**: `Records` keeps the top 5 per event (holder, body, heat, date; old single record migrated);
+    result card WORLD RECORDS panel (top 3, new record pulses, else the record to beat); main menu WORLD RECORDS board
+    (tap an event for its top 5) + the selected event's record under its rules
+  - built into every event scene by *PoOlympic › Broadcast › Upgrade broadcast FX* (`BroadcastFx.Install`, also called by
+    `EventScenes.AddBroadcast`); EditMode 47/47 PoOlympic tests (5 new: records, hull geometry, confidence model, scene
+    rig + no PhysX); before/after `parity/ui/broadcast_fx_before_after.html`
+  - [ ] Android: rebuild the APK and re-measure (VFX Graph, 8 critics at 10 Hz, audio) on the Pixel 9 Pro
 - [x] Licensing review (Avaturn, Hunyuan3D) before any commercial release → `docs/LICENSING.md` (2026-09-29). Blockers
   to act on before a store release: Olympic rings / name, Hunyuan3D territory (EU / UK / KR), Avaturn notification +
   attribution; checklist in the doc
