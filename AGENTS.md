@@ -10,7 +10,7 @@ Rules for any AI agent working in this repository (Unity 6000.6 + MuJoCo RL athl
 
 ## Training
 - All training is done with MuJoCo / Newton (MuJoCo Warp).
-- Ask the user for a skinned mesh before attempting to train a new creature. The rig structure comes from that model and is imported into MuJoCo / Newton for training.
+- Ask the user for a skinned mesh before attempting to train a new creature. Get the rig structure from that model and import it into MuJoCo / Newton for training.
 - Creatures move realistically: Earth gravity, realistic joint ranges, and mass that matches their size.
 - Joints move at speeds and forces that resemble real humans (when the trained agent is a human).
 - All body parts of all creatures collide accurately with each other; creatures cannot pass through each other or through anything in the environment.
@@ -18,11 +18,13 @@ Rules for any AI agent working in this repository (Unity 6000.6 + MuJoCo RL athl
 - When training starts, check TensorBoard for obsolete runs taking up room and remove them.
 - When training in MuJoCo or Isaac Lab, show the app's viewer so the user can watch how the creature moves during and after training. Use Newton's viewer if that is the better option.
 - When 30+ minutes of RL training is needed, close the Unity / Unreal editor if that dramatically speeds up training, and tell the user when it can be opened again (training is over).
+- When a run has more than 30 minutes of training, take screenshots of the 3 most consequential TensorBoard charts, review all 3 and explain in simple terms what they show.
 
 ## Unity
 - Interact with Unity through whichever tool gives the best result: Unity CLI pipeline (`unity command …`), https://github.com/CoplayDev/unity-mcp, or https://github.com/IvanMurzak/Unity-MCP.
 - Create as many prefabs / objects in the scene as possible (via MCP / the editor) rather than generating them from code at runtime, so the user can adjust the positions of static objects directly in the scene.
-- To avoid stalling: enable "No Throttling" (Preferences › General › Interaction Mode) in the editor and "Run In Background" in Player settings; keep the editor updating in the background.
+- To avoid stalling: enable "No Throttling" (Preferences › General › Interaction Mode) in the editor and "Run In Background" in Player settings (via MCP / the Unity CLI); turn on auto-tick so the editor keeps updating in the background.
+- When a change to the UI is made, take an annotated screenshot showing the old and the new UI, with the changes marked.
 
 ## Platforms
 - Use https://github.com/joanllobera/mujoco-bin/ to compile MuJoCo for Android phones.
