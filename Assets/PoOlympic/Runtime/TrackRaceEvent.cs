@@ -14,12 +14,15 @@ namespace PoOlympic
     ///                                      before the red line; toe past the line = DQ; rank by the gap left
     ///   Inverted  (9  The Inverted Sprint)  20 m backwards (command vx &lt; 0; runners face away from the finish, the scene
     ///                                      turns the stadium 180°); pelvis more than `laneHalf` off the lane line = DQ
+    ///   AllFours  (8  30m All Fours)       crawl brains (events/all_fours.py): start face down, get onto all fours during
+    ///                                      the countdown, crawl 30 m; falls never eliminate (tumbles are counted), standing
+    ///                                      up for more than standDqSeconds = DQ; rank by finish time
     /// Runners steer with the contract's lane keeping (PolicyRunner.laneKeeping). Traits + nerve are drawn per heat.
     ///   Ready (countdown) → Live → Result → auto restart (new seed)
     /// </summary>
     public class TrackRaceEvent : MonoBehaviour, ILaneRoster
     {
-        public enum Mode { Dash, Terminal, Brake, Inverted }
+        public enum Mode { Dash, Terminal, Brake, Inverted, AllFours }
         public enum Phase { Ready, Live, Result }
 
         [Serializable]
@@ -31,7 +34,9 @@ namespace PoOlympic
             [NonSerialized] public string status = "";
             [NonSerialized] public float finishS = -1, peakMps, gapM = float.NaN, nerveM, x, v, y;
             [NonSerialized] public bool braking;
-            [NonSerialized] public int place;
+            [NonSerialized] public int place, tumbles, torsoId = -1;
+            [NonSerialized] public float standT, lambda = 1f;
+            [NonSerialized] public bool wasOnFours;
             [NonSerialized] public readonly Queue<float> speedWindow = new();
             public bool Racing => status.Length == 0;
         }
@@ -48,6 +53,9 @@ namespace PoOlympic
         public Vector2 brakeNerve = new(1.4f, 2.2f);
         public float toeAhead = 0.25f, stoppedSpeed = 0.1f, laneHalf = 0.61f;
         public float countdownSeconds = 3f, resultHoldSeconds = 6f;
+        [Header("All fours (= all_fours.py)")]
+        public float standDqSeconds = 1f;
+        public Vector2 crawlBand = new(0.25f, 0.8f);   // pelvis height band (m) × λ
         public bool autoRestart = true, randomTraits = true;
         public int seed = 1;
 
@@ -59,7 +67,7 @@ namespace PoOlympic
         public IEnumerable<Runner> Standings => Current == Phase.Result ? runners.OrderBy(r => r.place) : runners.OrderByDescending(r => r.x);
 
         System.Random _rng;
-        int _liveStartTick;
+        int _liveStartTick, _prevTick;
         bool _traitsPending = true;
 
         public static (float distance, float speed, float maxS) Defaults(Mode m) => m switch
@@ -67,6 +75,7 @@ namespace PoOlympic
             Mode.Dash => (30f, 3.8f, 25f),
             Mode.Terminal => (84.39f, 4.0f, 45f),
             Mode.Inverted => (20f, -1.5f, 30f),
+            Mode.AllFours => (30f, 1.2f, 60f),
             _ => (30f, 3.0f, 25f),
         };
 
@@ -80,6 +89,7 @@ namespace PoOlympic
             foreach (var r in runners)
             {
                 r.status = ""; r.finishS = -1; r.peakMps = 0; r.gapM = float.NaN; r.braking = false; r.place = 0;
+                r.tumbles = 0; r.standT = 0; r.wasOnFours = false;
                 r.speedWindow.Clear();
                 r.runner.command = Vector3.zero;
                 r.runner.laneKeeping = false;
@@ -114,7 +124,16 @@ namespace PoOlympic
             if (!MjScene.InstanceExists || MjScene.Instance.Data == null) return;
             var m = MjScene.Instance.Model;
             var d = MjScene.Instance.Data;
-            foreach (var r in runners) r.judge ??= new AthleteJudge(m, r.runner, "ground");
+            foreach (var r in runners)
+            {
+                r.judge ??= new AthleteJudge(m, r.runner, "ground");
+                if (r.torsoId < 0)
+                {
+                    r.torsoId = MujocoLib.mj_name2id(m, (int)MujocoLib.mjtObj.mjOBJ_BODY, r.runner.athletePrefix + "torso");
+                    double k = r.runner.Contract.SpeedScale;
+                    r.lambda = (float)(k * k);
+                }
+            }
             if (_traitsPending) { DrawTraits(); _traitsPending = false; }
             PhaseTime += Time.deltaTime;
             var lead = runners[0].runner;
@@ -134,12 +153,14 @@ namespace PoOlympic
                     {
                         Current = Phase.Live;
                         PhaseTime = 0;
-                        _liveStartTick = lead.ControlTick;
+                        _liveStartTick = _prevTick = lead.ControlTick;
                         foreach (var r in runners) { r.runner.command = new Vector3(commandSpeed, 0f, 0f); r.runner.laneKeeping = true; }
                     }
                     break;
                 case Phase.Live:
                     LiveTime = (lead.ControlTick - _liveStartTick) * tick;
+                    float elapsed = (lead.ControlTick - _prevTick) * tick;     // control time since the last frame
+                    _prevTick = lead.ControlTick;
                     foreach (var r in runners.Where(r => r.Racing))
                     {
                         r.speedWindow.Enqueue(r.v);
@@ -150,6 +171,19 @@ namespace PoOlympic
                             r.braking = true;
                             r.runner.command = Vector3.zero;
                             r.runner.laneKeeping = false;
+                        }
+                        if (mode == Mode.AllFours)
+                        {
+                            int ra = r.runner.Binding.RootQposAdr;
+                            float z = (float)d->qpos[ra + 2];
+                            float tilt = Mathf.Rad2Deg * Mathf.Acos(Mathf.Clamp((float)d->xmat[9 * r.torsoId + 8], -1f, 1f));
+                            bool on4 = z > crawlBand.x * r.lambda && z < crawlBand.y * r.lambda && tilt > 50f;
+                            if (r.wasOnFours && z < crawlBand.x * r.lambda) r.tumbles++;
+                            r.wasOnFours = on4;
+                            r.standT = z > crawlBand.y * r.lambda && tilt < 40f ? r.standT + elapsed : 0f;
+                            if (r.standT > standDqSeconds) { Out(r, "DQ"); continue; }
+                            if (r.x >= distance) { r.status = "FINISHED"; r.finishS = LiveTime; Stand(r); }
+                            continue;
                         }
                         var why = r.judge.Eliminated(m, d);
                         if (why == "FELL") { Out(r, "FELL"); continue; }
@@ -179,6 +213,7 @@ namespace PoOlympic
             IEnumerable<Runner> order = mode switch
             {
                 Mode.Dash or Mode.Inverted => runners.OrderBy(r => r.status == "FINISHED" ? 0 : 1).ThenBy(r => r.finishS),
+                Mode.AllFours => runners.OrderBy(r => r.status == "FINISHED" ? 0 : r.status == "DNF" ? 1 : 2).ThenBy(r => r.finishS),
                 Mode.Terminal => runners.OrderBy(r => r.status == "FELL" ? 1 : 0).ThenByDescending(r => r.peakMps),
                 _ => runners.OrderBy(r => r.status == "STOPPED" ? 0 : 1).ThenBy(r => r.status == "STOPPED" ? r.gapM : 0f),
             };
@@ -194,6 +229,8 @@ namespace PoOlympic
         {
             Mode.Dash => r.status == "FINISHED" ? $"{r.finishS:0.00} s" : r.status,
             Mode.Inverted => r.status == "FINISHED" ? $"{r.finishS:0.00} s" : r.status == "DQ" ? "DQ (left lane)" : r.status,
+            Mode.AllFours => (r.status == "FINISHED" ? $"{r.finishS:0.00} s" : r.status == "DQ" ? "DQ (stood up)" : r.status)
+                             + (r.tumbles > 0 ? $" · {r.tumbles} tumble" + (r.tumbles > 1 ? "s" : "") : ""),
             Mode.Terminal => $"{r.peakMps:0.00} m/s" + (r.status == "FELL" ? " FELL" : ""),
             _ => r.status == "STOPPED" ? $"{r.gapM * 100f:0} cm short" : r.status == "DQ" ? "DQ (crossed)" : r.status,
         };

@@ -1,0 +1,11 @@
+{
+ "name": "zcrawl_v2_it300",
+ "contract_version": "3",
+ "fingerprint_sha256": "5521551798c3942cb235d40a8daab9ef10151ef407fa1815d9c9f9cc80a2b379",
+ "mujoco_version": "3.11.0",
+ "timestep": "0.005",
+ "decimation": "4",
+ "actuators": "[\"abdomen_flex\", \"abdomen_lat\", \"abdomen_twist\", \"shoulder_elev_l\", \"shoulder_flex_l\", \"shoulder_twist_l\", \"elbow_l\", \"shoulder_elev_r\", \"shoulder_flex_r\", \"shoulder_twist_r\", \"elbow_r\", \"hip_flex_l\", \"hip_abd_l\", \"hip_rot_l\", \"knee_l\", \"ankle_dorsi_l\", \"ankle_inv_l\", \"hip_flex_r\", \"hip_abd_r\", \"hip_rot_r\", \"knee_r\", \"ankle_dorsi_r\", \"ankle_inv_r\"]",
+ "checkpoint": "runs\\zombie_crawl\\2026-09-29_10-50-09_zcrawl_v2\\model_300.pt",
+ "onnx_sha256": "4184b0dcde0ae79ba5c4e3c05149e6fed3ccf837cc9fc743428f717403c5fb4e"
+}

@@ -140,7 +140,7 @@ Skill gaps: events marked **S** need behaviours the current contract cannot comm
 | **Phase 2 — Fundamental Track & Gait** |
 | 6 | The Flamingo Classic | one foot raised; time until touchdown | CentreStage | — | **S** single-leg stance cmd | todo |
 | 7 | Cadence March | high-knee marching in place to a rising metronome | CentreStage / Agility | — | **S** cadence / march-in-place cmd (phase clock with zero velocity) | todo |
-| 8 | The 30m Dash | pure forward sprint to the finish ribbon | HomeStraight | finish ribbon (visual) | R2 | **playable** (8 runners, `Event_30mDash.unity`) |
+| 8 | **30m All Fours** (replaced The 30m Dash, 2026-09-29) | race on hands and feet from a face-down start; falls never eliminate, standing up = DQ | HomeStraight | — | Crawl (`crawl_matt.onnx`, `crawl_zombie.onnx`) | **playable** (8 runners, any MATT/zombie lineup, `Event_30mAllFours.unity`; `events/all_fours.py` ≡ `TrackRaceEvent` AllFours) |
 | 9 | The Inverted Sprint | 20 m backwards; DQ on lane drift or backward tumble | HomeStraight | — | R2 | **playable** (8 runners at cmd −1.5 m/s, lane-drift DQ, stadium turned 180°, `Event_InvertedSprint.unity`) |
 | 10 | Crab Shuffle Relay | side-step between parallel rails without crossing legs | HomeStraight / Agility | boundary rails | R2 (+ leg-cross check) | **playable** (8 athletes side-step 20 m at 1.2 m/s between physical rails; +1 s per leg crossing / rail touch, `Event_CrabShuffle.unity`) |
 | **Phase 3 — Omnidirectional Agility** |

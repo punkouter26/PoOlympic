@@ -37,6 +37,14 @@ namespace PoOlympic
         /// Same tick as the Python event loops, so event commands stay tick-exact. Runs after laneKeeping.</summary>
         public Func<double, double, double, Vector3, Vector3> steer;
 
+        [Header("All-fours events (30m All Fours)")]
+        [Tooltip("Reset face down on the lane line, head towards +x (the finish), pelvis at proneHeight — " +
+                 "training/poolympic/events/all_fours.py prone_start.")]
+        public bool startProne;
+        public double proneHeight = 0.22;
+        [Tooltip("Lane keeping on the crawl heading (Contract.CrawlSteerYawRate) instead of the standing heading.")]
+        public bool crawlSteering;
+
         [Header("Lane (meet scenes; solo = no prefix, origin 0, cube slots 0..3)")]
         [Tooltip("MuJoCo world x/y of this lane's origin: root position = contract default + origin.")]
         public double laneOriginX, laneOriginY;
@@ -161,6 +169,13 @@ namespace PoOlympic
                 for (int i = 0; i < jq.qpos.Length; i++)
                     d->qpos[qa + i] = jq.qpos[i] + (free && i == 0 ? laneOriginX : free && i == 1 ? laneOriginY : 0.0);
             }
+            if (startProne)
+            {
+                // = mju_euler2Quat((0, π/2, 0), "XYZ"): pitch +90°, face down, spine (and head) along +x
+                int r = Binding.RootQposAdr;
+                d->qpos[r] = laneOriginX; d->qpos[r + 1] = laneOriginY; d->qpos[r + 2] = proneHeight;
+                d->qpos[r + 3] = Math.Cos(Math.PI / 4); d->qpos[r + 4] = 0.0; d->qpos[r + 5] = Math.Sin(Math.PI / 4); d->qpos[r + 6] = 0.0;
+            }
             foreach (var j in Binding.OwnJoints)
             {
                 int da = m->jnt_dofadr[j];
@@ -253,8 +268,10 @@ namespace PoOlympic
             if (laneKeeping)
             {
                 int r = Binding.RootQposAdr;
-                command.z = (float)Contract.SteerYawRate(d->qpos[r + 3], d->qpos[r + 4], d->qpos[r + 5], d->qpos[r + 6],
-                                                         d->qpos[r + 1] - laneOriginY, command.x);
+                command.z = crawlSteering
+                    ? (float)Contract.CrawlSteerYawRate(d->qpos[r + 3], d->qpos[r + 4], d->qpos[r + 5], d->qpos[r + 6], d->qpos[r + 1] - laneOriginY)
+                    : (float)Contract.SteerYawRate(d->qpos[r + 3], d->qpos[r + 4], d->qpos[r + 5], d->qpos[r + 6],
+                                                   d->qpos[r + 1] - laneOriginY, command.x);
             }
             if (steer != null)
             {

@@ -53,6 +53,32 @@ if bodies.current().name == "matt":
         runner_cls=MjlabOnPolicyRunner,
     )
 
+    from .crawl_env import matt_crawl2_env_cfg, matt_crawl3_env_cfg, matt_crawl_env_cfg
+
+    register_mjlab_task(
+        task_id="PoOlympic-Matt-Crawl3",
+        env_cfg=matt_crawl3_env_cfg(),
+        play_env_cfg=matt_crawl3_env_cfg(play=True),
+        rl_cfg=matt_ppo_cfg("matt_crawl", max_iterations=2500),
+        runner_cls=MjlabOnPolicyRunner,
+    )
+
+    register_mjlab_task(
+        task_id="PoOlympic-Matt-Crawl2",
+        env_cfg=matt_crawl2_env_cfg(),
+        play_env_cfg=matt_crawl2_env_cfg(play=True),
+        rl_cfg=matt_ppo_cfg("matt_crawl", max_iterations=2500),
+        runner_cls=MjlabOnPolicyRunner,
+    )
+
+    register_mjlab_task(
+        task_id="PoOlympic-Matt-Crawl",
+        env_cfg=matt_crawl_env_cfg(),
+        play_env_cfg=matt_crawl_env_cfg(play=True),
+        rl_cfg=matt_ppo_cfg("matt_crawl", max_iterations=2500),
+        runner_cls=MjlabOnPolicyRunner,
+    )
+
     register_mjlab_task(
         task_id="PoOlympic-Matt-Rung0-Stand",
         env_cfg=matt_rung0_env_cfg(),
@@ -268,4 +294,46 @@ if bodies.current().name == "zombie":
         play_env_cfg=zombie_rung2_wobble_sprint_env_cfg(play=True),
         rl_cfg=matt_ppo_cfg("zombie_rung2", max_iterations=600),
         runner_cls=SymmetricRunner,
+    )
+
+    from .crawl_env import zombie_crawl2_env_cfg, zombie_crawl3_env_cfg, zombie_crawl4_env_cfg, zombie_crawl5_env_cfg, zombie_crawl_env_cfg
+
+    register_mjlab_task(
+        task_id="PoOlympic-Zombie-Crawl5",
+        env_cfg=zombie_crawl5_env_cfg(),
+        play_env_cfg=zombie_crawl5_env_cfg(play=True),
+        rl_cfg=matt_ppo_cfg("zombie_crawl", max_iterations=1500),
+        runner_cls=MjlabOnPolicyRunner,
+    )
+
+    register_mjlab_task(
+        task_id="PoOlympic-Zombie-Crawl4",
+        env_cfg=zombie_crawl4_env_cfg(),
+        play_env_cfg=zombie_crawl4_env_cfg(play=True),
+        rl_cfg=matt_ppo_cfg("zombie_crawl", max_iterations=2500),
+        runner_cls=MjlabOnPolicyRunner,
+    )
+
+    register_mjlab_task(
+        task_id="PoOlympic-Zombie-Crawl3",
+        env_cfg=zombie_crawl3_env_cfg(),
+        play_env_cfg=zombie_crawl3_env_cfg(play=True),
+        rl_cfg=matt_ppo_cfg("zombie_crawl", max_iterations=2500),
+        runner_cls=MjlabOnPolicyRunner,
+    )
+
+    register_mjlab_task(
+        task_id="PoOlympic-Zombie-Crawl2",
+        env_cfg=zombie_crawl2_env_cfg(),
+        play_env_cfg=zombie_crawl2_env_cfg(play=True),
+        rl_cfg=matt_ppo_cfg("zombie_crawl", max_iterations=2500),
+        runner_cls=MjlabOnPolicyRunner,
+    )
+
+    register_mjlab_task(
+        task_id="PoOlympic-Zombie-Crawl",
+        env_cfg=zombie_crawl_env_cfg(),
+        play_env_cfg=zombie_crawl_env_cfg(play=True),
+        rl_cfg=matt_ppo_cfg("zombie_crawl", max_iterations=2500),
+        runner_cls=MjlabOnPolicyRunner,
     )

@@ -35,7 +35,7 @@ PHASE_COL = {1: (0.07, 0.15, 0.36), 2: (0.04, 0.28, 0.29), 3: (0.24, 0.11, 0.34)
 
 EVENTS = {  # number: (name, phase)
     1: ("The Iron Pedestal", 1), 2: ("Torso Archer", 1), 3: ("Deep Squat Endurance", 1), 4: ("Precision Javelin Reach", 1),
-    5: ("The Gust Gauntlet", 1), 6: ("The Flamingo Classic", 2), 7: ("Cadence March", 2), 8: ("The 30m Dash", 2),
+    5: ("The Gust Gauntlet", 1), 6: ("The Flamingo Classic", 2), 7: ("Cadence March", 2), 8: ("30m All Fours", 2),
     9: ("The Inverted Sprint", 2), 10: ("Crab Shuffle Relay", 2), 11: ("Slalom Sprint", 3), 12: ("The 360 Turntable", 3),
     13: ("Steeplechase Jog", 3), 14: ("The Alpine Ramp", 3), 15: ("Cross-Country Rubble", 3), 16: ("The Platform Drop", 4),
     17: ("Stadium Stair Climb", 4), 18: ("The Olympic High Jump", 4), 19: ("Terminal Velocity Sprint", 4),

@@ -275,6 +275,94 @@ def rise(env, target: float) -> torch.Tensor:
     return height_progress(env, target) * upright_linear(env) ** 2
 
 
+HAND_SENSOR = "hands_ground"
+
+
+def torso_tilt_target(env, target_deg: float, std_deg: float) -> torch.Tensor:
+    """exp(-(tilt − target)² / std²) on the torso's tilt from vertical (crawling: ~75-90°, trunk near horizontal)."""
+    return torch.exp(-torch.square(torso_tilt_rad(env) - math.radians(target_deg)) / math.radians(std_deg) ** 2)
+
+
+def forward_progress(env, command_name: str = "athlete", min_cmd: float = 0.1) -> torch.Tensor:
+    """clip(forward speed in the heading frame / commanded vx, -0.5, 1) while vx is commanded (else 0): pays for any
+    forward motion at once — the exp speed kernels pay ~0 until the athlete already moves near the command (crawl_v1
+    held a perfect static all-fours pose: posture terms ~3.5 per step, speed ~0)."""
+    cmd = env.command_manager.get_command(command_name)[:, 0]
+    _, qp, qv = _root(env)
+    w, x, y, z = qp[:, 3], qp[:, 4], qp[:, 5], qp[:, 6]
+    yaw = torch.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z))
+    v = torch.cos(yaw) * qv[:, 0] + torch.sin(yaw) * qv[:, 1]
+    active = cmd > min_cmd
+    return torch.where(active, torch.clamp(v / torch.clamp(cmd, min=min_cmd), -0.5, 1.0), torch.zeros_like(cmd))
+
+
+def crawl_heading(qp: torch.Tensor) -> torch.Tensor:
+    """(N, 2) unit horizontal heading that stays valid on all fours: the horizontal projection of (pelvis x axis +
+    pelvis z axis). Standing it is the facing direction (x axis horizontal, z vertical); crawling it is the head
+    direction (x axis points down, z axis along the spine) — the contract's yaw (x axis only) flips towards the feet
+    as soon as the hips are higher than the shoulders."""
+    w, x, y, z = qp[:, 3], qp[:, 4], qp[:, 5], qp[:, 6]
+    xa = torch.stack([1 - 2 * (y * y + z * z), 2 * (x * y + w * z)], -1)       # R[:, 0] horizontal part
+    za = torch.stack([2 * (x * z + w * y), 2 * (y * z - w * x)], -1)           # R[:, 2] horizontal part
+    h = xa + za
+    return h / torch.clamp(torch.linalg.norm(h, dim=-1, keepdim=True), min=1e-6)
+
+
+def _crawl_vel(env):
+    _, qp, qv = _root(env)
+    h = crawl_heading(qp)
+    fwd = h[:, 0] * qv[:, 0] + h[:, 1] * qv[:, 1]
+    lat = -h[:, 1] * qv[:, 0] + h[:, 0] * qv[:, 1]
+    return fwd, lat
+
+
+def crawl_track_lin(env, std: float, command_name: str = "athlete") -> torch.Tensor:
+    """Speed tracking in the crawl heading frame (forward = towards the head), exp kernel."""
+    cmd = env.command_manager.get_command(command_name)
+    fwd, lat = _crawl_vel(env)
+    return torch.exp(-(torch.square(fwd - cmd[:, 0]) + torch.square(lat - cmd[:, 1])) / std**2)
+
+
+def crawl_progress(env, command_name: str = "athlete", min_cmd: float = 0.1) -> torch.Tensor:
+    """forward_progress in the crawl heading frame."""
+    cmd = env.command_manager.get_command(command_name)[:, 0]
+    fwd, _ = _crawl_vel(env)
+    return torch.where(cmd > min_cmd, torch.clamp(fwd / torch.clamp(cmd, min=min_cmd), -0.5, 1.0), torch.zeros_like(cmd))
+
+
+def crawl_progress_gated(env, target_z: float, command_name: str = "athlete") -> torch.Tensor:
+    """crawl_progress × clip(pelvis z / target_z, 0, 1)²: forward motion only pays up on all fours (zcrawl_v1
+    belly-slid forward: progress 2.45 / 3 with the pelvis below the crawl band and the hands off the ground)."""
+    _, qp, _ = _root(env)
+    return crawl_progress(env, command_name) * torch.square(torch.clamp(qp[:, 2] / target_z, 0.0, 1.0))
+
+
+def yaw_rate_world(env, std: float, command_name: str = "athlete") -> torch.Tensor:
+    """Turn-rate tracking about the world vertical (the pelvis z axis is horizontal on all fours)."""
+    cmd = env.command_manager.get_command(command_name)[:, 2]
+    _, qp, qv = _root(env)
+    # free-joint angular velocity is in the body frame: world z component = R[2, :] · ω_body
+    w, x, y, z = qp[:, 3], qp[:, 4], qp[:, 5], qp[:, 6]
+    r2 = torch.stack([2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)], -1)
+    wz = (r2 * qv[:, 3:6]).sum(-1)
+    return torch.exp(-torch.square(cmd - wz) / std**2)
+
+
+def yaw_rate_world_l1(env, command_name: str = "athlete") -> torch.Tensor:
+    """|commanded − actual turn rate about the world vertical| (use with a negative weight)."""
+    cmd = env.command_manager.get_command(command_name)[:, 2]
+    _, qp, qv = _root(env)
+    w, x, y, z = qp[:, 3], qp[:, 4], qp[:, 5], qp[:, 6]
+    r2 = torch.stack([2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)], -1)
+    return torch.abs(cmd - (r2 * qv[:, 3:6]).sum(-1))
+
+
+def hands_on_ground(env) -> torch.Tensor:
+    """Fraction of the two hands (far end of the forearm capsules: forearm_l / forearm_r bodies) touching the ground —
+    all fours means the hands carry weight."""
+    return (env.scene[HAND_SENSOR].data.found > 0).float().mean(-1)
+
+
 def standing_tall(env, min_height: float, max_tilt_deg: float) -> torch.Tensor:
     """1 while the pelvis is above min_height and the torso within max_tilt_deg of vertical (up and done)."""
     _, qp, _ = _root(env)

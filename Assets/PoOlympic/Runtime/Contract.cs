@@ -130,6 +130,20 @@ namespace PoOlympic
             return Math.Clamp(steering.heading_gain * err, -steering.wz_limit, steering.wz_limit);
         }
 
+        /// <summary>Lane keeping on all fours (event 8, 30m All Fours) — training/poolympic/events/all_fours.py crawl_steer:
+        /// the contract law on the crawl heading = horizontal projection of the pelvis x + z axes (the x axis alone points at
+        /// the ground on all fours and flips towards the feet when the hips are above the shoulders). Forward only.</summary>
+        public double CrawlSteerYawRate(double w, double x, double y, double z, double laneOffsetY)
+        {
+            double hx = (1.0 - 2.0 * (y * y + z * z)) + 2.0 * (x * z + w * y);
+            double hy = 2.0 * (x * y + w * z) + 2.0 * (y * z - w * x);
+            double yaw = Math.Atan2(hy, hx);
+            double target = Math.Atan(-steering.lane_gain * laneOffsetY);
+            double err = target - yaw + Math.PI;
+            err = err - 2 * Math.PI * Math.Floor(err / (2 * Math.PI)) - Math.PI;
+            return Math.Clamp(steering.heading_gain * err, -steering.wz_limit, steering.wz_limit);
+        }
+
         public double GaitHz(Vector3 command)
         {
             double speed = Math.Sqrt((double)command.x * command.x + (double)command.y * command.y) + gait_hz_yaw_weight * Math.Abs((double)command.z);

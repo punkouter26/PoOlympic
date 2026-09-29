@@ -15,8 +15,8 @@ namespace PoOlympic
         /// <summary>One-line card stats per roster athlete (body + brains).</summary>
         public static string Stats(string athlete) => athlete switch
         {
-            "MATT" => "1.84 m · 80 kg\nRung 0 + Rung 2",
-            "ZOMBIE" => "1.10 m · 22 kg\nRung 0 + Rung 2",
+            "MATT" => "1.84 m · 80 kg\nRung 0/2 · Crawl",
+            "ZOMBIE" => "1.10 m · 22 kg\nRung 0/2 · Crawl",
             _ => "",
         };
         public static string[] Athletes { get; private set; } = Enumerable.Repeat(Roster[0], 8).ToArray();

@@ -190,9 +190,13 @@ namespace PoOlympic.Editor
         public const string TrackSource = "training/assets/scene_track8_roster.xml";
         public const string TrackLayout = "training/assets/track8_roster_layout.json";
         public const string DefaultRung2Brain = "rung2.onnx";
+        // Event 8 (30m All Fours): crawl brains per body (training/poolympic/tasks/crawl_env.py)
+        public const string AllFoursScene = "Assets/PoOlympic/Scenes/Event_30mAllFours.unity";
+        public const string CrawlMattBrain = "crawl_matt.onnx";
+        public const string CrawlZombieBrain = "crawl_zombie.onnx";
         public static readonly (int ev, TrackRaceEvent.Mode mode, string title, string scene)[] TrackEvents =
         {
-            (8, TrackRaceEvent.Mode.Dash, "30m DASH", "Assets/PoOlympic/Scenes/Event_30mDash.unity"),
+            (8, TrackRaceEvent.Mode.AllFours, "30m ALL FOURS", AllFoursScene),   // replaced The 30m Dash (2026-09-29)
             (19, TrackRaceEvent.Mode.Terminal, "TERMINAL VELOCITY", "Assets/PoOlympic/Scenes/Event_TerminalVelocity.unity"),
             (22, TrackRaceEvent.Mode.Brake, "EMERGENCY BRAKE", "Assets/PoOlympic/Scenes/Event_EmergencyBrake.unity"),
             (9, TrackRaceEvent.Mode.Inverted, "INVERTED SPRINT", "Assets/PoOlympic/Scenes/Event_InvertedSprint.unity"),
@@ -215,12 +219,26 @@ namespace PoOlympic.Editor
         public static string BuildTrackRace(int eventNum, TrackRaceEvent.Mode mode, string title, string scenePath, string brainFile)
         {
             bool reversed = mode == TrackRaceEvent.Mode.Inverted;
-            var meet = BuildMeetScene(TrackSource, TrackLayout, eventNum, reversed ? 7 - AthleteLane : AthleteLane, reversed ? 180f : 0f, brainFile);
+            bool crawl = mode == TrackRaceEvent.Mode.AllFours;
+            var brains = crawl ? new System.Collections.Generic.Dictionary<string, string> { { "matt", CrawlMattBrain }, { "zombie", CrawlZombieBrain } } : null;
+            if (crawl) brainFile = CrawlMattBrain;
+            var meet = BuildMeetScene(TrackSource, TrackLayout, eventNum, reversed ? 7 - AthleteLane : AthleteLane, reversed ? 180f : 0f, brainFile, brains);
             var race = new GameObject("TrackRaceEvent").AddComponent<TrackRaceEvent>();
             race.mode = mode;
             (race.distance, race.commandSpeed, race.maxSeconds) = TrackRaceEvent.Defaults(mode);
             foreach (var (k, r) in meet.Lanes)
+            {
                 race.runners.Add(new TrackRaceEvent.Runner { runner = r, name = LaneLabel($"L{(reversed ? 8 - k : k + 1)}", r) });
+                if (crawl)
+                {
+                    // all_fours.py prone_start: face down, head towards the finish, pelvis at 0.22 m × λ (λ = SpeedScale²)
+                    double s = Contract.Parse(r.contractJson.text).SpeedScale;
+                    r.startProne = true;
+                    r.proneHeight = 0.22 * s * s;
+                    r.crawlSteering = true;
+                    EditorUtility.SetDirty(r);
+                }
+            }
             meet.Pool.runner = race.runners[0].runner;
             var hud = new GameObject("RaceHUD").AddComponent<RaceHud>();
             hud.race = race;
@@ -232,6 +250,7 @@ namespace PoOlympic.Editor
             bc.target = meet.FocusPelvis;
             bc.focusOffset = new Vector3(reversed ? -1.0f : 1.0f, 0f, -0.6f);   // centre of the 8 lanes (Unity z = +3.66 .. -4.88), a bit ahead
             bc.offset = new Vector3(reversed ? 3.5f : -3.5f, 3.2f, -13f);      // trackside, slightly behind the pack (backward runners face it)
+            if (crawl) { bc.offset = new Vector3(-3.0f, 2.0f, -9f); bc.lookHeight = 0.4f; }   // crawlers are ~0.5 m tall
             EditorSceneManager.SaveScene(meet.Scene, scenePath);
             return $"{scenePath}: {mode}, {race.runners.Count} runners, {race.distance} m, brain {brainFile}";
         }
@@ -372,7 +391,8 @@ namespace PoOlympic.Editor
         static string LaneLabel(string label, PolicyRunner r) => r.athletePrefix.StartsWith("Z") ? "Z" + label.Substring(1) : label;
 
         static string BrainsLabel(string brainFile) =>
-            $"v0 · {Path.GetFileNameWithoutExtension(brainFile)} + {Path.GetFileNameWithoutExtension(DefaultZombieRung2Brain)}";
+            $"v0 · {Path.GetFileNameWithoutExtension(brainFile)} + " +
+            Path.GetFileNameWithoutExtension(brainFile == CrawlMattBrain ? CrawlZombieBrain : DefaultZombieRung2Brain);
 
         public sealed class MeetScene
         {
@@ -474,7 +494,7 @@ namespace PoOlympic.Editor
         {
             { 1, IronPedestalHeatScene },   // official 8-runner heat (solo practice: Event_IronPedestal.unity)
             { 5, GauntletScene },
-            { 8, "Assets/PoOlympic/Scenes/Event_30mDash.unity" },
+            { 8, AllFoursScene },
             { 9, "Assets/PoOlympic/Scenes/Event_InvertedSprint.unity" },
             { 10, CrabScene },
             { 11, SlalomScene },
