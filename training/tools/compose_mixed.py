@@ -39,6 +39,7 @@ SCENES = {  # scene -> the build_mjcf.compose_meet arguments of that event scene
     "crab8": dict(event=10, yaw=90.0, park_offset=(0.0, -30.0, 0.0), props=B.crab_rails),
     "shaker8": dict(event=5, park_offset=(0.0, -30.0, 0.0), shaker=B.SHAKER),
     "slalom8": dict(event=11, park_offset=(0.0, -30.0, 0.0), props=B.slalom_poles),
+    "trench8": dict(event=23, park_offset=(0.0, -30.0, 0.0), props=B.trench_props),
 }
 
 

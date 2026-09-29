@@ -71,7 +71,9 @@ namespace PoOlympic
         public float PhaseTime { get; private set; }
         public float LiveTime { get; private set; }
         public float LeaderX => runners.Count == 0 ? 0 : runners.Max(r => r.x);
-        public IEnumerable<Runner> Standings => Current == Phase.Result ? runners.OrderBy(r => r.place) : runners.OrderByDescending(r => r.x);
+        /// <summary>Result: by place. Live: finishers by finish time (they stop past the line), then the rest by distance.</summary>
+        public IEnumerable<Runner> Standings => Current == Phase.Result ? runners.OrderBy(r => r.place)
+            : runners.OrderBy(r => r.status == "FINISHED" ? 0 : 1).ThenBy(r => r.status == "FINISHED" ? r.finishS : 0f).ThenByDescending(r => r.x);
 
         System.Random _rng;
         int _liveStartTick, _prevTick;

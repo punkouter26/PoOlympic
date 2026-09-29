@@ -302,12 +302,12 @@ def build_lane_events():
             for i, hx in enumerate((lo + 20.0, lo + 23.5, lo + 27.0)):
                 for k, y in enumerate(ys):
                     box(f"{tag}_Hurdle_{i}_{k}", hx, y, 0.45, 0.05, 1.0, 0.05, M["Line_White"])
-        elif num == 23:  # trench crawl: 0.6 m ceiling over 12 m
-            box(f"{tag}_Ceiling", lo + 8.0, cy, 0.62, 12.0, BLOCK_W, 0.04, M["Roof_Under"])
-            for j in range(N + 1):
-                y = cy - BLOCK_W / 2 + j * LW
+        elif num == 23:  # trench crawl: 12 m ceiling, underside 0.72 m, overhanging the lanes by 0.8 m, posts 1.2 m outside
+            # (= training/tools/build_mjcf.py trench_props: the physical trench; posts on the lane lines snag crawlers)
+            box(f"{tag}_Ceiling", lo + 8.0, cy, 0.74, 12.0, BLOCK_W + 1.6, 0.04, M["Roof_Under"])
+            for j, y in enumerate((cy - BLOCK_W / 2 - 1.2, cy + BLOCK_W / 2 + 1.2)):
                 for p in range(4):
-                    box(f"{tag}_Post_{j}_{p}", lo + 2.0 + p * 4.0, y, 0.3, 0.05, 0.05, 0.6, steel)
+                    box(f"{tag}_Post_{j}_{p}", lo + 2.0 + p * 4.0, y, 0.36, 0.05, 0.05, 0.72, steel)
         elif num == 24:  # crates at the start, finish at 15 m
             for k, y in enumerate(ys):
                 box(f"{tag}_Crate_{k}", lo + 1.0, y, 0.2, 0.4, 0.4, 0.4, wood)

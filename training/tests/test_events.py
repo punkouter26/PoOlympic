@@ -117,3 +117,19 @@ def test_steeplechase_heat():
         assert l.score_s == pytest.approx(l.finish_s - l.hang_s, abs=1e-3)
     by_place = sorted(finished, key=lambda l: l.place)
     assert all(a.score_s <= b.score_s for a, b in zip(by_place, by_place[1:]))
+
+
+CRAWL = {"matt": C.ROOT.parent / "parity" / "brains" / "crawl_matt.onnx",
+         "zombie": C.ROOT.parent / "parity" / "brains" / "crawl_zombie.onnx"}
+
+
+@pytest.mark.skipif(not CRAWL["matt"].exists(), reason="crawl brains not exported")
+def test_trench_crawl_heat():
+    from poolympic.events import all_fours
+    res = all_fours.run_race(CRAWL, seed=1, scene=C.ROOT / "assets" / "scene_trench8_mzmzmzmz.xml",
+                             layout_path=C.ROOT / "assets" / "trench8_mzmzmzmz_layout.json", distance=all_fours.TRENCH_DISTANCE)
+    assert sorted(l.place for l in res.lanes) == list(range(1, 9))
+    finished = [l for l in res.lanes if l.status == "FINISHED"]
+    assert len(finished) >= 7
+    # 16 m: MATT squeezes under the 0.72 m ceiling (~15-19 s), the zombie crawls at its own pace (~17 s)
+    assert all(12.0 < l.finish_s < 30.0 for l in finished)

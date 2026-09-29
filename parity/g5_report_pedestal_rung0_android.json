@@ -1,0 +1,26 @@
+{
+ "reference": "pedestal_rung0",
+ "unity_run": "pedestal_rung0_android",
+ "body": "matt",
+ "frames": 250,
+ "fall_time_ref": null,
+ "fall_time_unity": null,
+ "pelvis_height_rms_m": 2.1330210352305723e-08,
+ "mean_abs_torque_ref": 5.360446463729474,
+ "mean_abs_torque_unity": 5.360446987128326,
+ "torque_ratio": 1.0000000976409065,
+ "cadence_ref_hz": null,
+ "cadence_unity_hz": null,
+ "qpos_max_abs_drift_1s": 3.910439037415128e-07,
+ "qpos_max_abs_drift_5s": 1.0934764758663285e-06,
+ "cube_qpos_max_abs_drift_after_fire": 1.4284788580246066e-05,
+ "obs_max_abs_diff": 1.385807991027832e-05,
+ "action_raw_max_abs_diff": 1.385807991027832e-05,
+ "checks": {
+  "same_fall_outcome": true,
+  "pelvis_height_rms_lt_3cm": true,
+  "mean_abs_torque_within_10pct": true,
+  "cadence_within_5pct": true
+ },
+ "G5_pass": true
+}

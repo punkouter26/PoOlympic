@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &166804562
+--- !u!1 &349391299
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,9 +127,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 166804565}
-  - component: {fileID: 166804564}
-  - component: {fileID: 166804563}
+  - component: {fileID: 349391302}
+  - component: {fileID: 349391301}
+  - component: {fileID: 349391300}
   m_Layer: 0
   m_Name: MainMenu
   m_TagString: Untagged
@@ -137,13 +137,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &166804563
+--- !u!114 &349391300
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 166804562}
+  m_GameObject: {fileID: 349391299}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 213e7403b4b52c348978b1782a2866f3, type: 3}
@@ -210,13 +210,19 @@ MonoBehaviour:
     brain: rung2
     scene: Event_EmergencyBrake
     lineup: []
---- !u!114 &166804564
+  - number: 23
+    name: The Trench Crawl
+    rules: 'Low ceiling tunnel forcing all-fours crawl movement: 16 m on hands and feet under a 12 m trench ceiling 0.72 m high; standing up = DQ.'
+    brain: crawl
+    scene: Event_TrenchCrawl
+    lineup: []
+--- !u!114 &349391301
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 166804562}
+  m_GameObject: {fileID: 349391299}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
@@ -233,13 +239,13 @@ MonoBehaviour:
   m_PivotReferenceSize: 0
   m_Pivot: 0
   m_WorldSpaceCollider: {fileID: 0}
---- !u!4 &166804565
+--- !u!4 &349391302
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 166804562}
+  m_GameObject: {fileID: 349391299}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -248,7 +254,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &429051295
+--- !u!1 &466901601
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -256,8 +262,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 429051297}
-  - component: {fileID: 429051296}
+  - component: {fileID: 466901603}
+  - component: {fileID: 466901602}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -265,13 +271,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!20 &429051296
+--- !u!20 &466901602
 Camera:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 429051295}
+  m_GameObject: {fileID: 466901601}
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
@@ -316,13 +322,13 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!4 &429051297
+--- !u!4 &466901603
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 429051295}
+  m_GameObject: {fileID: 466901601}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -335,5 +341,5 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 429051297}
-  - {fileID: 166804565}
+  - {fileID: 466901603}
+  - {fileID: 349391302}

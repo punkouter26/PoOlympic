@@ -46,6 +46,7 @@ EVENTS = {
     13: ("Steeplechase Jog", "track:steeple", "track8"),
     19: ("Terminal Velocity Sprint", "track:terminal", "track8"),
     22: ("Emergency Brake", "track:brake", "track8"),
+    23: ("The Trench Crawl", "trench", "trench8"),
 }
 
 
@@ -56,8 +57,9 @@ def run_one(event: int, seed: int) -> dict:
     if kind == "pedestal":
         brains = {"matt": BR / "r0_v2_it1000.onnx", "zombie": BR / "zombie_rung0.onnx"}
         res = iron_pedestal.run_heat(brains["matt"], seed, scene=scene, layout_path=layout, brains=brains)
-    elif kind == "all_fours":
-        res = all_fours.run_race({"matt": BR / "crawl_matt.onnx", "zombie": BR / "crawl_zombie.onnx"}, seed, scene=scene, layout_path=layout)
+    elif kind in ("all_fours", "trench"):
+        res = all_fours.run_race({"matt": BR / "crawl_matt.onnx", "zombie": BR / "crawl_zombie.onnx"}, seed, scene=scene,
+                                 layout_path=layout, distance=all_fours.TRENCH_DISTANCE if kind == "trench" else None)
     elif kind.startswith("track:"):
         mode = kind.split(":")[1]
         brains = dict(R2, matt=BR / "r2f_v3_it100.onnx") if mode == "steeple" else R2

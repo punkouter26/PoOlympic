@@ -35,6 +35,16 @@ def solo_equivalent(fp: dict) -> dict:
             g["contype"] = g["conaffinity"] = None
     out["bodies"]["pelvis"]["pos"] = None
     out["geoms"]["ground"]["pos"] = None       # the pedestal scenes lower the ground to -0.5 m
+    # lane-owned props (event 5 shaker platform: body + geom + x/y slide joints, prefixed like the athlete) are not part
+    # of the solo athlete; G0 still compares them Python vs Unity
+    for kind in ("bodies", "geoms", "joints"):
+        for key in [k for k in out.get(kind, {}) if k.startswith("shaker")]:
+            del out[kind][key]
+            count = {"bodies": "athlete_bodies", "joints": "athlete_joints"}.get(kind)
+            if count and kind == "bodies":
+                out["counts"][count] -= 1
+    if "counts" in out:
+        out["counts"]["athlete_joints"] -= sum(1 for k in fp.get("joints", {}) if k.startswith("shaker"))
     return out
 
 

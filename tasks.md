@@ -90,12 +90,15 @@ In-editor authoring runs through the Unity CLI (`unity command …`, com.unity.p
 
 Rules: every surface an athlete can touch is a MuJoCo geom generated into the MJCF (training, CPU gates and Unity share it); stadium / dressing art from Blender is render-only (no colliders — PhysXGuard). Events run on control ticks with seeded RNG (reproducible attempts). Runs in parallel with C7/C8 (GPU trains, editor builds).
 
-- [ ] **D1 Event 1 — Iron Pedestal (vertical slice, 1 biped)**
+- [x] **D1 Event 1 — Iron Pedestal (vertical slice, 1 biped)**
   - [x] physics: `scene_pedestal.xml` — 1 m × 1 m × 0.5 m block, top at z = 0, ground at −0.5 (athlete pose / obs / fall rule unchanged)
   - [x] CPU check: rung-0 brain survives 40/40 seeds on the pedestal (20 s, 0.5 m/s gusts + cubes); foot overhang ≤ 0.10 m
   - [x] Unity: `IronPedestalEvent` (countdown → 20 s live → result → auto reset; gusts + cube drops on seeded tick schedule; out = fall rule / foot below pedestal top / non-foot contact), `EventHud` (D2 anchors), `Event_IronPedestal.unity` via *PoOlympic › Events › Build Event 1*; play-through SURVIVED 20.00 s · EditMode 18/18
-  - [ ] G0 for the pedestal scene (Python vs Unity fingerprint) + a G5-style closed-loop parity run of one attempt
-  - [ ] Iron Pedestal fine-tune (foot-on-pedestal term, trained on the pedestal geometry) for edge margin
+  - [x] G0 for the pedestal scene (Python vs Unity fingerprint) + a G5-style closed-loop parity run of one attempt (2026-09-29):
+    **G0 pedestal 0 mismatches**; G5 `pedestal_rung0` (Rung 0 brain, standard shove + cube, 5 s) vs Unity
+    `pedestal_rung0_play`: drift 1.1e-6 @ 5 s, torque ratio 1.0000001, same outcome — **PASS**
+  - [x] Iron Pedestal fine-tune (foot-on-pedestal term, trained on the pedestal geometry) for edge margin — tried twice
+    (ped_v1, ped_v2; see D4), neither beat the Rung 0 brain → kept r0_v2_it1000
 - [x] **D2 Stadium (Blender MCP, Olympic realistic)** — `SourceArt/Stadium/stadium.blend` → `Assets/PoOlympic/Art/Stadium/Stadium.glb` (1.5 MB, ~28k tris, render-only): World-Athletics 400 m oval (84.39 m straights, R 36.5 m, 8 × 1.22 m lanes = meet layout), 20 m start extension, finish / 100 m lines; two-tier bowl with front-view crowd textures; roof canopy + floodlight ring; LED boards; 2 scoreboards. **Venues for every event category** with `VENUE_*` anchors (glTF nodes + `venues.json`): HomeStraight (8, 19, 9, 10, 22, hurdles) · CentreStage (1, 5) · Agility (11 slalom, 12 turntable) · Terrain (14–17, parkour) · Jumps (runways + pit) · Mats (27 get-up, crawl, flip) · Skills (carry, bench, kick + goal) · BackStraight. `EventScenes.PlaceStadium(venue, groundY)` snaps a venue onto the MuJoCo origin (verified: home anchor at Unity (−57.81, −0.50, −41.38)). Iron Pedestal scene now plays inside the stadium (`parity/d1/stadium_live.png`).
   - [x] full 30-event list received (Phase E catalogue): every event maps onto an existing venue — no new venue type needed
   - [x] **one venue per event (30), each for 8 competitors** — reproducible builder `SourceArt/Stadium/build_venues.py` (+ `stadium_helpers.py`), run inside Blender. Five infield rows + track: centre row = stationary events (1 Iron Pedestal: 8 × 1 m × 1 m × 0.5 m iron pedestals in a row, 3 m pitch; 2, 3, 4, 5, 6, 7, 12, 18 as 2 × 4 station grids); rows ±13 / −26 / +26 = 8-lane blocks with props (rails, gates, 15° ramp, stairs, rubble, stepping stones, parkour wall/drop/hurdles, crawl ceiling, crates, benches, mats, goals, long-jump runways + pit); track = 8, 20, 22, 27 (home straight) + 19 (back straight). Phase-coloured pads, painted event names + lane numbers; no pad overlaps, all inside the kerb (checked). 240 competitor anchors `E##_L#` + `venues.json` (lane pos + yaw, MuJoCo axes) — the future source for the physical props in each event MJCF. GLB 3.9 MB, ~77k tris, 1555 objects (merge per event in D6).
@@ -133,7 +136,11 @@ Rules: every surface an athlete can touch is a MuJoCo geom generated into the MJ
     rate: 23-83 % (uniform 12.5 %); Emergency Brake / Iron Pedestal ≈ uniform (traits do not predict the winner)
   - [x] Iron Pedestal fine-tune tried twice (ped_v1 fixed ±0.8 m/s gusts; ped_v2 adaptive gusts) — neither beat r0_v2_it1000 on identical heats (28.2 s mean survival); Event 1 keeps the Rung 0 brain (see log)
 - [x] **D5 remaining Sprint Series events** — done: 5, 8, 9, 10, 11, 12, 13, 19, 22 (5 = `scene_shaker8.xml` spring platforms + `events/gauntlet.py` ≡ `GustGauntletEvent`; all 8-athlete, Rung 2 brain; pattern: venue layout → `compose_meet(origins, props)` MJCF (G0 8/8 per lane, props checked with `ParityTools.DumpProps`) → CPU rules in `poolympic/events/` ≡ Unity controller → `EventScenes.Build*` via the shared `BuildMeetScene`. 8/9/19/22 = straight-track framework (`scene_track8.xml`, `events/track.py` ≡ `TrackRaceEvent` + `RaceHud`); 10 = `scene_crab8.xml` + rails, `events/crab.py` ≡ `CrabShuffleEvent`; 11 = `scene_slalom8.xml` + poles, `events/slalom.py` ≡ `SlalomEvent`; 12 = `scene_turntable8.xml`, `events/turntable.py` ≡ `TurntableEvent`; per-tick `PolicyRunner.steer` hook; generic `StandingsHud`); 13 Steeplechase Jog (2026-09-29) = `track.py` steeple ≡ `TrackRaceEvent` Steeplechase: 50 m at 3.5 m/s, flight brain `r2f_v3_it100.onnx` (zombie: zombie_rung2), scored on **ground time** = finish − hang time (flights ≥ 20 ms counted per physics substep, `FootGait`), `Event_SteeplechaseJog.unity` on venue E13; CPU winners ≈ 8.9-9.1 s ground (air 6.7-6.9 s), Unity heats 9.0-9.1 s — the rest of the catalogue: **Phase E** below
-- [ ] **D6** full suite re-validation + perf pass
+- [x] **D6** full suite re-validation + perf pass (2026-09-29): pytest 32/32, EditMode 36/36, **G0 PASS on every event scene**
+  (meet8, pedestal8, track8, turntable8, crab8, shaker8 — solo check now ignores the lane-owned shaker —, slalom8,
+  meet8_mzmzmzmz, trench8 via compose --verify, solo pedestal). Perf (desktop editor, 8 athletes): mj_step 0.33-0.40 ms
+  (7-8 % of real time), 8.9 ms CPU frame, 194 draw calls / 8 SRP batches → the planned per-event stadium merge is not
+  needed. Mobile: see Android (57.6 fps on the Pixel 9 Pro).
 
 ## Phase E — The 30 Olympic Events (catalogue, added 2026-09-27)
 
@@ -170,7 +177,7 @@ Skill gaps: events marked **S** need behaviours the current contract cannot comm
 | **Phase 5 — Heavy Athletics & Transitional Motion** |
 | 21 | The Sandpit Long Jump | run-up, forward launch into the sand pit | Jumps | take-off board, pit (soft contact) | R5 | todo |
 | 22 | Emergency Brake | full sprint to a red stop line; full standstill without crossing it | HomeStraight | stop line (visual) | R2 | **playable** (per-runner "nerve" brake point, DQ on crossing, `Event_EmergencyBrake.unity`) |
-| 23 | The Trench Crawl | low-ceiling tunnel forces all-fours crawling | Terrain | tunnel ceiling | R8 crawl (**M**?) | todo |
+| 23 | The Trench Crawl | low-ceiling tunnel forces all-fours crawling | Terrain | tunnel ceiling (0.72 m, `build_mjcf.trench_props`) | Crawl (no new training) | **playable** (16 m all-fours race under a 12 m see-through ceiling; MATT squeezes through 15-19 s, zombie untouched ~17 s → mixed heats contested, `Event_TrenchCrawl.unity`) |
 | 24 | The Courier Carry | carry a weighted crate 15 m without dropping / pitching back | Skills | crate (free body) + hand contact | R8 carry (needs hand/wrist contact on the body) | todo |
 | 25 | The Bench Relay | approach a bench, stable seated rest, explode back into a sprint | Skills | bench | R8 sit/stand | todo |
 | **Phase 6 — The Extreme Decathlon** |
@@ -223,8 +230,14 @@ apply: TensorBoard + MuJoCo viewer for every run, close Unity during 30 min+ run
 ## Backlog (later rungs & platforms)
 
   - **Menu lineups (roster scenes):** `compose_mixed.py <scene> roster` puts MATT (L<k>_) + zombie (Z<k>_) in every lane of every event scene (verify: every roster athlete == its one-body composition, 18/18); `LaneLineup` keeps the menu's pick per lane before MuJoCo compiles (bodies, actuators, excludes off), events drop the others, camera/pool follow. Zombie commands = MATT's × √λ (speeds) / ÷ √λ (yaw), `PolicyRunner.BodyCommand`; gauntlet gusts × √λ; shaker is the lane's (L<k>_shaker). All 9 events rebuilt; mixed 30m Dash + Gust Gauntlet played clean.
-- [ ] Android: arm64-v8a MuJoCo build via NDK + ARM↔desktop trajectory parity + mobile perf pass
+- [x] Android: arm64-v8a MuJoCo build via NDK + ARM↔desktop trajectory parity + mobile perf pass
   - [x] **first device run (Pixel 9 Pro, Android 17):** `tools/build_mujoco_android.sh` builds libmujoco.so from MuJoCo 3.11.0 with Unity's NDK r27 (API 28, `_POSIX_C_SOURCE`; mujoco-bin's prebuilt .so is 3.5.0 = wrong ABI for the 3.11 plugin), `AndroidBuild.Build` (IL2CPP arm64, portrait, min API 28, link.xml) → 167 MB APK. URP post-processing shader stripping had to be turned off (stripped Uber pass = blank 3D view). Event 1 heat ran on device (winner M1 after 31.2 s). Open: ARM↔desktop trajectory parity, perf pass, InputSystem 'InputUpdateType.None' warning at startup.
+  - [x] **ARM↔desktop parity + perf (2026-09-29):** parity APK (`AndroidBuild.BuildParityApk`, package
+    com.poolympic.parity, `DeviceProbe`): the pedestal G5 attempt recorded on the Pixel 9 Pro vs the desktop CPU reference
+    → drift 1.09e-6 @ 5 s, torque ratio 1.0000001 — **G5 PASS on ARM**. Perf in an 8-athlete Steeplechase heat: 57.6 fps,
+    frame p50 16.7 / p95 16.9 / p99 33 ms, mj_step 0.30 ms (8 athletes), 0.10 ms solo (`parity/android/device_probe.json`).
+    InputSystem warning: not reproduced (cold start of the game APK and the parity APK); the only startup error is
+    Unity probing for Play Asset Delivery classes (unused).
 - [ ] R3 get-up · R4 ramp/rubble/stairs · R5 jumps/hurdles
   - R3 first attempts 2026-09-29 (getup_v1-v5, tasks `PoOlympic-Matt-Getup..5`, `tools/getup_probe.py`): with a fading
     torso assist it learns to sit up and to get onto all fours, not yet to stand. Next: reverse curriculum from

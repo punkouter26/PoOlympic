@@ -384,3 +384,20 @@ One entry per run or decision. Newest at the bottom.
   record), mixed Turntable (zombies 1-4 as the odds said), 3-event gauntlet 13 → 12 → 05 (points carried, final podium on
   the menu). EditMode PoOlympic 36/36.
 - **Licensing** → `docs/LICENSING.md` (Avaturn conditional, Hunyuan3D outputs barred in EU/UK/KR, Olympic marks, notices).
+- **D1 pedestal parity:** G0 `scene_pedestal.xml` vs Unity Event_IronPedestal 0 mismatches; G5 one attempt (Rung 0, standard
+  shove at tick 50 + cube at tick 100, 5 s): CPU reference `pedestal_rung0` (rerun bit-identical) vs Unity: drift 1.1e-6,
+  torque 1.0000001 → PASS.
+- **D6:** G0 on all event scene sets PASS (the shaker8 "== solo athlete" check now drops the lane-owned platform, which G0
+  still compares Python vs Unity). Desktop perf: mj_step 0.33-0.40 ms for 8 athletes, 194 draw calls → no stadium merge.
+- **Android (Pixel 9 Pro, Android 17):** parity APK = pedestal G5 attempt + `DeviceProbe`; ARM run vs the desktop CPU
+  reference: drift 1.09e-6 @ 5 s — the ARM libmujoco.so + IL2CPP inference agree with x86 to the same 1e-6 as the
+  editor. 8-athlete heat 57.6 fps (p95 16.9 ms, p99 33 ms), mj_step 0.30 ms. InputSystem warning not reproduced.
+- **Event 23 The Trench Crawl (no training):** `tools/trench_probe.py` sweep of the ceiling underside with the Event 8
+  crawl brains (16 m): 0.62 m 19/24 MATT finish, 22.6-57.8 s, 26 tumbles; 0.66 m 13/24; 0.70 m 23/24 but 17-58 s; **0.72 m
+  32/32, 15.2-19.4 s**; 0.74 m 13.8-16.9 s; 0.78 m 13.9-14.4 s (no obstacle). Zombies unaffected (16.8-17.1 s) → 0.72 m makes
+  mixed heats a contest (in the open 30 m crawl the zombie never wins). Posts on every lane line (0.61 m from lane centres)
+  hooked 7/8 MATTs; posts 0.4 m outside the block still stopped lane 1 (drifts outwards) → ceiling overhangs 0.8 m, posts
+  1.2 m outside: 95/96 finishes in 12 heats. Odds fit (60 heats): zombie +1.83, strength +4.3. Unity draws the physical
+  ceiling translucent (TrenchGlass) so the broadcast cameras see the crawlers; `build_venues.py` updated to match (the
+  current stadium GLB still has the old 0.60 m render-only trench, hidden in the event scene).
+- TrackRaceEvent live standings: finishers by finish time (they stop past the line and were sorted by position).

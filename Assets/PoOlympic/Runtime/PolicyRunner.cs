@@ -303,12 +303,16 @@ namespace PoOlympic
         }
 
         // ---------------------------------------------------------------- recording (G5 closed-loop comparison)
+        /// <summary>Editor: the repo's parity/ folder; player builds (Android parity APK): the app's persistent data.</summary>
+        public static string RecordDir => Application.isEditor ? Path.Combine(Application.dataPath, "..", "parity") : Application.persistentDataPath;
+        public string RecordPath => _recPath;
+        public bool RecordingDone => !string.IsNullOrEmpty(recordName) && _recFrames >= recordTicks;   // flushed at recordTicks
         string _recPath;
         int[] _recQ, _recV; // recorded qpos / qvel addresses: own joints + own cube slots, in joint order
 
         void BeginRecording(MujocoLib.mjModel_* m)
         {
-            _recPath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "parity", $"unity_run_{recordName}.json"));
+            _recPath = Path.GetFullPath(Path.Combine(RecordDir, $"unity_run_{recordName}.json"));
             var joints = new List<int>(Binding.OwnJoints);
             foreach (var c in cubeSlots)
                 if (_jointIndex.TryGetValue($"cube{c}_free", out var cj)) joints.Add(cj);

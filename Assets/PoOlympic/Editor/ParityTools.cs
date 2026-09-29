@@ -77,6 +77,23 @@ namespace PoOlympic.Editor
             return sb.Append('}').ToString();
         }
 
+        /// <summary>D6 perf probe (Play mode): time `n` mj_step calls on a copy of the running scene's mjData (the live
+        /// simulation is untouched).</summary>
+        public static unsafe string BenchStep(int n = 800)
+        {
+            if (!MjScene.InstanceExists || MjScene.Instance.Model == null) return "enter Play mode first";
+            var m = MjScene.Instance.Model;
+            var d = MujocoLib.mj_makeData(m);
+            MujocoLib.mj_copyData(d, m, MjScene.Instance.Data);
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            for (int i = 0; i < n; i++) MujocoLib.mj_step(m, d);
+            sw.Stop();
+            int ncon = d->ncon;
+            MujocoLib.mj_deleteData(d);
+            double ms = sw.Elapsed.TotalMilliseconds / n;
+            return $"nq {m->nq} nv {m->nv} nbody {m->nbody} ngeom {m->ngeom} ncon {ncon}: mj_step {ms:F3} ms = {ms * 200:F1} ms per simulated second";
+        }
+
         /// <summary>Deterministically step Play mode until the first PolicyRunner reaches `tick`, then stay paused.</summary>
         public static void StepUntilTick(int tick)
         {

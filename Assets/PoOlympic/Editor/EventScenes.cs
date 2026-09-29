@@ -221,6 +221,10 @@ namespace PoOlympic.Editor
         /// (the MuJoCo lane layout is the mirror image), so MuJoCo lane k runs in venue lane 8 - k.
         /// </summary>
         public static string BuildTrackRace(int eventNum, TrackRaceEvent.Mode mode, string title, string scenePath, string brainFile)
+            => BuildTrackRace(eventNum, mode, title, scenePath, brainFile, TrackSource, TrackLayout);
+
+        public static string BuildTrackRace(int eventNum, TrackRaceEvent.Mode mode, string title, string scenePath, string brainFile,
+                                            string source, string layout, float distance = 0f)
         {
             bool reversed = mode == TrackRaceEvent.Mode.Inverted;
             bool crawl = mode == TrackRaceEvent.Mode.AllFours;
@@ -230,10 +234,11 @@ namespace PoOlympic.Editor
                        : null;
             if (crawl) brainFile = CrawlMattBrain;
             if (steeple) brainFile = FlightMattBrain;
-            var meet = BuildMeetScene(TrackSource, TrackLayout, eventNum, reversed ? 7 - AthleteLane : AthleteLane, reversed ? 180f : 0f, brainFile, brains);
+            var meet = BuildMeetScene(source, layout, eventNum, reversed ? 7 - AthleteLane : AthleteLane, reversed ? 180f : 0f, brainFile, brains);
             var race = new GameObject("TrackRaceEvent").AddComponent<TrackRaceEvent>();
             race.mode = mode;
             (race.distance, race.commandSpeed, race.maxSeconds) = TrackRaceEvent.Defaults(mode);
+            if (distance > 0f) race.distance = distance;
             foreach (var (k, r) in meet.Lanes)
             {
                 race.runners.Add(new TrackRaceEvent.Runner { runner = r, name = LaneLabel($"L{(reversed ? 8 - k : k + 1)}", r) });
@@ -258,6 +263,62 @@ namespace PoOlympic.Editor
                          reversed ? Vector3.left : Vector3.right);
             EditorSceneManager.SaveScene(meet.Scene, scenePath);
             return $"{scenePath}: {mode}, {race.runners.Count} runners, {race.distance} m, brain {brainFile}";
+        }
+
+        public const string TrenchScene = "Assets/PoOlympic/Scenes/Event_TrenchCrawl.unity";
+        public const string TrenchSource = "training/assets/scene_trench8_roster.xml";
+        public const string TrenchLayout = "training/assets/trench8_roster_layout.json";
+        public const float TrenchDistance = 16f;   // = all_fours.TRENCH_DISTANCE
+
+        /// <summary>Event 23: the all-fours race (crawl brains) over the venue's 16 m under the trench ceiling
+        /// (build_mjcf.trench_props: 12 m slab, underside 0.72 m, posts outside the lanes). The ceiling and posts are
+        /// physical, so they are drawn by their MuJoCo geoms (translucent TrenchGlass slab, stadium steel posts); the
+        /// stadium's own render-only trench (0.60 m, older export) is hidden.</summary>
+        [MenuItem("PoOlympic/Events/Build Event 23 — The Trench Crawl")]
+        public static string BuildTrenchCrawl()
+        {
+            var msg = BuildTrackRace(23, TrackRaceEvent.Mode.AllFours, "THE TRENCH CRAWL", TrenchScene, CrawlMattBrain, TrenchSource, TrenchLayout, TrenchDistance);
+            var scene = EditorSceneManager.OpenScene(TrenchScene);
+            var art = scene.GetRootGameObjects().First(g => g.name == "Stadium").GetComponentsInChildren<Renderer>(true)
+                           .Where(r => r.name.StartsWith("E23_")).ToArray();
+            var slab = TrenchGlass();                         // see-through: the broadcast cameras film the crawlers from above
+            var steel = art.FirstOrDefault(r => r.name.Contains("Post"))?.sharedMaterial;
+            int hidden = 0, shown = 0;
+            foreach (var r in art.Where(r => r.name.Contains("Ceiling") || r.name.Contains("Post"))) { r.enabled = false; hidden++; }
+            foreach (var g in UnityEngine.Object.FindObjectsByType<MjGeom>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (!g.name.StartsWith("trench_") || !g.TryGetComponent<Renderer>(out var rend)) continue;
+                rend.enabled = true;
+                rend.sharedMaterial = g.name.Contains("ceiling") ? slab : steel;
+                shown++;
+            }
+            if (shown != 9) throw new InvalidOperationException($"expected 9 MuJoCo trench geoms (ceiling + 8 posts), found {shown}");
+
+            EditorSceneManager.SaveScene(scene);
+            return $"{msg}; trench: {shown} MuJoCo geoms drawn, {hidden} stadium renderers hidden";
+        }
+
+        public const string TrenchGlassMaterial = "Assets/PoOlympic/Materials/TrenchGlass.mat";
+
+        /// <summary>Tinted, translucent URP material for the trench ceiling (an opaque slab hides the crawlers from every
+        /// broadcast angle but a sub-0.7 m one, where it is an invisible 4 cm line).</summary>
+        static Material TrenchGlass()
+        {
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(TrenchGlassMaterial);
+            if (mat != null) return mat;
+            mat = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = "TrenchGlass" };
+            mat.SetFloat("_Surface", 1f);                  // transparent
+            mat.SetFloat("_Blend", 0f);                    // alpha
+            mat.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            mat.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            mat.SetFloat("_ZWrite", 0f);
+            mat.SetFloat("_Cull", 0f);                     // both faces (seen from above and below)
+            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            mat.SetColor("_BaseColor", new Color(0.55f, 0.75f, 0.95f, 0.28f));
+            mat.SetFloat("_Smoothness", 0.85f);
+            AssetDatabase.CreateAsset(mat, TrenchGlassMaterial);
+            return mat;
         }
 
         public const string TurntableScene = "Assets/PoOlympic/Scenes/Event_360Turntable.unity";
@@ -521,6 +582,7 @@ namespace PoOlympic.Editor
             { 13, SteepleScene },
             { 19, "Assets/PoOlympic/Scenes/Event_TerminalVelocity.unity" },
             { 22, "Assets/PoOlympic/Scenes/Event_EmergencyBrake.unity" },
+            { 23, TrenchScene },
         };
 
         /// <summary>

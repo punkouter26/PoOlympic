@@ -565,6 +565,32 @@ def slalom_poles() -> list[dict]:
             for k, lane in enumerate(ev["poles"]) for g, (x, y) in enumerate(lane)]
 
 
+TRENCH_POST_OUT = 1.2     # m — the ceiling overhangs the lane block by TRENCH_OVERHANG, its posts stand this far outside it
+TRENCH_OVERHANG = 0.8
+TRENCH_UNDERSIDE = 0.72   # m — Event 23 ceiling underside: MATT's crawl brain squeezes through (15-19 s / 16 m), the zombie
+                          # is untouched (tools/trench_probe.py sweep: 0.62-0.70 m stalls MATTs, 0.78 m is no obstacle)
+
+
+def trench_props() -> list[dict]:
+    """Event 23 Trench Crawl (build_venues.py): a 12 m ceiling (4 cm slab, underside TRENCH_UNDERSIDE) over the whole
+    8-lane block (+ TRENCH_OVERHANG each side) from 2 m past the start, carried by 5 cm posts every 4 m along both sides,
+    TRENCH_POST_OUT outside the block — as MuJoCo boxes in the athlete frame of reference lane 3. (Posts on every lane
+    line, 0.61 m from each lane centre, hooked 7 of 8 MATT crawlers; an edge flush with the outer lane line / posts 0.4 m
+    out stopped the lane-1 crawler, which drifts outwards: tools/trench_probe.py + CPU heats.)"""
+    ev = json.loads(VENUES_JSON.read_text())["events"]["23"]
+    ys = [l["pos"][1] for l in ev["lanes"]]
+    lo, lw = ev["lanes"][0]["pos"][0], abs(ys[0] - ys[1])
+    cy, width = (ys[0] + ys[-1]) / 2, lw * len(ys)
+    props = [{"name": "trench_ceiling", "pos": venue_to_athlete(23, 3, [lo + 8.0, cy, TRENCH_UNDERSIDE + 0.02]),
+              "size": [6.0, width / 2 + TRENCH_OVERHANG, 0.02]}]
+    for j, y in enumerate((cy - width / 2 - TRENCH_POST_OUT, cy + width / 2 + TRENCH_POST_OUT)):
+        for k in range(4):
+            props.append({"name": f"trench_post{j}_{k}",
+                          "pos": venue_to_athlete(23, 3, [lo + 2.0 + 4.0 * k, y, TRENCH_UNDERSIDE / 2]),
+                          "size": [0.025, 0.025, TRENCH_UNDERSIDE / 2]})
+    return props
+
+
 def cube_entity_xml() -> str:
     """One pooled cube as a standalone model (mjlab entity for training) — identical to the scene's cube bodies."""
     root = ET.Element("mujoco", {"model": "cube"})
@@ -753,6 +779,11 @@ def main() -> int:
                                              model="slalom8", park_offset=(0.0, -30.0, 0.0), props=slalom_poles())
     (ASSETS / "scene_slalom8.xml").write_text(header + slalom_xml + "\n")
     (ASSETS / "slalom8_layout.json").write_text(json.dumps(slalom_layout, indent=1) + "\n")
+    # 23 The Trench Crawl: 8 crawl lanes (1.22 m) under a 12 m ceiling on posts (trench_props), crawl brains
+    trench_xml, trench_layout = compose_meet(skin, geoms, inertials, qdef, origins=venue_lane_origins(23, 3),
+                                             model="trench8", park_offset=(0.0, -30.0, 0.0), props=trench_props())
+    (ASSETS / "scene_trench8.xml").write_text(header + trench_xml + "\n")
+    (ASSETS / "trench8_layout.json").write_text(json.dumps(trench_layout, indent=1) + "\n")
     (ASSETS / f"scene_meet{N_LANES}.xml").write_text(header + meet_xml + "\n")
     (ASSETS / f"meet{N_LANES}_layout.json").write_text(json.dumps(meet_layout, indent=1) + "\n")
 

@@ -28,6 +28,8 @@ namespace PoOlympic
         public float shotSeconds = 5f;
         public float followSharpness = 3f;
         public float orbitSpeed = 0.12f;                // rad/s (arena)
+        [Tooltip("Cap on the camera height (m): Event 23 keeps every shot under the trench ceiling.")]
+        public float maxCameraHeight = 100f;
 
         IBroadcastBoard B => board as IBroadcastBoard;
         readonly Dictionary<PolicyRunner, Transform> _pelvis = new();
@@ -105,6 +107,7 @@ namespace PoOlympic
                     want = focus + establishing;
                     break;
             }
+            want.y = Mathf.Min(want.y, maxCameraHeight);
             float k = 1f - Mathf.Exp(-followSharpness * Time.unscaledDeltaTime);
             bool cut = !_init || _cut;             // hard cut between live race shots, smooth moves otherwise
             _cut = false;

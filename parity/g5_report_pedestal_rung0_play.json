@@ -1,0 +1,26 @@
+{
+ "reference": "pedestal_rung0",
+ "unity_run": "pedestal_rung0_play",
+ "body": "matt",
+ "frames": 250,
+ "fall_time_ref": null,
+ "fall_time_unity": null,
+ "pelvis_height_rms_m": 2.1404582078385102e-08,
+ "mean_abs_torque_ref": 5.360446463729474,
+ "mean_abs_torque_unity": 5.360446971849003,
+ "torque_ratio": 1.0000000947905239,
+ "cadence_ref_hz": null,
+ "cadence_unity_hz": null,
+ "qpos_max_abs_drift_1s": 3.910439044284633e-07,
+ "qpos_max_abs_drift_5s": 1.0934764761716398e-06,
+ "cube_qpos_max_abs_drift_after_fire": 1.4284787904869645e-05,
+ "obs_max_abs_diff": 1.385807991027832e-05,
+ "action_raw_max_abs_diff": 1.385807991027832e-05,
+ "checks": {
+  "same_fall_outcome": true,
+  "pelvis_height_rms_lt_3cm": true,
+  "mean_abs_torque_within_10pct": true,
+  "cadence_within_5pct": true
+ },
+ "G5_pass": true
+}

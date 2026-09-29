@@ -1,4 +1,4 @@
-"""Event 8 — 30m All Fours (replaces The 30m Dash; user request 2026-09-29: race on all fours, falls do not eliminate,
+"""Event 8 — 30m All Fours (and Event 23 — The Trench Crawl: the same race under a low ceiling, TRENCH_*) (replaces The 30m Dash; user request 2026-09-29: race on all fours, falls do not eliminate,
 only natural falls, MATT + zombie). 8 runners on the home straight (assets/scene_track8*.xml), crawl brains per body
 (tasks/crawl_env.py). Mirror of Unity AllFoursRace.
 
@@ -30,6 +30,11 @@ SCENE = C.ROOT / "assets" / "scene_track8.xml"
 LAYOUT = C.ROOT / "assets" / "track8_layout.json"
 DISTANCE, VX, SETUP_S, MAX_S = 30.0, 1.2, 3.0, 60.0
 STAND_DQ_S = 1.0
+# Event 23 The Trench Crawl: same rules over the venue's 16 m under a 12 m ceiling (underside 0.72 m, posts on the lane
+# lines; tools/build_mjcf.trench_props) — MATT's crawl squeezes through, the zombie's is untouched
+TRENCH_SCENE = C.ROOT / "assets" / "scene_trench8.xml"
+TRENCH_LAYOUT = C.ROOT / "assets" / "trench8_layout.json"
+TRENCH_DISTANCE = 16.0
 BAND = (0.25, 0.8)          # crawl pelvis band (m) × λ
 START_Z = 0.22              # prone start pelvis height (m) × λ
 
@@ -79,7 +84,9 @@ def prone_start(m, d, ln) -> None:
 
 
 def run_race(brains: dict[str, Path], seed: int, traits: list[Traits] | None = None, scene: Path = SCENE,
-             layout_path: Path = LAYOUT) -> CrawlResult:
+             layout_path: Path = LAYOUT, distance: float | None = None) -> CrawlResult:
+    """distance: race length (default DISTANCE = 30 m; Event 23 The Trench Crawl: TRENCH_DISTANCE on TRENCH_SCENE)."""
+    distance = DISTANCE if distance is None else distance
     m = mujoco.MjModel.from_xml_path(str(scene))
     d = mujoco.MjData(m)
     layout = json.loads(Path(layout_path).read_text())
@@ -128,7 +135,7 @@ def run_race(brains: dict[str, Path], seed: int, traits: list[Traits] | None = N
             if stand_t[i] > STAND_DQ_S:
                 rr.status = "DQ"
                 continue
-            if d.qpos[r] - ln.origin[0] >= DISTANCE:
+            if d.qpos[r] - ln.origin[0] >= distance:
                 rr.status, rr.finish_s = "FINISHED", round(t - SETUP_S, 2)
         if all(r.status for r in res):
             break
