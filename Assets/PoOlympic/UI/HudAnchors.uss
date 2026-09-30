@@ -1,0 +1,134 @@
+/* HudAnchors.cs — the fixed 5-slot frame of every portrait screen:
+   TL title · TC FPS · TR menu (sheet) · BL debug (performance) · BR version. */
+@import url("Tokens.uss");
+
+.ha-bar {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+}
+.ha-bar-top { height: var(--po-btn); }
+.ha-bar-bottom { min-height: var(--po-chip); }
+.ha-side { flex-grow: 1; flex-basis: 0; flex-direction: row; align-items: center; min-width: 0; }
+.ha-side-right { justify-content: flex-end; }
+.ha-bottom-centre { flex-grow: 1; flex-shrink: 1; flex-direction: row; align-items: center; min-width: 0; margin-left: var(--po-pad); margin-right: var(--po-pad); }
+
+/* TL: title chip */
+.ha-title-chip {
+    flex-shrink: 1;
+    min-width: 0;
+    padding-left: var(--po-pad);
+    border-left-width: 8px;
+    border-left-color: var(--po-gold);
+}
+.ha-title {
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
+    font-size: 34px;
+    color: var(--po-fg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ha-sub {
+    font-size: var(--po-text);
+    color: var(--po-soft);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* TC: FPS pill */
+.ha-fps {
+    flex-shrink: 0;
+    min-width: 112px;
+    height: 48px;
+    margin-left: var(--po-pad-s);
+    margin-right: var(--po-pad-s);
+    padding-left: var(--po-pad);
+    padding-right: var(--po-pad);
+    -unity-text-align: middle-center;
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
+    font-size: var(--po-text);
+    color: var(--po-green);
+    background-color: rgba(0, 0, 0, 0.45);
+    border-radius: 24px;
+}
+.ha-fps-mid { color: var(--po-gold); }
+.ha-fps-low { color: var(--po-red); }
+
+/* TR: menu button (three bars) + extras slot */
+.ha-extra { flex-direction: row; align-items: center; flex-shrink: 1; min-width: 0; }
+.ha-icon-btn {
+    width: var(--po-btn);
+    height: var(--po-btn);
+    margin: 0;
+    padding: 0;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--po-card);
+    border-width: 0;
+    border-radius: var(--po-radius);
+}
+.ha-icon-btn:hover { background-color: var(--po-card-hover); }
+.ha-icon-btn--on { background-color: var(--po-gold); }
+.ha-burger-bar { width: 44px; height: 6px; margin: 4px 0; border-radius: 3px; background-color: var(--po-fg); }
+.ha-icon-btn--on > .ha-burger-bar { background-color: var(--po-ink); }
+
+/* BL: debug button (a small bar chart = performance) */
+.ha-debug-btn { width: var(--po-chip); height: var(--po-chip); flex-direction: row; align-items: flex-end; padding-bottom: 18px; }
+.ha-dbg-bar { width: 9px; margin: 0 3px; border-radius: 2px; background-color: var(--po-cyan); }
+.ha-debug-btn.ha-icon-btn--on > .ha-dbg-bar { background-color: var(--po-ink); }
+
+/* BR: version */
+.ha-version {
+    flex-shrink: 0;
+    font-size: var(--po-text);
+    color: var(--po-muted);
+    -unity-text-align: middle-right;
+    white-space: nowrap;
+}
+
+/* menu sheet: drops from TR over the content */
+.ha-sheet {
+    position: absolute;
+    right: var(--po-gap);
+    min-width: 440px;
+    padding: var(--po-pad-s);
+    background-color: rgba(10, 16, 30, 0.97);
+    border-width: 2px;
+    border-color: var(--po-gold);
+    border-radius: 14px;
+    display: none;
+}
+.ha-sheet--open { display: flex; }
+.ha-sheet-item {
+    height: var(--po-btn);
+    margin: 4px 0;
+    padding: 0 26px;
+    -unity-text-align: middle-left;
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
+    font-size: var(--po-text-m);
+    color: var(--po-fg);
+    background-color: var(--po-card);
+    border-width: 0;
+    border-radius: var(--po-radius);
+}
+.ha-sheet-item:hover { background-color: var(--po-card-hover); }
+
+/* debug panel: grows up from BL */
+.ha-debug {
+    position: absolute;
+    left: var(--po-gap);
+    right: var(--po-gap);
+    bottom: var(--po-gap);
+    padding: 6px 14px;
+    font-size: var(--po-text);
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
+    white-space: normal;
+    color: rgb(120, 255, 170);
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 8px;
+    display: none;
+}
+.ha-debug--on { display: flex; }

@@ -1,4 +1,5 @@
-"""12 The 360 Turntable — 8 athletes on the venue's spin spots (assets/scene_turntable8.xml), Rung 2 brain.
+"""12 The 360 Turntable — 8 athletes on the venue's ring of spin spots, neighbours 0.75 m apart
+(assets/scene_turntable8.xml, crowd scene: spinning neighbours knock each other off their spots), Rung 2 brain.
 Mirror of Unity TurntableEvent.
 
 On GO every athlete is commanded a pure in-place yaw rate (WZ, the top of the trained envelope) in the heat's seeded
@@ -27,7 +28,7 @@ LAYOUT = C.ROOT / "assets" / "turntable8_layout.json"
 WZ = 3.0               # rad/s — Rung 2 training envelope top (the G1 turntable drill uses 2.5)
 TURNS = 3
 DRIFT_PENALTY = 2.0    # s per metre of max drift
-RING_R = 1.1           # m — the painted ring around each spot (build_venues.py)
+RING_R = 0.75          # m — knocked onto a neighbour's spot (= the ring pitch, build_venues.SPIN_PITCH) = DQ
 START_S = 0.5          # s of zero command before GO (same as the Unity countdown hand-off)
 MAX_S = 15.0
 

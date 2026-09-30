@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rung S Training Review</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --card: #ffffff; --text: #1d1d1f; --muted: #5d5d66; --line: #e2e0da;
+    --v1: #1aa6c4; --v2: #d6307f; --good: #1f8a4c; --warn: #b8660b; --bad: #c2372b;
+    --t1: #fff4d6; --t2: #e3f3ff; --t3: #eeeaf8; --verdict: #e8f6ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+      --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+      --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+    --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+    --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.8rem; margin: 0 0 4px; }
+  h2 { margin: 0 0 4px; font-size: 1.3rem; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+  .verdict { background: var(--verdict); }
+  .verdict p { margin: 6px 0 0; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 10px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+  .up { color: var(--good); font-weight: 600; } .same { color: var(--muted); font-weight: 600; }
+  .down { color: var(--warn); font-weight: 600; } .fail { color: var(--bad); font-weight: 600; }
+  .tag { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--muted); }
+  img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); margin: 12px 0 16px; background: #fff; }
+  .levels { display: grid; gap: 12px; }
+  .lvl { border-radius: 10px; padding: 12px 16px; }
+  .lvl h3 { margin: 0 0 4px; font-size: .95rem; }
+  .lvl p { margin: 0; }
+  .l1 { background: var(--t1); } .l2 { background: var(--t2); } .l3 { background: var(--t3); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 8px; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+  footer { color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Rung S training review: stance skills</h1>
+  <p class="sub">Snapshot 2026-09-30 10:25, iteration ~430 of 1000 · MATT (<code>mattbio</code> body) ·
+    <span class="dot" style="background:var(--v1)"></span>rs_v1 = first try (stopped at 213)
+    <span class="dot" style="background:var(--v2)"></span>rs_v2 = this run (resumed from rs_v1 at 200, with a new reach reward)</p>
+
+  <div class="box verdict">
+    <h2>Verdict: rs_v2 is doing better than rs_v1</h2>
+    <p><strong>In one sentence:</strong> the athlete finally learns to reach, aims its chest twice as well, and still runs and never falls. Squat, march and one-leg balance haven't improved yet, though, and its movements are getting a little shakier.</p>
+    <p><strong>Why:</strong> in rs_v1 the reach reward only paid when the hand was within about 10 cm of the target, but the hand starts 0.5–1.2 m away, so it earned nothing and never learned. rs_v2 adds a reward for getting closer, which gives the hand a slope to follow. Part of rs_v2's lead is simply more training time (430 vs 213 iterations). Reach is the exception: it sat at exactly 0 for all 213 rs_v1 iterations, so that gain comes from the fix, not the extra time.</p>
+    <div class="scroll">
+    <table>
+      <tr><th>Skill (training reward, ~10-iteration average)</th><th>rs_v1 at 213</th><th>rs_v2 at 430</th><th>Change</th><th>Gate at 400 (10 seeds)</th></tr>
+      <tr><td>E4 Hand reach, precise (σ 0.10 m)</td><td>0.000</td><td>0.018</td><td class="up">was dead, now learning</td><td class="fail">0/10 · off by 0.26–0.36 m (needs 0.08)</td></tr>
+      <tr><td>E4 Hand reach, coarse (new in rs_v2)</td><td>–</td><td>0.180</td><td class="up">~75 % of its ceiling</td><td></td></tr>
+      <tr><td>E2 Torso aim</td><td>0.143</td><td>0.332</td><td class="up">2.3× better</td><td>6/10</td></tr>
+      <tr><td>E3 Squat</td><td>0.055</td><td>0.086</td><td class="up">+55 %, still low</td><td class="fail">0/10 · barely squats</td></tr>
+      <tr><td>E6 Flamingo (one leg)</td><td>0.341</td><td>0.346</td><td class="same">same</td><td class="fail">0/10 · stance foot slides 0.40 m</td></tr>
+      <tr><td>E7 March in place</td><td>0.105</td><td>0.104</td><td class="same">same</td><td class="fail">0/10 · no steps</td></tr>
+      <tr><td>Running (track_lin / track_ang)</td><td>1.48 / 0.87</td><td>1.45 / 0.82</td><td class="down">−2 % / −6 %</td><td>Rung 2 G1 9/10 (rung2.onnx: 10/10)</td></tr>
+      <tr><td>Action noise (Policy/mean_std)</td><td>0.48</td><td>0.52</td><td class="down">rising: shakier</td><td></td></tr>
+      <tr><td>Training speed (env-steps/s)</td><td>28–39k</td><td>77k → 14k</td><td class="down">slowed by other apps</td><td></td></tr>
+    </table>
+    </div>
+  </div>
+
+  <section class="box">
+    <h2>1 · Precise hand reach: dead in rs_v1, learning in rs_v2</h2>
+    <div class="tag">Episode_Reward/skill_reach (the original σ = 0.10 m reach reward, logged in both runs)</div>
+    <img src="1_reach_precise.png" alt="Precise reach reward: rs_v1 flat at zero for 216 iterations; rs_v2 rises from 0 at 220 to 0.02 at 430">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The blue robot never touched the dot. The pink robot is starting to touch it. Pink is winning!</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This is the “touch the dot exactly” prize. In the first try (blue) the robot didn't win it once, because it only counted when the hand was already really close. This time (pink) we also give a small prize for getting closer. The robot followed those small prizes, and now its hand gets close enough to win the exact prize sometimes, which is why the pink line lifts off the floor and keeps climbing.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>Same reward term in both runs, so this is a fair comparison. rs_v1 averaged 0.000 for 213 iterations: with the hand 0.5–1.2 m from the target, <code>exp(−d²/0.10²)</code> is ~e<sup>−25</sup>, so there was no gradient. rs_v2's coarse kernel (σ 0.5 m, not shown; 0 → 0.18) pulled the hand into the region where this σ 0.10 term starts to pay, and it has been rising faster since iteration ~370 (0.018 now; ceiling ≈ 0.24). The drill still fails (error 0.26–0.36 m vs 0.08 m). The trend should continue, and the σ 0.03 term (0.001) takes over last.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>2 · Torso aim: rs_v2 more than doubles rs_v1</h2>
+    <div class="tag">Episode_Reward/skill_torso</div>
+    <img src="2_torso.png" alt="Torso aim reward: rs_v1 climbs slowly to 0.14 at 216; rs_v2 jumps to about 0.3 by iteration 300 and holds">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The robot turns its tummy to look at the flying target. Pink turns better than blue!</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>In Torso Archer the robot keeps its feet still and twists or bends its upper body to point at a target. Blue got better slowly. Pink shot up fast and then leveled off at about twice blue's score. In the test it already gets 6 out of 10 tries fully right. (Pink starts at 0 only because the score board resets when training restarts.)</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>rs_v1 climbed ~0.07 per 100 iterations to 0.143; rs_v2 reached ~0.30 within 100 iterations of the resume and has plateaued near 0.33 (ceiling ≈ 0.48). The dip to 0 at iteration 200 is an artifact: the episode-reward buffer refills after a resume (1000-step episodes ≈ 40 iterations). Most of the gain is extra training on the same torso reward. A likely contributor is that learning to reach trains upper-body control that torso aim shares, but that's a hypothesis, not measured. G1: 6/10 seeds (worst yaw/pitch error 0.09–0.21 rad vs 0.15 rad). The plateau suggests the remaining misses are the hardest aims (±60° yaw, +40° pitch).</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>3 · Warning sign: the movements are getting shakier</h2>
+    <div class="tag">Policy/mean_std (how much random “try something” noise the policy adds to each joint command)</div>
+    <img src="3_action_noise.png" alt="Policy action noise: rs_v1 dips to 0.47 then rises to 0.48; rs_v2 rises steadily from 0.465 to 0.525">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>This line shows how wiggly the robot is. It keeps going up, so the robot is getting wigglier. We want it calm.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>While practising, the robot adds a little random wiggle to its moves to try new things. Normally, as it learns, it gets surer and wiggles less, so the line should go down. Here it keeps going up, so the robot is still unsure. That's okay while it's learning four new tricks, but if the line keeps climbing, careful tricks like standing on one leg and touching a small dot get harder to practise.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>The Gaussian action std fell 0.49 → 0.47 in rs_v1's first 100 iterations (it was refining Rung 2 behaviour), then turned upward. rs_v2 rises linearly, 0.465 → 0.525, and entropy rises with it (12.1 → 13.8). The entropy bonus and the new, still-unsolved skill objectives (squat, march, flamingo, precise reach) are pushing exploration up rather than letting the policy commit. The gate uses the deterministic mean action, so this doesn't hurt the drills directly, but noisier rollouts make the advantage estimates for precise skills worse. It's also consistent with flamingo scoring ~72 % of its training ceiling while failing the drill on stance-foot slide (0.40 m vs 0.10 m): the reward checks contact and lift, not slip. If the std passes ~0.55 or squat and march are still flat by iteration 600, the fixes are: lower <code>entropy_coef</code>, add a stance-foot slip penalty to <code>skill_flamingo</code>, and give squat and march coarse kernels (the same fix that worked for reach).</p></div>
+    </div>
+  </section>
+
+  <footer>Charts are TensorBoard screenshots (smoothing 0.6), captured with <code>training/tools/tb_shots.py</code> (headless Chrome).
+    Numbers are ~10-iteration averages read from the event files. The gate result is from <code>parity/watch/g1_rungS_rs_v2_it400.json</code>.
+    Training has been slowed about 5× since ~09:55 by RealityScan and Maestro using the CPU and GPU. This page is refreshed at the end of the run.</footer>
+</main>
+</body>
+</html>

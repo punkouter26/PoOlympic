@@ -9,14 +9,18 @@ namespace PoOlympic
     /// <summary>
     /// Straight-track races for 8 runners (Rung 2 brain) — mirror of training/poolympic/events/track.py:
     ///   Dash      (8  The 30m Dash)        sprint `distance` from standstill; rank by finish time
-    ///   Terminal  (19 Terminal Velocity)   open sprint of the back straight at the max trained command; rank by peak 1 s speed
+    ///   Terminal  (19 Terminal Velocity)   open sprint of the back straight at the max trained command; rank by peak 1 s speed.
+    ///                                      Lane break (track.py break_target): past breakX the field squeezes to the
+    ///                                      inside (the runner's left): each line moves to `squeeze` × its distance from
+    ///                                      lane 1 (1.22 → 0.61 m apart), at most mergeDeg off straight — shoulder to shoulder
     ///   Brake     (22 Emergency Brake)     run in at 3 m/s; each runner brakes (command 0) at its seeded "nerve" distance
     ///                                      before the red line; toe past the line = DQ; rank by the gap left
     ///   Inverted  (9  The Inverted Sprint)  20 m backwards (command vx &lt; 0; runners face away from the finish, the scene
     ///                                      turns the stadium 180°); pelvis more than `laneHalf` off the lane line = DQ
     ///   AllFours  (8  30m All Fours)       crawl brains (events/all_fours.py): start face down, get onto all fours during
     ///                                      the countdown, crawl 30 m; falls never eliminate (tumbles are counted), standing
-    ///                                      up for more than standDqSeconds = DQ; rank by finish time
+    ///                                      up for more than standDqSeconds = DQ; rank by finish time, then (stuck in a
+    ///                                      tangle when the clock runs out) by distance covered
     ///   Steeplechase (13 Steeplechase Jog) 50 m at 3.5 m/s with the flight brain; scored on ground time = finish time −
     ///                                      hang time (flights: both feet off the ground ≥ minFlight, counted per physics
     ///                                      substep like track.py FootGait); rank by ground time, then finish time
@@ -35,8 +39,7 @@ namespace PoOlympic
             public string name;
             [NonSerialized] public AthleteJudge judge;
             [NonSerialized] public string status = "";
-            [NonSerialized] public float finishS = -1, peakMps, gapM = float.NaN, nerveM, x, v, y;
-            [NonSerialized] public bool braking;
+            [NonSerialized] public float finishS = -1, peakMps, gapM = float.NaN, nerveM, x, v, y;            [NonSerialized] public bool braking;
             [NonSerialized] public int place, tumbles, torsoId = -1;
             [NonSerialized] public float standT, lambda = 1f;
             [NonSerialized] public bool wasOnFours;
@@ -58,6 +61,9 @@ namespace PoOlympic
         public Vector2 brakeNerve = new(1.4f, 2.2f);
         public float toeAhead = 0.25f, stoppedSpeed = 0.1f, laneHalf = 0.61f;
         public float countdownSeconds = 3f, resultHoldSeconds = 6f;
+        [Header("Terminal lane break (= track.py BREAK_X, MERGE_DEG, SQUEEZE)")]
+        public bool laneBreak = true;
+        public float breakX = 15f, mergeDeg = 12f, squeeze = 0.5f;
         [Header("Steeplechase (= track.py steeple)")]
         public float minFlight = 0.02f;
         [Header("All fours (= all_fours.py)")]
@@ -104,6 +110,7 @@ namespace PoOlympic
                 r.speedWindow.Clear();
                 r.runner.command = Vector3.zero;
                 r.runner.laneKeeping = false;
+                r.runner.steer = null;
                 if (!first) r.runner.RequestReset();
             }
             Current = Phase.Ready;
@@ -168,7 +175,12 @@ namespace PoOlympic
                         Current = Phase.Live;
                         PhaseTime = 0;
                         _liveStartTick = _prevTick = lead.ControlTick;
-                        foreach (var r in runners) { r.runner.command = new Vector3(commandSpeed, 0f, 0f); r.runner.laneKeeping = true; }
+                        foreach (var r in runners)
+                        {
+                            r.runner.command = new Vector3(commandSpeed, 0f, 0f);
+                            r.runner.laneKeeping = true;
+                            if (mode == Mode.Terminal && laneBreak) { var rr = r; r.runner.steer = (x, y, yaw, c) => BreakSteer(rr, x, yaw, c); }
+                        }
                     }
                     break;
                 case Phase.Live:
@@ -274,7 +286,23 @@ namespace PoOlympic
         }
 
         void Out(Runner r, string status) { r.status = status; Stand(r); }
-        void Stand(Runner r) { r.runner.command = Vector3.zero; r.runner.laneKeeping = false; }
+        void Stand(Runner r) { r.runner.command = Vector3.zero; r.runner.laneKeeping = false; r.runner.steer = null; }
+
+        /// <summary>Terminal lane break (PolicyRunner.steer, every control tick after lane keeping): past breakX, steer for
+        /// the squeezed line (track.py break_target) through the contract law with the offset capped at mergeDeg (track.py
+        /// merge_offset). x = progress from this runner's lane origin.</summary>
+        unsafe Vector3 BreakSteer(Runner me, double x, double yaw, Vector3 cmd)
+        {
+            if (x < breakX) return cmd;
+            var d = MjScene.Instance.Data;
+            double myY = d->qpos[me.runner.Binding.RootQposAdr + 1];
+            double inside = runners.Max(o => o.runner.laneOriginY);
+            double target = inside - squeeze * (inside - me.runner.laneOriginY);
+            double cap = Math.Tan(mergeDeg * Math.PI / 180.0) / me.runner.Contract.steering.lane_gain;
+            double off = Math.Clamp(myY - target, -cap, cap);
+            cmd.z = (float)me.runner.Contract.SteerYawRateFromYaw(yaw, off, cmd.x);
+            return cmd;
+        }
 
         void Finish()
         {
@@ -284,7 +312,8 @@ namespace PoOlympic
             IEnumerable<Runner> order = mode switch
             {
                 Mode.Dash or Mode.Inverted => runners.OrderBy(r => r.status == "FINISHED" ? 0 : 1).ThenBy(r => r.finishS),
-                Mode.AllFours => runners.OrderBy(r => r.status == "FINISHED" ? 0 : r.status == "DNF" ? 1 : 2).ThenBy(r => r.finishS),
+                Mode.AllFours => runners.OrderBy(r => r.status == "FINISHED" ? 0 : r.status == "DNF" ? 1 : 2).ThenBy(r => r.finishS)
+                                        .ThenByDescending(r => r.status == "DNF" ? Mathf.Min(r.x, distance) : 0f),
                 Mode.Steeplechase => runners.OrderBy(r => r.status == "FINISHED" ? 0 : 1).ThenBy(r => r.status == "FINISHED" ? r.scoreS : 0f).ThenBy(r => r.finishS),
                 Mode.Terminal => runners.OrderBy(r => r.status == "FELL" ? 1 : 0).ThenByDescending(r => r.peakMps),
                 _ => runners.OrderBy(r => r.status == "STOPPED" ? 0 : 1).ThenBy(r => r.status == "STOPPED" ? r.gapM : 0f),
@@ -301,7 +330,8 @@ namespace PoOlympic
         {
             Mode.Dash => r.status == "FINISHED" ? $"{r.finishS:0.00} s" : r.status,
             Mode.Inverted => r.status == "FINISHED" ? $"{r.finishS:0.00} s" : r.status == "DQ" ? "DQ (left lane)" : r.status,
-            Mode.AllFours => (r.status == "FINISHED" ? $"{r.finishS:0.00} s" : r.status == "DQ" ? "DQ (stood up)" : r.status)
+            Mode.AllFours => (r.status == "FINISHED" ? $"{r.finishS:0.00} s" : r.status == "DQ" ? "DQ (stood up)"
+                              : r.status == "DNF" ? $"DNF · {Mathf.Min(r.x, distance):0.0} m" : r.status)
                              + (r.tumbles > 0 ? $" · {r.tumbles} tumble" + (r.tumbles > 1 ? "s" : "") : ""),
             Mode.Terminal => $"{r.peakMps:0.00} m/s" + (r.status == "FELL" ? " FELL" : ""),
             Mode.Steeplechase => r.status == "FINISHED"

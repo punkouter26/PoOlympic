@@ -147,6 +147,12 @@ namespace PoOlympic
         public double SteerYawRate(double w, double x, double y, double z, double laneOffsetY, double vxCommand)
         {
             double yaw = Math.Atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z));
+            return SteerYawRateFromYaw(yaw, laneOffsetY, vxCommand);
+        }
+
+        /// <summary>SteerYawRate from a heading already computed (PolicyRunner.steer hands it over).</summary>
+        public double SteerYawRateFromYaw(double yaw, double laneOffsetY, double vxCommand)
+        {
             double dir = vxCommand < 0 ? -1.0 : 1.0;
             double target = Math.Atan(-steering.lane_gain * laneOffsetY * dir);
             double err = target - yaw + Math.PI;

@@ -8,7 +8,7 @@
    "prefix": "L0_",
    "body": "matt",
    "origin": [
-    -9.0,
+    -2.4000000000000057,
     0.0,
     0.0
    ],
@@ -22,7 +22,7 @@
    "prefix": "L1_",
    "body": "zombie",
    "origin": [
-    -6.0,
+    -1.6000000000000014,
     0.0,
     0.0
    ],
@@ -36,7 +36,7 @@
    "prefix": "L2_",
    "body": "matt",
    "origin": [
-    -3.0,
+    -0.8000000000000043,
     0.0,
     0.0
    ],
@@ -64,8 +64,8 @@
    "prefix": "L4_",
    "body": "matt",
    "origin": [
-    -9.0,
-    -4.0,
+    -2.4000000000000057,
+    -0.8,
     0.0
    ],
    "cubes": [
@@ -78,8 +78,8 @@
    "prefix": "L5_",
    "body": "zombie",
    "origin": [
-    -6.0,
-    -4.0,
+    -1.6000000000000014,
+    -0.8,
     0.0
    ],
    "cubes": [
@@ -92,8 +92,8 @@
    "prefix": "L6_",
    "body": "matt",
    "origin": [
-    -3.0,
-    -4.0,
+    -0.8000000000000043,
+    -0.8,
     0.0
    ],
    "cubes": [
@@ -107,7 +107,7 @@
    "body": "zombie",
    "origin": [
     0.0,
-    -4.0,
+    -0.8,
     0.0
    ],
    "cubes": [
@@ -117,6 +117,7 @@
   }
  ],
  "pedestal_h": 0.0,
+ "crowd": true,
  "lineup": [
   "matt",
   "zombie",
@@ -129,11 +130,20 @@
  ],
  "note": "lane k: names prefixed L<k>_, athlete body per lane (assets/<body>.xml), pelvis shifted by origin",
  "shaker": {
-  "half": 0.8,
   "h": 0.1,
-  "mass": 150.0,
-  "stiffness": 36300.0,
-  "damping": 1160.0,
-  "range": 0.25
+  "mass": 1200.0,
+  "stiffness": 290400.0,
+  "damping": 9280.0,
+  "range": 0.25,
+  "shared": true,
+  "half": [
+   2.0,
+   1.2
+  ],
+  "pos": [
+   -1.2000000000000028,
+   -0.4,
+   0.0
+  ]
  }
 }

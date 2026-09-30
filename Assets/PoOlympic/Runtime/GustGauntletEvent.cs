@@ -13,6 +13,9 @@ namespace PoOlympic
     /// same size, own seeded side) and on every `shakeEvery`-th round a floor shake (platform velocity kick). Recovery per
     /// round = time until back within `calmRadius` and slower than `calmSpeed` for `calmSeconds` (cap = round length);
     /// a fall or a foot off the platform = out. Rank: still in by total recovery time, then eliminated (later = better).
+    /// Crowd stage (scene_shaker8 since 2026-09-30): all 8 share ONE shaker floor (joints shaker_x/_y) in a tight 2 x 4
+    /// grid — bursts push the rows into each other and a jolt throws everyone at once (one direction per round, drawn from
+    /// its own per-heat stream); scenes with a platform per lane (L&lt;k&gt;_shaker) keep per-lane jolts.
     ///   Ready (countdown) → Live → Result → auto restart (new seed)
     /// </summary>
     public class GustGauntletEvent : MonoBehaviour, IBroadcastBoard, ILaneRoster
@@ -59,7 +62,8 @@ namespace PoOlympic
         public float GustNow => gustStart + gustStep * Mathf.Max(0, Round - 1);
         public IEnumerable<Athlete> Standings => athletes.OrderBy(a => a.In ? 0 : 1).ThenBy(a => a.In ? a.total : -a.outAt);
 
-        System.Random _rng;
+        System.Random _rng, _floorRng;
+        bool? _shared;                          // one shaker floor for everyone (joints shaker_x/_y)
         int _liveStartTick, _nextRoundTick;
         bool _traitsPending = true;
 
@@ -84,6 +88,7 @@ namespace PoOlympic
         {
             if (!first) Attempt++;
             _rng = new System.Random(seed + Attempt);
+            _floorRng = new System.Random((seed + Attempt) * 7919 + 5999);
             foreach (var a in athletes)
             {
                 a.recoveries.Clear(); a.total = 0; a.outAt = a.burstAt = -1; a.calm = 0; a.reason = ""; a.place = 0;
@@ -122,7 +127,9 @@ namespace PoOlympic
             if (!MjScene.InstanceExists || MjScene.Instance.Data == null) return;
             var m = MjScene.Instance.Model;
             var d = MjScene.Instance.Data;
-            foreach (var a in athletes) a.judge ??= new AthleteJudge(m, a.runner, "ground", a.ShakerPrefix + "shaker");
+            foreach (var a in athletes) a.judge ??= new AthleteJudge(m, a.runner, "ground", a.ShakerPrefix + "shaker", "shaker");
+            if (_shared == null)
+                _shared = MujocoLib.mj_name2id(m, (int)MujocoLib.mjtObj.mjOBJ_JOINT, "shaker_x") >= 0;
             if (_traitsPending) { DrawTraits(); _traitsPending = false; }
             PhaseTime += Time.deltaTime;
             var lead = athletes[0].runner;
@@ -154,6 +161,13 @@ namespace PoOlympic
                         Round++;
                         float dv = GustNow;
                         bool shake = Round % shakeEvery == 0;
+                        double fa = _floorRng.NextDouble() * 2 * Math.PI;   // shared floor: one jolt direction per round
+                        var jolter = athletes.FirstOrDefault(a => a.In);
+                        if (shake && _shared == true && jolter != null)
+                        {
+                            jolter.runner.Request(new Disturbance { kind = "kick", target = "shaker_x", dqvel = new[] { shakeSpeed * Math.Cos(fa) } });
+                            jolter.runner.Request(new Disturbance { kind = "kick", target = "shaker_y", dqvel = new[] { shakeSpeed * Math.Sin(fa) } });
+                        }
                         foreach (var a in athletes)
                         {
                             double side = _rng.NextDouble() < 0.5 ? Math.PI / 2 : -Math.PI / 2;
@@ -163,7 +177,7 @@ namespace PoOlympic
                             if (a.burstAt >= 0) a.recoveries.Add(roundSeconds);
                             double bdv = dv * a.runner.Contract.SpeedScale;   // Froude: gusts scale with the body like its speeds
                             a.runner.Request(new Disturbance { kind = "shove", target = "root", dqvel = new[] { bdv * Math.Cos(ang), bdv * Math.Sin(ang), 0 } });
-                            if (shake)
+                            if (shake && _shared != true)
                             {
                                 var p = a.ShakerPrefix;
                                 a.runner.Request(new Disturbance { kind = "kick", target = p + "shaker_x", dqvel = new[] { shakeSpeed * Math.Cos(sa) } });

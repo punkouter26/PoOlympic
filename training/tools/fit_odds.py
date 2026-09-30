@@ -38,7 +38,7 @@ R2 = {"matt": BR / "rung2.onnx", "zombie": BR / "zombie_rung2.onnx"}
 EVENTS = {
     1: ("The Iron Pedestal", "pedestal", "pedestal8"),
     5: ("The Gust Gauntlet", "gauntlet", "shaker8"),
-    8: ("30m All Fours", "all_fours", "track8"),
+    8: ("30m All Fours", "all_fours", "crawl8"),
     9: ("The Inverted Sprint", "track:inverted", "track8"),
     10: ("Crab Shuffle Relay", "crab", "crab8"),
     11: ("Slalom Sprint", "slalom", "slalom8"),

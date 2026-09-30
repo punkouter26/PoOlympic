@@ -46,7 +46,7 @@ class Disturbance:
 def default_disturbances(body: bodies.Body | None = None) -> list[Disturbance]:
     """Standard parity script: lateral 0.5 m/s shove at 1.0 s (other bodies: Froude-scaled), 2 kg cube dropped from
     z = 3 m at 2.0 s."""
-    dv = 0.5 if body is None or body.name == "matt" else round(0.5 * body.speed_scale, 4)
+    dv = 0.5 if body is None or body.family == "matt" else round(0.5 * body.speed_scale, 4)
     return [
         Disturbance(50, "shove", "root", dqvel=[0.0, dv, 0.0]),
         Disturbance(100, "cube", "cube0_free", qpos=[0.0, 0.2, 3.0, 1.0, 0.0, 0.0, 0.0], qvel=[0.0] * 6),

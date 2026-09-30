@@ -1,7 +1,11 @@
 """Straight-track races, 8 runners, Rung 2 brain (assets/scene_track8.xml). Mirror of Unity TrackRaceEvent.
 
   dash      (8  The 30m Dash)          sprint 30 m from standstill; rank by finish time
-  terminal  (19 Terminal Velocity)     open 84.39 m sprint (back straight) at the maximum trained command; rank by peak 1 s speed
+  terminal  (19 Terminal Velocity)     open 84.39 m sprint (back straight) at the maximum trained command; rank by peak 1 s speed.
+                                       Lane break (crowd rule, 2026-09-30): past BREAK_X the field squeezes to the
+                                       inside (lane 1 = the runner's left): every runner's line moves to SQUEEZE x its
+                                       distance from the inside lane (1.22 -> 0.61 m apart: shoulder to shoulder),
+                                       merging at most MERGE_DEG off straight (break_target)
   brake     (22 Emergency Brake)       run in at BRAKE_VX, each runner brakes (command 0) when its pelvis is BRAKE_TRIGGER
                                        metres before the red line; must stop without crossing it (toe past the line =
                                        DQ); rank by the gap left to the line
@@ -38,12 +42,28 @@ MODES = {
     "inverted": {"distance": 20.0, "vx": -1.5, "max_s": 30.0},   # vx = the Rung 2 envelope's backward limit
     "steeple": {"distance": 50.0, "vx": 3.5, "max_s": 30.0},
 }
+BREAK_X = 15.0        # m — terminal: the green lane-break line
+MERGE_DEG = 12.0      # terminal: largest heading off straight while merging (lateral ~0.8 m/s at 4 m/s)
+SQUEEZE = 0.5         # terminal: lines after the break = inside + SQUEEZE x (lane line - inside). Tuned on CPU: one
+                      # shared inside line gave rear-end pile-ups (2-6 of 8 down, slower zombies run over); 0.5 = steady
+                      # shoulder contact, 1-3 MATTs down; 0.45 = 2-5 down
 MIN_FLIGHT = 0.02     # s — steeple: both feet off the ground at least this long = a flight (contact chatter ignored)
 LANE_HALF = 0.61      # m — inverted sprint: pelvis further than this from the lane centre line = DQ (lane drift)
 BRAKE_NERVE = (1.4, 2.2)   # m before the line at which a runner hits the brakes — per-runner "nerve" (seeded); the
                            # brain stops from 3 m/s with the toe ~1.6 m past its trigger point → late = DQ, early = big gap
 TOE_AHEAD = 0.25      # m — the toe tip is ahead of the pelvis while standing
 STOPPED = 0.1         # m/s
+
+
+def break_target(lane_y: float, inside_y: float) -> float:
+    """Terminal lane break: the line a runner steers for after BREAK_X (race frame y, +y = inside)."""
+    return inside_y - SQUEEZE * (inside_y - lane_y)
+
+
+def merge_offset(y: float, target: float) -> float:
+    """Lane offset fed to the contract steering law, capped so the merge heading stays within MERGE_DEG."""
+    cap = math.tan(math.radians(MERGE_DEG)) / C.LANE_GAIN
+    return float(np.clip(y - target, -cap, cap))
 
 
 @dataclass
@@ -111,6 +131,7 @@ def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = Non
     speed_hist = [[] for _ in lanes]
     dt = m.opt.timestep * C.DECIMATION
     tick = 0
+    inside_y = max(float(ln.origin[1]) for ln in lanes)        # lane 1 (the runner's left) = the inside
     while tick * dt < cfg["max_s"]:
         t = tick * dt
         for i, ln in enumerate(lanes):
@@ -126,7 +147,10 @@ def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = Non
                 cmd = np.zeros(3)
             else:
                 q = d.qpos[ra + 3: ra + 7]
-                cmd = np.array([cfg["vx"], 0.0, C.steer_yaw_rate(q, d.qpos[ra + 1] - ln.origin[1], cfg["vx"])])
+                off = d.qpos[ra + 1] - ln.origin[1]
+                if mode == "terminal" and x >= BREAK_X:
+                    off = merge_offset(d.qpos[ra + 1], break_target(float(ln.origin[1]), inside_y))
+                cmd = np.array([cfg["vx"], 0.0, C.steer_yaw_rate(q, off, cfg["vx"])])
             ln.control(ln.sess, d, cmd)
         for s in range(C.DECIMATION):
             for ln in lanes:

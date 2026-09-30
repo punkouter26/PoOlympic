@@ -3,9 +3,9 @@ using UnityEngine;
 namespace PoOlympic
 {
     /// <summary>
-    /// Event HUD for Iron Pedestal (Phase D2 anchors, IMGUI placeholder until the broadcast UI):
-    /// TL title · TC timer / telemetry · TR attempt stats · BL controls · BR version · centre countdown / result banner.
-    /// Laid out inside the 9:16 camera viewport.
+    /// Event HUD for the solo Iron Pedestal (IMGUI dev screen) on the shared anchors (HudAnchors, UI consolidation
+    /// 2026-09-29): TL title + timer / telemetry · TC FPS · TR menu + attempt stats · BL debug controls · BR version ·
+    /// centre countdown / result banner. Laid out inside the 9:16 camera viewport.
     /// </summary>
     public class EventHud : MonoBehaviour
     {
@@ -40,17 +40,26 @@ namespace PoOlympic
             GUI.Label(new Rect(a.x + pad, a.y + pad, a.width * 0.6f, 34 * s), title, _mid);
             GUI.Label(new Rect(a.x + pad, a.y + pad + 32 * s, a.width * 0.6f, 22 * s), subtitle, _small);
 
-            // TC — timer / telemetry
+            // TL (under the title) — timer / telemetry
             float remaining = ev.Current == IronPedestalEvent.Phase.Live ? Mathf.Max(0, ev.durationSeconds - ev.LiveTime)
                             : ev.Current == IronPedestalEvent.Phase.Ready ? ev.durationSeconds : Mathf.Max(0, ev.durationSeconds - ev.LiveTime);
-            var tc = new Rect(a.x + a.width * 0.5f - 90 * s, a.y + pad + 60 * s, 180 * s, 70 * s);
-            GUI.Box(tc, GUIContent.none, _panel);
-            GUI.Label(new Rect(tc.x, tc.y + 2 * s, tc.width, 40 * s), $"{remaining:0.0}s", new GUIStyle(_mid) { alignment = TextAnchor.MiddleCenter, fontSize = Mathf.RoundToInt(32 * s) });
-            GUI.Label(new Rect(tc.x, tc.y + 40 * s, tc.width, 24 * s), $"gusts {ev.Gusts} · cubes {ev.Cubes} · {_fps:F0} fps", new GUIStyle(_small) { alignment = TextAnchor.MiddleCenter });
+            var tl = new Rect(a.x + pad, a.y + pad + 60 * s, 180 * s, 70 * s);
+            GUI.Box(tl, GUIContent.none, _panel);
+            GUI.Label(new Rect(tl.x, tl.y + 2 * s, tl.width, 40 * s), $"{remaining:0.0}s", new GUIStyle(_mid) { alignment = TextAnchor.MiddleCenter, fontSize = Mathf.RoundToInt(32 * s) });
+            GUI.Label(new Rect(tl.x, tl.y + 40 * s, tl.width, 24 * s), $"gusts {ev.Gusts} · cubes {ev.Cubes}", new GUIStyle(_small) { alignment = TextAnchor.MiddleCenter });
 
-            // TR — attempt stats
+            // TC — FPS
+            GUI.Label(new Rect(a.x + a.width * 0.5f - 60 * s, a.y + pad, 120 * s, 30 * s), $"{_fps:F0} fps", new GUIStyle(_mid) { alignment = TextAnchor.MiddleCenter });
+
+            // TR — menu + attempt stats
             var tr = new GUIStyle(_small) { alignment = TextAnchor.UpperRight };
-            GUI.Label(new Rect(a.xMax - 200 * s - pad, a.y + pad, 200 * s, 70 * s),
+            float my = a.y + pad;
+            if (MeetLineup.MenuAvailable)
+            {
+                if (GUI.Button(new Rect(a.xMax - 96 * s - pad, my, 96 * s, 40 * s), "Menu")) MeetLineup.ReturnToMenu();
+                my += 46 * s;
+            }
+            GUI.Label(new Rect(a.xMax - 200 * s - pad, my, 200 * s, 70 * s),
                 $"attempt {ev.Attempt + 1}  (seed {ev.seed + ev.Attempt})\nwins {ev.Wins} / {ev.Attempt + (ev.Current == IronPedestalEvent.Phase.Result ? 1 : 0)}\nbest {ev.BestTime:0.0} s", tr);
 
             // centre banner
@@ -63,7 +72,7 @@ namespace PoOlympic
             if (banner.Length > 0)
                 GUI.Label(new Rect(a.x, a.y + a.height * 0.30f, a.width, 160 * s), banner, _big);
 
-            // BL — controls
+            // BL — debug controls
             float bw = 96 * s, bh = 40 * s, by = a.yMax - bh - pad;
             if (GUI.Button(new Rect(a.x + pad, by, bw, bh), "Restart")) ev.Restart();
             if (GUI.Button(new Rect(a.x + pad + (bw + 6 * s), by, bw, bh), "Gust")) ev.cubes.Shove(ev.runner, Random.insideUnitCircle.normalized * ev.gustDv);

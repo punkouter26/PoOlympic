@@ -63,7 +63,7 @@ code { background: var(--chip); padding: 1px 5px; border-radius: 4px; font-size:
 <body>
 <main>
   <h1><span>PoOlympic</span> Events</h1>
-  <p class="lead">All 30 events of the programme: how each one is played, how it is won, and whether it is playable in Unity yet. Status as of 28 Sep 2026.</p>
+  <p class="lead">All 30 events of the programme: how each one is played, how it is won, and whether it is playable in Unity yet. Status as of 30 Sep 2026.</p>
 
   <div class="stats">
     <div class="stat"><b>30</b><small>events in the programme</small></div>
@@ -78,6 +78,7 @@ code { background: var(--chip); padding: 1px 5px; border-radius: 4px; font-size:
     <ul>
       <li><b>Flow:</b> countdown → live → result banner → a new heat starts automatically (or press <em>New heat</em>; <em>Menu</em> returns to the main menu).</li>
       <li><b>Athlete traits</b> (drawn fresh each heat, shown in the HUD): <em>strength</em> ×0.85–1.15 on muscle force, <em>latency</em> 0–4 physics steps of reaction delay, <em>sensor noise</em> 0–100 % of the training noise. Traits are why results differ between identical athletes, which drives the betting odds.</li>
+      <li><b>Crowd contact</b> (every event since 30 Sep 2026): every body part of every athlete collides with every body part of the other 7 (MuJoCo contacts, checked pair by pair). Six events are laid out for contact: the Iron Pedestal beam, the shared Gust Gauntlet floor, 30m All Fours at 1.1 m, the mirror Slalom, the Turntable ring and the Terminal Velocity lane break.</li>
       <li><b>Fall rule</b> (all events): pelvis below 0.55 m, torso tilted more than 60°, or any body part other than a foot touching the ground.</li>
       <li><b>Brains:</b> <em>Rung 0</em> = stand and recover from shoves; <em>Rung 2</em> = walk and run in any direction plus turning (up to ~3.8 m/s). Future rungs add stance skills, get-up, terrain, jumps and special skills.</li>
       <li><b>Where to play:</b> Unity scene <code>MainMenu</code> (pick 8 athletes and an event), or the <code>Stadium_Hub</code> flyover.</li>
@@ -106,37 +107,37 @@ const PHASES = {
 };
 // play = how a heat is played in Unity, win = how it is won; need = what is missing before it can be built
 const EVENTS = [
-  {n:1, p:1, name:"The Iron Pedestal", skill:"Standing Still", brain:"Rung 0", rules:"8 runners start on narrow 1 m × 1 m pedestals. The last runner to maintain base equilibrium without stepping off wins.",
-   play:"Each athlete stands on its own 1 m × 1 m × 0.5 m iron pedestal. Every 3 s round each one gets a wind gust of the same strength (0.3 m/s, +0.05 per round) from its own random direction; every 3rd round a 2 kg cube drops from 1.5 m above its shoulder.",
-   win:"Last one standing. Falling or a foot off the pedestal = out; the rest are ranked by how long they lasted. Heats run ~27–41 s."},
+  {n:1, p:1, name:"The Iron Pedestal", skill:"Standing Still", brain:"Rung 0", rules:"8 athletes stand shoulder to shoulder on one narrow iron beam. Gusts shove them into each other; the last one still on the beam wins.",
+   play:"All 8 stand shoulder to shoulder (0.7 m apart) on one 5.9 m × 1 m × 0.5 m iron beam and collide with each other. Every 3 s round each one gets a wind gust of the same strength (0.3 m/s, +0.05 per round) from its own random direction, often straight into a neighbour; every 3rd round a 2 kg cube drops from 1.5 m above its shoulder.",
+   win:"Last one standing. Falling or a foot off the beam = out; the rest are ranked by how long they lasted. Heats run ~32–46 s."},
   {n:2, p:1, name:"Torso Archer", skill:"Upper-Body Tracking", brain:"Stance skills", rules:"Athletes plant feet and track rapid overhead flight targets with upper bodies. Scored on angular accuracy and zero foot slippage.",
    need:"A stance-skills brain that can be commanded where to point the upper body (extended command set)."},
   {n:3, p:1, name:"Deep Squat Endurance", skill:"Squatting", brain:"Stance skills", rules:"Rhythmic squat repetitions. Lowest torso drop combined with balance retention scores maximum points.",
    need:"A stance-skills brain with a commanded pelvis height."},
   {n:4, p:1, name:"Precision Javelin Reach", skill:"Arm Extension", brain:"Stance skills", rules:"Single-arm extension toward dynamic targets at maximum reach while keeping stance anchored.",
    need:"A stance-skills brain with hand-target commands."},
-  {n:5, p:1, name:"The Gust Gauntlet", skill:"Push Shock", brain:"Rung 2", rules:"Athletes endure lateral wind bursts and sudden floor shakers. Scored on recovery time back to center.",
-   play:"Each athlete stands on its own spring-mounted 1.6 m shaker platform and keeps walking back to its spot. 10 rounds, 4 s apart: a sideways wind burst for everyone (same strength, 0.5 m/s rising 0.05 per round, own random side); every 2nd round the floor also jolts at 2 m/s.",
-   win:"Lowest total recovery time (back within 15 cm and settled; each round capped at 4 s). Falling or stepping off the platform = out; athletes still in rank first. Usually 0–2 survive."},
+  {n:5, p:1, name:"The Gust Gauntlet", skill:"Push Shock", brain:"Rung 2", rules:"All 8 share one shaker floor: lateral wind bursts push them into each other and the floor jolts everyone at once. Scored on recovery time back to your spot.",
+   play:"All 8 stand in a tight 2 × 4 grid (0.8 m apart) on one spring-mounted 4 m × 2.4 m shaker floor and keep walking back to their own spot, jostling their neighbours. 10 rounds, 4 s apart: a sideways wind burst for everyone (0.5 m/s rising 0.05 per round, own random side) that pushes the two rows into each other; every 2nd round the whole floor jolts at 2 m/s.",
+   win:"Lowest total recovery time (back within 15 cm of your spot and settled; each round capped at 4 s). Falling or stepping off the floor = out; athletes still in rank first. Usually 1–4 survive."},
   {n:6, p:2, name:"The Flamingo Classic", skill:"Single-Leg Stance", brain:"Stance skills", rules:"One foot raised; time-until-touchdown determines placement.",
    need:"A stance-skills brain with a single-leg stance command."},
   {n:7, p:2, name:"Cadence March", skill:"Stepping In-Place", brain:"Stance skills", rules:"High-knee marching synchronized to a rising stadium metronome.",
    need:"A stance-skills brain that can march in place to a commanded cadence."},
-  {n:8, p:2, name:"30m All Fours", skill:"Quadruped Crawl", brain:"Crawl (MATT + zombie)", rules:"30 m race on hands and feet. Falling never eliminates; standing up is a DQ.",
-   play:"8 runners start face down on the home straight, get onto all fours during the countdown, then crawl 30 m (1.2 m/s command, zombies scaled to their size) with lane keeping. A tumble just costs time: the runner gets back on all fours and keeps going.",
-   win:"Fastest time to the line (MATT fields ~25.6–26.3 s on CPU). Standing up for more than 1 s = DQ. Replaced The 30m Dash (2026-09-29)."},
+  {n:8, p:2, name:"30m All Fours", skill:"Quadruped Crawl", brain:"Crawl (MATT + zombie)", rules:"30 m race on hands and feet, crawlers side by side 1.1 m apart: bumping and tangling allowed. Falling never eliminates; standing up is a DQ.",
+   play:"8 runners start face down 1.1 m apart on the home straight (a crawling athlete is ~0.9 m wide, so neighbours bump and tangle), get onto all fours during the countdown, then crawl 30 m (1.2 m/s command, zombies scaled to their size) with lane keeping. A tumble just costs time: the runner gets back on all fours and keeps going.",
+   win:"Fastest time to the line (MATT ~25.5–26.5 s). Crawlers still tangled up when the 60 s clock runs out rank by distance covered. Standing up for more than 1 s = DQ."},
   {n:9, p:2, name:"The Inverted Sprint", skill:"Backward Walking", brain:"Rung 2", rules:"20m reverse sprint. Disqualification upon lane drifting or backward tumbling.",
    play:"Runners face away from the finish and run 20 m backwards (−1.5 m/s command) with lane keeping.",
    win:"Fastest time (~14.7–15.1 s). Drifting more than half a lane (0.61 m) off the lane line = DQ; a fall = out."},
   {n:10, p:2, name:"Crab Shuffle Relay", skill:"Lateral Shuffling", brain:"Rung 2", rules:"Side-stepping dash between parallel boundary rails without crossing legs.",
    play:"Athletes stand sideways to the course and side-step 20 m at 1.2 m/s between real steel rails (shin height) on every lane line, holding their heading and distance to the rails.",
    win:"Lowest time + penalties: +1 s for every leg crossing and every rail touch; a fall = out. Heats ~18.1–18.5 s."},
-  {n:11, p:3, name:"Slalom Sprint", skill:"Velocity Vectoring", brain:"Rung 2", rules:"Weaving through slalom gates; penalties added for missed gates or clipping flags.",
-   play:"7 physical poles on each lane's centre line every 4 m; runners weave left–right around them at 2.2 m/s. Each runner has its own random racing line (0.40–0.56 m swing): tight lines clip poles, wide lines risk a fall.",
-   win:"Lowest time + penalties: +0.5 s per pole clipped, +2 s per pole passed on the wrong side; a fall = out. Winners ~15.9–16.1 s on clean wide lines."},
-  {n:12, p:3, name:"The 360 Turntable", skill:"In-Place Yaw Pivot", brain:"Rung 2", rules:"Rapid rotational turns in place on a marked spot; scored on rotational speed and zero translation drift.",
-   play:"8 athletes on painted spin spots turn 3 full circles in place at 3 rad/s, all in the same direction (drawn each heat), then stop.",
-   win:"Lowest score = time for 3 turns + 2 s per metre of drift from the spot (times ~6.5–6.8 s, drift 3–12 cm). Leaving the 1.1 m ring = DQ; a fall = out."},
+  {n:11, p:3, name:"Slalom Sprint", skill:"Velocity Vectoring", brain:"Rung 2", rules:"Mirror slalom: neighbouring lanes weave in opposite directions and meet at every other gate. Penalties for missed gates or clipping flags.",
+   play:"Mirror slalom on 1.4 m lanes: 7 poles on each lane's centre line every 4 m; neighbouring lanes weave in opposite directions, so every pair of runners meets at every other pole, shoulder to shoulder, at 1.6 m/s. Each runner has its own random racing line (0.40–0.56 m swing): tight lines clip poles, wide lines bump the neighbour.",
+   win:"Lowest time + penalties: +0.5 s per pole clipped (neighbours knock each other into them), +2 s per pole passed on the wrong side; a fall = out. About 7 of 8 finish, in ~21–32 s."},
+  {n:12, p:3, name:"The 360 Turntable", skill:"In-Place Yaw Pivot", brain:"Rung 2", rules:"8 spin spots on one tight ring: turn 3 times without being knocked off your spot. Scored on speed and drift; pushed onto a neighbour's spot is a DQ.",
+   play:"8 athletes on a ring of painted spin spots only 0.75 m apart turn 3 full circles at 3 rad/s, all in the same direction (drawn each heat), then stop. Spinning neighbours knock each other off their spots.",
+   win:"Lowest score = time for 3 turns + 2 s per metre of drift from the spot (drift now ~0.15–1 m). Knocked more than 0.75 m (onto a neighbour's spot) = DQ; a fall = out."},
   {n:13, p:3, name:"Steeplechase Jog", skill:"Flight Phase Running", brain:"Rung 2 + flight", rules:"50m sprint requiring sustained aerial flight phases between foot strikes.",
    need:"A training run that rewards sustained flight between strides (both feet off the ground)."},
   {n:14, p:3, name:"The Alpine Ramp", skill:"Mild Incline", brain:"Rung 4", rules:"Ascending a 15-degree ramp straight into a finish sensor.", need:"Rung 4 terrain brain (ramps, rubble, stairs)."},
@@ -144,9 +145,9 @@ const EVENTS = [
   {n:16, p:4, name:"The Platform Drop", skill:"Walking Down Stairs", brain:"Rung 4", rules:"Rapid descent down stepped terrain; scored on descent speed and soft-landing dissipation.", need:"Rung 4 terrain brain."},
   {n:17, p:4, name:"Stadium Stair Climb", skill:"Ascending Stairs", brain:"Rung 4", rules:"20-step vertical climb without catching toes on step lips.", need:"Rung 4 terrain brain."},
   {n:18, p:4, name:"The Olympic High Jump", skill:"Vertical Leap", brain:"Rung 5", rules:"Static squat jump measuring highest clearance of the pelvis.", need:"Rung 5 jumping brain."},
-  {n:19, p:4, name:"Terminal Velocity Sprint", skill:"High-Speed Limit", brain:"Rung 2", rules:"Open sprint pushing top-end velocity until motor saturation or collapse.",
-   play:"Runners sprint the whole 84.39 m back straight at the maximum command (4.0 m/s) with lane keeping.",
-   win:"Highest peak speed averaged over 1 s (fields ~3.99–4.06 m/s); fallers rank last."},
+  {n:19, p:4, name:"Terminal Velocity Sprint", skill:"High-Speed Limit", brain:"Rung 2", rules:"Open sprint at top speed; past the green break line the field squeezes to the inside, shoulder to shoulder. Ranked by peak speed.",
+   play:"Runners sprint the whole 84.39 m back straight at the maximum command (4.0 m/s). After the green break line (15 m) the field squeezes to the inside: every runner's line halves its distance to lane 1, so the pack runs shoulder to shoulder (0.61 m apart) and bumps.",
+   win:"Highest peak speed averaged over 1 s (~3.96–4.2 m/s); fallers rank last (0–3 go down per race)."},
   {n:20, p:4, name:"Low Hurdle Dash", skill:"Obstacle Step-Over", brain:"Rung 5", rules:"30m sprint incorporating 0.3m hurdles requiring coordinated high-knee clearance.", need:"Rung 5 brain (hurdle clearance)."},
   {n:21, p:5, name:"The Sandpit Long Jump", skill:"Broad Jump", brain:"Rung 5", rules:"Run-up followed by forward horizontal launch into a sandpit.", need:"Rung 5 jumping brain."},
   {n:22, p:5, name:"Emergency Brake", skill:"Sudden Stop", brain:"Rung 2", rules:"Full sprint toward a red stop line. Athletes must reach full standstill without crossing the boundary.",

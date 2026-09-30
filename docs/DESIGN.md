@@ -9,6 +9,7 @@ Approved 2026-09-27. Changes to any value here must be logged in `rl_optimizatio
 - **PhysX forbidden**: no `Rigidbody`/`Collider`/`CharacterController`/PhysX joints in any athlete scene; an editor validator fails the scene. Ground, props, obstacles, shove/drop cubes are MuJoCo entities (`MjBody`/`MjGeom`/`MjFreeJoint`). Dynamic cubes come from a pre-allocated pool activated by writing `qpos`/`qvel` — no runtime `Instantiate`/`Destroy`.
 - Inference: ONNX (opset 17, batch=1) via Unity Inference Engine (`com.unity.ai.inference`, ex-Sentis), output written straight into `mjData.ctrl`.
 - Platform: Windows first (Editor + standalone) with 9:16 portrait framing/HUD. Android (arm64 MuJoCo build + ARM↔desktop trajectory check) is a separate phase after Rung 1 parity. iOS deferred.
+- Portrait UI rule (2026-09-29): every screen fits one viewport with no scrolling, inside the safe area, on the shared 5-slot frame `HudAnchors` (TL title · TC FPS · TR menu · BL debug · BR version); text ≥ 28 px and primary buttons ≥ 104 px at 1080 wide (`UI/Tokens.uss`). Enforced by `PortraitLayoutTests`.
 
 ### Training
 - MuJoCo Warp, native Windows, RTX 5070 Ti Laptop 12 GB (Blackwell sm_120 → CUDA ≥ 12.8 builds). PPO in an mjlab-style framework; WSL2 Ubuntu fallback.
@@ -104,7 +105,8 @@ Tick order (Python and C#): read state → build obs → infer → write ctrl �
 - **Model fingerprint**: Python and Unity each dump compiled `mjModel` (counts, body mass/inertia, jnt range/axis, actuator gain/bias/forcerange, geom size/friction, opt) to JSON. Ints exact, floats ≤ 1e-6 rel.
 - **Shove**: instantaneous Δqvel on pelvis free joint at a control-tick boundary.
 - **Cube**: 0.2 m box, 2 kg, friction 0.8, free joint. Pool: 4 per env (training), 16 per scene (Unity), parked resting at `x = 50 + 2i`; fire = write qpos(7) + qvel(6).
-- **Lane isolation**: lane k geoms `contype = conaffinity = 1<<k`; ground + cubes carry all lane bits → athletes never collide with each other (matches 1-athlete training envs).
+- **Lane isolation (G6 testbed only)**: lane k geoms `contype = conaffinity = 1<<k`; ground + cubes carry all lane bits → athletes never collide with each other (matches 1-athlete training envs).
+- **Crowd contact (every event scene, 2026-09-30)**: lane k's geoms also carry crowd bit `1<<(16+k)` and every other lane's crowd bit in `conaffinity` → every body part of an athlete collides with every body part of the other 7, own parts unchanged (`build_mjcf.crowd_bits`). Checked per part pair (filter + real `mj_collision`) by `training/tools/check_crowd_contacts.py` and the Unity EditMode `CrowdContactTests`. Crowd layouts (venues.json, `build_venues.py`): 1 one iron beam 0.7 m pitch · 5 one shaker floor 2 × 4 at 0.8 m · 8 crawl lanes 1.1 m · 11 mirror slalom 1.4 m lanes at 1.6 m/s · 12 spin ring 0.75 m (DQ 0.75 m) · 19 lane break at 15 m (field squeezes to 0.61 m). The brains were trained alone; contact is handled by their shove robustness.
 - **Athlete traits**: strength 0.85–1.15 (gainprm/biasprm/forcerange), latency 0–4 substeps, obs-noise σ. Same ranges in training DR.
 - **DR** (training only): mass ±15 %, friction ±20 %, kp/kv ±15 %, restitution via solref. Unity uses nominal.
 - **Precision**: Warp is float32, MuJoCo C is float64 → the golden reference is a **CPU MuJoCo** rollout (same C version as Unity).

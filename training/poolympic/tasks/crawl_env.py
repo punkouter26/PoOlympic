@@ -169,3 +169,19 @@ def zombie_crawl5_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     cfg.rewards["track_yaw"].weight = 3.0
     cfg.rewards["yaw_l1"] = RewardTermCfg(func=mdp.yaw_rate_world_l1, weight=-0.5)
     return cfg
+
+
+def matt_crawl_v5_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """Recipe v5 crawl for the self-colliding bio body (mattbio): crawl_matt.onnx still crawls on it (5/5) but slower
+    (29.7-43.9 s vs 25.7-26.7 s) and curves 13.4 m off its lane (0.12 m on the old body) — arms and legs now collide on
+    all fours. crawl_v3 recipe + zcrawl_v3's turn fix (turn tracking x3 + linear turn-error penalty) + bio terms,
+    8192 envs, no cube pool. Warm start crawl_v3 it 800."""
+    cfg = matt_crawl3_env_cfg(play=play)
+    cfg.rewards["track_yaw"].weight = 3.0
+    cfg.rewards["yaw_l1"] = RewardTermCfg(func=mdp.yaw_rate_world_l1, weight=-0.5)
+    for n in M.CUBE_NAMES:
+        cfg.scene.entities.pop(n, None)
+    cfg.events.pop("drop_cube", None)
+    M.add_bio_rewards(cfg)
+    cfg.scene.num_envs = M.V5_ENVS
+    return cfg

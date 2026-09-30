@@ -11,7 +11,8 @@ namespace PoOlympic
     /// training/poolympic/events/turntable.py: on GO every athlete gets a pure in-place yaw command (`spinRate`, the top of
     /// the trained envelope) in the heat's direction until its pelvis heading has turned `turns` full circles, then zero
     /// command. Score = time + `driftPenalty` × largest pelvis drift from the spot; a fall = FELL, leaving the painted ring
-    /// (`ringRadius`) = DQ. Traits + direction are drawn per heat.
+    /// (`ringRadius`) = DQ. Traits + direction are drawn per heat. Crowd stage (2026-09-30): the 8 spots form a ring with
+    /// neighbours 0.75 m apart — spinning athletes knock each other off their spots (drift penalty, DQ).
     ///   Ready (countdown) → Live → Result → auto restart (new seed)
     /// </summary>
     public class TurntableEvent : MonoBehaviour, IBroadcastBoard, ILaneRoster
@@ -37,7 +38,8 @@ namespace PoOlympic
         [Header("Rules (= turntable.py)")]
         public float spinRate = 3.0f;
         public int turns = 3;
-        public float driftPenalty = 2f, ringRadius = 1.1f;
+        [Tooltip("Knocked further than this from the spot = DQ (= turntable.py RING_R: the ring pitch, a neighbour's spot).")]
+        public float driftPenalty = 2f, ringRadius = 0.75f;
         public float maxSeconds = 15f;
         public float countdownSeconds = 3f, resultHoldSeconds = 6f;
         public bool autoRestart = true, randomTraits = true;

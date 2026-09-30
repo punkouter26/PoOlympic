@@ -6,6 +6,35 @@ from mjlab.tasks.registry import register_mjlab_task
 
 from .. import bodies
 
+
+def _patch_rsl_code_state() -> None:
+    """rsl_rl stores `git diff` in every run with strict UTF-8; parallel sessions' uncommitted files (non-UTF-8 bytes)
+    made that crash the launch (2026-09-30). Same file, invalid bytes replaced."""
+    import builtins
+    import rsl_rl.utils.logger as L
+
+    orig = L.Logger._store_code_state
+    if getattr(orig, "_poolympic", False):
+        return
+
+    def store(self):
+        real_open = builtins.open
+
+        def lenient(file, mode="r", *a, **kw):
+            if "b" not in mode and str(file).endswith(".diff"):
+                kw["errors"] = "replace"
+            return real_open(file, mode, *a, **kw)
+        builtins.open = lenient
+        try:
+            return orig(self)
+        finally:
+            builtins.open = real_open
+    store._poolympic = True
+    L.Logger._store_code_state = store
+
+
+_patch_rsl_code_state()
+
 if bodies.current().name == "matt":
 
     from .matt_env import (matt_getup2_env_cfg, matt_getup3_env_cfg, matt_getup4_env_cfg, matt_getup5_env_cfg, matt_getup_env_cfg, matt_pedestal2_env_cfg, matt_pedestal_env_cfg, matt_ppo_cfg, matt_rung0_env_cfg, matt_rung1_env_cfg,
@@ -53,6 +82,18 @@ if bodies.current().name == "matt":
         runner_cls=MjlabOnPolicyRunner,
     )
 
+    from .matt_env import matt_ppo_v5_cfg, matt_rung2_v5_env_cfg
+    from .stance_env import matt_stance_env_cfg
+
+    # recipe v5 on the current MATT body (staged): r2_v8 + fast sim + bio rewards; warm start r2_v8 it 600
+    register_mjlab_task(
+        task_id="PoOlympic-Matt-Rung2-V5",
+        env_cfg=matt_rung2_v5_env_cfg(),
+        play_env_cfg=matt_rung2_v5_env_cfg(play=True),
+        rl_cfg=matt_ppo_v5_cfg("matt_rung2", max_iterations=600),
+        runner_cls=SymmetricRunner,
+    )
+
     from .stance_env import matt_stance_env_cfg
 
     # Rung S (contract v4 stance skills, events 2/3/4/6/7): warm start = rung2 (r2_v8) expanded by tools/expand_obs.py
@@ -60,7 +101,7 @@ if bodies.current().name == "matt":
         task_id="PoOlympic-Matt-RungS-Stance",
         env_cfg=matt_stance_env_cfg(),
         play_env_cfg=matt_stance_env_cfg(play=True),
-        rl_cfg=matt_ppo_cfg("matt_stance", max_iterations=1500),
+        rl_cfg=matt_ppo_v5_cfg("matt_stance", max_iterations=1000),   # 8192 envs: ~2x samples per iteration
         runner_cls=SymmetricRunner,
     )
 
@@ -193,6 +234,25 @@ if bodies.current().name == "matt":
         rl_cfg=matt_ppo_cfg("matt_rung2", max_iterations=800),
         runner_cls=SymmetricRunner,
     )
+
+if bodies.current().name == "mattbio":
+    # STAGED (not trained; needs the user's OK — DESIGN §2 body change): MATT with full self-collision + bio torque caps
+    # (bodies.BIO_TORQUE_CAPS). Same contract, so every MATT checkpoint warm-starts directly. POOLYMPIC_BODY=mattbio.
+    from .matt_env import matt_ppo_v5_cfg, matt_rung0_v5_env_cfg, matt_rung2_flight_v5_env_cfg, matt_rung2_v5_env_cfg
+    from .getup_env import matt_getup_rev_env_cfg
+    from .crawl_env import matt_crawl_v5_env_cfg
+    from .stance_env import matt_stance_env_cfg
+    from .symmetry import SymmetricRunner
+
+    for task_id, fn, exp, its, runner in (
+            ("PoOlympic-MattBio-Rung0-Stand", matt_rung0_v5_env_cfg, "mattbio_rung0", 400, MjlabOnPolicyRunner),
+            ("PoOlympic-MattBio-Rung2-Omni", matt_rung2_v5_env_cfg, "mattbio_rung2", 800, SymmetricRunner),
+            ("PoOlympic-MattBio-RungS-Stance", matt_stance_env_cfg, "mattbio_stance", 1000, SymmetricRunner),
+            ("PoOlympic-MattBio-Rung2-Flight", matt_rung2_flight_v5_env_cfg, "mattbio_rung2", 400, SymmetricRunner),
+            ("PoOlympic-MattBio-Getup-Rev", matt_getup_rev_env_cfg, "mattbio_getup", 1500, MjlabOnPolicyRunner),
+            ("PoOlympic-MattBio-Crawl", matt_crawl_v5_env_cfg, "mattbio_crawl", 600, MjlabOnPolicyRunner)):
+        register_mjlab_task(task_id=task_id, env_cfg=fn(), play_env_cfg=fn(play=True),
+                            rl_cfg=matt_ppo_v5_cfg(exp, max_iterations=its), runner_cls=runner)
 
 if bodies.current().name == "zombie":
     from .matt_env import matt_ppo_cfg

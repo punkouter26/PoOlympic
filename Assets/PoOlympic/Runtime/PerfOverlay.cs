@@ -17,8 +17,8 @@ namespace PoOlympic
     /// GFX idea 10 — real-time performance telemetry + automatic quality steps.
     ///   overlay   one line: fps · CPU / GPU frame ms (FrameTimingManager) · sim ms (physics + brains: every
     ///             MonoBehaviour FixedUpdate of the frame, bracketed in the player loop) · draw calls (editor / dev
-    ///             builds) · Android thermal status + battery °C · quality tier. Toggle: F3, a three-finger tap, or tap
-    ///             the version label of the broadcast HUD (BroadcastHud.ToggleOverlay).
+    ///             builds) · Android thermal status + battery °C · quality tier. Toggle: F3, a three-finger tap, or the
+    ///             bottom-left debug button of the HudAnchors frame, which then shows the line in that corner.
     ///   log       one CSV row per second to persistentDataPath/perf/&lt;scene&gt;_&lt;time&gt;.csv (the Android re-measure).
     ///   auto      on a phone (autoQuality): sustained throttling (thermal ≥ moderate, or fps under 90 % of the target
     ///             for 5 s) steps the tier up, 20 s of cool, full-rate running steps it back down:
@@ -39,7 +39,10 @@ namespace PoOlympic
 
         public static PerfOverlay Instance { get; private set; }
         public int Tier { get; private set; }
-        public bool Visible { get => _visible; set { _visible = value; if (_label != null) _label.style.display = value ? DisplayStyle.Flex : DisplayStyle.None; PlayerPrefs.SetInt(PrefKey, value ? 1 : 0); } }
+        public bool Visible { get => _visible; set { _visible = value; ShowLabel(); PlayerPrefs.SetInt(PrefKey, value ? 1 : 0); } }
+        /// <summary>The latest one-line readout (refreshed once a second, also while hidden): HudAnchors shows it in
+        /// its bottom-left debug slot, and this overlay's own label stays hidden while such a frame is attached.</summary>
+        public static string Line { get; private set; } = "";
 
         const string PrefKey = "poolympic.perfOverlay";
         static readonly Stopwatch SimWatch = new();
@@ -71,7 +74,7 @@ namespace PoOlympic
             _label.AddToClassList("perf-line");
             root.Add(_label);
             _visible = PlayerPrefs.GetInt(PrefKey, 0) == 1;
-            _label.style.display = _visible ? DisplayStyle.Flex : DisplayStyle.None;
+            ShowLabel();
             _draws = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Draw Calls Count");
             if (logCsv) OpenCsv();
         }
@@ -85,7 +88,28 @@ namespace PoOlympic
             if (Tier != 0) SetTier(0);        // leave the render pipeline asset as it was
         }
 
+        /// <summary>Phones render at 60 fps (user, 2026-09-29), not Unity's default 30 fps mobile cap; an 8-athlete heat
+        /// held 57.6 fps on the Pixel 9 Pro (parity/android/device_probe.json), and auto quality steps down if a phone
+        /// cannot. Physics / brains run on FixedUpdate and are unaffected.</summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        static void PhoneFrameRate()
+        {
+            if (Application.isMobilePlatform) Application.targetFrameRate = MobileFps;
+        }
+
+        public const int MobileFps = 60;
+
+        /// <summary>The frame rate the player actually aims for: Application.targetFrameRate, else the platform default
+        /// (30 on phones — Unity's Android / iOS cap when none is set — 60 elsewhere). Comparing a phone's 30 fps cap
+        /// with 60 read as permanent throttling and walked the quality tier to 3 on a cool Pixel 9 Pro.</summary>
+        public static float TargetFps => Application.targetFrameRate > 0 ? Application.targetFrameRate : Application.isMobilePlatform ? 30f : 60f;
+
         public static void Toggle() { if (Instance != null) Instance.Visible = !Instance.Visible; }
+
+        void ShowLabel()
+        {
+            if (_label != null) _label.style.display = _visible && !HudAnchors.AnyAttached ? DisplayStyle.Flex : DisplayStyle.None;
+        }
 
         // -------------------------------------------------------------------------------------- sim timing
         struct SimBegin { }
@@ -137,9 +161,10 @@ namespace PoOlympic
             ReadThermal();
             long draws = _draws.Valid ? _draws.LastValue : -1;
             if (autoQuality) AutoQuality(fps);
-            if (_visible)
-                _label.text = $"{fps:0} fps · CPU {cpu:0.0} · GPU {(gpu > 0 ? gpu.ToString("0.0") : "–")} · sim {sim:0.00} ms · " +
+            Line = $"{fps:0} fps · CPU {cpu:0.0} · GPU {(gpu > 0 ? gpu.ToString("0.0") : "–")} · sim {sim:0.00} ms · " +
                               $"{(draws > 0 ? draws + " draws" : "draws n/a")} · {ThermalText()}{(float.IsNaN(_batteryC) ? "" : $" {_batteryC:0}°C")} · Q{Tier}";
+            _label.text = Line;
+            ShowLabel();
             _csv?.WriteLine(FormattableString.Invariant($"{Time.realtimeSinceStartup:0.0},{fps:0.0},{cpu:0.00},{gpu:0.00},{sim:0.000},{draws},{_thermal},{_batteryC:0.0},{Tier}"));
         }
 
@@ -156,7 +181,7 @@ namespace PoOlympic
         void AutoQuality(float fps)
         {
             if (!Application.isMobilePlatform) return;
-            float target = Application.targetFrameRate > 0 ? Application.targetFrameRate : 60f;
+            float target = TargetFps;
             bool hot = _thermal >= 2 || fps < target * 0.9f;
             bool cool = _thermal <= 1 && fps >= target * 0.97f;
             _hotFor = hot ? _hotFor + 1f : 0f;

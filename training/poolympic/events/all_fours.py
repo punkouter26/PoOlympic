@@ -1,5 +1,6 @@
 """Event 8 — 30m All Fours (and Event 23 — The Trench Crawl: the same race under a low ceiling, TRENCH_*) (replaces The 30m Dash; user request 2026-09-29: race on all fours, falls do not eliminate,
-only natural falls, MATT + zombie). 8 runners on the home straight (assets/scene_track8*.xml), crawl brains per body
+only natural falls, MATT + zombie). 8 runners 1.1 m apart on the home straight (assets/scene_crawl8*.xml — crowd
+scene: neighbours collide), crawl brains per body
 (tasks/crawl_env.py). Mirror of Unity AllFoursRace.
 
   start     every runner lies face down on its lane line, head towards the finish (pelvis at 0.22 m × λ)
@@ -9,6 +10,8 @@ only natural falls, MATT + zombie). 8 runners on the home straight (assets/scene
   finish    pelvis DISTANCE past the start; rank by time
   falls     a tumble (pelvis drops below the crawl band) is counted and costs time, never eliminates
   stand-up  pelvis above the band with the torso within 40° of vertical for more than STAND_DQ_S = DQ (all fours!)
+  crowd     (2026-09-30) crawlers of neighbouring lanes collide; anyone still crawling at MAX_S (tangled up, stuck)
+            ranks behind the finishers by distance covered
 Traits as in every event (strength, latency, sensor noise).
 """
 
@@ -26,8 +29,8 @@ from .. import bodies
 from .. import contract as C
 from .iron_pedestal import Traits, body_command, make_lanes  # noqa: F401 (body_command re-exported)
 
-SCENE = C.ROOT / "assets" / "scene_track8.xml"
-LAYOUT = C.ROOT / "assets" / "track8_layout.json"
+SCENE = C.ROOT / "assets" / "scene_crawl8.xml"
+LAYOUT = C.ROOT / "assets" / "crawl8_layout.json"
 DISTANCE, VX, SETUP_S, MAX_S = 30.0, 1.2, 3.0, 60.0
 STAND_DQ_S = 1.0
 # Event 23 The Trench Crawl: same rules over the venue's 16 m under a 12 m ceiling (underside 0.72 m, posts on the lane
@@ -47,6 +50,7 @@ class CrawlLane:
     finish_s: float | None = None
     status: str = ""        # FINISHED / DQ / DNF
     tumbles: int = 0
+    distance_m: float = 0.0  # progress along the lane (capped at the race distance)
     place: int = 0
 
 
@@ -139,9 +143,10 @@ def run_race(brains: dict[str, Path], seed: int, traits: list[Traits] | None = N
                 rr.status, rr.finish_s = "FINISHED", round(t - SETUP_S, 2)
         if all(r.status for r in res):
             break
-    for r in res:
+    for i, r in enumerate(res):
         r.status = r.status or "DNF"
-    order = sorted(res, key=lambda r: (0, r.finish_s) if r.status == "FINISHED" else (1 if r.status == "DNF" else 2, 0))
+        r.distance_m = round(min(distance, float(d.qpos[lanes[i].ath.root_qposadr] - lanes[i].origin[0])), 2)
+    order = sorted(res, key=lambda r: (0, r.finish_s) if r.status == "FINISHED" else (1, -r.distance_m) if r.status == "DNF" else (2, 0))
     for p, r in enumerate(order, 1):
         r.place = p
     return CrawlResult(seed, tick * dt, res)

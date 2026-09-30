@@ -85,9 +85,10 @@ namespace PoOlympic.Editor
         };
 
         /// <summary>
-        /// Event 1 official heat: 8 athletes on the 8 stadium pedestals (lane origins come from the venue layout, so
-        /// physics pedestals = stadium pedestals), 16 pooled cubes, IronPedestalHeat + HUD. Mixed meet: every lane carries
-        /// its own body (layout "body"), contract, brain and visual.
+        /// Event 1 official heat: 8 athletes shoulder to shoulder (0.7 m) on the stadium's iron beam (lane origins and the
+        /// beam come from the venue layout, so physics beam = stadium beam; crowd scene: the athletes collide), 16 pooled
+        /// cubes, IronPedestalHeat + HUD. Mixed meet: every lane carries its own body (layout "body"), contract, brain and
+        /// visual.
         /// </summary>
         [MenuItem("PoOlympic/Events/Build Event 1 — Iron Pedestal Heat (MATT + zombie)")]
         public static string BuildIronPedestalHeat() => BuildIronPedestalHeat(DefaultRung0Brain, PedestalRosterSource, PedestalRosterLayout);
@@ -122,7 +123,7 @@ namespace PoOlympic.Editor
             {
                 if (rend.GetComponent<MjGeom>() == null) continue;
                 bool cube = rend.gameObject.name.StartsWith("cube");
-                rend.enabled = cube;                         // pedestals are drawn by the stadium (identical boxes)
+                rend.enabled = cube;                         // the beam is drawn by the stadium (identical box)
                 if (cube && cubeMat != null) rend.sharedMaterial = cubeMat;
             }
 
@@ -179,8 +180,8 @@ namespace PoOlympic.Editor
             cc.farClipPlane = 1000f;
             var bc = cam.GetComponent<BroadcastCamera>();
             bc.target = focusPelvis;
-            bc.focusOffset = new Vector3(0f, 0f, 1.5f);      // centre of the row (lanes 1..8 at Unity z = -9 .. +12)
-            bc.offset = new Vector3(8f, 3.4f, -17f);         // front-left end of the row: all 8 pedestals recede in a 9:16 frame
+            bc.focusOffset = new Vector3(0f, 0f, 0.35f);     // centre of the row (lanes 1..8 at Unity z = -2.1 .. +2.8)
+            bc.offset = new Vector3(4.6f, 2.4f, -6.4f);      // front-left end of the beam: the row recedes in a 9:16 frame
             AddBroadcast(heat, "IRON PEDESTAL", "Event 1 · last one standing", 1, version, cam, BroadcastDirector.Kind.Arena, Vector3.right);
             EditorSceneManager.SaveScene(scene, IronPedestalHeatScene);
             return $"{IronPedestalHeatScene}: {heat.runners.Count} athletes ({string.Join(",", lineup)}), brains {string.Join(" / ", brains.Values)}";
@@ -188,6 +189,9 @@ namespace PoOlympic.Editor
 
         public const string TrackSource = "training/assets/scene_track8_roster.xml";
         public const string TrackLayout = "training/assets/track8_roster_layout.json";
+        // Event 8 (30m All Fours): crawlers 1.1 m apart (venue 08; crowd scene) — the other track races keep 1.22 m lanes
+        public const string CrawlSource = "training/assets/scene_crawl8_roster.xml";
+        public const string CrawlLayout = "training/assets/crawl8_roster_layout.json";
         public const string DefaultRung2Brain = "rung2.onnx";
         // Event 8 (30m All Fours): crawl brains per body (training/poolympic/tasks/crawl_env.py)
         public const string AllFoursScene = "Assets/PoOlympic/Scenes/Event_30mAllFours.unity";
@@ -210,7 +214,10 @@ namespace PoOlympic.Editor
         public static string BuildTrackRaces()
         {
             var sb = new System.Text.StringBuilder();
-            foreach (var t in TrackEvents) sb.AppendLine(BuildTrackRace(t.ev, t.mode, t.title, t.scene, DefaultRung2Brain));
+            foreach (var t in TrackEvents)
+                sb.AppendLine(t.mode == TrackRaceEvent.Mode.AllFours
+                    ? BuildTrackRace(t.ev, t.mode, t.title, t.scene, DefaultRung2Brain, CrawlSource, CrawlLayout)
+                    : BuildTrackRace(t.ev, t.mode, t.title, t.scene, DefaultRung2Brain));
             return sb.ToString();
         }
 
@@ -325,7 +332,8 @@ namespace PoOlympic.Editor
         public const string TurntableSource = "training/assets/scene_turntable8_roster.xml";
         public const string TurntableLayout = "training/assets/turntable8_roster_layout.json";
 
-        /// <summary>Event 12: 8 athletes on the venue's spin spots (scene_turntable8.xml), TurntableEvent + HUD.</summary>
+        /// <summary>Event 12: 8 athletes on the venue's ring of spin spots, 0.75 m apart (scene_turntable8.xml, crowd scene),
+        /// TurntableEvent + HUD.</summary>
         [MenuItem("PoOlympic/Events/Build Event 12 — 360 Turntable")]
         public static string BuildTurntable() => BuildTurntable(DefaultRung2Brain);
 
@@ -338,8 +346,8 @@ namespace PoOlympic.Editor
 
             var bc = meet.Camera.GetComponent<BroadcastCamera>();
             bc.target = meet.FocusPelvis;
-            bc.focusOffset = new Vector3(-4.5f, 0f, -2f);    // centre of the 2 x 4 grid (spot S4 is the origin)
-            bc.offset = new Vector3(10.5f, 5.2f, -8.5f);     // front three-quarter: the athletes start facing +x
+            bc.focusOffset = new Vector3(-0.69f, 0f, 0.69f); // centre of the ring (spot S4 is the origin)
+            bc.offset = new Vector3(5.2f, 3.6f, -5.2f);      // front three-quarter: the athletes start facing +x
             AddBroadcast(ev, "THE 360 TURNTABLE", "Event 12", 12, BrainsLabel(brainFile), meet.Camera, BroadcastDirector.Kind.Arena, Vector3.right);
             EditorSceneManager.SaveScene(meet.Scene, TurntableScene);
             return $"{TurntableScene}: {ev.spinners.Count} athletes, {ev.turns} turns at {ev.spinRate} rad/s, brain {brainFile}";
@@ -376,8 +384,8 @@ namespace PoOlympic.Editor
         public const string SlalomSource = "training/assets/scene_slalom8_roster.xml";
         public const string SlalomLayout = "training/assets/slalom8_roster_layout.json";
 
-        /// <summary>Event 11: 8 runners weave through the 7 physical poles on each lane's centre line (scene_slalom8.xml);
-        /// SlalomEvent + StandingsHud.</summary>
+        /// <summary>Event 11: 8 runners weave through the 7 physical poles on each lane's centre line (scene_slalom8.xml,
+        /// 1.4 m lanes, crowd scene: mirror slalom — neighbours meet at every other pole); SlalomEvent + StandingsHud.</summary>
         [MenuItem("PoOlympic/Events/Build Event 11 — Slalom Sprint")]
         public static string BuildSlalom() => BuildSlalom(DefaultRung2Brain);
 
@@ -390,7 +398,7 @@ namespace PoOlympic.Editor
 
             var bc = meet.Camera.GetComponent<BroadcastCamera>();
             bc.target = meet.FocusPelvis;
-            bc.focusOffset = new Vector3(1.5f, 0f, -0.6f);   // centre of the 8 lanes (Unity z = +3.66 .. -4.88), ahead of the pack
+            bc.focusOffset = new Vector3(1.5f, 0f, -0.7f);   // centre of the 8 lanes (Unity z = +4.2 .. -5.6), ahead of the pack
             bc.offset = new Vector3(-4f, 3.4f, -12f);        // trackside, outside lane 8, slightly behind the pack
             AddBroadcast(ev, "SLALOM SPRINT", "Event 11", 11, BrainsLabel(brainFile), meet.Camera, BroadcastDirector.Kind.Race, Vector3.right);
             EditorSceneManager.SaveScene(meet.Scene, SlalomScene);
@@ -401,9 +409,9 @@ namespace PoOlympic.Editor
         public const string ShakerSource = "training/assets/scene_shaker8_roster.xml";
         public const string ShakerLayout = "training/assets/shaker8_roster_layout.json";
 
-        /// <summary>Event 5: 8 athletes on spring-mounted shaker platforms (scene_shaker8.xml); GustGauntletEvent +
-        /// StandingsHud. The platforms move, so they are drawn by their MuJoCo geoms (stadium hazard material) and the
-        /// stadium's static shaker pads are hidden.</summary>
+        /// <summary>Event 5: 8 athletes in a 2 x 4 grid (0.8 m) on ONE spring-mounted shaker floor (scene_shaker8.xml, crowd
+        /// scene); GustGauntletEvent + StandingsHud. The floor moves, so it is drawn by its MuJoCo geom (stadium hazard
+        /// material) and the stadium's static floor is hidden.</summary>
         [MenuItem("PoOlympic/Events/Build Event 5 — Gust Gauntlet")]
         public static string BuildGustGauntlet() => BuildGustGauntlet(DefaultRung2Brain);
 
@@ -411,27 +419,27 @@ namespace PoOlympic.Editor
         {
             var meet = BuildMeetScene(ShakerSource, ShakerLayout, 5, AthleteLane, 0f, brainFile);
             var pads = meet.Scene.GetRootGameObjects().First(g => g.name == "Stadium").GetComponentsInChildren<Renderer>(true)
-                           .Where(r => r.name.StartsWith("E05_Shaker_")).ToArray();
-            if (pads.Length != 8) throw new InvalidOperationException($"expected 8 stadium shaker pads, found {pads.Length}");
+                           .Where(r => r.name.StartsWith("E05_Shaker")).ToArray();
+            if (pads.Length != 1) throw new InvalidOperationException($"expected the stadium shaker floor, found {pads.Length}");
             var hazard = pads[0].sharedMaterial;
             foreach (var pad in pads) pad.enabled = false;
             int shown = 0;
             foreach (var g in UnityEngine.Object.FindObjectsByType<MjGeom>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
-                if (!g.name.EndsWith("_shaker") || !g.TryGetComponent<Renderer>(out var rend)) continue;
+                if (!(g.name == "shaker" || g.name.EndsWith("_shaker")) || !g.TryGetComponent<Renderer>(out var rend)) continue;
                 rend.enabled = true;
                 rend.sharedMaterial = hazard;
                 shown++;
             }
-            if (shown != 8) throw new InvalidOperationException($"expected 8 MuJoCo shaker platforms, found {shown}");   // one per lane, shared by its bodies
+            if (shown != 1) throw new InvalidOperationException($"expected 1 MuJoCo shaker floor, found {shown}");   // shared by all lanes
             var ev = new GameObject("GustGauntletEvent").AddComponent<GustGauntletEvent>();
             foreach (var (k, r) in meet.Lanes) ev.athletes.Add(new GustGauntletEvent.Athlete { runner = r, name = LaneLabel($"S{k + 1}", r), lane = k });
             meet.Pool.runner = ev.athletes[0].runner;
 
             var bc = meet.Camera.GetComponent<BroadcastCamera>();
             bc.target = meet.FocusPelvis;
-            bc.focusOffset = new Vector3(-4.5f, 0f, -2f);    // centre of the 2 x 4 grid (platform S4 is the origin)
-            bc.offset = new Vector3(10.5f, 5.2f, -8.5f);     // front three-quarter, as the turntable
+            bc.focusOffset = new Vector3(-1.2f, 0f, -0.4f);  // centre of the 2 x 4 grid (spot S4 is the origin)
+            bc.offset = new Vector3(5.6f, 3.8f, -5.6f);      // front three-quarter, as the turntable
             AddBroadcast(ev, "THE GUST GAUNTLET", "Event 5", 5, BrainsLabel(brainFile), meet.Camera, BroadcastDirector.Kind.Arena, Vector3.right);
             EditorSceneManager.SaveScene(meet.Scene, GauntletScene);
             return $"{GauntletScene}: {ev.athletes.Count} athletes, {ev.rounds} rounds, brain {brainFile}";

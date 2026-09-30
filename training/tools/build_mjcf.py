@@ -3,7 +3,8 @@
 Inputs : assets/derived/skeleton_matt.json, assets/derived/skin_matt.npz  (from extract_skeleton.py)
 Outputs: assets/matt.xml         robot only (for mjlab)
          assets/scene_matt.xml   flattened: options + ground + robot + cube pool + keyframe (CPU eval, Unity import)
-         assets/scene_meet8.xml  8 lane-isolated athletes (names prefixed L<k>_) + 16-cube pool (G6, events)
+         assets/scene_meet8.xml  8 lane-isolated athletes (names prefixed L<k>_) + 16-cube pool (G6)
+         assets/scene_<event>8.xml  event scenes: crowd contact between lanes (crowd_bits), venue layouts from venues.json
          assets/scene_pedestal.xml Event 1 Iron Pedestal: solo scene on a 1 m x 1 m x 0.5 m block (top at z = 0)
          assets/meet8_layout.json lane table (prefix, origin, cube slots) shared by Python and Unity
          assets/derived/body_report.json
@@ -88,6 +89,19 @@ def lane_bits(lane: int, leg: bool) -> tuple[int, int]:
         b = 1 << (lane + 8)
         return b, b
     return 1 << lane, 0
+
+
+# Crowd contact (event scenes): lane k's athlete also owns bit CROWD_SHIFT + k and has every OTHER lane's crowd bit in
+# its conaffinity, so every body part of an athlete collides with every body part of every other athlete, while its own
+# geoms still never see each other (no new self-collision). Bits 16-23 are outside ALL_BITS: ground / props / cubes are
+# unaffected. The G6 testbed (scene_meet8) keeps full lane isolation (every lane == its solo run).
+CROWD_SHIFT = 16
+CROWD_ALL = 0xFF << CROWD_SHIFT
+
+
+def crowd_bits(ct: int, ca: int, lane: int) -> tuple[int, int]:
+    own = 1 << (CROWD_SHIFT + lane)
+    return ct | own, ca | (CROWD_ALL & ~own)
 
 
 # --------------------------------------------------------------------------------------------------
@@ -273,7 +287,7 @@ def fit_geoms(skin: Skin) -> dict[str, list[dict]]:
     foot_v = skin.of(["LeftFoot", "LeftToeBase"])
     toe_x = J["LeftToeBase"][0]
     heel_x = float(np.percentile(foot_v[:, 0], 0.5))
-    if BODY.name != "matt":
+    if BODY.family != "matt":
         # AccuRig weights the heel skin to the calf: take the heel from all skin near the sole under this foot
         sole = skin.verts[(skin.verts[:, 2] < skin.sole_z + 0.03 * L)
                           & (np.abs(skin.verts[:, 1] - J["LeftFoot"][1]) < 0.07 * L)]
@@ -306,7 +320,7 @@ def joint_axis(js: JointSpec, side: str) -> np.ndarray:
     return a
 
 
-def build_robot(skin: Skin, geoms, inertials=None, lane: int = LANE) -> tuple[ET.Element, list, list]:
+def build_robot(skin: Skin, geoms, inertials=None, lane: int = LANE, crowd: bool = False) -> tuple[ET.Element, list, list]:
     """Returns (<body name="pelvis"> element, actuator specs, joint specs in qpos order)."""
     specs = body_specs()
     by_name = {s.name: s for s in specs}
@@ -337,6 +351,8 @@ def build_robot(skin: Skin, geoms, inertials=None, lane: int = LANE) -> tuple[ET
             ET.SubElement(el, "joint", ja)
             joints_in_order.append((jname, js))
         ct, ca = lane_bits(lane, s.leg or BODY.self_collision)   # self-colliding body: every geom on the leg bit
+        if crowd:
+            ct, ca = crowd_bits(ct, ca, lane)
         for gi, g in enumerate(geoms[s.name]):
             ga = {"name": f"{s.name}_geom{gi}", "type": g["type"], "size": vec(g["size"]),
                   "contype": str(ct), "conaffinity": str(ca), "condim": "3", "friction": vec(BODY_FRICTION)}
@@ -367,8 +383,13 @@ def actuator_block(parent: ET.Element, actuators):
     act = ET.SubElement(parent, "actuator")
     for jname, group in actuators:
         kp, kv, cap, _arm = GAINS[group]
+        lo, hi = -cap, cap
+        if BODY.torque_caps:        # joint- and direction-specific caps (bodies.BIO_TORQUE_CAPS), never above the group cap
+            base = jname[:-2] if jname.endswith(("_l", "_r")) else jname
+            against, towards = BODY.torque_caps[base]
+            lo, hi = -min(against, cap), min(towards, cap)
         ET.SubElement(act, "position", {"name": jname, "joint": jname, "kp": f(kp), "kv": f(kv),
-                                        "forcelimited": "true", "forcerange": f"{f(-cap)} {f(cap)}"})
+                                        "forcelimited": "true", "forcerange": f"{f(lo)} {f(hi)}"})
 
 
 def option_block(root: ET.Element):
@@ -431,17 +452,66 @@ def compose_model(skin, geoms, inertials, with_scene: bool, n_cubes: int, defaul
     return indent(root)
 
 
+def static_box(parent: ET.Element, name: str, pos, size) -> None:
+    """A static event prop (collides with every lane)."""
+    ET.SubElement(parent, "geom", {"name": name, "type": "box", "pos": vec(pos), "size": vec(size),
+                                   "contype": str(ALL_BITS), "conaffinity": str(ALL_BITS), "condim": "3",
+                                   "friction": vec(GROUND_FRICTION)})
+
+
+def shaker_body(parent: ET.Element, prefix: str, pos, sh: dict) -> np.ndarray:
+    """Spring-mounted platform (body/geom `<prefix>shaker`, slide joints `<prefix>shaker_x/_y`, top at z = 0 when pos is
+    the athlete spot). sh["half"]: half side (square) or [half x, half y]. Returns its 2 keyframe qpos."""
+    hx, hy = (sh["half"], sh["half"]) if np.isscalar(sh["half"]) else sh["half"]
+    body = ET.SubElement(parent, "body", {"name": prefix + "shaker", "pos": vec(np.asarray(pos, float) + [0, 0, -sh["h"] / 2])})
+    half = [hx, hy, sh["h"] / 2]
+    ET.SubElement(body, "inertial", {"pos": "0 0 0", "mass": f(sh["mass"]), "diaginertia": vec(
+        [sh["mass"] * (half[1] ** 2 + half[2] ** 2) / 3, sh["mass"] * (half[0] ** 2 + half[2] ** 2) / 3,
+         sh["mass"] * (half[0] ** 2 + half[1] ** 2) / 3])})
+    for ax, axis in (("x", "1 0 0"), ("y", "0 1 0")):
+        ET.SubElement(body, "joint", {"name": f"{prefix}shaker_{ax}", "type": "slide", "axis": axis,
+                                      "stiffness": f(sh["stiffness"]), "damping": f(sh["damping"]),
+                                      "limited": "true", "range": vec([-sh["range"], sh["range"]])})
+    ET.SubElement(body, "geom", {"name": prefix + "shaker", "type": "box", "size": vec(half),
+                                 "contype": str(ALL_BITS), "conaffinity": str(ALL_BITS), "condim": "3",
+                                 "friction": vec(GROUND_FRICTION)})
+    return np.zeros(2)
+
+
+def stage_shared(wb: ET.Element, pedestal_h: float, shaker: dict | None, beam: dict | None) -> list[np.ndarray]:
+    """Stage pieces all athletes share (crowd events): the Iron Pedestal beam (geom `pedestal`, {pos, half: [x, y]}, top
+    at z = 0) and the Gust Gauntlet shaker floor (shaker["shared"], centred at shaker["pos"]). Returns keyframe qpos."""
+    if beam:
+        static_box(wb, "pedestal", np.asarray(beam["pos"], float) + [0, 0, -pedestal_h / 2],
+                   [beam["half"][0], beam["half"][1], pedestal_h / 2])
+    if shaker and shaker.get("shared"):
+        return [shaker_body(wb, "", shaker["pos"], shaker)]
+    return []
+
+
+def stage_lane(wb: ET.Element, p: str, o: np.ndarray, pedestal_h: float, shaker: dict | None, beam: dict | None) -> list[np.ndarray]:
+    """Per-lane stage pieces: its own 1 m pedestal / shaker platform (unless the event shares one)."""
+    if pedestal_h and not beam:
+        static_box(wb, p + "pedestal", o + [0, 0, -pedestal_h / 2], [PEDESTAL_HALF, PEDESTAL_HALF, pedestal_h / 2])
+    if shaker and not shaker.get("shared"):
+        return [shaker_body(wb, p, o, shaker)]
+    return []
+
+
 def compose_meet(skin, geoms, inertials, default_qpos: np.ndarray, n_lanes: int = N_LANES,
                  n_cubes: int = N_CUBES_MEET, origins: list[np.ndarray] | None = None, pedestal_h: float = 0.0,
                  model: str | None = None, park_offset=(0.0, 0.0, 0.0), props: list[dict] | None = None,
-                 shaker: dict | None = None) -> tuple[str, dict]:
+                 shaker: dict | None = None, beam: dict | None = None, crowd: bool = False) -> tuple[str, dict]:
     """Multi-athlete scene (G6 / events): lane k = the training athlete with every name prefixed `L<k>_`, its own
-    collision bits (lane isolation) and its pelvis shifted to origins[k] (default lane_origin(k)). Ground + cube pool as
-    in the solo scene. pedestal_h > 0: every lane stands on its own 1 m x 1 m pedestal (`L<k>_pedestal`, top at z = 0)
-    and the ground drops to -pedestal_h (Iron Pedestal heat). props: static event boxes {name, pos, size (half)} that
-    collide with every lane (rails, poles). shaker {half, h, mass, stiffness, damping, range}: every lane stands on its
-    own spring-mounted platform (body `L<k>_shaker`, slide joints `L<k>_shaker_x/_y`, top at z = 0; ground at -h) —
-    events shake it with velocity kicks. Returns (xml, layout) — the lane table Unity and the evaluators share."""
+    collision bits and its pelvis shifted to origins[k] (default lane_origin(k)). Ground + cube pool as in the solo
+    scene. crowd: athletes of different lanes collide (crowd_bits; every event scene) — otherwise full lane isolation
+    (G6). pedestal_h > 0: every lane stands on its own 1 m x 1 m pedestal (`L<k>_pedestal`, top at z = 0) — or all on
+    one shared beam {pos, half} (geom `pedestal`) — and the ground drops to -pedestal_h (Iron Pedestal heat). props:
+    static event boxes {name, pos, size (half)} that collide with every lane (rails, poles). shaker {half, h, mass,
+    stiffness, damping, range}: every lane stands on its own spring-mounted platform (body `L<k>_shaker`, slide joints
+    `L<k>_shaker_x/_y`, top at z = 0; ground at -h) — or, shaker["shared"], all on one floor (`shaker`, centre
+    shaker["pos"]) — events shake it with velocity kicks. Returns (xml, layout) — the lane table Unity and the evaluators
+    share."""
     root = ET.Element("mujoco", {"model": model or f"meet{n_lanes}"})
     option_block(root)
     wb = ET.SubElement(root, "worldbody")
@@ -452,34 +522,14 @@ def compose_meet(skin, geoms, inertials, default_qpos: np.ndarray, n_lanes: int 
         ground["pos"] = vec([0, 0, -(pedestal_h or shaker["h"])])
     ET.SubElement(wb, "geom", ground)
     for pr in props or []:
-        ET.SubElement(wb, "geom", {"name": pr["name"], "type": "box", "pos": vec(pr["pos"]), "size": vec(pr["size"]),
-                                   "contype": str(ALL_BITS), "conaffinity": str(ALL_BITS), "condim": "3",
-                                   "friction": vec(GROUND_FRICTION)})
+        static_box(wb, pr["name"], pr["pos"], pr["size"])
     contact = ET.Element("contact")
-    all_actuators, key_qpos, lanes = [], [], []
+    all_actuators, lanes = [], []
+    key_qpos = stage_shared(wb, pedestal_h, shaker, beam)
     for k in range(n_lanes):
         p, o = lane_prefix(k), (np.asarray(origins[k], float) if origins is not None else lane_origin(k))
-        if pedestal_h:
-            ET.SubElement(wb, "geom", {"name": p + "pedestal", "type": "box", "pos": vec(o + [0, 0, -pedestal_h / 2]),
-                                       "size": vec([PEDESTAL_HALF, PEDESTAL_HALF, pedestal_h / 2]),
-                                       "contype": str(ALL_BITS), "conaffinity": str(ALL_BITS), "condim": "3",
-                                       "friction": vec(GROUND_FRICTION)})
-        if shaker:
-            sh = shaker
-            body = ET.SubElement(wb, "body", {"name": p + "shaker", "pos": vec(o + [0, 0, -sh["h"] / 2])})
-            half = [sh["half"], sh["half"], sh["h"] / 2]
-            ET.SubElement(body, "inertial", {"pos": "0 0 0", "mass": f(sh["mass"]), "diaginertia": vec(
-                [sh["mass"] * (half[1] ** 2 + half[2] ** 2) / 3, sh["mass"] * (half[0] ** 2 + half[2] ** 2) / 3,
-                 sh["mass"] * (half[0] ** 2 + half[1] ** 2) / 3])})
-            for ax, axis in (("x", "1 0 0"), ("y", "0 1 0")):
-                ET.SubElement(body, "joint", {"name": f"{p}shaker_{ax}", "type": "slide", "axis": axis,
-                                              "stiffness": f(sh["stiffness"]), "damping": f(sh["damping"]),
-                                              "limited": "true", "range": vec([-sh["range"], sh["range"]])})
-            ET.SubElement(body, "geom", {"name": p + "shaker", "type": "box", "size": vec(half),
-                                         "contype": str(ALL_BITS), "conaffinity": str(ALL_BITS), "condim": "3",
-                                         "friction": vec(GROUND_FRICTION)})
-            key_qpos.append(np.zeros(2))
-        pelvis, actuators, _ = build_robot(skin, geoms, inertials, lane=k)
+        key_qpos += stage_lane(wb, p, o, pedestal_h, shaker, beam)
+        pelvis, actuators, _ = build_robot(skin, geoms, inertials, lane=k, crowd=crowd)
         tree_order = [j.get("name") for j in pelvis.iter("joint")]
         actuators = sorted(actuators, key=lambda a: tree_order.index(a[0]))
         for el in pelvis.iter():
@@ -509,13 +559,22 @@ def compose_meet(skin, geoms, inertials, default_qpos: np.ndarray, n_lanes: int 
     kf = ET.SubElement(root, "keyframe")
     ET.SubElement(kf, "key", {"name": "default", "qpos": vec(np.concatenate(key_qpos))})
     layout = {"n_lanes": n_lanes, "lane_width": LANE_WIDTH, "n_cubes": n_cubes, "lanes": lanes, "pedestal_h": pedestal_h,
+              "crowd": crowd,
               "note": "lane k: names prefixed L<k>_, pelvis shifted by origin; solo-scene cube i -> meet cube cubes[i]"}
-    if shaker:
-        layout["shaker"] = dict(shaker)
+    stage_layout(layout, shaker, beam)
     if props:
         layout["props"] = [{"name": pr["name"], "pos": np.asarray(pr["pos"], float).tolist(), "size": list(pr["size"])}
                            for pr in props]
     return indent(root), layout
+
+
+def stage_layout(layout: dict, shaker: dict | None, beam: dict | None) -> None:
+    """Layout entries of the stage (JSON-safe): shaker platform spec, shared beam."""
+    js = lambda v: np.asarray(v, float).tolist() if not np.isscalar(v) else v
+    if shaker:
+        layout["shaker"] = {k: js(v) for k, v in shaker.items()}
+    if beam:
+        layout["beam"] = {k: js(v) for k, v in beam.items()}
 
 
 SHAKER = {"half": 0.8, "h": 0.1, "mass": 150.0, "stiffness": 36300.0, "damping": 1160.0, "range": 0.25}
@@ -541,6 +600,26 @@ def venue_to_athlete(event: int, reference_lane: int, pos, extra_yaw_deg: float 
     c, s = math.cos(-yaw), math.sin(-yaw)
     d = np.asarray(pos, float) - p0
     return np.array([c * d[0] - s * d[1], s * d[0] + c * d[1], d[2]])
+
+
+def venue_box(event: int, key: str) -> dict:
+    """A shared stage box of a crowd venue (venues.json events[event][key] = {pos: top centre, size_m}) in the athlete
+    frame of reference lane 3: {pos (top centre), half [x, y]} — the E01 beam lies across the athletes' facing."""
+    ev = json.loads(VENUES_JSON.read_text())["events"][f"{event:02d}"]
+    box, yaw = ev[key], math.radians(ev["lanes"][3]["yaw_deg"])
+    sx, sy = box["size_m"][0] / 2, box["size_m"][1] / 2
+    turned = abs(math.cos(yaw)) < 0.5
+    return {"pos": venue_to_athlete(event, 3, box["pos"]), "half": [sy, sx] if turned else [sx, sy]}
+
+
+# 5 Gust Gauntlet crowd stage: ONE spring-mounted floor under all 8 (venue "floor"); mass, stiffness and damping are 8 x
+# the per-lane platform's, so with the 8 athletes aboard it still rings at 2.0 Hz, damping ratio 0.2
+SHAKER_FLOOR = {"h": 0.1, "mass": 8 * 150.0, "stiffness": 8 * 36300.0, "damping": 8 * 1160.0, "range": 0.25, "shared": True}
+
+
+def shaker_floor() -> dict:
+    fl = venue_box(5, "floor")
+    return {**SHAKER_FLOOR, "half": fl["half"], "pos": fl["pos"]}
 
 
 def crab_rails() -> list[dict]:
@@ -745,43 +824,50 @@ def main() -> int:
                                       for i in range(N_CUBES_TRAINING)])]))
     (ASSETS / "scene_pedestal.xml").write_text(header + pedestal_xml + "\n")
     meet_xml, meet_layout = compose_meet(skin, geoms, inertials, qdef)
+    # Event scenes are crowd scenes (athletes of different lanes collide: crowd_bits); scene_meet8 (G6) stays isolated.
+    # 1 Iron Pedestal: all 8 shoulder to shoulder (0.7 m) on one iron beam (venue "beam")
     ped_origins = venue_lane_origins(1, reference_lane=3)
     ped8_xml, ped8_layout = compose_meet(skin, geoms, inertials, qdef, origins=ped_origins, pedestal_h=PEDESTAL_H,
-                                         model="pedestal8")
+                                         model="pedestal8", beam=venue_box(1, "beam"), crowd=True)
     (ASSETS / "scene_pedestal8.xml").write_text(header + ped8_xml + "\n")
     (ASSETS / "pedestal8_layout.json").write_text(json.dumps(ped8_layout, indent=1) + "\n")
-    # straight-track races (8 30m Dash, 19 Terminal Velocity, 22 Emergency Brake): flat lanes 1.22 m apart, from the
-    # home-straight venue (the back straight has the same layout in the runner's frame)
+    # straight-track races (9 Inverted, 13 Steeplechase, 19 Terminal Velocity, 22 Emergency Brake): flat lanes 1.22 m
+    # apart, from the home-straight venue of event 22 (the back straight has the same layout in the runner's frame)
     # cube pool parked 30 m to the side: the default park line (x = 50..80, y = 0) is lane 4's running line
-    track_xml, track_layout = compose_meet(skin, geoms, inertials, qdef, origins=venue_lane_origins(8, reference_lane=3),
-                                           model="track8", park_offset=(0.0, -30.0, 0.0))
+    track_xml, track_layout = compose_meet(skin, geoms, inertials, qdef, origins=venue_lane_origins(22, reference_lane=3),
+                                           model="track8", park_offset=(0.0, -30.0, 0.0), crowd=True)
     (ASSETS / "scene_track8.xml").write_text(header + track_xml + "\n")
     (ASSETS / "track8_layout.json").write_text(json.dumps(track_layout, indent=1) + "\n")
-    # 12 The 360 Turntable: 8 spin spots in the venue's 2 x 4 grid (3 m x 4 m pitch); the cube park line is clear of it
+    # 8 30m All Fours: crawlers 1.1 m apart on the home straight (venue 08)
+    crawl_xml, crawl_layout = compose_meet(skin, geoms, inertials, qdef, origins=venue_lane_origins(8, reference_lane=3),
+                                           model="crawl8", park_offset=(0.0, -30.0, 0.0), crowd=True)
+    (ASSETS / "scene_crawl8.xml").write_text(header + crawl_xml + "\n")
+    (ASSETS / "crawl8_layout.json").write_text(json.dumps(crawl_layout, indent=1) + "\n")
+    # 12 The 360 Turntable: 8 spin spots on the venue's ring, neighbours 0.75 m apart; the cube park line is clear of it
     turn_xml, turn_layout = compose_meet(skin, geoms, inertials, qdef, origins=venue_lane_origins(12, reference_lane=3),
-                                         model="turntable8")
+                                         model="turntable8", crowd=True)
     (ASSETS / "scene_turntable8.xml").write_text(header + turn_xml + "\n")
     (ASSETS / "turntable8_layout.json").write_text(json.dumps(turn_layout, indent=1) + "\n")
     # 10 Crab Shuffle: athletes turned to face the event's left (they side-step to their right = down the course);
     # lanes are then 1.22 m apart along x, the steel rails on the lane lines are real (shin-height) obstacles
     crab_xml, crab_layout = compose_meet(skin, geoms, inertials, qdef, origins=venue_lane_origins(10, 3, 90.0),
-                                         model="crab8", park_offset=(0.0, -30.0, 0.0), props=crab_rails())
+                                         model="crab8", park_offset=(0.0, -30.0, 0.0), props=crab_rails(), crowd=True)
     (ASSETS / "scene_crab8.xml").write_text(header + crab_xml + "\n")
     (ASSETS / "crab8_layout.json").write_text(json.dumps(crab_layout, indent=1) + "\n")
-    # 5 Gust Gauntlet: every athlete on its own spring-mounted 1.6 m shaker platform (venue: 0.1 m high, top = z 0)
-    # 150 kg platform; with the 80 kg athlete aboard f = 2.0 Hz, damping ratio 0.2; +-0.25 m travel
+    # 5 Gust Gauntlet: all 8 on ONE spring-mounted shaker floor (venue "floor", 0.1 m high, top = z 0), 2 x 4 grid 0.8 m
+    # apart (SHAKER_FLOOR: 2.0 Hz, damping ratio 0.2 with everyone aboard; +-0.25 m travel)
     shaker8_xml, shaker8_layout = compose_meet(skin, geoms, inertials, qdef, origins=venue_lane_origins(5, 3),
-                                               model="shaker8", park_offset=(0.0, -30.0, 0.0), shaker=SHAKER)
+                                               model="shaker8", park_offset=(0.0, -30.0, 0.0), shaker=shaker_floor(), crowd=True)
     (ASSETS / "scene_shaker8.xml").write_text(header + shaker8_xml + NL)
     (ASSETS / "shaker8_layout.json").write_text(json.dumps(shaker8_layout, indent=1) + NL)
-    # 11 Slalom Sprint: 7 physical poles on every lane's centre line (venues.json "poles")
+    # 11 Slalom Sprint: 7 physical poles on every lane's centre line (venues.json "poles"), 1.4 m mirror-slalom lanes
     slalom_xml, slalom_layout = compose_meet(skin, geoms, inertials, qdef, origins=venue_lane_origins(11, 3),
-                                             model="slalom8", park_offset=(0.0, -30.0, 0.0), props=slalom_poles())
+                                             model="slalom8", park_offset=(0.0, -30.0, 0.0), props=slalom_poles(), crowd=True)
     (ASSETS / "scene_slalom8.xml").write_text(header + slalom_xml + "\n")
     (ASSETS / "slalom8_layout.json").write_text(json.dumps(slalom_layout, indent=1) + "\n")
     # 23 The Trench Crawl: 8 crawl lanes (1.22 m) under a 12 m ceiling on posts (trench_props), crawl brains
     trench_xml, trench_layout = compose_meet(skin, geoms, inertials, qdef, origins=venue_lane_origins(23, 3),
-                                             model="trench8", park_offset=(0.0, -30.0, 0.0), props=trench_props())
+                                             model="trench8", park_offset=(0.0, -30.0, 0.0), props=trench_props(), crowd=True)
     (ASSETS / "scene_trench8.xml").write_text(header + trench_xml + "\n")
     (ASSETS / "trench8_layout.json").write_text(json.dumps(trench_layout, indent=1) + "\n")
     (ASSETS / f"scene_meet{N_LANES}.xml").write_text(header + meet_xml + "\n")

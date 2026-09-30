@@ -141,6 +141,15 @@ Rules: every surface an athlete can touch is a MuJoCo geom generated into the MJ
   meet8_mzmzmzmz, trench8 via compose --verify, solo pedestal). Perf (desktop editor, 8 athletes): mj_step 0.33-0.40 ms
   (7-8 % of real time), 8.9 ms CPU frame, 194 draw calls / 8 SRP batches → the planned per-event stadium merge is not
   needed. Mobile: see Android (57.6 fps on the Pixel 9 Pro).
+- [x] **Crowd contact** (2026-09-30, user: "more interaction and collisions … do all 6"): every event scene lets every
+  body part of every athlete collide with every part of the other 7 (`build_mjcf.crowd_bits`; G6 testbed stays isolated).
+  Six events laid out for contact (venues: `build_venues.py` + Blender pass `build_crowd.py`, Stadium.glb re-exported;
+  rules in `poolympic/events/*` ≡ Unity controllers): 1 one iron beam (0.7 m) · 5 one shaker floor (2 × 4, 0.8 m) ·
+  8 crawl lanes 1.1 m (`scene_crawl8`, DNF by distance) · 11 mirror slalom (1.4 m lanes, 1.6 m/s) · 12 spin ring 0.75 m
+  (DQ 0.75 m) · 19 lane break at 15 m (field squeezes to 0.61 m). Verified: `tools/check_crowd_contacts.py` (16,184/16,184
+  part pairs per scene, all-MATT + mixed) + Unity `CrowdContactTests` 11/11; odds refitted; tuning in rl_optimization_log.md.
+  - [ ] optional crowd training run (2-4 colliding athletes per env) if contact falls feel too frequent (19, 11)
+  - [ ] mixed lineups: the zombie is narrower, so 11 and 19 see little MATT↔zombie contact
 
 ## Phase E — The 30 Olympic Events (catalogue, added 2026-09-27)
 
@@ -324,6 +333,37 @@ apply: TensorBoard + MuJoCo viewer for every run, close Unity during 30 min+ run
     ≥ 4 s per shot, near-fall cuts at danger ≥ 0.7 / 8 s apart, `ClampToBowl` keeps every camera inside the track's
     outer edge; `Subject` drives the stats card (speed / power / confidence, 1 Hz) and the stadium screens
   - [ ] Android: rebuild + re-measure with the showcase (baked lighting should pay for the crowd cards / screens)
+- [x] **UI consolidation — portrait top 10** (2026-09-29, user: "do all"): one viewport, nothing scrolls, no dropped
+  features. Before / after with annotations: `parity/ui/consolidate_before_after.html` (shots in `parity/ui/consolidate/`)
+  - **1 anchors** `HudAnchors` (+ `UI/HudAnchors.uss`): one 5-slot frame on every UI Toolkit screen — TL title + one-line
+    subtitle · TC FPS pill (0.5 s average, amber / red under 90 % / 50 % of the target) · TR ☰ sheet (+ `Extra` slot:
+    the race clock) · BL debug · BR version. The IMGUI dev HUDs (`EventHud`, `TestbedHud`) use the same corners
+  - **2 perf** `PerfOverlay.Line`: the readout shows in the BL debug slot (grows up from the corner, above the bottom
+    dock); the overlay's own label only on screens without the frame (now bottom-left too)
+  - **3 actions** New heat / Main menu / all 8 · top 4 / performance → the TR sheet; the bottom bar holds only the primary
+    action at the result (New heat, or Next event in a gauntlet); coins only with betting on
+  - **4 result in place** the result card overlay is gone: rows 1-3 gold / silver / bronze, WR badge on a record winner,
+    one world-record line (+ "#n ALL-TIME" / "NEW RECORD!" pulse), heat bests as TOP / PWR / CLOSE badges, bet and
+    gauntlet lines; the winner banner clears after 2.5 s (`winnerBannerSeconds`)
+  - **5 + 6 story strip** stats card (3 tiles) + ticker box → one 64 px strip (chip · lane · tag · speed · power ·
+    confidence + sparkline; refreshes at once on a phase change) and a 2-line ticker in the bottom bar
+  - **7 menu roster / lanes** roster cards = "all 8 lanes" (×8), lane tiles 4 × 2 (tap = next athlete); no ROSTER / LANES
+    headings, no hint, no "Fill all 8"; the ☰ sheet adds All MATT / All ZOMBIE / Alternate
+  - **8 no scrolling** event list → fixed 3-column grid that fills the rest of the 1920-unit column; the WORLD RECORDS
+    screen → the ★ toggle (world record on every tile, the selected event's top 5 in the fixed-height detail panel);
+    status line → the title chip's subtitle; the menu keeps to the safe area
+  - **9 guard** `HudLayoutAudit` + `Tests/Editor/PortraitLayoutTests` (8 cases): menu + HUD at 1080×1920, Pixel 9 Pro
+    (with insets), 720×1280, 1080×2400 — no ScrollView, nothing outside the safe area, text ≥ 28, anchors in their
+    corners, 104 px buttons / tiles, camera gap ≥ 60 % live / ≥ 55 % at the result. EditMode 58/58
+  - **10 tokens** `UI/Tokens.uss` (`--po-text` 28, `--po-btn` 104, `--po-chip`, spacing, colours) imported by all
+    three style sheets; the menu's 16-24 px text is gone
+  - **no slow motion during the race** (user, same day): `ImpactFx` hit-stop (70 ms timeScale 0) is off while a heat is
+    live (`hitStopWhileLive`, default off; shake + effects still play); its release moved from a WaitForSecondsRealtime
+    coroutine to Update (the coroutine never resumed under editor single-stepping and froze the heat)
+  - [x] Android (Pixel 9 Pro, APK 228 MB): menu + heat fit the safe area, result in place, FPS pill + debug readout
+    work (`parity/ui/consolidate/android/`). Found there: the game runs at Unity's 30 fps phone cap, but PerfOverlay's
+    auto quality compared against 60 → "throttling" on a cool phone walked it to tier 3 (render scale −0.1, beams off,
+    critics 5 Hz, shadows ½). `PerfOverlay.TargetFps` (targetFrameRate, else 30 on phones / 60 elsewhere) → Q0 at 33 °C
 - [x] Licensing review (Avaturn, Hunyuan3D) before any commercial release → `docs/LICENSING.md` (2026-09-29). Blockers
   to act on before a store release: Olympic rings / name, Hunyuan3D territory (EU / UK / KR), Avaturn notification +
   attribution; checklist in the doc

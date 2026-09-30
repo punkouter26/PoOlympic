@@ -19,31 +19,31 @@
     <body name="L0_pelvis" pos="0.014059 3.66 0.966775">
       <inertial pos="-0.01696645 0 -0.003757688" quat="0.7071068 -0.7071068 0 0" mass="8.937766" diaginertia="0.0907144 0.0907144 0.07049761" />
       <freejoint name="L0_root" />
-      <geom name="L0_pelvis_geom0" type="capsule" size="0.1357963 0.03473648" contype="1" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="-0.01696645 0 -0.003757688" quat="0.7071068 -0.7071068 0 0" />
+      <geom name="L0_pelvis_geom0" type="capsule" size="0.1357963 0.03473648" contype="65537" conaffinity="16646144" condim="3" friction="1 0.005 0.0001" pos="-0.01696645 0 -0.003757688" quat="0.7071068 -0.7071068 0 0" />
       <body name="L0_torso" pos="-0.000796 0 0.095775">
         <inertial pos="0.003384799 0 0.1412323" quat="0.7071068 -0.7071068 0 0" mass="13.05674" diaginertia="0.1165244 0.1165244 0.08048442" />
         <joint name="L0_abdomen_flex" type="hinge" pos="0 0 0" axis="0 1 0" range="-30 60" armature="0.02" />
         <joint name="L0_abdomen_lat" type="hinge" pos="0 0 0" axis="1 0 0" range="-35 35" armature="0.02" />
         <joint name="L0_abdomen_twist" type="hinge" pos="0 0 0" axis="0 0 1" range="-45 45" armature="0.02" />
-        <geom name="L0_torso_geom0" type="capsule" size="0.1189253 0.04429121" contype="1" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="0.003384799 0 0.1412323" quat="0.7071068 -0.7071068 0 0" />
+        <geom name="L0_torso_geom0" type="capsule" size="0.1189253 0.04429121" contype="65537" conaffinity="16646144" condim="3" friction="1 0.005 0.0001" pos="0.003384799 0 0.1412323" quat="0.7071068 -0.7071068 0 0" />
         <body name="L0_chest" pos="-0.016728 0 0.279754">
           <inertial pos="-0.003824043 0 0.05326067" quat="0.7071068 -0.7071068 0 0" mass="12.76681" diaginertia="0.157376 0.157376 0.09756839" />
-          <geom name="L0_chest_geom0" type="capsule" size="0.1315126 0.06314432" contype="1" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="-0.003824043 0 0.05326067" quat="0.7071068 -0.7071068 0 0" />
+          <geom name="L0_chest_geom0" type="capsule" size="0.1315126 0.06314432" contype="65537" conaffinity="16646144" condim="3" friction="1 0.005 0.0001" pos="-0.003824043 0 0.05326067" quat="0.7071068 -0.7071068 0 0" />
           <body name="L0_head" pos="-0.048542 0 0.181344">
             <inertial pos="0.05070428 0 0.1332104" quat="0.6920062 0.1453527 0.1453527 0.6920062" mass="5.548613" diaginertia="0.0503217 0.05005417 0.02171975" />
-            <geom name="L0_head_geom0" type="capsule" size="0.06994246 0.0600033" contype="1" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="0.013404 0 0.058487" quat="0.9936623 0 0.1124062 0" />
-            <geom name="L0_head_geom1" type="sphere" size="0.1098854" contype="1" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="0.07270066 0 0.1772756" />
+            <geom name="L0_head_geom0" type="capsule" size="0.06994246 0.0600033" contype="65537" conaffinity="16646144" condim="3" friction="1 0.005 0.0001" pos="0.013404 0 0.058487" quat="0.9936623 0 0.1124062 0" />
+            <geom name="L0_head_geom1" type="sphere" size="0.1098854" contype="65537" conaffinity="16646144" condim="3" friction="1 0.005 0.0001" pos="0.07270066 0 0.1772756" />
           </body>
           <body name="L0_upper_arm_l" pos="-0.033514 0.201796 0.161482">
             <inertial pos="-0.007092 0.126 0.00073" quat="0.7091489 -0.7039445 -0.03962202 0" mass="2.169458" diaginertia="0.01610463 0.01610463 0.004156322" />
             <joint name="L0_shoulder_elev_l" type="hinge" pos="0 0 0" axis="1 0 0" range="-95 80" armature="0.01" />
             <joint name="L0_shoulder_flex_l" type="hinge" pos="0 0 0" axis="0 0 -1" range="-60 170" armature="0.01" />
             <joint name="L0_shoulder_twist_l" type="hinge" pos="0 0 0" axis="0 1 0" range="-80 80" armature="0.01" />
-            <geom name="L0_upper_arm_l_geom0" type="capsule" size="0.06392297 0.09424006" contype="1" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="-0.007092 0.126 0.00073" quat="0.7091489 -0.7039445 -0.03962202 0" />
+            <geom name="L0_upper_arm_l_geom0" type="capsule" size="0.06392297 0.09424006" contype="65537" conaffinity="16646144" condim="3" friction="1 0.005 0.0001" pos="-0.007092 0.126 0.00073" quat="0.7091489 -0.7039445 -0.03962202 0" />
             <body name="L0_forearm_l" pos="-0.014184 0.252 0.00146">
               <inertial pos="0.0027005 0.1902425 -0.00161" quat="0.7041088 -0.7100206 0.01007877 0" mass="1.789553" diaginertia="0.02422419 0.02422419 0.001594476" />
               <joint name="L0_elbow_l" type="hinge" pos="0 0 0" axis="0 0 -1" range="0 145" armature="0.01" />
-              <geom name="L0_forearm_l_geom0" type="capsule" size="0.04283781 0.1688496" contype="1" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="0.0027005 0.1902425 -0.00161" quat="0.7041088 -0.7100206 0.01007877 0" />
+              <geom name="L0_forearm_l_geom0" type="capsule" size="0.04283781 0.1688496" contype="65537" conaffinity="16646144" condim="3" friction="1 0.005 0.0001" pos="0.0027005 0.1902425 -0.00161" quat="0.7041088 -0.7100206 0.01007877 0" />
             </body>
           </body>
           <body name="L0_upper_arm_r" pos="-0.033514 -0.201796 0.161482">
@@ -51,11 +51,11 @@
             <joint name="L0_shoulder_elev_r" type="hinge" pos="0 0 0" axis="-1 0 0" range="-95 80" armature="0.01" />
             <joint name="L0_shoulder_flex_r" type="hinge" pos="0 0 0" axis="0 0 1" range="-60 170" armature="0.01" />
             <joint name="L0_shoulder_twist_r" type="hinge" pos="0 0 0" axis="0 1 0" range="-80 80" armature="0.01" />
-            <geom name="L0_upper_arm_r_geom0" type="capsule" size="0.06392297 0.09424006" contype="1" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="-0.007092 -0.126 0.00073" quat="0.7091489 0.7039445 -0.03962202 0" />
+            <geom name="L0_upper_arm_r_geom0" type="capsule" size="0.06392297 0.09424006" contype="65537" conaffinity="16646144" condim="3" friction="1 0.005 0.0001" pos="-0.007092 -0.126 0.00073" quat="0.7091489 0.7039445 -0.03962202 0" />
             <body name="L0_forearm_r" pos="-0.014184 -0.252 0.00146">
               <inertial pos="0.0027005 -0.1902425 -0.00161" quat="0.7041088 0.7100206 0.01007877 0" mass="1.789553" diaginertia="0.02422419 0.02422419 0.001594476" />
               <joint name="L0_elbow_r" type="hinge" pos="0 0 0" axis="0 0 1" range="0 145" armature="0.01" />
-              <geom name="L0_forearm_r_geom0" type="capsule" size="0.04283781 0.1688496" contype="1" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="0.0027005 -0.1902425 -0.00161" quat="0.7041088 0.7100206 0.01007877 0" />
+              <geom name="L0_forearm_r_geom0" type="capsule" size="0.04283781 0.1688496" contype="65537" conaffinity="16646144" condim="3" friction="1 0.005 0.0001" pos="0.0027005 -0.1902425 -0.00161" quat="0.7041088 0.7100206 0.01007877 0" />
             </body>
           </body>
         </body>
@@ -65,20 +65,20 @@
         <joint name="L0_hip_flex_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 120" armature="0.02" />
         <joint name="L0_hip_abd_l" type="hinge" pos="0 0 0" axis="1 0 0" range="-30 45" armature="0.02" />
         <joint name="L0_hip_rot_l" type="hinge" pos="0 0 0" axis="0 0 1" range="-40 40" armature="0.02" />
-        <geom name="L0_thigh_l_geom0" type="capsule" size="0.08888116 0.1633062" contype="256" conaffinity="256" condim="3" friction="1 0.005 0.0001" pos="0.002864 0 -0.207727" quat="0.006893172 0 0.9999762 0" />
+        <geom name="L0_thigh_l_geom0" type="capsule" size="0.08888116 0.1633062" contype="65792" conaffinity="16646400" condim="3" friction="1 0.005 0.0001" pos="0.002864 0 -0.207727" quat="0.006893172 0 0.9999762 0" />
         <body name="L0_shin_l" pos="0.005728 0 -0.415454">
           <inertial pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" mass="3.459135" diaginertia="0.06386931 0.06386931 0.007533594" />
           <joint name="L0_knee_l" type="hinge" pos="0 0 0" axis="0 1 0" range="0 150" armature="0.02" />
-          <geom name="L0_shin_l_geom0" type="capsule" size="0.06734565 0.1817725" contype="256" conaffinity="256" condim="3" friction="1 0.005 0.0001" pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" />
+          <geom name="L0_shin_l_geom0" type="capsule" size="0.06734565 0.1817725" contype="65792" conaffinity="16646400" condim="3" friction="1 0.005 0.0001" pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" />
           <body name="L0_foot_l" pos="-0.031931 0 -0.429706">
             <inertial pos="0.03774256 0.002908948 -0.06798844" quat="1 0 0 0" mass="0.8497876" diaginertia="0.00103675 0.003237029 0.003763906" />
             <joint name="L0_ankle_dorsi_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-50 25" armature="0.01" />
             <joint name="L0_ankle_inv_l" type="hinge" pos="0 0 0" axis="-1 0 0" range="-20 30" armature="0.01" />
-            <geom name="L0_foot_l_geom0" type="box" size="0.1026044 0.05253602 0.03" contype="256" conaffinity="256" condim="3" friction="1 0.005 0.0001" pos="0.03774256 0.002908948 -0.06798844" />
+            <geom name="L0_foot_l_geom0" type="box" size="0.1026044 0.05253602 0.03" contype="65792" conaffinity="16646400" condim="3" friction="1 0.005 0.0001" pos="0.03774256 0.002908948 -0.06798844" />
             <body name="L0_toe_l" pos="0.140347 0 -0.07597">
               <inertial pos="0.03863281 0.004919875 -0.004518435" quat="1 0 0 0" mass="0.2499375" diaginertia="0.0002352078 0.0001498579 0.0003340368" />
               <joint name="L0_toe_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 60" stiffness="20" damping="1" armature="0.005" />
-              <geom name="L0_toe_l_geom0" type="box" size="0.03863281 0.05016921 0.0175" contype="256" conaffinity="256" condim="3" friction="1 0.005 0.0001" pos="0.03863281 0.004919875 -0.004518435" />
+              <geom name="L0_toe_l_geom0" type="box" size="0.03863281 0.05016921 0.0175" contype="65792" conaffinity="16646400" condim="3" friction="1 0.005 0.0001" pos="0.03863281 0.004919875 -0.004518435" />
             </body>
           </body>
         </body>
@@ -88,20 +88,20 @@
         <joint name="L0_hip_flex_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 120" armature="0.02" />
         <joint name="L0_hip_abd_r" type="hinge" pos="0 0 0" axis="-1 0 0" range="-30 45" armature="0.02" />
         <joint name="L0_hip_rot_r" type="hinge" pos="0 0 0" axis="0 0 -1" range="-40 40" armature="0.02" />
-        <geom name="L0_thigh_r_geom0" type="capsule" size="0.08888116 0.1633062" contype="256" conaffinity="256" condim="3" friction="1 0.005 0.0001" pos="0.002864 0 -0.207727" quat="0.006893172 0 0.9999762 0" />
+        <geom name="L0_thigh_r_geom0" type="capsule" size="0.08888116 0.1633062" contype="65792" conaffinity="16646400" condim="3" friction="1 0.005 0.0001" pos="0.002864 0 -0.207727" quat="0.006893172 0 0.9999762 0" />
         <body name="L0_shin_r" pos="0.005728 0 -0.415454">
           <inertial pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" mass="3.459135" diaginertia="0.06386931 0.06386931 0.007533594" />
           <joint name="L0_knee_r" type="hinge" pos="0 0 0" axis="0 1 0" range="0 150" armature="0.02" />
-          <geom name="L0_shin_r_geom0" type="capsule" size="0.06734565 0.1817725" contype="256" conaffinity="256" condim="3" friction="1 0.005 0.0001" pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" />
+          <geom name="L0_shin_r_geom0" type="capsule" size="0.06734565 0.1817725" contype="65792" conaffinity="16646400" condim="3" friction="1 0.005 0.0001" pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" />
           <body name="L0_foot_r" pos="-0.031931 0 -0.429706">
             <inertial pos="0.03774256 -0.002908948 -0.06798844" quat="1 0 0 0" mass="0.8497876" diaginertia="0.00103675 0.003237029 0.003763906" />
             <joint name="L0_ankle_dorsi_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-50 25" armature="0.01" />
             <joint name="L0_ankle_inv_r" type="hinge" pos="0 0 0" axis="1 0 0" range="-20 30" armature="0.01" />
-            <geom name="L0_foot_r_geom0" type="box" size="0.1026044 0.05253602 0.03" contype="256" conaffinity="256" condim="3" friction="1 0.005 0.0001" pos="0.03774256 -0.002908948 -0.06798844" />
+            <geom name="L0_foot_r_geom0" type="box" size="0.1026044 0.05253602 0.03" contype="65792" conaffinity="16646400" condim="3" friction="1 0.005 0.0001" pos="0.03774256 -0.002908948 -0.06798844" />
             <body name="L0_toe_r" pos="0.140343 0 -0.075843">
               <inertial pos="0.03863281 -0.004919875 -0.004518435" quat="1 0 0 0" mass="0.2499375" diaginertia="0.0002352078 0.0001498579 0.0003340368" />
               <joint name="L0_toe_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 60" stiffness="20" damping="1" armature="0.005" />
-              <geom name="L0_toe_r_geom0" type="box" size="0.03863281 0.05016921 0.0175" contype="256" conaffinity="256" condim="3" friction="1 0.005 0.0001" pos="0.03863681 -0.004919875 -0.004645435" />
+              <geom name="L0_toe_r_geom0" type="box" size="0.03863281 0.05016921 0.0175" contype="65792" conaffinity="16646400" condim="3" friction="1 0.005 0.0001" pos="0.03863681 -0.004919875 -0.004645435" />
             </body>
           </body>
         </body>
@@ -110,31 +110,31 @@
     <body name="L1_pelvis" pos="0 2.44 0.559887">
       <inertial pos="-0.007612123 0 0.009433847" quat="0.7071068 -0.7071068 0 0" mass="2.457886" diaginertia="0.009705657 0.009705657 0.006605976" />
       <freejoint name="L1_root" />
-      <geom name="L1_pelvis_geom0" type="capsule" size="0.07844793 0.03035992" contype="512" conaffinity="512" condim="3" friction="1 0.005 0.0001" pos="-0.007612123 0 0.009433847" quat="0.7071068 -0.7071068 0 0" />
+      <geom name="L1_pelvis_geom0" type="capsule" size="0.07844793 0.03035992" contype="131584" conaffinity="16581120" condim="3" friction="1 0.005 0.0001" pos="-0.007612123 0 0.009433847" quat="0.7071068 -0.7071068 0 0" />
       <body name="L1_torso" pos="-0.001231 -2.6e-05 0.062415">
         <inertial pos="-0.005324366 2.6e-05 0.03596058" quat="0.7071068 -0.7071068 0 0" mass="3.590602" diaginertia="0.009810929 0.009810929 0.006378186" />
         <joint name="L1_abdomen_flex" type="hinge" pos="0 0 0" axis="0 1 0" range="-30 60" armature="0.002099598" />
         <joint name="L1_abdomen_lat" type="hinge" pos="0 0 0" axis="1 0 0" range="-35 35" armature="0.002099598" />
         <joint name="L1_abdomen_twist" type="hinge" pos="0 0 0" axis="0 0 1" range="-45 45" armature="0.002099598" />
-        <geom name="L1_torso_geom0" type="capsule" size="0.06358528 0.02750999" contype="512" conaffinity="512" condim="3" friction="1 0.005 0.0001" pos="-0.005324366 2.6e-05 0.03596058" quat="0.7071068 -0.7071068 0 0" />
+        <geom name="L1_torso_geom0" type="capsule" size="0.06358528 0.02750999" contype="131584" conaffinity="16581120" condim="3" friction="1 0.005 0.0001" pos="-0.005324366 2.6e-05 0.03596058" quat="0.7071068 -0.7071068 0 0" />
         <body name="L1_chest" pos="-0.000412 0 0.109225">
           <inertial pos="0.02102744 2.6e-05 0.05248355" quat="0.7071068 -0.7071068 0 0" mass="3.510872" diaginertia="0.01368155 0.01368155 0.008567377" />
-          <geom name="L1_chest_geom0" type="capsule" size="0.07435712 0.03495606" contype="512" conaffinity="512" condim="3" friction="1 0.005 0.0001" pos="0.02102744 2.6e-05 0.05248355" quat="0.7071068 -0.7071068 0 0" />
+          <geom name="L1_chest_geom0" type="capsule" size="0.07435712 0.03495606" contype="131584" conaffinity="16581120" condim="3" friction="1 0.005 0.0001" pos="0.02102744 2.6e-05 0.05248355" quat="0.7071068 -0.7071068 0 0" />
           <body name="L1_head" pos="0.033148 0 0.156037">
             <inertial pos="0.06573305 1.878749e-05 0.0784395" quat="0.6614595 0.2478298 0.2473417 0.6632298" mass="1.525869" diaginertia="0.008143213 0.008139096 0.004756541" />
-            <geom name="L1_head_geom0" type="capsule" size="0.05753786 0.03165845" contype="512" conaffinity="512" condim="3" friction="1 0.005 0.0001" pos="0.018568 0 0.0256415" quat="0.9512996 0 0.3082679 0" />
-            <geom name="L1_head_geom1" type="sphere" size="0.09675238" contype="512" conaffinity="512" condim="3" friction="1 0.005 0.0001" pos="0.08383968 2.6e-05 0.09870861" />
+            <geom name="L1_head_geom0" type="capsule" size="0.05753786 0.03165845" contype="131584" conaffinity="16581120" condim="3" friction="1 0.005 0.0001" pos="0.018568 0 0.0256415" quat="0.9512996 0 0.3082679 0" />
+            <geom name="L1_head_geom1" type="sphere" size="0.09675238" contype="131584" conaffinity="16581120" condim="3" friction="1 0.005 0.0001" pos="0.08383968 2.6e-05 0.09870861" />
           </body>
           <body name="L1_upper_arm_l" pos="0.009612 0.129445 0.124194">
             <inertial pos="-0.000137 0.078008 7.7e-05" quat="0.7074557 -0.7067566 -0.001241227 0" mass="0.5966008" diaginertia="0.001505767 0.001505767 0.0002328844" />
             <joint name="L1_shoulder_elev_l" type="hinge" pos="0 0 0" axis="1 0 0" range="-95 80" armature="0.001049799" />
             <joint name="L1_shoulder_flex_l" type="hinge" pos="0 0 0" axis="0 0 -1" range="-60 170" armature="0.001049799" />
             <joint name="L1_shoulder_twist_l" type="hinge" pos="0 0 0" axis="0 1 0" range="-80 80" armature="0.001049799" />
-            <geom name="L1_upper_arm_l_geom0" type="capsule" size="0.028608 0.06370416" contype="512" conaffinity="512" condim="3" friction="1 0.005 0.0001" pos="-0.000137 0.078008 7.7e-05" quat="0.7074557 -0.7067566 -0.001241227 0" />
+            <geom name="L1_upper_arm_l_geom0" type="capsule" size="0.028608 0.06370416" contype="131584" conaffinity="16581120" condim="3" friction="1 0.005 0.0001" pos="-0.000137 0.078008 7.7e-05" quat="0.7074557 -0.7067566 -0.001241227 0" />
             <body name="L1_forearm_l" pos="-0.000274 0.156016 0.000154">
               <inertial pos="9.064547e-05 0.1302764 3.230928e-05" quat="0.7071945 -0.7070189 0.0004919392 0" mass="0.492127" diaginertia="0.003034748 0.003034748 0.0001322193" />
               <joint name="L1_elbow_l" type="hinge" pos="0 0 0" axis="0 0 -1" range="0 145" armature="0.001049799" />
-              <geom name="L1_forearm_l_geom0" type="capsule" size="0.0234555 0.1185487" contype="512" conaffinity="512" condim="3" friction="1 0.005 0.0001" pos="9.064547e-05 0.1302764 3.230928e-05" quat="0.7071945 -0.7070189 0.0004919392 0" />
+              <geom name="L1_forearm_l_geom0" type="capsule" size="0.0234555 0.1185487" contype="131584" conaffinity="16581120" condim="3" friction="1 0.005 0.0001" pos="9.064547e-05 0.1302764 3.230928e-05" quat="0.7071945 -0.7070189 0.0004919392 0" />
             </body>
           </body>
           <body name="L1_upper_arm_r" pos="0.009612 -0.129445 0.124194">
@@ -142,11 +142,11 @@
             <joint name="L1_shoulder_elev_r" type="hinge" pos="0 0 0" axis="-1 0 0" range="-95 80" armature="0.001049799" />
             <joint name="L1_shoulder_flex_r" type="hinge" pos="0 0 0" axis="0 0 1" range="-60 170" armature="0.001049799" />
             <joint name="L1_shoulder_twist_r" type="hinge" pos="0 0 0" axis="0 1 0" range="-80 80" armature="0.001049799" />
-            <geom name="L1_upper_arm_r_geom0" type="capsule" size="0.028608 0.06370416" contype="512" conaffinity="512" condim="3" friction="1 0.005 0.0001" pos="-0.000137 -0.077956 7.7e-05" quat="0.7074557 0.7067566 -0.001241227 0" />
+            <geom name="L1_upper_arm_r_geom0" type="capsule" size="0.028608 0.06370416" contype="131584" conaffinity="16581120" condim="3" friction="1 0.005 0.0001" pos="-0.000137 -0.077956 7.7e-05" quat="0.7074557 0.7067566 -0.001241227 0" />
             <body name="L1_forearm_r" pos="-0.000271 -0.156311 0.000154">
               <inertial pos="9.064547e-05 -0.1302764 3.230928e-05" quat="0.7071945 0.7070189 0.0004919392 0" mass="0.492127" diaginertia="0.003034748 0.003034748 0.0001322193" />
               <joint name="L1_elbow_r" type="hinge" pos="0 0 0" axis="0 0 1" range="0 145" armature="0.001049799" />
-              <geom name="L1_forearm_r_geom0" type="capsule" size="0.0234555 0.1185487" contype="512" conaffinity="512" condim="3" friction="1 0.005 0.0001" pos="8.764547e-05 -0.1299294 3.230928e-05" quat="0.7071945 0.7070189 0.0004919392 0" />
+              <geom name="L1_forearm_r_geom0" type="capsule" size="0.0234555 0.1185487" contype="131584" conaffinity="16581120" condim="3" friction="1 0.005 0.0001" pos="8.764547e-05 -0.1299294 3.230928e-05" quat="0.7071945 0.7070189 0.0004919392 0" />
             </body>
           </body>
         </body>
@@ -156,20 +156,20 @@
         <joint name="L1_hip_flex_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 120" armature="0.002099598" />
         <joint name="L1_hip_abd_l" type="hinge" pos="0 0 0" axis="1 0 0" range="-30 45" armature="0.002099598" />
         <joint name="L1_hip_rot_l" type="hinge" pos="0 0 0" axis="0 0 1" range="-40 40" armature="0.002099598" />
-        <geom name="L1_thigh_l_geom0" type="capsule" size="0.05396597 0.1009075" contype="512" conaffinity="512" condim="3" friction="1 0.005 0.0001" pos="0 0 -0.1278905" quat="0 1 0 0" />
+        <geom name="L1_thigh_l_geom0" type="capsule" size="0.05396597 0.1009075" contype="131584" conaffinity="16581120" condim="3" friction="1 0.005 0.0001" pos="0 0 -0.1278905" quat="0 1 0 0" />
         <body name="L1_shin_l" pos="0 0 -0.255781">
           <inertial pos="0 0 -0.1340565" quat="0 1 0 0" mass="0.9512622" diaginertia="0.006572025 0.006572025 0.0005829297" />
           <joint name="L1_knee_l" type="hinge" pos="0 0 0" axis="0 1 0" range="0 150" armature="0.002099598" />
-          <geom name="L1_shin_l_geom0" type="capsule" size="0.03561781 0.1162476" contype="512" conaffinity="512" condim="3" friction="1 0.005 0.0001" pos="0 0 -0.1340565" quat="0 1 0 0" />
+          <geom name="L1_shin_l_geom0" type="capsule" size="0.03561781 0.1162476" contype="131584" conaffinity="16581120" condim="3" friction="1 0.005 0.0001" pos="0 0 -0.1340565" quat="0 1 0 0" />
           <body name="L1_foot_l" pos="0 0 -0.268113">
             <inertial pos="0.02989977 0.01554355 -0.02697956" quat="1 0 0 0" mass="0.2336916" diaginertia="0.0001722914 0.000345643 0.000464408" />
             <joint name="L1_ankle_dorsi_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-50 25" armature="0.001049799" />
             <joint name="L1_ankle_inv_l" type="hinge" pos="0 0 0" axis="-1 0 0" range="-20 30" armature="0.001049799" />
-            <geom name="L1_foot_l_geom0" type="box" size="0.06398123 0.04322278 0.01853566" contype="512" conaffinity="512" condim="3" friction="1 0.005 0.0001" pos="0.02989977 0.01554355 -0.02697956" />
+            <geom name="L1_foot_l_geom0" type="box" size="0.06398123 0.04322278 0.01853566" contype="131584" conaffinity="16581120" condim="3" friction="1 0.005 0.0001" pos="0.02989977 0.01554355 -0.02697956" />
             <body name="L1_toe_l" pos="0.093881 0.002417 -0.028506">
               <inertial pos="0.03375064 0.01336441 -0.006196754" quat="1 0 0 0" mass="0.06873282" diaginertia="4.657589e-05 2.877649e-05 6.999537e-05" />
               <joint name="L1_toe_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 60" stiffness="3.398204" damping="0.1335558" armature="0.0005248994" />
-              <geom name="L1_toe_l_geom0" type="box" size="0.03375064 0.04377215 0.01081247" contype="512" conaffinity="512" condim="3" friction="1 0.005 0.0001" pos="0.03375064 0.01336441 -0.006196754" />
+              <geom name="L1_toe_l_geom0" type="box" size="0.03375064 0.04377215 0.01081247" contype="131584" conaffinity="16581120" condim="3" friction="1 0.005 0.0001" pos="0.03375064 0.01336441 -0.006196754" />
             </body>
           </body>
         </body>
@@ -179,20 +179,20 @@
         <joint name="L1_hip_flex_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 120" armature="0.002099598" />
         <joint name="L1_hip_abd_r" type="hinge" pos="0 0 0" axis="-1 0 0" range="-30 45" armature="0.002099598" />
         <joint name="L1_hip_rot_r" type="hinge" pos="0 0 0" axis="0 0 -1" range="-40 40" armature="0.002099598" />
-        <geom name="L1_thigh_r_geom0" type="capsule" size="0.05396597 0.1009075" contype="512" conaffinity="512" condim="3" friction="1 0.005 0.0001" pos="0 -1.3e-05 -0.1278405" quat="0 1 0 0" />
+        <geom name="L1_thigh_r_geom0" type="capsule" size="0.05396597 0.1009075" contype="131584" conaffinity="16581120" condim="3" friction="1 0.005 0.0001" pos="0 -1.3e-05 -0.1278405" quat="0 1 0 0" />
         <body name="L1_shin_r" pos="0 0 -0.252279">
           <inertial pos="0 0 -0.1340565" quat="0 -1 0 0" mass="0.9512622" diaginertia="0.006572025 0.006572025 0.0005829297" />
           <joint name="L1_knee_r" type="hinge" pos="0 0 0" axis="0 1 0" range="0 150" armature="0.002099598" />
-          <geom name="L1_shin_r_geom0" type="capsule" size="0.03561781 0.1162476" contype="512" conaffinity="512" condim="3" friction="1 0.005 0.0001" pos="0 -1.3e-05 -0.1375085" quat="0 1 0 0" />
+          <geom name="L1_shin_r_geom0" type="capsule" size="0.03561781 0.1162476" contype="131584" conaffinity="16581120" condim="3" friction="1 0.005 0.0001" pos="0 -1.3e-05 -0.1375085" quat="0 1 0 0" />
           <body name="L1_foot_r" pos="0 0 -0.269013">
             <inertial pos="0.02989977 -0.01554355 -0.02697956" quat="1 0 0 0" mass="0.2336916" diaginertia="0.0001722914 0.000345643 0.000464408" />
             <joint name="L1_ankle_dorsi_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-50 25" armature="0.001049799" />
             <joint name="L1_ankle_inv_r" type="hinge" pos="0 0 0" axis="1 0 0" range="-20 30" armature="0.001049799" />
-            <geom name="L1_foot_r_geom0" type="box" size="0.06398123 0.04322278 0.01853566" contype="512" conaffinity="512" condim="3" friction="1 0.005 0.0001" pos="0.02989977 -0.01555655 -0.02953156" />
+            <geom name="L1_foot_r_geom0" type="box" size="0.06398123 0.04322278 0.01853566" contype="131584" conaffinity="16581120" condim="3" friction="1 0.005 0.0001" pos="0.02989977 -0.01555655 -0.02953156" />
             <body name="L1_toe_r" pos="0.089318 -0.003451 -0.028805">
               <inertial pos="0.03375064 -0.01336441 -0.006196754" quat="1 0 0 0" mass="0.06873282" diaginertia="4.657589e-05 2.877649e-05 6.999537e-05" />
               <joint name="L1_toe_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 60" stiffness="3.398204" damping="0.1335558" armature="0.0005248994" />
-              <geom name="L1_toe_r_geom0" type="box" size="0.03375064 0.04377215 0.01081247" contype="512" conaffinity="512" condim="3" friction="1 0.005 0.0001" pos="0.03831364 -0.01234341 -0.008449754" />
+              <geom name="L1_toe_r_geom0" type="box" size="0.03375064 0.04377215 0.01081247" contype="131584" conaffinity="16581120" condim="3" friction="1 0.005 0.0001" pos="0.03831364 -0.01234341 -0.008449754" />
             </body>
           </body>
         </body>
@@ -201,31 +201,31 @@
     <body name="L2_pelvis" pos="0.014059 1.22 0.966775">
       <inertial pos="-0.01696645 0 -0.003757688" quat="0.7071068 -0.7071068 0 0" mass="8.937766" diaginertia="0.0907144 0.0907144 0.07049761" />
       <freejoint name="L2_root" />
-      <geom name="L2_pelvis_geom0" type="capsule" size="0.1357963 0.03473648" contype="4" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="-0.01696645 0 -0.003757688" quat="0.7071068 -0.7071068 0 0" />
+      <geom name="L2_pelvis_geom0" type="capsule" size="0.1357963 0.03473648" contype="262148" conaffinity="16449536" condim="3" friction="1 0.005 0.0001" pos="-0.01696645 0 -0.003757688" quat="0.7071068 -0.7071068 0 0" />
       <body name="L2_torso" pos="-0.000796 0 0.095775">
         <inertial pos="0.003384799 0 0.1412323" quat="0.7071068 -0.7071068 0 0" mass="13.05674" diaginertia="0.1165244 0.1165244 0.08048442" />
         <joint name="L2_abdomen_flex" type="hinge" pos="0 0 0" axis="0 1 0" range="-30 60" armature="0.02" />
         <joint name="L2_abdomen_lat" type="hinge" pos="0 0 0" axis="1 0 0" range="-35 35" armature="0.02" />
         <joint name="L2_abdomen_twist" type="hinge" pos="0 0 0" axis="0 0 1" range="-45 45" armature="0.02" />
-        <geom name="L2_torso_geom0" type="capsule" size="0.1189253 0.04429121" contype="4" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="0.003384799 0 0.1412323" quat="0.7071068 -0.7071068 0 0" />
+        <geom name="L2_torso_geom0" type="capsule" size="0.1189253 0.04429121" contype="262148" conaffinity="16449536" condim="3" friction="1 0.005 0.0001" pos="0.003384799 0 0.1412323" quat="0.7071068 -0.7071068 0 0" />
         <body name="L2_chest" pos="-0.016728 0 0.279754">
           <inertial pos="-0.003824043 0 0.05326067" quat="0.7071068 -0.7071068 0 0" mass="12.76681" diaginertia="0.157376 0.157376 0.09756839" />
-          <geom name="L2_chest_geom0" type="capsule" size="0.1315126 0.06314432" contype="4" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="-0.003824043 0 0.05326067" quat="0.7071068 -0.7071068 0 0" />
+          <geom name="L2_chest_geom0" type="capsule" size="0.1315126 0.06314432" contype="262148" conaffinity="16449536" condim="3" friction="1 0.005 0.0001" pos="-0.003824043 0 0.05326067" quat="0.7071068 -0.7071068 0 0" />
           <body name="L2_head" pos="-0.048542 0 0.181344">
             <inertial pos="0.05070428 0 0.1332104" quat="0.6920062 0.1453527 0.1453527 0.6920062" mass="5.548613" diaginertia="0.0503217 0.05005417 0.02171975" />
-            <geom name="L2_head_geom0" type="capsule" size="0.06994246 0.0600033" contype="4" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="0.013404 0 0.058487" quat="0.9936623 0 0.1124062 0" />
-            <geom name="L2_head_geom1" type="sphere" size="0.1098854" contype="4" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="0.07270066 0 0.1772756" />
+            <geom name="L2_head_geom0" type="capsule" size="0.06994246 0.0600033" contype="262148" conaffinity="16449536" condim="3" friction="1 0.005 0.0001" pos="0.013404 0 0.058487" quat="0.9936623 0 0.1124062 0" />
+            <geom name="L2_head_geom1" type="sphere" size="0.1098854" contype="262148" conaffinity="16449536" condim="3" friction="1 0.005 0.0001" pos="0.07270066 0 0.1772756" />
           </body>
           <body name="L2_upper_arm_l" pos="-0.033514 0.201796 0.161482">
             <inertial pos="-0.007092 0.126 0.00073" quat="0.7091489 -0.7039445 -0.03962202 0" mass="2.169458" diaginertia="0.01610463 0.01610463 0.004156322" />
             <joint name="L2_shoulder_elev_l" type="hinge" pos="0 0 0" axis="1 0 0" range="-95 80" armature="0.01" />
             <joint name="L2_shoulder_flex_l" type="hinge" pos="0 0 0" axis="0 0 -1" range="-60 170" armature="0.01" />
             <joint name="L2_shoulder_twist_l" type="hinge" pos="0 0 0" axis="0 1 0" range="-80 80" armature="0.01" />
-            <geom name="L2_upper_arm_l_geom0" type="capsule" size="0.06392297 0.09424006" contype="4" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="-0.007092 0.126 0.00073" quat="0.7091489 -0.7039445 -0.03962202 0" />
+            <geom name="L2_upper_arm_l_geom0" type="capsule" size="0.06392297 0.09424006" contype="262148" conaffinity="16449536" condim="3" friction="1 0.005 0.0001" pos="-0.007092 0.126 0.00073" quat="0.7091489 -0.7039445 -0.03962202 0" />
             <body name="L2_forearm_l" pos="-0.014184 0.252 0.00146">
               <inertial pos="0.0027005 0.1902425 -0.00161" quat="0.7041088 -0.7100206 0.01007877 0" mass="1.789553" diaginertia="0.02422419 0.02422419 0.001594476" />
               <joint name="L2_elbow_l" type="hinge" pos="0 0 0" axis="0 0 -1" range="0 145" armature="0.01" />
-              <geom name="L2_forearm_l_geom0" type="capsule" size="0.04283781 0.1688496" contype="4" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="0.0027005 0.1902425 -0.00161" quat="0.7041088 -0.7100206 0.01007877 0" />
+              <geom name="L2_forearm_l_geom0" type="capsule" size="0.04283781 0.1688496" contype="262148" conaffinity="16449536" condim="3" friction="1 0.005 0.0001" pos="0.0027005 0.1902425 -0.00161" quat="0.7041088 -0.7100206 0.01007877 0" />
             </body>
           </body>
           <body name="L2_upper_arm_r" pos="-0.033514 -0.201796 0.161482">
@@ -233,11 +233,11 @@
             <joint name="L2_shoulder_elev_r" type="hinge" pos="0 0 0" axis="-1 0 0" range="-95 80" armature="0.01" />
             <joint name="L2_shoulder_flex_r" type="hinge" pos="0 0 0" axis="0 0 1" range="-60 170" armature="0.01" />
             <joint name="L2_shoulder_twist_r" type="hinge" pos="0 0 0" axis="0 1 0" range="-80 80" armature="0.01" />
-            <geom name="L2_upper_arm_r_geom0" type="capsule" size="0.06392297 0.09424006" contype="4" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="-0.007092 -0.126 0.00073" quat="0.7091489 0.7039445 -0.03962202 0" />
+            <geom name="L2_upper_arm_r_geom0" type="capsule" size="0.06392297 0.09424006" contype="262148" conaffinity="16449536" condim="3" friction="1 0.005 0.0001" pos="-0.007092 -0.126 0.00073" quat="0.7091489 0.7039445 -0.03962202 0" />
             <body name="L2_forearm_r" pos="-0.014184 -0.252 0.00146">
               <inertial pos="0.0027005 -0.1902425 -0.00161" quat="0.7041088 0.7100206 0.01007877 0" mass="1.789553" diaginertia="0.02422419 0.02422419 0.001594476" />
               <joint name="L2_elbow_r" type="hinge" pos="0 0 0" axis="0 0 1" range="0 145" armature="0.01" />
-              <geom name="L2_forearm_r_geom0" type="capsule" size="0.04283781 0.1688496" contype="4" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="0.0027005 -0.1902425 -0.00161" quat="0.7041088 0.7100206 0.01007877 0" />
+              <geom name="L2_forearm_r_geom0" type="capsule" size="0.04283781 0.1688496" contype="262148" conaffinity="16449536" condim="3" friction="1 0.005 0.0001" pos="0.0027005 -0.1902425 -0.00161" quat="0.7041088 0.7100206 0.01007877 0" />
             </body>
           </body>
         </body>
@@ -247,20 +247,20 @@
         <joint name="L2_hip_flex_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 120" armature="0.02" />
         <joint name="L2_hip_abd_l" type="hinge" pos="0 0 0" axis="1 0 0" range="-30 45" armature="0.02" />
         <joint name="L2_hip_rot_l" type="hinge" pos="0 0 0" axis="0 0 1" range="-40 40" armature="0.02" />
-        <geom name="L2_thigh_l_geom0" type="capsule" size="0.08888116 0.1633062" contype="1024" conaffinity="1024" condim="3" friction="1 0.005 0.0001" pos="0.002864 0 -0.207727" quat="0.006893172 0 0.9999762 0" />
+        <geom name="L2_thigh_l_geom0" type="capsule" size="0.08888116 0.1633062" contype="263168" conaffinity="16450560" condim="3" friction="1 0.005 0.0001" pos="0.002864 0 -0.207727" quat="0.006893172 0 0.9999762 0" />
         <body name="L2_shin_l" pos="0.005728 0 -0.415454">
           <inertial pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" mass="3.459135" diaginertia="0.06386931 0.06386931 0.007533594" />
           <joint name="L2_knee_l" type="hinge" pos="0 0 0" axis="0 1 0" range="0 150" armature="0.02" />
-          <geom name="L2_shin_l_geom0" type="capsule" size="0.06734565 0.1817725" contype="1024" conaffinity="1024" condim="3" friction="1 0.005 0.0001" pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" />
+          <geom name="L2_shin_l_geom0" type="capsule" size="0.06734565 0.1817725" contype="263168" conaffinity="16450560" condim="3" friction="1 0.005 0.0001" pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" />
           <body name="L2_foot_l" pos="-0.031931 0 -0.429706">
             <inertial pos="0.03774256 0.002908948 -0.06798844" quat="1 0 0 0" mass="0.8497876" diaginertia="0.00103675 0.003237029 0.003763906" />
             <joint name="L2_ankle_dorsi_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-50 25" armature="0.01" />
             <joint name="L2_ankle_inv_l" type="hinge" pos="0 0 0" axis="-1 0 0" range="-20 30" armature="0.01" />
-            <geom name="L2_foot_l_geom0" type="box" size="0.1026044 0.05253602 0.03" contype="1024" conaffinity="1024" condim="3" friction="1 0.005 0.0001" pos="0.03774256 0.002908948 -0.06798844" />
+            <geom name="L2_foot_l_geom0" type="box" size="0.1026044 0.05253602 0.03" contype="263168" conaffinity="16450560" condim="3" friction="1 0.005 0.0001" pos="0.03774256 0.002908948 -0.06798844" />
             <body name="L2_toe_l" pos="0.140347 0 -0.07597">
               <inertial pos="0.03863281 0.004919875 -0.004518435" quat="1 0 0 0" mass="0.2499375" diaginertia="0.0002352078 0.0001498579 0.0003340368" />
               <joint name="L2_toe_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 60" stiffness="20" damping="1" armature="0.005" />
-              <geom name="L2_toe_l_geom0" type="box" size="0.03863281 0.05016921 0.0175" contype="1024" conaffinity="1024" condim="3" friction="1 0.005 0.0001" pos="0.03863281 0.004919875 -0.004518435" />
+              <geom name="L2_toe_l_geom0" type="box" size="0.03863281 0.05016921 0.0175" contype="263168" conaffinity="16450560" condim="3" friction="1 0.005 0.0001" pos="0.03863281 0.004919875 -0.004518435" />
             </body>
           </body>
         </body>
@@ -270,20 +270,20 @@
         <joint name="L2_hip_flex_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 120" armature="0.02" />
         <joint name="L2_hip_abd_r" type="hinge" pos="0 0 0" axis="-1 0 0" range="-30 45" armature="0.02" />
         <joint name="L2_hip_rot_r" type="hinge" pos="0 0 0" axis="0 0 -1" range="-40 40" armature="0.02" />
-        <geom name="L2_thigh_r_geom0" type="capsule" size="0.08888116 0.1633062" contype="1024" conaffinity="1024" condim="3" friction="1 0.005 0.0001" pos="0.002864 0 -0.207727" quat="0.006893172 0 0.9999762 0" />
+        <geom name="L2_thigh_r_geom0" type="capsule" size="0.08888116 0.1633062" contype="263168" conaffinity="16450560" condim="3" friction="1 0.005 0.0001" pos="0.002864 0 -0.207727" quat="0.006893172 0 0.9999762 0" />
         <body name="L2_shin_r" pos="0.005728 0 -0.415454">
           <inertial pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" mass="3.459135" diaginertia="0.06386931 0.06386931 0.007533594" />
           <joint name="L2_knee_r" type="hinge" pos="0 0 0" axis="0 1 0" range="0 150" armature="0.02" />
-          <geom name="L2_shin_r_geom0" type="capsule" size="0.06734565 0.1817725" contype="1024" conaffinity="1024" condim="3" friction="1 0.005 0.0001" pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" />
+          <geom name="L2_shin_r_geom0" type="capsule" size="0.06734565 0.1817725" contype="263168" conaffinity="16450560" condim="3" friction="1 0.005 0.0001" pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" />
           <body name="L2_foot_r" pos="-0.031931 0 -0.429706">
             <inertial pos="0.03774256 -0.002908948 -0.06798844" quat="1 0 0 0" mass="0.8497876" diaginertia="0.00103675 0.003237029 0.003763906" />
             <joint name="L2_ankle_dorsi_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-50 25" armature="0.01" />
             <joint name="L2_ankle_inv_r" type="hinge" pos="0 0 0" axis="1 0 0" range="-20 30" armature="0.01" />
-            <geom name="L2_foot_r_geom0" type="box" size="0.1026044 0.05253602 0.03" contype="1024" conaffinity="1024" condim="3" friction="1 0.005 0.0001" pos="0.03774256 -0.002908948 -0.06798844" />
+            <geom name="L2_foot_r_geom0" type="box" size="0.1026044 0.05253602 0.03" contype="263168" conaffinity="16450560" condim="3" friction="1 0.005 0.0001" pos="0.03774256 -0.002908948 -0.06798844" />
             <body name="L2_toe_r" pos="0.140343 0 -0.075843">
               <inertial pos="0.03863281 -0.004919875 -0.004518435" quat="1 0 0 0" mass="0.2499375" diaginertia="0.0002352078 0.0001498579 0.0003340368" />
               <joint name="L2_toe_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 60" stiffness="20" damping="1" armature="0.005" />
-              <geom name="L2_toe_r_geom0" type="box" size="0.03863281 0.05016921 0.0175" contype="1024" conaffinity="1024" condim="3" friction="1 0.005 0.0001" pos="0.03863681 -0.004919875 -0.004645435" />
+              <geom name="L2_toe_r_geom0" type="box" size="0.03863281 0.05016921 0.0175" contype="263168" conaffinity="16450560" condim="3" friction="1 0.005 0.0001" pos="0.03863681 -0.004919875 -0.004645435" />
             </body>
           </body>
         </body>
@@ -292,31 +292,31 @@
     <body name="L3_pelvis" pos="0 0 0.559887">
       <inertial pos="-0.007612123 0 0.009433847" quat="0.7071068 -0.7071068 0 0" mass="2.457886" diaginertia="0.009705657 0.009705657 0.006605976" />
       <freejoint name="L3_root" />
-      <geom name="L3_pelvis_geom0" type="capsule" size="0.07844793 0.03035992" contype="2048" conaffinity="2048" condim="3" friction="1 0.005 0.0001" pos="-0.007612123 0 0.009433847" quat="0.7071068 -0.7071068 0 0" />
+      <geom name="L3_pelvis_geom0" type="capsule" size="0.07844793 0.03035992" contype="526336" conaffinity="16189440" condim="3" friction="1 0.005 0.0001" pos="-0.007612123 0 0.009433847" quat="0.7071068 -0.7071068 0 0" />
       <body name="L3_torso" pos="-0.001231 -2.6e-05 0.062415">
         <inertial pos="-0.005324366 2.6e-05 0.03596058" quat="0.7071068 -0.7071068 0 0" mass="3.590602" diaginertia="0.009810929 0.009810929 0.006378186" />
         <joint name="L3_abdomen_flex" type="hinge" pos="0 0 0" axis="0 1 0" range="-30 60" armature="0.002099598" />
         <joint name="L3_abdomen_lat" type="hinge" pos="0 0 0" axis="1 0 0" range="-35 35" armature="0.002099598" />
         <joint name="L3_abdomen_twist" type="hinge" pos="0 0 0" axis="0 0 1" range="-45 45" armature="0.002099598" />
-        <geom name="L3_torso_geom0" type="capsule" size="0.06358528 0.02750999" contype="2048" conaffinity="2048" condim="3" friction="1 0.005 0.0001" pos="-0.005324366 2.6e-05 0.03596058" quat="0.7071068 -0.7071068 0 0" />
+        <geom name="L3_torso_geom0" type="capsule" size="0.06358528 0.02750999" contype="526336" conaffinity="16189440" condim="3" friction="1 0.005 0.0001" pos="-0.005324366 2.6e-05 0.03596058" quat="0.7071068 -0.7071068 0 0" />
         <body name="L3_chest" pos="-0.000412 0 0.109225">
           <inertial pos="0.02102744 2.6e-05 0.05248355" quat="0.7071068 -0.7071068 0 0" mass="3.510872" diaginertia="0.01368155 0.01368155 0.008567377" />
-          <geom name="L3_chest_geom0" type="capsule" size="0.07435712 0.03495606" contype="2048" conaffinity="2048" condim="3" friction="1 0.005 0.0001" pos="0.02102744 2.6e-05 0.05248355" quat="0.7071068 -0.7071068 0 0" />
+          <geom name="L3_chest_geom0" type="capsule" size="0.07435712 0.03495606" contype="526336" conaffinity="16189440" condim="3" friction="1 0.005 0.0001" pos="0.02102744 2.6e-05 0.05248355" quat="0.7071068 -0.7071068 0 0" />
           <body name="L3_head" pos="0.033148 0 0.156037">
             <inertial pos="0.06573305 1.878749e-05 0.0784395" quat="0.6614595 0.2478298 0.2473417 0.6632298" mass="1.525869" diaginertia="0.008143213 0.008139096 0.004756541" />
-            <geom name="L3_head_geom0" type="capsule" size="0.05753786 0.03165845" contype="2048" conaffinity="2048" condim="3" friction="1 0.005 0.0001" pos="0.018568 0 0.0256415" quat="0.9512996 0 0.3082679 0" />
-            <geom name="L3_head_geom1" type="sphere" size="0.09675238" contype="2048" conaffinity="2048" condim="3" friction="1 0.005 0.0001" pos="0.08383968 2.6e-05 0.09870861" />
+            <geom name="L3_head_geom0" type="capsule" size="0.05753786 0.03165845" contype="526336" conaffinity="16189440" condim="3" friction="1 0.005 0.0001" pos="0.018568 0 0.0256415" quat="0.9512996 0 0.3082679 0" />
+            <geom name="L3_head_geom1" type="sphere" size="0.09675238" contype="526336" conaffinity="16189440" condim="3" friction="1 0.005 0.0001" pos="0.08383968 2.6e-05 0.09870861" />
           </body>
           <body name="L3_upper_arm_l" pos="0.009612 0.129445 0.124194">
             <inertial pos="-0.000137 0.078008 7.7e-05" quat="0.7074557 -0.7067566 -0.001241227 0" mass="0.5966008" diaginertia="0.001505767 0.001505767 0.0002328844" />
             <joint name="L3_shoulder_elev_l" type="hinge" pos="0 0 0" axis="1 0 0" range="-95 80" armature="0.001049799" />
             <joint name="L3_shoulder_flex_l" type="hinge" pos="0 0 0" axis="0 0 -1" range="-60 170" armature="0.001049799" />
             <joint name="L3_shoulder_twist_l" type="hinge" pos="0 0 0" axis="0 1 0" range="-80 80" armature="0.001049799" />
-            <geom name="L3_upper_arm_l_geom0" type="capsule" size="0.028608 0.06370416" contype="2048" conaffinity="2048" condim="3" friction="1 0.005 0.0001" pos="-0.000137 0.078008 7.7e-05" quat="0.7074557 -0.7067566 -0.001241227 0" />
+            <geom name="L3_upper_arm_l_geom0" type="capsule" size="0.028608 0.06370416" contype="526336" conaffinity="16189440" condim="3" friction="1 0.005 0.0001" pos="-0.000137 0.078008 7.7e-05" quat="0.7074557 -0.7067566 -0.001241227 0" />
             <body name="L3_forearm_l" pos="-0.000274 0.156016 0.000154">
               <inertial pos="9.064547e-05 0.1302764 3.230928e-05" quat="0.7071945 -0.7070189 0.0004919392 0" mass="0.492127" diaginertia="0.003034748 0.003034748 0.0001322193" />
               <joint name="L3_elbow_l" type="hinge" pos="0 0 0" axis="0 0 -1" range="0 145" armature="0.001049799" />
-              <geom name="L3_forearm_l_geom0" type="capsule" size="0.0234555 0.1185487" contype="2048" conaffinity="2048" condim="3" friction="1 0.005 0.0001" pos="9.064547e-05 0.1302764 3.230928e-05" quat="0.7071945 -0.7070189 0.0004919392 0" />
+              <geom name="L3_forearm_l_geom0" type="capsule" size="0.0234555 0.1185487" contype="526336" conaffinity="16189440" condim="3" friction="1 0.005 0.0001" pos="9.064547e-05 0.1302764 3.230928e-05" quat="0.7071945 -0.7070189 0.0004919392 0" />
             </body>
           </body>
           <body name="L3_upper_arm_r" pos="0.009612 -0.129445 0.124194">
@@ -324,11 +324,11 @@
             <joint name="L3_shoulder_elev_r" type="hinge" pos="0 0 0" axis="-1 0 0" range="-95 80" armature="0.001049799" />
             <joint name="L3_shoulder_flex_r" type="hinge" pos="0 0 0" axis="0 0 1" range="-60 170" armature="0.001049799" />
             <joint name="L3_shoulder_twist_r" type="hinge" pos="0 0 0" axis="0 1 0" range="-80 80" armature="0.001049799" />
-            <geom name="L3_upper_arm_r_geom0" type="capsule" size="0.028608 0.06370416" contype="2048" conaffinity="2048" condim="3" friction="1 0.005 0.0001" pos="-0.000137 -0.077956 7.7e-05" quat="0.7074557 0.7067566 -0.001241227 0" />
+            <geom name="L3_upper_arm_r_geom0" type="capsule" size="0.028608 0.06370416" contype="526336" conaffinity="16189440" condim="3" friction="1 0.005 0.0001" pos="-0.000137 -0.077956 7.7e-05" quat="0.7074557 0.7067566 -0.001241227 0" />
             <body name="L3_forearm_r" pos="-0.000271 -0.156311 0.000154">
               <inertial pos="9.064547e-05 -0.1302764 3.230928e-05" quat="0.7071945 0.7070189 0.0004919392 0" mass="0.492127" diaginertia="0.003034748 0.003034748 0.0001322193" />
               <joint name="L3_elbow_r" type="hinge" pos="0 0 0" axis="0 0 1" range="0 145" armature="0.001049799" />
-              <geom name="L3_forearm_r_geom0" type="capsule" size="0.0234555 0.1185487" contype="2048" conaffinity="2048" condim="3" friction="1 0.005 0.0001" pos="8.764547e-05 -0.1299294 3.230928e-05" quat="0.7071945 0.7070189 0.0004919392 0" />
+              <geom name="L3_forearm_r_geom0" type="capsule" size="0.0234555 0.1185487" contype="526336" conaffinity="16189440" condim="3" friction="1 0.005 0.0001" pos="8.764547e-05 -0.1299294 3.230928e-05" quat="0.7071945 0.7070189 0.0004919392 0" />
             </body>
           </body>
         </body>
@@ -338,20 +338,20 @@
         <joint name="L3_hip_flex_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 120" armature="0.002099598" />
         <joint name="L3_hip_abd_l" type="hinge" pos="0 0 0" axis="1 0 0" range="-30 45" armature="0.002099598" />
         <joint name="L3_hip_rot_l" type="hinge" pos="0 0 0" axis="0 0 1" range="-40 40" armature="0.002099598" />
-        <geom name="L3_thigh_l_geom0" type="capsule" size="0.05396597 0.1009075" contype="2048" conaffinity="2048" condim="3" friction="1 0.005 0.0001" pos="0 0 -0.1278905" quat="0 1 0 0" />
+        <geom name="L3_thigh_l_geom0" type="capsule" size="0.05396597 0.1009075" contype="526336" conaffinity="16189440" condim="3" friction="1 0.005 0.0001" pos="0 0 -0.1278905" quat="0 1 0 0" />
         <body name="L3_shin_l" pos="0 0 -0.255781">
           <inertial pos="0 0 -0.1340565" quat="0 1 0 0" mass="0.9512622" diaginertia="0.006572025 0.006572025 0.0005829297" />
           <joint name="L3_knee_l" type="hinge" pos="0 0 0" axis="0 1 0" range="0 150" armature="0.002099598" />
-          <geom name="L3_shin_l_geom0" type="capsule" size="0.03561781 0.1162476" contype="2048" conaffinity="2048" condim="3" friction="1 0.005 0.0001" pos="0 0 -0.1340565" quat="0 1 0 0" />
+          <geom name="L3_shin_l_geom0" type="capsule" size="0.03561781 0.1162476" contype="526336" conaffinity="16189440" condim="3" friction="1 0.005 0.0001" pos="0 0 -0.1340565" quat="0 1 0 0" />
           <body name="L3_foot_l" pos="0 0 -0.268113">
             <inertial pos="0.02989977 0.01554355 -0.02697956" quat="1 0 0 0" mass="0.2336916" diaginertia="0.0001722914 0.000345643 0.000464408" />
             <joint name="L3_ankle_dorsi_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-50 25" armature="0.001049799" />
             <joint name="L3_ankle_inv_l" type="hinge" pos="0 0 0" axis="-1 0 0" range="-20 30" armature="0.001049799" />
-            <geom name="L3_foot_l_geom0" type="box" size="0.06398123 0.04322278 0.01853566" contype="2048" conaffinity="2048" condim="3" friction="1 0.005 0.0001" pos="0.02989977 0.01554355 -0.02697956" />
+            <geom name="L3_foot_l_geom0" type="box" size="0.06398123 0.04322278 0.01853566" contype="526336" conaffinity="16189440" condim="3" friction="1 0.005 0.0001" pos="0.02989977 0.01554355 -0.02697956" />
             <body name="L3_toe_l" pos="0.093881 0.002417 -0.028506">
               <inertial pos="0.03375064 0.01336441 -0.006196754" quat="1 0 0 0" mass="0.06873282" diaginertia="4.657589e-05 2.877649e-05 6.999537e-05" />
               <joint name="L3_toe_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 60" stiffness="3.398204" damping="0.1335558" armature="0.0005248994" />
-              <geom name="L3_toe_l_geom0" type="box" size="0.03375064 0.04377215 0.01081247" contype="2048" conaffinity="2048" condim="3" friction="1 0.005 0.0001" pos="0.03375064 0.01336441 -0.006196754" />
+              <geom name="L3_toe_l_geom0" type="box" size="0.03375064 0.04377215 0.01081247" contype="526336" conaffinity="16189440" condim="3" friction="1 0.005 0.0001" pos="0.03375064 0.01336441 -0.006196754" />
             </body>
           </body>
         </body>
@@ -361,20 +361,20 @@
         <joint name="L3_hip_flex_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 120" armature="0.002099598" />
         <joint name="L3_hip_abd_r" type="hinge" pos="0 0 0" axis="-1 0 0" range="-30 45" armature="0.002099598" />
         <joint name="L3_hip_rot_r" type="hinge" pos="0 0 0" axis="0 0 -1" range="-40 40" armature="0.002099598" />
-        <geom name="L3_thigh_r_geom0" type="capsule" size="0.05396597 0.1009075" contype="2048" conaffinity="2048" condim="3" friction="1 0.005 0.0001" pos="0 -1.3e-05 -0.1278405" quat="0 1 0 0" />
+        <geom name="L3_thigh_r_geom0" type="capsule" size="0.05396597 0.1009075" contype="526336" conaffinity="16189440" condim="3" friction="1 0.005 0.0001" pos="0 -1.3e-05 -0.1278405" quat="0 1 0 0" />
         <body name="L3_shin_r" pos="0 0 -0.252279">
           <inertial pos="0 0 -0.1340565" quat="0 -1 0 0" mass="0.9512622" diaginertia="0.006572025 0.006572025 0.0005829297" />
           <joint name="L3_knee_r" type="hinge" pos="0 0 0" axis="0 1 0" range="0 150" armature="0.002099598" />
-          <geom name="L3_shin_r_geom0" type="capsule" size="0.03561781 0.1162476" contype="2048" conaffinity="2048" condim="3" friction="1 0.005 0.0001" pos="0 -1.3e-05 -0.1375085" quat="0 1 0 0" />
+          <geom name="L3_shin_r_geom0" type="capsule" size="0.03561781 0.1162476" contype="526336" conaffinity="16189440" condim="3" friction="1 0.005 0.0001" pos="0 -1.3e-05 -0.1375085" quat="0 1 0 0" />
           <body name="L3_foot_r" pos="0 0 -0.269013">
             <inertial pos="0.02989977 -0.01554355 -0.02697956" quat="1 0 0 0" mass="0.2336916" diaginertia="0.0001722914 0.000345643 0.000464408" />
             <joint name="L3_ankle_dorsi_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-50 25" armature="0.001049799" />
             <joint name="L3_ankle_inv_r" type="hinge" pos="0 0 0" axis="1 0 0" range="-20 30" armature="0.001049799" />
-            <geom name="L3_foot_r_geom0" type="box" size="0.06398123 0.04322278 0.01853566" contype="2048" conaffinity="2048" condim="3" friction="1 0.005 0.0001" pos="0.02989977 -0.01555655 -0.02953156" />
+            <geom name="L3_foot_r_geom0" type="box" size="0.06398123 0.04322278 0.01853566" contype="526336" conaffinity="16189440" condim="3" friction="1 0.005 0.0001" pos="0.02989977 -0.01555655 -0.02953156" />
             <body name="L3_toe_r" pos="0.089318 -0.003451 -0.028805">
               <inertial pos="0.03375064 -0.01336441 -0.006196754" quat="1 0 0 0" mass="0.06873282" diaginertia="4.657589e-05 2.877649e-05 6.999537e-05" />
               <joint name="L3_toe_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 60" stiffness="3.398204" damping="0.1335558" armature="0.0005248994" />
-              <geom name="L3_toe_r_geom0" type="box" size="0.03375064 0.04377215 0.01081247" contype="2048" conaffinity="2048" condim="3" friction="1 0.005 0.0001" pos="0.03831364 -0.01234341 -0.008449754" />
+              <geom name="L3_toe_r_geom0" type="box" size="0.03375064 0.04377215 0.01081247" contype="526336" conaffinity="16189440" condim="3" friction="1 0.005 0.0001" pos="0.03831364 -0.01234341 -0.008449754" />
             </body>
           </body>
         </body>
@@ -383,31 +383,31 @@
     <body name="L4_pelvis" pos="0.014059 -1.22 0.966775">
       <inertial pos="-0.01696645 0 -0.003757688" quat="0.7071068 -0.7071068 0 0" mass="8.937766" diaginertia="0.0907144 0.0907144 0.07049761" />
       <freejoint name="L4_root" />
-      <geom name="L4_pelvis_geom0" type="capsule" size="0.1357963 0.03473648" contype="16" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="-0.01696645 0 -0.003757688" quat="0.7071068 -0.7071068 0 0" />
+      <geom name="L4_pelvis_geom0" type="capsule" size="0.1357963 0.03473648" contype="1048592" conaffinity="15663104" condim="3" friction="1 0.005 0.0001" pos="-0.01696645 0 -0.003757688" quat="0.7071068 -0.7071068 0 0" />
       <body name="L4_torso" pos="-0.000796 0 0.095775">
         <inertial pos="0.003384799 0 0.1412323" quat="0.7071068 -0.7071068 0 0" mass="13.05674" diaginertia="0.1165244 0.1165244 0.08048442" />
         <joint name="L4_abdomen_flex" type="hinge" pos="0 0 0" axis="0 1 0" range="-30 60" armature="0.02" />
         <joint name="L4_abdomen_lat" type="hinge" pos="0 0 0" axis="1 0 0" range="-35 35" armature="0.02" />
         <joint name="L4_abdomen_twist" type="hinge" pos="0 0 0" axis="0 0 1" range="-45 45" armature="0.02" />
-        <geom name="L4_torso_geom0" type="capsule" size="0.1189253 0.04429121" contype="16" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="0.003384799 0 0.1412323" quat="0.7071068 -0.7071068 0 0" />
+        <geom name="L4_torso_geom0" type="capsule" size="0.1189253 0.04429121" contype="1048592" conaffinity="15663104" condim="3" friction="1 0.005 0.0001" pos="0.003384799 0 0.1412323" quat="0.7071068 -0.7071068 0 0" />
         <body name="L4_chest" pos="-0.016728 0 0.279754">
           <inertial pos="-0.003824043 0 0.05326067" quat="0.7071068 -0.7071068 0 0" mass="12.76681" diaginertia="0.157376 0.157376 0.09756839" />
-          <geom name="L4_chest_geom0" type="capsule" size="0.1315126 0.06314432" contype="16" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="-0.003824043 0 0.05326067" quat="0.7071068 -0.7071068 0 0" />
+          <geom name="L4_chest_geom0" type="capsule" size="0.1315126 0.06314432" contype="1048592" conaffinity="15663104" condim="3" friction="1 0.005 0.0001" pos="-0.003824043 0 0.05326067" quat="0.7071068 -0.7071068 0 0" />
           <body name="L4_head" pos="-0.048542 0 0.181344">
             <inertial pos="0.05070428 0 0.1332104" quat="0.6920062 0.1453527 0.1453527 0.6920062" mass="5.548613" diaginertia="0.0503217 0.05005417 0.02171975" />
-            <geom name="L4_head_geom0" type="capsule" size="0.06994246 0.0600033" contype="16" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="0.013404 0 0.058487" quat="0.9936623 0 0.1124062 0" />
-            <geom name="L4_head_geom1" type="sphere" size="0.1098854" contype="16" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="0.07270066 0 0.1772756" />
+            <geom name="L4_head_geom0" type="capsule" size="0.06994246 0.0600033" contype="1048592" conaffinity="15663104" condim="3" friction="1 0.005 0.0001" pos="0.013404 0 0.058487" quat="0.9936623 0 0.1124062 0" />
+            <geom name="L4_head_geom1" type="sphere" size="0.1098854" contype="1048592" conaffinity="15663104" condim="3" friction="1 0.005 0.0001" pos="0.07270066 0 0.1772756" />
           </body>
           <body name="L4_upper_arm_l" pos="-0.033514 0.201796 0.161482">
             <inertial pos="-0.007092 0.126 0.00073" quat="0.7091489 -0.7039445 -0.03962202 0" mass="2.169458" diaginertia="0.01610463 0.01610463 0.004156322" />
             <joint name="L4_shoulder_elev_l" type="hinge" pos="0 0 0" axis="1 0 0" range="-95 80" armature="0.01" />
             <joint name="L4_shoulder_flex_l" type="hinge" pos="0 0 0" axis="0 0 -1" range="-60 170" armature="0.01" />
             <joint name="L4_shoulder_twist_l" type="hinge" pos="0 0 0" axis="0 1 0" range="-80 80" armature="0.01" />
-            <geom name="L4_upper_arm_l_geom0" type="capsule" size="0.06392297 0.09424006" contype="16" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="-0.007092 0.126 0.00073" quat="0.7091489 -0.7039445 -0.03962202 0" />
+            <geom name="L4_upper_arm_l_geom0" type="capsule" size="0.06392297 0.09424006" contype="1048592" conaffinity="15663104" condim="3" friction="1 0.005 0.0001" pos="-0.007092 0.126 0.00073" quat="0.7091489 -0.7039445 -0.03962202 0" />
             <body name="L4_forearm_l" pos="-0.014184 0.252 0.00146">
               <inertial pos="0.0027005 0.1902425 -0.00161" quat="0.7041088 -0.7100206 0.01007877 0" mass="1.789553" diaginertia="0.02422419 0.02422419 0.001594476" />
               <joint name="L4_elbow_l" type="hinge" pos="0 0 0" axis="0 0 -1" range="0 145" armature="0.01" />
-              <geom name="L4_forearm_l_geom0" type="capsule" size="0.04283781 0.1688496" contype="16" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="0.0027005 0.1902425 -0.00161" quat="0.7041088 -0.7100206 0.01007877 0" />
+              <geom name="L4_forearm_l_geom0" type="capsule" size="0.04283781 0.1688496" contype="1048592" conaffinity="15663104" condim="3" friction="1 0.005 0.0001" pos="0.0027005 0.1902425 -0.00161" quat="0.7041088 -0.7100206 0.01007877 0" />
             </body>
           </body>
           <body name="L4_upper_arm_r" pos="-0.033514 -0.201796 0.161482">
@@ -415,11 +415,11 @@
             <joint name="L4_shoulder_elev_r" type="hinge" pos="0 0 0" axis="-1 0 0" range="-95 80" armature="0.01" />
             <joint name="L4_shoulder_flex_r" type="hinge" pos="0 0 0" axis="0 0 1" range="-60 170" armature="0.01" />
             <joint name="L4_shoulder_twist_r" type="hinge" pos="0 0 0" axis="0 1 0" range="-80 80" armature="0.01" />
-            <geom name="L4_upper_arm_r_geom0" type="capsule" size="0.06392297 0.09424006" contype="16" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="-0.007092 -0.126 0.00073" quat="0.7091489 0.7039445 -0.03962202 0" />
+            <geom name="L4_upper_arm_r_geom0" type="capsule" size="0.06392297 0.09424006" contype="1048592" conaffinity="15663104" condim="3" friction="1 0.005 0.0001" pos="-0.007092 -0.126 0.00073" quat="0.7091489 0.7039445 -0.03962202 0" />
             <body name="L4_forearm_r" pos="-0.014184 -0.252 0.00146">
               <inertial pos="0.0027005 -0.1902425 -0.00161" quat="0.7041088 0.7100206 0.01007877 0" mass="1.789553" diaginertia="0.02422419 0.02422419 0.001594476" />
               <joint name="L4_elbow_r" type="hinge" pos="0 0 0" axis="0 0 1" range="0 145" armature="0.01" />
-              <geom name="L4_forearm_r_geom0" type="capsule" size="0.04283781 0.1688496" contype="16" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="0.0027005 -0.1902425 -0.00161" quat="0.7041088 0.7100206 0.01007877 0" />
+              <geom name="L4_forearm_r_geom0" type="capsule" size="0.04283781 0.1688496" contype="1048592" conaffinity="15663104" condim="3" friction="1 0.005 0.0001" pos="0.0027005 -0.1902425 -0.00161" quat="0.7041088 0.7100206 0.01007877 0" />
             </body>
           </body>
         </body>
@@ -429,20 +429,20 @@
         <joint name="L4_hip_flex_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 120" armature="0.02" />
         <joint name="L4_hip_abd_l" type="hinge" pos="0 0 0" axis="1 0 0" range="-30 45" armature="0.02" />
         <joint name="L4_hip_rot_l" type="hinge" pos="0 0 0" axis="0 0 1" range="-40 40" armature="0.02" />
-        <geom name="L4_thigh_l_geom0" type="capsule" size="0.08888116 0.1633062" contype="4096" conaffinity="4096" condim="3" friction="1 0.005 0.0001" pos="0.002864 0 -0.207727" quat="0.006893172 0 0.9999762 0" />
+        <geom name="L4_thigh_l_geom0" type="capsule" size="0.08888116 0.1633062" contype="1052672" conaffinity="15667200" condim="3" friction="1 0.005 0.0001" pos="0.002864 0 -0.207727" quat="0.006893172 0 0.9999762 0" />
         <body name="L4_shin_l" pos="0.005728 0 -0.415454">
           <inertial pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" mass="3.459135" diaginertia="0.06386931 0.06386931 0.007533594" />
           <joint name="L4_knee_l" type="hinge" pos="0 0 0" axis="0 1 0" range="0 150" armature="0.02" />
-          <geom name="L4_shin_l_geom0" type="capsule" size="0.06734565 0.1817725" contype="4096" conaffinity="4096" condim="3" friction="1 0.005 0.0001" pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" />
+          <geom name="L4_shin_l_geom0" type="capsule" size="0.06734565 0.1817725" contype="1052672" conaffinity="15667200" condim="3" friction="1 0.005 0.0001" pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" />
           <body name="L4_foot_l" pos="-0.031931 0 -0.429706">
             <inertial pos="0.03774256 0.002908948 -0.06798844" quat="1 0 0 0" mass="0.8497876" diaginertia="0.00103675 0.003237029 0.003763906" />
             <joint name="L4_ankle_dorsi_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-50 25" armature="0.01" />
             <joint name="L4_ankle_inv_l" type="hinge" pos="0 0 0" axis="-1 0 0" range="-20 30" armature="0.01" />
-            <geom name="L4_foot_l_geom0" type="box" size="0.1026044 0.05253602 0.03" contype="4096" conaffinity="4096" condim="3" friction="1 0.005 0.0001" pos="0.03774256 0.002908948 -0.06798844" />
+            <geom name="L4_foot_l_geom0" type="box" size="0.1026044 0.05253602 0.03" contype="1052672" conaffinity="15667200" condim="3" friction="1 0.005 0.0001" pos="0.03774256 0.002908948 -0.06798844" />
             <body name="L4_toe_l" pos="0.140347 0 -0.07597">
               <inertial pos="0.03863281 0.004919875 -0.004518435" quat="1 0 0 0" mass="0.2499375" diaginertia="0.0002352078 0.0001498579 0.0003340368" />
               <joint name="L4_toe_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 60" stiffness="20" damping="1" armature="0.005" />
-              <geom name="L4_toe_l_geom0" type="box" size="0.03863281 0.05016921 0.0175" contype="4096" conaffinity="4096" condim="3" friction="1 0.005 0.0001" pos="0.03863281 0.004919875 -0.004518435" />
+              <geom name="L4_toe_l_geom0" type="box" size="0.03863281 0.05016921 0.0175" contype="1052672" conaffinity="15667200" condim="3" friction="1 0.005 0.0001" pos="0.03863281 0.004919875 -0.004518435" />
             </body>
           </body>
         </body>
@@ -452,20 +452,20 @@
         <joint name="L4_hip_flex_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 120" armature="0.02" />
         <joint name="L4_hip_abd_r" type="hinge" pos="0 0 0" axis="-1 0 0" range="-30 45" armature="0.02" />
         <joint name="L4_hip_rot_r" type="hinge" pos="0 0 0" axis="0 0 -1" range="-40 40" armature="0.02" />
-        <geom name="L4_thigh_r_geom0" type="capsule" size="0.08888116 0.1633062" contype="4096" conaffinity="4096" condim="3" friction="1 0.005 0.0001" pos="0.002864 0 -0.207727" quat="0.006893172 0 0.9999762 0" />
+        <geom name="L4_thigh_r_geom0" type="capsule" size="0.08888116 0.1633062" contype="1052672" conaffinity="15667200" condim="3" friction="1 0.005 0.0001" pos="0.002864 0 -0.207727" quat="0.006893172 0 0.9999762 0" />
         <body name="L4_shin_r" pos="0.005728 0 -0.415454">
           <inertial pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" mass="3.459135" diaginertia="0.06386931 0.06386931 0.007533594" />
           <joint name="L4_knee_r" type="hinge" pos="0 0 0" axis="0 1 0" range="0 150" armature="0.02" />
-          <geom name="L4_shin_r_geom0" type="capsule" size="0.06734565 0.1817725" contype="4096" conaffinity="4096" condim="3" friction="1 0.005 0.0001" pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" />
+          <geom name="L4_shin_r_geom0" type="capsule" size="0.06734565 0.1817725" contype="1052672" conaffinity="15667200" condim="3" friction="1 0.005 0.0001" pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" />
           <body name="L4_foot_r" pos="-0.031931 0 -0.429706">
             <inertial pos="0.03774256 -0.002908948 -0.06798844" quat="1 0 0 0" mass="0.8497876" diaginertia="0.00103675 0.003237029 0.003763906" />
             <joint name="L4_ankle_dorsi_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-50 25" armature="0.01" />
             <joint name="L4_ankle_inv_r" type="hinge" pos="0 0 0" axis="1 0 0" range="-20 30" armature="0.01" />
-            <geom name="L4_foot_r_geom0" type="box" size="0.1026044 0.05253602 0.03" contype="4096" conaffinity="4096" condim="3" friction="1 0.005 0.0001" pos="0.03774256 -0.002908948 -0.06798844" />
+            <geom name="L4_foot_r_geom0" type="box" size="0.1026044 0.05253602 0.03" contype="1052672" conaffinity="15667200" condim="3" friction="1 0.005 0.0001" pos="0.03774256 -0.002908948 -0.06798844" />
             <body name="L4_toe_r" pos="0.140343 0 -0.075843">
               <inertial pos="0.03863281 -0.004919875 -0.004518435" quat="1 0 0 0" mass="0.2499375" diaginertia="0.0002352078 0.0001498579 0.0003340368" />
               <joint name="L4_toe_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 60" stiffness="20" damping="1" armature="0.005" />
-              <geom name="L4_toe_r_geom0" type="box" size="0.03863281 0.05016921 0.0175" contype="4096" conaffinity="4096" condim="3" friction="1 0.005 0.0001" pos="0.03863681 -0.004919875 -0.004645435" />
+              <geom name="L4_toe_r_geom0" type="box" size="0.03863281 0.05016921 0.0175" contype="1052672" conaffinity="15667200" condim="3" friction="1 0.005 0.0001" pos="0.03863681 -0.004919875 -0.004645435" />
             </body>
           </body>
         </body>
@@ -474,31 +474,31 @@
     <body name="L5_pelvis" pos="0 -2.44 0.559887">
       <inertial pos="-0.007612123 0 0.009433847" quat="0.7071068 -0.7071068 0 0" mass="2.457886" diaginertia="0.009705657 0.009705657 0.006605976" />
       <freejoint name="L5_root" />
-      <geom name="L5_pelvis_geom0" type="capsule" size="0.07844793 0.03035992" contype="8192" conaffinity="8192" condim="3" friction="1 0.005 0.0001" pos="-0.007612123 0 0.009433847" quat="0.7071068 -0.7071068 0 0" />
+      <geom name="L5_pelvis_geom0" type="capsule" size="0.07844793 0.03035992" contype="2105344" conaffinity="14622720" condim="3" friction="1 0.005 0.0001" pos="-0.007612123 0 0.009433847" quat="0.7071068 -0.7071068 0 0" />
       <body name="L5_torso" pos="-0.001231 -2.6e-05 0.062415">
         <inertial pos="-0.005324366 2.6e-05 0.03596058" quat="0.7071068 -0.7071068 0 0" mass="3.590602" diaginertia="0.009810929 0.009810929 0.006378186" />
         <joint name="L5_abdomen_flex" type="hinge" pos="0 0 0" axis="0 1 0" range="-30 60" armature="0.002099598" />
         <joint name="L5_abdomen_lat" type="hinge" pos="0 0 0" axis="1 0 0" range="-35 35" armature="0.002099598" />
         <joint name="L5_abdomen_twist" type="hinge" pos="0 0 0" axis="0 0 1" range="-45 45" armature="0.002099598" />
-        <geom name="L5_torso_geom0" type="capsule" size="0.06358528 0.02750999" contype="8192" conaffinity="8192" condim="3" friction="1 0.005 0.0001" pos="-0.005324366 2.6e-05 0.03596058" quat="0.7071068 -0.7071068 0 0" />
+        <geom name="L5_torso_geom0" type="capsule" size="0.06358528 0.02750999" contype="2105344" conaffinity="14622720" condim="3" friction="1 0.005 0.0001" pos="-0.005324366 2.6e-05 0.03596058" quat="0.7071068 -0.7071068 0 0" />
         <body name="L5_chest" pos="-0.000412 0 0.109225">
           <inertial pos="0.02102744 2.6e-05 0.05248355" quat="0.7071068 -0.7071068 0 0" mass="3.510872" diaginertia="0.01368155 0.01368155 0.008567377" />
-          <geom name="L5_chest_geom0" type="capsule" size="0.07435712 0.03495606" contype="8192" conaffinity="8192" condim="3" friction="1 0.005 0.0001" pos="0.02102744 2.6e-05 0.05248355" quat="0.7071068 -0.7071068 0 0" />
+          <geom name="L5_chest_geom0" type="capsule" size="0.07435712 0.03495606" contype="2105344" conaffinity="14622720" condim="3" friction="1 0.005 0.0001" pos="0.02102744 2.6e-05 0.05248355" quat="0.7071068 -0.7071068 0 0" />
           <body name="L5_head" pos="0.033148 0 0.156037">
             <inertial pos="0.06573305 1.878749e-05 0.0784395" quat="0.6614595 0.2478298 0.2473417 0.6632298" mass="1.525869" diaginertia="0.008143213 0.008139096 0.004756541" />
-            <geom name="L5_head_geom0" type="capsule" size="0.05753786 0.03165845" contype="8192" conaffinity="8192" condim="3" friction="1 0.005 0.0001" pos="0.018568 0 0.0256415" quat="0.9512996 0 0.3082679 0" />
-            <geom name="L5_head_geom1" type="sphere" size="0.09675238" contype="8192" conaffinity="8192" condim="3" friction="1 0.005 0.0001" pos="0.08383968 2.6e-05 0.09870861" />
+            <geom name="L5_head_geom0" type="capsule" size="0.05753786 0.03165845" contype="2105344" conaffinity="14622720" condim="3" friction="1 0.005 0.0001" pos="0.018568 0 0.0256415" quat="0.9512996 0 0.3082679 0" />
+            <geom name="L5_head_geom1" type="sphere" size="0.09675238" contype="2105344" conaffinity="14622720" condim="3" friction="1 0.005 0.0001" pos="0.08383968 2.6e-05 0.09870861" />
           </body>
           <body name="L5_upper_arm_l" pos="0.009612 0.129445 0.124194">
             <inertial pos="-0.000137 0.078008 7.7e-05" quat="0.7074557 -0.7067566 -0.001241227 0" mass="0.5966008" diaginertia="0.001505767 0.001505767 0.0002328844" />
             <joint name="L5_shoulder_elev_l" type="hinge" pos="0 0 0" axis="1 0 0" range="-95 80" armature="0.001049799" />
             <joint name="L5_shoulder_flex_l" type="hinge" pos="0 0 0" axis="0 0 -1" range="-60 170" armature="0.001049799" />
             <joint name="L5_shoulder_twist_l" type="hinge" pos="0 0 0" axis="0 1 0" range="-80 80" armature="0.001049799" />
-            <geom name="L5_upper_arm_l_geom0" type="capsule" size="0.028608 0.06370416" contype="8192" conaffinity="8192" condim="3" friction="1 0.005 0.0001" pos="-0.000137 0.078008 7.7e-05" quat="0.7074557 -0.7067566 -0.001241227 0" />
+            <geom name="L5_upper_arm_l_geom0" type="capsule" size="0.028608 0.06370416" contype="2105344" conaffinity="14622720" condim="3" friction="1 0.005 0.0001" pos="-0.000137 0.078008 7.7e-05" quat="0.7074557 -0.7067566 -0.001241227 0" />
             <body name="L5_forearm_l" pos="-0.000274 0.156016 0.000154">
               <inertial pos="9.064547e-05 0.1302764 3.230928e-05" quat="0.7071945 -0.7070189 0.0004919392 0" mass="0.492127" diaginertia="0.003034748 0.003034748 0.0001322193" />
               <joint name="L5_elbow_l" type="hinge" pos="0 0 0" axis="0 0 -1" range="0 145" armature="0.001049799" />
-              <geom name="L5_forearm_l_geom0" type="capsule" size="0.0234555 0.1185487" contype="8192" conaffinity="8192" condim="3" friction="1 0.005 0.0001" pos="9.064547e-05 0.1302764 3.230928e-05" quat="0.7071945 -0.7070189 0.0004919392 0" />
+              <geom name="L5_forearm_l_geom0" type="capsule" size="0.0234555 0.1185487" contype="2105344" conaffinity="14622720" condim="3" friction="1 0.005 0.0001" pos="9.064547e-05 0.1302764 3.230928e-05" quat="0.7071945 -0.7070189 0.0004919392 0" />
             </body>
           </body>
           <body name="L5_upper_arm_r" pos="0.009612 -0.129445 0.124194">
@@ -506,11 +506,11 @@
             <joint name="L5_shoulder_elev_r" type="hinge" pos="0 0 0" axis="-1 0 0" range="-95 80" armature="0.001049799" />
             <joint name="L5_shoulder_flex_r" type="hinge" pos="0 0 0" axis="0 0 1" range="-60 170" armature="0.001049799" />
             <joint name="L5_shoulder_twist_r" type="hinge" pos="0 0 0" axis="0 1 0" range="-80 80" armature="0.001049799" />
-            <geom name="L5_upper_arm_r_geom0" type="capsule" size="0.028608 0.06370416" contype="8192" conaffinity="8192" condim="3" friction="1 0.005 0.0001" pos="-0.000137 -0.077956 7.7e-05" quat="0.7074557 0.7067566 -0.001241227 0" />
+            <geom name="L5_upper_arm_r_geom0" type="capsule" size="0.028608 0.06370416" contype="2105344" conaffinity="14622720" condim="3" friction="1 0.005 0.0001" pos="-0.000137 -0.077956 7.7e-05" quat="0.7074557 0.7067566 -0.001241227 0" />
             <body name="L5_forearm_r" pos="-0.000271 -0.156311 0.000154">
               <inertial pos="9.064547e-05 -0.1302764 3.230928e-05" quat="0.7071945 0.7070189 0.0004919392 0" mass="0.492127" diaginertia="0.003034748 0.003034748 0.0001322193" />
               <joint name="L5_elbow_r" type="hinge" pos="0 0 0" axis="0 0 1" range="0 145" armature="0.001049799" />
-              <geom name="L5_forearm_r_geom0" type="capsule" size="0.0234555 0.1185487" contype="8192" conaffinity="8192" condim="3" friction="1 0.005 0.0001" pos="8.764547e-05 -0.1299294 3.230928e-05" quat="0.7071945 0.7070189 0.0004919392 0" />
+              <geom name="L5_forearm_r_geom0" type="capsule" size="0.0234555 0.1185487" contype="2105344" conaffinity="14622720" condim="3" friction="1 0.005 0.0001" pos="8.764547e-05 -0.1299294 3.230928e-05" quat="0.7071945 0.7070189 0.0004919392 0" />
             </body>
           </body>
         </body>
@@ -520,20 +520,20 @@
         <joint name="L5_hip_flex_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 120" armature="0.002099598" />
         <joint name="L5_hip_abd_l" type="hinge" pos="0 0 0" axis="1 0 0" range="-30 45" armature="0.002099598" />
         <joint name="L5_hip_rot_l" type="hinge" pos="0 0 0" axis="0 0 1" range="-40 40" armature="0.002099598" />
-        <geom name="L5_thigh_l_geom0" type="capsule" size="0.05396597 0.1009075" contype="8192" conaffinity="8192" condim="3" friction="1 0.005 0.0001" pos="0 0 -0.1278905" quat="0 1 0 0" />
+        <geom name="L5_thigh_l_geom0" type="capsule" size="0.05396597 0.1009075" contype="2105344" conaffinity="14622720" condim="3" friction="1 0.005 0.0001" pos="0 0 -0.1278905" quat="0 1 0 0" />
         <body name="L5_shin_l" pos="0 0 -0.255781">
           <inertial pos="0 0 -0.1340565" quat="0 1 0 0" mass="0.9512622" diaginertia="0.006572025 0.006572025 0.0005829297" />
           <joint name="L5_knee_l" type="hinge" pos="0 0 0" axis="0 1 0" range="0 150" armature="0.002099598" />
-          <geom name="L5_shin_l_geom0" type="capsule" size="0.03561781 0.1162476" contype="8192" conaffinity="8192" condim="3" friction="1 0.005 0.0001" pos="0 0 -0.1340565" quat="0 1 0 0" />
+          <geom name="L5_shin_l_geom0" type="capsule" size="0.03561781 0.1162476" contype="2105344" conaffinity="14622720" condim="3" friction="1 0.005 0.0001" pos="0 0 -0.1340565" quat="0 1 0 0" />
           <body name="L5_foot_l" pos="0 0 -0.268113">
             <inertial pos="0.02989977 0.01554355 -0.02697956" quat="1 0 0 0" mass="0.2336916" diaginertia="0.0001722914 0.000345643 0.000464408" />
             <joint name="L5_ankle_dorsi_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-50 25" armature="0.001049799" />
             <joint name="L5_ankle_inv_l" type="hinge" pos="0 0 0" axis="-1 0 0" range="-20 30" armature="0.001049799" />
-            <geom name="L5_foot_l_geom0" type="box" size="0.06398123 0.04322278 0.01853566" contype="8192" conaffinity="8192" condim="3" friction="1 0.005 0.0001" pos="0.02989977 0.01554355 -0.02697956" />
+            <geom name="L5_foot_l_geom0" type="box" size="0.06398123 0.04322278 0.01853566" contype="2105344" conaffinity="14622720" condim="3" friction="1 0.005 0.0001" pos="0.02989977 0.01554355 -0.02697956" />
             <body name="L5_toe_l" pos="0.093881 0.002417 -0.028506">
               <inertial pos="0.03375064 0.01336441 -0.006196754" quat="1 0 0 0" mass="0.06873282" diaginertia="4.657589e-05 2.877649e-05 6.999537e-05" />
               <joint name="L5_toe_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 60" stiffness="3.398204" damping="0.1335558" armature="0.0005248994" />
-              <geom name="L5_toe_l_geom0" type="box" size="0.03375064 0.04377215 0.01081247" contype="8192" conaffinity="8192" condim="3" friction="1 0.005 0.0001" pos="0.03375064 0.01336441 -0.006196754" />
+              <geom name="L5_toe_l_geom0" type="box" size="0.03375064 0.04377215 0.01081247" contype="2105344" conaffinity="14622720" condim="3" friction="1 0.005 0.0001" pos="0.03375064 0.01336441 -0.006196754" />
             </body>
           </body>
         </body>
@@ -543,20 +543,20 @@
         <joint name="L5_hip_flex_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 120" armature="0.002099598" />
         <joint name="L5_hip_abd_r" type="hinge" pos="0 0 0" axis="-1 0 0" range="-30 45" armature="0.002099598" />
         <joint name="L5_hip_rot_r" type="hinge" pos="0 0 0" axis="0 0 -1" range="-40 40" armature="0.002099598" />
-        <geom name="L5_thigh_r_geom0" type="capsule" size="0.05396597 0.1009075" contype="8192" conaffinity="8192" condim="3" friction="1 0.005 0.0001" pos="0 -1.3e-05 -0.1278405" quat="0 1 0 0" />
+        <geom name="L5_thigh_r_geom0" type="capsule" size="0.05396597 0.1009075" contype="2105344" conaffinity="14622720" condim="3" friction="1 0.005 0.0001" pos="0 -1.3e-05 -0.1278405" quat="0 1 0 0" />
         <body name="L5_shin_r" pos="0 0 -0.252279">
           <inertial pos="0 0 -0.1340565" quat="0 -1 0 0" mass="0.9512622" diaginertia="0.006572025 0.006572025 0.0005829297" />
           <joint name="L5_knee_r" type="hinge" pos="0 0 0" axis="0 1 0" range="0 150" armature="0.002099598" />
-          <geom name="L5_shin_r_geom0" type="capsule" size="0.03561781 0.1162476" contype="8192" conaffinity="8192" condim="3" friction="1 0.005 0.0001" pos="0 -1.3e-05 -0.1375085" quat="0 1 0 0" />
+          <geom name="L5_shin_r_geom0" type="capsule" size="0.03561781 0.1162476" contype="2105344" conaffinity="14622720" condim="3" friction="1 0.005 0.0001" pos="0 -1.3e-05 -0.1375085" quat="0 1 0 0" />
           <body name="L5_foot_r" pos="0 0 -0.269013">
             <inertial pos="0.02989977 -0.01554355 -0.02697956" quat="1 0 0 0" mass="0.2336916" diaginertia="0.0001722914 0.000345643 0.000464408" />
             <joint name="L5_ankle_dorsi_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-50 25" armature="0.001049799" />
             <joint name="L5_ankle_inv_r" type="hinge" pos="0 0 0" axis="1 0 0" range="-20 30" armature="0.001049799" />
-            <geom name="L5_foot_r_geom0" type="box" size="0.06398123 0.04322278 0.01853566" contype="8192" conaffinity="8192" condim="3" friction="1 0.005 0.0001" pos="0.02989977 -0.01555655 -0.02953156" />
+            <geom name="L5_foot_r_geom0" type="box" size="0.06398123 0.04322278 0.01853566" contype="2105344" conaffinity="14622720" condim="3" friction="1 0.005 0.0001" pos="0.02989977 -0.01555655 -0.02953156" />
             <body name="L5_toe_r" pos="0.089318 -0.003451 -0.028805">
               <inertial pos="0.03375064 -0.01336441 -0.006196754" quat="1 0 0 0" mass="0.06873282" diaginertia="4.657589e-05 2.877649e-05 6.999537e-05" />
               <joint name="L5_toe_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 60" stiffness="3.398204" damping="0.1335558" armature="0.0005248994" />
-              <geom name="L5_toe_r_geom0" type="box" size="0.03375064 0.04377215 0.01081247" contype="8192" conaffinity="8192" condim="3" friction="1 0.005 0.0001" pos="0.03831364 -0.01234341 -0.008449754" />
+              <geom name="L5_toe_r_geom0" type="box" size="0.03375064 0.04377215 0.01081247" contype="2105344" conaffinity="14622720" condim="3" friction="1 0.005 0.0001" pos="0.03831364 -0.01234341 -0.008449754" />
             </body>
           </body>
         </body>
@@ -565,31 +565,31 @@
     <body name="L6_pelvis" pos="0.014059 -3.66 0.966775">
       <inertial pos="-0.01696645 0 -0.003757688" quat="0.7071068 -0.7071068 0 0" mass="8.937766" diaginertia="0.0907144 0.0907144 0.07049761" />
       <freejoint name="L6_root" />
-      <geom name="L6_pelvis_geom0" type="capsule" size="0.1357963 0.03473648" contype="64" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="-0.01696645 0 -0.003757688" quat="0.7071068 -0.7071068 0 0" />
+      <geom name="L6_pelvis_geom0" type="capsule" size="0.1357963 0.03473648" contype="4194368" conaffinity="12517376" condim="3" friction="1 0.005 0.0001" pos="-0.01696645 0 -0.003757688" quat="0.7071068 -0.7071068 0 0" />
       <body name="L6_torso" pos="-0.000796 0 0.095775">
         <inertial pos="0.003384799 0 0.1412323" quat="0.7071068 -0.7071068 0 0" mass="13.05674" diaginertia="0.1165244 0.1165244 0.08048442" />
         <joint name="L6_abdomen_flex" type="hinge" pos="0 0 0" axis="0 1 0" range="-30 60" armature="0.02" />
         <joint name="L6_abdomen_lat" type="hinge" pos="0 0 0" axis="1 0 0" range="-35 35" armature="0.02" />
         <joint name="L6_abdomen_twist" type="hinge" pos="0 0 0" axis="0 0 1" range="-45 45" armature="0.02" />
-        <geom name="L6_torso_geom0" type="capsule" size="0.1189253 0.04429121" contype="64" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="0.003384799 0 0.1412323" quat="0.7071068 -0.7071068 0 0" />
+        <geom name="L6_torso_geom0" type="capsule" size="0.1189253 0.04429121" contype="4194368" conaffinity="12517376" condim="3" friction="1 0.005 0.0001" pos="0.003384799 0 0.1412323" quat="0.7071068 -0.7071068 0 0" />
         <body name="L6_chest" pos="-0.016728 0 0.279754">
           <inertial pos="-0.003824043 0 0.05326067" quat="0.7071068 -0.7071068 0 0" mass="12.76681" diaginertia="0.157376 0.157376 0.09756839" />
-          <geom name="L6_chest_geom0" type="capsule" size="0.1315126 0.06314432" contype="64" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="-0.003824043 0 0.05326067" quat="0.7071068 -0.7071068 0 0" />
+          <geom name="L6_chest_geom0" type="capsule" size="0.1315126 0.06314432" contype="4194368" conaffinity="12517376" condim="3" friction="1 0.005 0.0001" pos="-0.003824043 0 0.05326067" quat="0.7071068 -0.7071068 0 0" />
           <body name="L6_head" pos="-0.048542 0 0.181344">
             <inertial pos="0.05070428 0 0.1332104" quat="0.6920062 0.1453527 0.1453527 0.6920062" mass="5.548613" diaginertia="0.0503217 0.05005417 0.02171975" />
-            <geom name="L6_head_geom0" type="capsule" size="0.06994246 0.0600033" contype="64" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="0.013404 0 0.058487" quat="0.9936623 0 0.1124062 0" />
-            <geom name="L6_head_geom1" type="sphere" size="0.1098854" contype="64" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="0.07270066 0 0.1772756" />
+            <geom name="L6_head_geom0" type="capsule" size="0.06994246 0.0600033" contype="4194368" conaffinity="12517376" condim="3" friction="1 0.005 0.0001" pos="0.013404 0 0.058487" quat="0.9936623 0 0.1124062 0" />
+            <geom name="L6_head_geom1" type="sphere" size="0.1098854" contype="4194368" conaffinity="12517376" condim="3" friction="1 0.005 0.0001" pos="0.07270066 0 0.1772756" />
           </body>
           <body name="L6_upper_arm_l" pos="-0.033514 0.201796 0.161482">
             <inertial pos="-0.007092 0.126 0.00073" quat="0.7091489 -0.7039445 -0.03962202 0" mass="2.169458" diaginertia="0.01610463 0.01610463 0.004156322" />
             <joint name="L6_shoulder_elev_l" type="hinge" pos="0 0 0" axis="1 0 0" range="-95 80" armature="0.01" />
             <joint name="L6_shoulder_flex_l" type="hinge" pos="0 0 0" axis="0 0 -1" range="-60 170" armature="0.01" />
             <joint name="L6_shoulder_twist_l" type="hinge" pos="0 0 0" axis="0 1 0" range="-80 80" armature="0.01" />
-            <geom name="L6_upper_arm_l_geom0" type="capsule" size="0.06392297 0.09424006" contype="64" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="-0.007092 0.126 0.00073" quat="0.7091489 -0.7039445 -0.03962202 0" />
+            <geom name="L6_upper_arm_l_geom0" type="capsule" size="0.06392297 0.09424006" contype="4194368" conaffinity="12517376" condim="3" friction="1 0.005 0.0001" pos="-0.007092 0.126 0.00073" quat="0.7091489 -0.7039445 -0.03962202 0" />
             <body name="L6_forearm_l" pos="-0.014184 0.252 0.00146">
               <inertial pos="0.0027005 0.1902425 -0.00161" quat="0.7041088 -0.7100206 0.01007877 0" mass="1.789553" diaginertia="0.02422419 0.02422419 0.001594476" />
               <joint name="L6_elbow_l" type="hinge" pos="0 0 0" axis="0 0 -1" range="0 145" armature="0.01" />
-              <geom name="L6_forearm_l_geom0" type="capsule" size="0.04283781 0.1688496" contype="64" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="0.0027005 0.1902425 -0.00161" quat="0.7041088 -0.7100206 0.01007877 0" />
+              <geom name="L6_forearm_l_geom0" type="capsule" size="0.04283781 0.1688496" contype="4194368" conaffinity="12517376" condim="3" friction="1 0.005 0.0001" pos="0.0027005 0.1902425 -0.00161" quat="0.7041088 -0.7100206 0.01007877 0" />
             </body>
           </body>
           <body name="L6_upper_arm_r" pos="-0.033514 -0.201796 0.161482">
@@ -597,11 +597,11 @@
             <joint name="L6_shoulder_elev_r" type="hinge" pos="0 0 0" axis="-1 0 0" range="-95 80" armature="0.01" />
             <joint name="L6_shoulder_flex_r" type="hinge" pos="0 0 0" axis="0 0 1" range="-60 170" armature="0.01" />
             <joint name="L6_shoulder_twist_r" type="hinge" pos="0 0 0" axis="0 1 0" range="-80 80" armature="0.01" />
-            <geom name="L6_upper_arm_r_geom0" type="capsule" size="0.06392297 0.09424006" contype="64" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="-0.007092 -0.126 0.00073" quat="0.7091489 0.7039445 -0.03962202 0" />
+            <geom name="L6_upper_arm_r_geom0" type="capsule" size="0.06392297 0.09424006" contype="4194368" conaffinity="12517376" condim="3" friction="1 0.005 0.0001" pos="-0.007092 -0.126 0.00073" quat="0.7091489 0.7039445 -0.03962202 0" />
             <body name="L6_forearm_r" pos="-0.014184 -0.252 0.00146">
               <inertial pos="0.0027005 -0.1902425 -0.00161" quat="0.7041088 0.7100206 0.01007877 0" mass="1.789553" diaginertia="0.02422419 0.02422419 0.001594476" />
               <joint name="L6_elbow_r" type="hinge" pos="0 0 0" axis="0 0 1" range="0 145" armature="0.01" />
-              <geom name="L6_forearm_r_geom0" type="capsule" size="0.04283781 0.1688496" contype="64" conaffinity="0" condim="3" friction="1 0.005 0.0001" pos="0.0027005 -0.1902425 -0.00161" quat="0.7041088 0.7100206 0.01007877 0" />
+              <geom name="L6_forearm_r_geom0" type="capsule" size="0.04283781 0.1688496" contype="4194368" conaffinity="12517376" condim="3" friction="1 0.005 0.0001" pos="0.0027005 -0.1902425 -0.00161" quat="0.7041088 0.7100206 0.01007877 0" />
             </body>
           </body>
         </body>
@@ -611,20 +611,20 @@
         <joint name="L6_hip_flex_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 120" armature="0.02" />
         <joint name="L6_hip_abd_l" type="hinge" pos="0 0 0" axis="1 0 0" range="-30 45" armature="0.02" />
         <joint name="L6_hip_rot_l" type="hinge" pos="0 0 0" axis="0 0 1" range="-40 40" armature="0.02" />
-        <geom name="L6_thigh_l_geom0" type="capsule" size="0.08888116 0.1633062" contype="16384" conaffinity="16384" condim="3" friction="1 0.005 0.0001" pos="0.002864 0 -0.207727" quat="0.006893172 0 0.9999762 0" />
+        <geom name="L6_thigh_l_geom0" type="capsule" size="0.08888116 0.1633062" contype="4210688" conaffinity="12533760" condim="3" friction="1 0.005 0.0001" pos="0.002864 0 -0.207727" quat="0.006893172 0 0.9999762 0" />
         <body name="L6_shin_l" pos="0.005728 0 -0.415454">
           <inertial pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" mass="3.459135" diaginertia="0.06386931 0.06386931 0.007533594" />
           <joint name="L6_knee_l" type="hinge" pos="0 0 0" axis="0 1 0" range="0 150" armature="0.02" />
-          <geom name="L6_shin_l_geom0" type="capsule" size="0.06734565 0.1817725" contype="16384" conaffinity="16384" condim="3" friction="1 0.005 0.0001" pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" />
+          <geom name="L6_shin_l_geom0" type="capsule" size="0.06734565 0.1817725" contype="4210688" conaffinity="12533760" condim="3" friction="1 0.005 0.0001" pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" />
           <body name="L6_foot_l" pos="-0.031931 0 -0.429706">
             <inertial pos="0.03774256 0.002908948 -0.06798844" quat="1 0 0 0" mass="0.8497876" diaginertia="0.00103675 0.003237029 0.003763906" />
             <joint name="L6_ankle_dorsi_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-50 25" armature="0.01" />
             <joint name="L6_ankle_inv_l" type="hinge" pos="0 0 0" axis="-1 0 0" range="-20 30" armature="0.01" />
-            <geom name="L6_foot_l_geom0" type="box" size="0.1026044 0.05253602 0.03" contype="16384" conaffinity="16384" condim="3" friction="1 0.005 0.0001" pos="0.03774256 0.002908948 -0.06798844" />
+            <geom name="L6_foot_l_geom0" type="box" size="0.1026044 0.05253602 0.03" contype="4210688" conaffinity="12533760" condim="3" friction="1 0.005 0.0001" pos="0.03774256 0.002908948 -0.06798844" />
             <body name="L6_toe_l" pos="0.140347 0 -0.07597">
               <inertial pos="0.03863281 0.004919875 -0.004518435" quat="1 0 0 0" mass="0.2499375" diaginertia="0.0002352078 0.0001498579 0.0003340368" />
               <joint name="L6_toe_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 60" stiffness="20" damping="1" armature="0.005" />
-              <geom name="L6_toe_l_geom0" type="box" size="0.03863281 0.05016921 0.0175" contype="16384" conaffinity="16384" condim="3" friction="1 0.005 0.0001" pos="0.03863281 0.004919875 -0.004518435" />
+              <geom name="L6_toe_l_geom0" type="box" size="0.03863281 0.05016921 0.0175" contype="4210688" conaffinity="12533760" condim="3" friction="1 0.005 0.0001" pos="0.03863281 0.004919875 -0.004518435" />
             </body>
           </body>
         </body>
@@ -634,20 +634,20 @@
         <joint name="L6_hip_flex_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 120" armature="0.02" />
         <joint name="L6_hip_abd_r" type="hinge" pos="0 0 0" axis="-1 0 0" range="-30 45" armature="0.02" />
         <joint name="L6_hip_rot_r" type="hinge" pos="0 0 0" axis="0 0 -1" range="-40 40" armature="0.02" />
-        <geom name="L6_thigh_r_geom0" type="capsule" size="0.08888116 0.1633062" contype="16384" conaffinity="16384" condim="3" friction="1 0.005 0.0001" pos="0.002864 0 -0.207727" quat="0.006893172 0 0.9999762 0" />
+        <geom name="L6_thigh_r_geom0" type="capsule" size="0.08888116 0.1633062" contype="4210688" conaffinity="12533760" condim="3" friction="1 0.005 0.0001" pos="0.002864 0 -0.207727" quat="0.006893172 0 0.9999762 0" />
         <body name="L6_shin_r" pos="0.005728 0 -0.415454">
           <inertial pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" mass="3.459135" diaginertia="0.06386931 0.06386931 0.007533594" />
           <joint name="L6_knee_r" type="hinge" pos="0 0 0" axis="0 1 0" range="0 150" armature="0.02" />
-          <geom name="L6_shin_r_geom0" type="capsule" size="0.06734565 0.1817725" contype="16384" conaffinity="16384" condim="3" friction="1 0.005 0.0001" pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" />
+          <geom name="L6_shin_r_geom0" type="capsule" size="0.06734565 0.1817725" contype="4210688" conaffinity="12533760" condim="3" friction="1 0.005 0.0001" pos="-0.0159655 0 -0.214853" quat="0.03707781 0 -0.9993124 0" />
           <body name="L6_foot_r" pos="-0.031931 0 -0.429706">
             <inertial pos="0.03774256 -0.002908948 -0.06798844" quat="1 0 0 0" mass="0.8497876" diaginertia="0.00103675 0.003237029 0.003763906" />
             <joint name="L6_ankle_dorsi_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-50 25" armature="0.01" />
             <joint name="L6_ankle_inv_r" type="hinge" pos="0 0 0" axis="1 0 0" range="-20 30" armature="0.01" />
-            <geom name="L6_foot_r_geom0" type="box" size="0.1026044 0.05253602 0.03" contype="16384" conaffinity="16384" condim="3" friction="1 0.005 0.0001" pos="0.03774256 -0.002908948 -0.06798844" />
+            <geom name="L6_foot_r_geom0" type="box" size="0.1026044 0.05253602 0.03" contype="4210688" conaffinity="12533760" condim="3" friction="1 0.005 0.0001" pos="0.03774256 -0.002908948 -0.06798844" />
             <body name="L6_toe_r" pos="0.140343 0 -0.075843">
               <inertial pos="0.03863281 -0.004919875 -0.004518435" quat="1 0 0 0" mass="0.2499375" diaginertia="0.0002352078 0.0001498579 0.0003340368" />
               <joint name="L6_toe_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 60" stiffness="20" damping="1" armature="0.005" />
-              <geom name="L6_toe_r_geom0" type="box" size="0.03863281 0.05016921 0.0175" contype="16384" conaffinity="16384" condim="3" friction="1 0.005 0.0001" pos="0.03863681 -0.004919875 -0.004645435" />
+              <geom name="L6_toe_r_geom0" type="box" size="0.03863281 0.05016921 0.0175" contype="4210688" conaffinity="12533760" condim="3" friction="1 0.005 0.0001" pos="0.03863681 -0.004919875 -0.004645435" />
             </body>
           </body>
         </body>
@@ -656,31 +656,31 @@
     <body name="L7_pelvis" pos="0 -4.88 0.559887">
       <inertial pos="-0.007612123 0 0.009433847" quat="0.7071068 -0.7071068 0 0" mass="2.457886" diaginertia="0.009705657 0.009705657 0.006605976" />
       <freejoint name="L7_root" />
-      <geom name="L7_pelvis_geom0" type="capsule" size="0.07844793 0.03035992" contype="32768" conaffinity="32768" condim="3" friction="1 0.005 0.0001" pos="-0.007612123 0 0.009433847" quat="0.7071068 -0.7071068 0 0" />
+      <geom name="L7_pelvis_geom0" type="capsule" size="0.07844793 0.03035992" contype="8421376" conaffinity="8355840" condim="3" friction="1 0.005 0.0001" pos="-0.007612123 0 0.009433847" quat="0.7071068 -0.7071068 0 0" />
       <body name="L7_torso" pos="-0.001231 -2.6e-05 0.062415">
         <inertial pos="-0.005324366 2.6e-05 0.03596058" quat="0.7071068 -0.7071068 0 0" mass="3.590602" diaginertia="0.009810929 0.009810929 0.006378186" />
         <joint name="L7_abdomen_flex" type="hinge" pos="0 0 0" axis="0 1 0" range="-30 60" armature="0.002099598" />
         <joint name="L7_abdomen_lat" type="hinge" pos="0 0 0" axis="1 0 0" range="-35 35" armature="0.002099598" />
         <joint name="L7_abdomen_twist" type="hinge" pos="0 0 0" axis="0 0 1" range="-45 45" armature="0.002099598" />
-        <geom name="L7_torso_geom0" type="capsule" size="0.06358528 0.02750999" contype="32768" conaffinity="32768" condim="3" friction="1 0.005 0.0001" pos="-0.005324366 2.6e-05 0.03596058" quat="0.7071068 -0.7071068 0 0" />
+        <geom name="L7_torso_geom0" type="capsule" size="0.06358528 0.02750999" contype="8421376" conaffinity="8355840" condim="3" friction="1 0.005 0.0001" pos="-0.005324366 2.6e-05 0.03596058" quat="0.7071068 -0.7071068 0 0" />
         <body name="L7_chest" pos="-0.000412 0 0.109225">
           <inertial pos="0.02102744 2.6e-05 0.05248355" quat="0.7071068 -0.7071068 0 0" mass="3.510872" diaginertia="0.01368155 0.01368155 0.008567377" />
-          <geom name="L7_chest_geom0" type="capsule" size="0.07435712 0.03495606" contype="32768" conaffinity="32768" condim="3" friction="1 0.005 0.0001" pos="0.02102744 2.6e-05 0.05248355" quat="0.7071068 -0.7071068 0 0" />
+          <geom name="L7_chest_geom0" type="capsule" size="0.07435712 0.03495606" contype="8421376" conaffinity="8355840" condim="3" friction="1 0.005 0.0001" pos="0.02102744 2.6e-05 0.05248355" quat="0.7071068 -0.7071068 0 0" />
           <body name="L7_head" pos="0.033148 0 0.156037">
             <inertial pos="0.06573305 1.878749e-05 0.0784395" quat="0.6614595 0.2478298 0.2473417 0.6632298" mass="1.525869" diaginertia="0.008143213 0.008139096 0.004756541" />
-            <geom name="L7_head_geom0" type="capsule" size="0.05753786 0.03165845" contype="32768" conaffinity="32768" condim="3" friction="1 0.005 0.0001" pos="0.018568 0 0.0256415" quat="0.9512996 0 0.3082679 0" />
-            <geom name="L7_head_geom1" type="sphere" size="0.09675238" contype="32768" conaffinity="32768" condim="3" friction="1 0.005 0.0001" pos="0.08383968 2.6e-05 0.09870861" />
+            <geom name="L7_head_geom0" type="capsule" size="0.05753786 0.03165845" contype="8421376" conaffinity="8355840" condim="3" friction="1 0.005 0.0001" pos="0.018568 0 0.0256415" quat="0.9512996 0 0.3082679 0" />
+            <geom name="L7_head_geom1" type="sphere" size="0.09675238" contype="8421376" conaffinity="8355840" condim="3" friction="1 0.005 0.0001" pos="0.08383968 2.6e-05 0.09870861" />
           </body>
           <body name="L7_upper_arm_l" pos="0.009612 0.129445 0.124194">
             <inertial pos="-0.000137 0.078008 7.7e-05" quat="0.7074557 -0.7067566 -0.001241227 0" mass="0.5966008" diaginertia="0.001505767 0.001505767 0.0002328844" />
             <joint name="L7_shoulder_elev_l" type="hinge" pos="0 0 0" axis="1 0 0" range="-95 80" armature="0.001049799" />
             <joint name="L7_shoulder_flex_l" type="hinge" pos="0 0 0" axis="0 0 -1" range="-60 170" armature="0.001049799" />
             <joint name="L7_shoulder_twist_l" type="hinge" pos="0 0 0" axis="0 1 0" range="-80 80" armature="0.001049799" />
-            <geom name="L7_upper_arm_l_geom0" type="capsule" size="0.028608 0.06370416" contype="32768" conaffinity="32768" condim="3" friction="1 0.005 0.0001" pos="-0.000137 0.078008 7.7e-05" quat="0.7074557 -0.7067566 -0.001241227 0" />
+            <geom name="L7_upper_arm_l_geom0" type="capsule" size="0.028608 0.06370416" contype="8421376" conaffinity="8355840" condim="3" friction="1 0.005 0.0001" pos="-0.000137 0.078008 7.7e-05" quat="0.7074557 -0.7067566 -0.001241227 0" />
             <body name="L7_forearm_l" pos="-0.000274 0.156016 0.000154">
               <inertial pos="9.064547e-05 0.1302764 3.230928e-05" quat="0.7071945 -0.7070189 0.0004919392 0" mass="0.492127" diaginertia="0.003034748 0.003034748 0.0001322193" />
               <joint name="L7_elbow_l" type="hinge" pos="0 0 0" axis="0 0 -1" range="0 145" armature="0.001049799" />
-              <geom name="L7_forearm_l_geom0" type="capsule" size="0.0234555 0.1185487" contype="32768" conaffinity="32768" condim="3" friction="1 0.005 0.0001" pos="9.064547e-05 0.1302764 3.230928e-05" quat="0.7071945 -0.7070189 0.0004919392 0" />
+              <geom name="L7_forearm_l_geom0" type="capsule" size="0.0234555 0.1185487" contype="8421376" conaffinity="8355840" condim="3" friction="1 0.005 0.0001" pos="9.064547e-05 0.1302764 3.230928e-05" quat="0.7071945 -0.7070189 0.0004919392 0" />
             </body>
           </body>
           <body name="L7_upper_arm_r" pos="0.009612 -0.129445 0.124194">
@@ -688,11 +688,11 @@
             <joint name="L7_shoulder_elev_r" type="hinge" pos="0 0 0" axis="-1 0 0" range="-95 80" armature="0.001049799" />
             <joint name="L7_shoulder_flex_r" type="hinge" pos="0 0 0" axis="0 0 1" range="-60 170" armature="0.001049799" />
             <joint name="L7_shoulder_twist_r" type="hinge" pos="0 0 0" axis="0 1 0" range="-80 80" armature="0.001049799" />
-            <geom name="L7_upper_arm_r_geom0" type="capsule" size="0.028608 0.06370416" contype="32768" conaffinity="32768" condim="3" friction="1 0.005 0.0001" pos="-0.000137 -0.077956 7.7e-05" quat="0.7074557 0.7067566 -0.001241227 0" />
+            <geom name="L7_upper_arm_r_geom0" type="capsule" size="0.028608 0.06370416" contype="8421376" conaffinity="8355840" condim="3" friction="1 0.005 0.0001" pos="-0.000137 -0.077956 7.7e-05" quat="0.7074557 0.7067566 -0.001241227 0" />
             <body name="L7_forearm_r" pos="-0.000271 -0.156311 0.000154">
               <inertial pos="9.064547e-05 -0.1302764 3.230928e-05" quat="0.7071945 0.7070189 0.0004919392 0" mass="0.492127" diaginertia="0.003034748 0.003034748 0.0001322193" />
               <joint name="L7_elbow_r" type="hinge" pos="0 0 0" axis="0 0 1" range="0 145" armature="0.001049799" />
-              <geom name="L7_forearm_r_geom0" type="capsule" size="0.0234555 0.1185487" contype="32768" conaffinity="32768" condim="3" friction="1 0.005 0.0001" pos="8.764547e-05 -0.1299294 3.230928e-05" quat="0.7071945 0.7070189 0.0004919392 0" />
+              <geom name="L7_forearm_r_geom0" type="capsule" size="0.0234555 0.1185487" contype="8421376" conaffinity="8355840" condim="3" friction="1 0.005 0.0001" pos="8.764547e-05 -0.1299294 3.230928e-05" quat="0.7071945 0.7070189 0.0004919392 0" />
             </body>
           </body>
         </body>
@@ -702,20 +702,20 @@
         <joint name="L7_hip_flex_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 120" armature="0.002099598" />
         <joint name="L7_hip_abd_l" type="hinge" pos="0 0 0" axis="1 0 0" range="-30 45" armature="0.002099598" />
         <joint name="L7_hip_rot_l" type="hinge" pos="0 0 0" axis="0 0 1" range="-40 40" armature="0.002099598" />
-        <geom name="L7_thigh_l_geom0" type="capsule" size="0.05396597 0.1009075" contype="32768" conaffinity="32768" condim="3" friction="1 0.005 0.0001" pos="0 0 -0.1278905" quat="0 1 0 0" />
+        <geom name="L7_thigh_l_geom0" type="capsule" size="0.05396597 0.1009075" contype="8421376" conaffinity="8355840" condim="3" friction="1 0.005 0.0001" pos="0 0 -0.1278905" quat="0 1 0 0" />
         <body name="L7_shin_l" pos="0 0 -0.255781">
           <inertial pos="0 0 -0.1340565" quat="0 1 0 0" mass="0.9512622" diaginertia="0.006572025 0.006572025 0.0005829297" />
           <joint name="L7_knee_l" type="hinge" pos="0 0 0" axis="0 1 0" range="0 150" armature="0.002099598" />
-          <geom name="L7_shin_l_geom0" type="capsule" size="0.03561781 0.1162476" contype="32768" conaffinity="32768" condim="3" friction="1 0.005 0.0001" pos="0 0 -0.1340565" quat="0 1 0 0" />
+          <geom name="L7_shin_l_geom0" type="capsule" size="0.03561781 0.1162476" contype="8421376" conaffinity="8355840" condim="3" friction="1 0.005 0.0001" pos="0 0 -0.1340565" quat="0 1 0 0" />
           <body name="L7_foot_l" pos="0 0 -0.268113">
             <inertial pos="0.02989977 0.01554355 -0.02697956" quat="1 0 0 0" mass="0.2336916" diaginertia="0.0001722914 0.000345643 0.000464408" />
             <joint name="L7_ankle_dorsi_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-50 25" armature="0.001049799" />
             <joint name="L7_ankle_inv_l" type="hinge" pos="0 0 0" axis="-1 0 0" range="-20 30" armature="0.001049799" />
-            <geom name="L7_foot_l_geom0" type="box" size="0.06398123 0.04322278 0.01853566" contype="32768" conaffinity="32768" condim="3" friction="1 0.005 0.0001" pos="0.02989977 0.01554355 -0.02697956" />
+            <geom name="L7_foot_l_geom0" type="box" size="0.06398123 0.04322278 0.01853566" contype="8421376" conaffinity="8355840" condim="3" friction="1 0.005 0.0001" pos="0.02989977 0.01554355 -0.02697956" />
             <body name="L7_toe_l" pos="0.093881 0.002417 -0.028506">
               <inertial pos="0.03375064 0.01336441 -0.006196754" quat="1 0 0 0" mass="0.06873282" diaginertia="4.657589e-05 2.877649e-05 6.999537e-05" />
               <joint name="L7_toe_l" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 60" stiffness="3.398204" damping="0.1335558" armature="0.0005248994" />
-              <geom name="L7_toe_l_geom0" type="box" size="0.03375064 0.04377215 0.01081247" contype="32768" conaffinity="32768" condim="3" friction="1 0.005 0.0001" pos="0.03375064 0.01336441 -0.006196754" />
+              <geom name="L7_toe_l_geom0" type="box" size="0.03375064 0.04377215 0.01081247" contype="8421376" conaffinity="8355840" condim="3" friction="1 0.005 0.0001" pos="0.03375064 0.01336441 -0.006196754" />
             </body>
           </body>
         </body>
@@ -725,20 +725,20 @@
         <joint name="L7_hip_flex_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 120" armature="0.002099598" />
         <joint name="L7_hip_abd_r" type="hinge" pos="0 0 0" axis="-1 0 0" range="-30 45" armature="0.002099598" />
         <joint name="L7_hip_rot_r" type="hinge" pos="0 0 0" axis="0 0 -1" range="-40 40" armature="0.002099598" />
-        <geom name="L7_thigh_r_geom0" type="capsule" size="0.05396597 0.1009075" contype="32768" conaffinity="32768" condim="3" friction="1 0.005 0.0001" pos="0 -1.3e-05 -0.1278405" quat="0 1 0 0" />
+        <geom name="L7_thigh_r_geom0" type="capsule" size="0.05396597 0.1009075" contype="8421376" conaffinity="8355840" condim="3" friction="1 0.005 0.0001" pos="0 -1.3e-05 -0.1278405" quat="0 1 0 0" />
         <body name="L7_shin_r" pos="0 0 -0.252279">
           <inertial pos="0 0 -0.1340565" quat="0 -1 0 0" mass="0.9512622" diaginertia="0.006572025 0.006572025 0.0005829297" />
           <joint name="L7_knee_r" type="hinge" pos="0 0 0" axis="0 1 0" range="0 150" armature="0.002099598" />
-          <geom name="L7_shin_r_geom0" type="capsule" size="0.03561781 0.1162476" contype="32768" conaffinity="32768" condim="3" friction="1 0.005 0.0001" pos="0 -1.3e-05 -0.1375085" quat="0 1 0 0" />
+          <geom name="L7_shin_r_geom0" type="capsule" size="0.03561781 0.1162476" contype="8421376" conaffinity="8355840" condim="3" friction="1 0.005 0.0001" pos="0 -1.3e-05 -0.1375085" quat="0 1 0 0" />
           <body name="L7_foot_r" pos="0 0 -0.269013">
             <inertial pos="0.02989977 -0.01554355 -0.02697956" quat="1 0 0 0" mass="0.2336916" diaginertia="0.0001722914 0.000345643 0.000464408" />
             <joint name="L7_ankle_dorsi_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-50 25" armature="0.001049799" />
             <joint name="L7_ankle_inv_r" type="hinge" pos="0 0 0" axis="1 0 0" range="-20 30" armature="0.001049799" />
-            <geom name="L7_foot_r_geom0" type="box" size="0.06398123 0.04322278 0.01853566" contype="32768" conaffinity="32768" condim="3" friction="1 0.005 0.0001" pos="0.02989977 -0.01555655 -0.02953156" />
+            <geom name="L7_foot_r_geom0" type="box" size="0.06398123 0.04322278 0.01853566" contype="8421376" conaffinity="8355840" condim="3" friction="1 0.005 0.0001" pos="0.02989977 -0.01555655 -0.02953156" />
             <body name="L7_toe_r" pos="0.089318 -0.003451 -0.028805">
               <inertial pos="0.03375064 -0.01336441 -0.006196754" quat="1 0 0 0" mass="0.06873282" diaginertia="4.657589e-05 2.877649e-05 6.999537e-05" />
               <joint name="L7_toe_r" type="hinge" pos="0 0 0" axis="0 -1 0" range="-30 60" stiffness="3.398204" damping="0.1335558" armature="0.0005248994" />
-              <geom name="L7_toe_r_geom0" type="box" size="0.03375064 0.04377215 0.01081247" contype="32768" conaffinity="32768" condim="3" friction="1 0.005 0.0001" pos="0.03831364 -0.01234341 -0.008449754" />
+              <geom name="L7_toe_r_geom0" type="box" size="0.03375064 0.04377215 0.01081247" contype="8421376" conaffinity="8355840" condim="3" friction="1 0.005 0.0001" pos="0.03831364 -0.01234341 -0.008449754" />
             </body>
           </body>
         </body>

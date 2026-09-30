@@ -20,7 +20,7 @@ from mjlab.managers.reward_manager import RewardTermCfg
 from mjlab.managers.termination_manager import TerminationTermCfg
 
 from . import skill_mdp as S
-from .matt_env import matt_rung2_sym5_env_cfg
+from .matt_env import add_bio_rewards, fast_sim, matt_rung2_sym5_env_cfg
 
 SKILL_REWARD_WEIGHT = 3.0
 
@@ -46,11 +46,25 @@ def matt_stance_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     # the five skills
     w = SKILL_REWARD_WEIGHT
     r["skill_squat"] = RewardTermCfg(func=S.skill_squat, weight=w, params={"std": 0.05})
-    r["skill_flamingo"] = RewardTermCfg(func=S.skill_flamingo, weight=w, params={"clearance": 0.10})
+    r["skill_flamingo"] = RewardTermCfg(func=S.skill_flamingo, weight=w, params={"clearance": 0.10, "slip_speed": 0.05})
     r["skill_march"] = RewardTermCfg(func=S.skill_march, weight=w, params={"std": 0.06})
+    # coarse terms (rs_v3), same fix as reach: rs_v2 squatted ~0.29 m short of the target (std 0.05 pays e^-33) and
+    # barely lifted a knee for the march (std 0.06 vs 0.15-0.30 m lifts) -> both flat for 300 iterations
+    r["skill_squat_coarse"] = RewardTermCfg(func=S.skill_squat, weight=w / 2, params={"std": 0.25})
+    # rs_v4: the march coarse kernel paid ~73 % for standing still -> replaced by the swing-knee lift fraction
+    r["skill_march_lift"] = RewardTermCfg(func=S.skill_march_lift, weight=w / 2)
     r["skill_torso"] = RewardTermCfg(func=S.skill_torso, weight=w, params={"std": math.radians(9)})
+    # coarse term (rs_v2): the resting hand starts 0.5-1.2 m from the target, where std 0.10 pays ~0 (rs_v1 reach stayed 0)
+    r["skill_reach_coarse"] = RewardTermCfg(func=S.skill_reach, weight=w / 2, params={"std": 0.50})
     r["skill_reach"] = RewardTermCfg(func=S.skill_reach, weight=w / 2, params={"std": 0.10})
     r["skill_reach_fine"] = RewardTermCfg(func=S.skill_reach, weight=w / 2, params={"std": 0.03})
 
     cfg.terminations["pelvis_low"] = TerminationTermCfg(func=S.pelvis_below_skill, params={"minimum_height": 0.55})
+
+    # recipe v5 (staged 2026-09-29, before the first Rung S run): the joints a skill does not use hold the default pose
+    # (posture is off outside locomotion, so idle arms / legs would drift), bio-realism terms, fast simulation (8192 envs,
+    # one pool cube, sized buffers — tasks/matt_env.fast_sim).
+    r["posture_idle"] = RewardTermCfg(func=S.posture_skill_idle, weight=r["posture"].weight, params={"std": 0.5})
+    add_bio_rewards(cfg)
+    fast_sim(cfg)
     return cfg

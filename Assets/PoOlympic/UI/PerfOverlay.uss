@@ -1,13 +1,13 @@
-/* PerfOverlay.cs: one telemetry line, top of the camera view, readable over any background. */
+/* PerfOverlay.cs: one telemetry line in the bottom-left (debug) corner, readable over any background. Only used on
+   screens without a HudAnchors frame; with one, the frame's debug slot shows the line instead. */
 .perf-line {
     position: absolute;
-    left: 12px;
-    right: 12px;
-    top: 19%;
+    left: 16px;
+    bottom: 16px;
+    max-width: 78%;
     padding: 6px 12px;
     font-size: 28px;
     -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
-    -unity-text-align: middle-center;
     white-space: normal;
     color: rgb(120, 255, 170);
     background-color: rgba(0, 0, 0, 0.62);

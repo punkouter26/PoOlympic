@@ -36,7 +36,8 @@ from mjlab.viewer import ViewerConfig
 from .. import contract as C
 from . import mdp
 
-MATT_XML = C.ROOT / "assets" / "matt.xml"
+# MATT or a MATT variant (bodies.BODIES["mattbio"]: same rig, same contract, own MJCF)
+MATT_XML = C.BODY.robot_xml if C.BODY.family == "matt" else C.ROOT / "assets" / "matt.xml"
 CUBE_XML = C.ROOT / "assets" / "cube.xml"
 N_CUBES = 4
 DEFAULT_ROOT_Z = 0.9549291  # scene_matt.xml keyframe "default"
@@ -308,6 +309,76 @@ def matt_getup5_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
         cfg.rewards.pop(k)
     cfg.rewards["rise"] = RewardTermCfg(func=mdp.rise, weight=8.0, params={"target": DEFAULT_ROOT_Z})
     cfg.rewards["standing_tall"].weight = 5.0
+    return cfg
+
+
+# ---- recipe v5 (STAGED 2026-09-29, not yet trained) ---------------------------------------------------------------
+# Throughput (tools/bench_env.py, parity/bench/bench.jsonl; Rung 2 recipe driven by r2_v8, stepping only): the eager torch
+# managers, not MuJoCo, dominate a step (physics ~36 %), so more envs per step and a lighter world pay most:
+#   4096 envs 80k steps/s · 8192 envs 109k · 1 pool cube 105k · 8192 + 1 cube + sized buffers 118-134k (1.5-1.7x).
+# ls_iterations 10 gave nothing (78k) -> the solver options stay identical to scene_matt.xml / Unity.
+V5_ENVS = 8192
+V5_MINI_BATCHES = 8          # 8192 x 24 samples in 8 mini-batches = the same 24.6k-sample mini-batch as 4096 / 4
+
+
+def fast_sim(cfg: ManagerBasedRlEnvCfg) -> ManagerBasedRlEnvCfg:
+    """Training copy only (CPU MuJoCo / Unity keep scene_matt.xml's 4-cube pool; G0 is unaffected):
+    - ONE pool cube per env: drops come every 3-8 s and a fall takes ~0.7 s, so one cube is always free; the three parked
+      cubes cost 12 resting contacts + 18 dofs per world for nothing (peak contacts/world 18 -> 6, nefc 117 -> 69).
+    - contact / constraint buffers sized to the measured peaks with margin (nconmax 96 -> 64, njmax 500 -> 256; peak
+      nefc 117-132 with 4 cubes, 69-76 with 1). Not for lying tasks (get-up, crawl): whole-body ground contact."""
+    keep = CUBE_NAMES[:1]
+    for n in CUBE_NAMES[1:]:
+        cfg.scene.entities.pop(n, None)
+    if "drop_cube" in cfg.events:
+        cfg.events["drop_cube"].params["cube_names"] = keep
+    cfg.sim.nconmax = 64
+    cfg.sim.njmax = 256
+    cfg.scene.num_envs = V5_ENVS
+    return cfg
+
+
+BODY_WEIGHT_N = C.BODY.total_mass * 9.81
+
+
+def add_bio_rewards(cfg: ManagerBasedRlEnvCfg, power_w: float = -2e-4, impact_w: float = -1.0) -> ManagerBasedRlEnvCfg:
+    """Human-likeness terms (reward side only — contract, MJCF and ONNX unchanged, so parity gates are unaffected):
+    mechanical power Σ|τ·q̇| (rung2.onnx: 3 W standing ≈ 0, 290 W walking -0.06, 1.1 kW sprinting -0.22; energy minimisation is what makes gaits
+    look natural), Hill torque-velocity envelope (guard: rung2.onnx violates it on 0.03 % of frames today) and
+    foot impact above 3 BW per foot (guard: rung2.onnx p95 1.9 BW running). Measure with tools/bio_probe.py."""
+    cfg.rewards["mech_power"] = RewardTermCfg(func=mdp.mechanical_power, weight=power_w)
+    cfg.rewards["hill"] = RewardTermCfg(func=mdp.torque_speed_excess, weight=-0.5)
+    if any(getattr(s, "name", None) == mdp.FOOT_SENSOR for s in cfg.scene.sensors):
+        cfg.rewards["foot_impact"] = RewardTermCfg(func=mdp.foot_impact, weight=impact_w,
+                                                   params={"body_weight_n": BODY_WEIGHT_N})
+    return cfg
+
+
+def matt_rung2_v5_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """Rung 2 recipe v5 = the final r2_v8 recipe (Sym5) + fast_sim + bio rewards. Warm start: r2_v8 it 600 (plain; same
+    contract, obs and actions). On POOLYMPIC_BODY=mattbio it trains the self-colliding, bio-torque MATT."""
+    cfg = add_bio_rewards(fast_sim(matt_rung2_sym5_env_cfg(play=play)))
+    return cfg
+
+
+def matt_rung0_v5_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """Rung 0 recipe v5 (Iron Pedestal brain for mattbio): r0_v2 recipe + fast_sim + bio rewards. Warm start r0_v2 it 1000."""
+    return add_bio_rewards(fast_sim(matt_rung0_env_cfg(play=play)))
+
+
+def matt_rung2_flight_v5_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """Event 13 flight brain, recipe v5: r2f_v3 recipe + fast_sim + bio rewards. bio_probe: r2f_v3 lands at up to 3.4 BW
+    per foot (rung2.onnx 2.6) and clips an arm 1.6 cm into the hip while standing — the impact guard (> 3 BW) and the
+    self-colliding body address both. Warm start r2f_v3 it 100."""
+    return add_bio_rewards(fast_sim(matt_rung2_flight3_env_cfg(play=play)))
+
+
+def matt_ppo_v5_cfg(experiment: str, max_iterations: int) -> RslRlOnPolicyRunnerCfg:
+    """matt_ppo_cfg for 8192 envs: 8 mini-batches keep the mini-batch at 24.6k samples. One iteration now carries 2x
+    the samples, so gates / max_iterations can be ~half of a 4096-env run for the same data."""
+    cfg = matt_ppo_cfg(experiment, max_iterations)
+    cfg.algorithm.num_mini_batches = V5_MINI_BATCHES
+    cfg.save_interval = 50
     return cfg
 
 

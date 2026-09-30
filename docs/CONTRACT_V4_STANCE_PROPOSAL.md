@@ -71,7 +71,8 @@ Training run (the only remaining step):
 
     cd training
     uv run python tools/expand_obs.py runs/matt_rung2/2026-09-28_04-54-44_r2_v8/model_600.pt runs/matt_stance/rs_init
-    uv run train PoOlympic-Matt-RungS-Stance --log-root runs --env.scene.num-envs 4096 --agent.resume True \
+    pwsh tools/preflight.ps1      # recipe v5: close Unity / Blender first; TensorBoard on :6006
+    uv run train PoOlympic-Matt-RungS-Stance --log-root runs --agent.resume True \
         --agent.load-run rs_init --agent.load-checkpoint model_0.pt --agent.run-name rs_v1
     uv run python tools/export_brain.py runs/matt_stance/<run> rs_v1_itNNN
     uv run python tools/eval_cpu.py ../parity/brains/rs_v1_itNNN.onnx --rung S

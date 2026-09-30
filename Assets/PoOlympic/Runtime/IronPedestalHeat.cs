@@ -12,6 +12,8 @@ namespace PoOlympic
     /// escalating magnitude (0.3 m/s + 0.05 per round) in its own seeded direction, and every 3rd round a 2 kg cube
     /// dropped from 1.5 m above the shoulder. Traits (strength / latency / sensor noise) are drawn per attempt from the
     /// contract ranges — the lanes' "form" that odds are built on. Ranking = elimination order.
+    /// Crowd stage (scene_pedestal8 since 2026-09-30): all 8 stand shoulder to shoulder on ONE iron beam (geom `pedestal`)
+    /// and collide — a gust into a neighbour can topple the row like dominoes.
     ///   Ready (countdown) → Live → Result → auto restart (new seed, new traits)
     /// </summary>
     public class IronPedestalHeat : MonoBehaviour, IBroadcastBoard, ILaneRoster
@@ -106,7 +108,7 @@ namespace PoOlympic
             var m = MjScene.Instance.Model;
             var d = MjScene.Instance.Data;
             foreach (var r in runners)
-                r.judge ??= new AthleteJudge(m, r.runner, "ground", r.runner.athletePrefix + "pedestal");
+                r.judge ??= new AthleteJudge(m, r.runner, "ground", r.runner.athletePrefix + "pedestal", "pedestal");   // own pedestal or the shared beam
             if (_traitsPending) { DrawTraits(); _traitsPending = false; }
             PhaseTime += Time.deltaTime;
             var lead = runners[0].runner;

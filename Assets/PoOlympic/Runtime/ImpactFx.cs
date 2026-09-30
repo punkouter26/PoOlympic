@@ -13,7 +13,8 @@ namespace PoOlympic
     ///                big slams also shake the camera (Cinemachine impulse) and freeze the frame (hit-stop)
     ///   cube hit     a pool cube strikes an athlete → sparks (VFX Graph; Shuriken fallback without compute shaders),
     ///                shake + hit-stop above cubeHitStopWeights
-    /// Hit-stop = Time.timeScale 0 for hitStopSeconds of real time: physics (FixedUpdate) simply pauses, fixedDeltaTime
+    /// Hit-stop (not while a heat is live, hitStopWhileLive — the race never slows down) = Time.timeScale 0 for
+    /// hitStopSeconds of real time: physics (FixedUpdate) simply pauses, fixedDeltaTime
     /// is untouched, so the simulation and parity are unchanged. Every effect instance is pooled in the scene (built by
     /// PoOlympic › Broadcast › Upgrade broadcast FX); nothing is instantiated at runtime.
     /// </summary>
@@ -42,12 +43,18 @@ namespace PoOlympic
         public bool hitStop = true;
         public float hitStopSeconds = 0.07f;
         public float hitStopCooldown = 2.5f;
+        [Tooltip("Freeze frames while a heat is live. Off (user, 2026-09-29: \"no slo motion during the race\"): the " +
+                 "live heat runs at full speed; shake and effects still play.")]
+        public bool hitStopWhileLive;
 
         public int Emitted { get; private set; }
 
         int _dust, _slam, _wave, _spark;
         float _lastStop = -99f;
         bool _stopping;
+        float _stopBefore = 1f, _stopUntil;
+        IBroadcastBoard _board;
+        bool _boardSearched;
         bool _vfxOk;
         readonly Dictionary<PolicyRunner, float> _lastPuff = new();
 
@@ -134,17 +141,32 @@ namespace PoOlympic
         {
             if (impulse != null) impulse.GenerateImpulseAt(e.position, (Vector3.down + e.normal * 0.3f) * shake);
             if (!hitStop || _stopping || Time.unscaledTime - _lastStop < hitStopCooldown) return;
-            StartCoroutine(HitStop());
-        }
-
-        IEnumerator HitStop()
-        {
+            if (!hitStopWhileLive && HeatLive()) return;                // no slow motion during the race
             _stopping = true;
             _lastStop = Time.unscaledTime;
-            float before = Time.timeScale;
+            _stopBefore = Time.timeScale;
+            _stopUntil = Time.realtimeSinceStartup + hitStopSeconds;
             Time.timeScale = 0f;
-            yield return new WaitForSecondsRealtime(hitStopSeconds);
-            Time.timeScale = before > 0f ? before : 1f;
+        }
+
+        // Hit-stop release in Update (not a WaitForSecondsRealtime coroutine: in the editor's single-step capture mode
+        // that coroutine never resumed and left the heat frozen at timeScale 0).
+        /// <summary>The scene's event board is in its live phase (no board: treated as live).</summary>
+        bool HeatLive()
+        {
+            if (!_boardSearched)
+            {
+                _boardSearched = true;
+                foreach (var mb in FindObjectsByType<MonoBehaviour>())
+                    if (mb is IBroadcastBoard b) { _board = b; break; }
+            }
+            return _board == null || _board.BoardState == BoardPhase.Live;
+        }
+
+        void Update()
+        {
+            if (!_stopping || Time.realtimeSinceStartup < _stopUntil) return;
+            Time.timeScale = _stopBefore > 0f ? _stopBefore : 1f;
             _stopping = false;
         }
     }

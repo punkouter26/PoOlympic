@@ -29,8 +29,8 @@ B = C.BODY
 LAM, SS, TS = B.length_scale, B.speed_scale, B.time_scale
 WS = 1.0 / TS            # angular rates
 MATT_ROOT_Z = 0.9549291
-RELATIVE_TILT = B.name != "matt"
-if B.name != "matt":
+RELATIVE_TILT = B.family != "matt"
+if B.family != "matt":
     _root_z = float(mujoco.MjModel.from_xml_path(str(C.SCENE_XML)).key("default").qpos[2])
     FALL_PELVIS_Z = 0.55 * _root_z / MATT_ROOT_Z
     RECOVER_WINDOW_S = 1.5 * TS
@@ -60,6 +60,7 @@ class Sim:
         self.d = mujoco.MjData(self.m)
         self.ath = C.Athlete.bind(self.m)
         self.sess = ort.InferenceSession(str(onnx_path), providers=["CPUExecutionProvider"])
+        self.obs_dim = self.sess.get_inputs()[0].shape[1]     # 84 (v3) or 95 (v4: zero skill block = plain locomotion)
         m = self.m
         self.ground = m.geom("ground").id
         self.torso = m.body("torso").id
@@ -80,6 +81,8 @@ class Sim:
         d = self.d
         self.phase = C.advance_phase(self.phase, command)
         obs = C.build_obs(self.ath, d.qpos, d.qvel, command, self.phase, self.last_action)
+        if isinstance(self.obs_dim, int) and self.obs_dim > len(obs):
+            obs = np.concatenate([obs, np.zeros(self.obs_dim - len(obs), dtype=obs.dtype)])
         ctrl, action = self.sess.run(None, {"obs": obs[None]})
         d.ctrl[self.ath.actuator_ids] = ctrl[0].astype(np.float64)
         if pre_step is not None:

@@ -12,6 +12,12 @@ import json
 import sys
 from pathlib import Path
 
+
+def _jsonable(o):
+    """numpy scalars / arrays in the reports -> plain JSON."""
+    return o.tolist() if hasattr(o, "tolist") else str(o)
+
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from poolympic import evaluate as E  # noqa: E402
@@ -42,7 +48,7 @@ def main() -> int:
         verdict = E.rung2_verdict(results)
         report = {"onnx": str(a.onnx), **verdict, "episodes": [dataclasses.asdict(r) for r in results]}
         out = a.out or ROOT.parent / "parity" / f"eval_rung2_{a.onnx.stem}.json"
-        out.write_text(json.dumps(report, indent=1))
+        out.write_text(json.dumps(report, indent=1, default=_jsonable))
         print(f"G1 rung 2: {verdict['passed_seeds']}/{verdict['seeds']} seeds pass -> "
               f"{'PASS' if verdict['PASS'] else 'FAIL'}  ({out.name})")
         return 0 if verdict["PASS"] else 1
@@ -56,7 +62,7 @@ def main() -> int:
         verdict = E.rung1_verdict(results)
         report = {"onnx": str(a.onnx), **verdict, "episodes": [dataclasses.asdict(r) for r in results]}
         out = a.out or ROOT.parent / "parity" / f"eval_rung1_{a.onnx.stem}.json"
-        out.write_text(json.dumps(report, indent=1))
+        out.write_text(json.dumps(report, indent=1, default=_jsonable))
         print(f"G1 rung 1: {verdict['passed_seeds']}/{verdict['seeds']} seeds pass -> {'PASS' if verdict['PASS'] else 'FAIL'}  ({out.name})")
         return 0 if verdict["PASS"] else 1
     results = []
@@ -68,7 +74,7 @@ def main() -> int:
     verdict = E.rung0_verdict(results)
     report = {"onnx": str(a.onnx), **verdict, "episodes": [dataclasses.asdict(r) for r in results]}
     out = a.out or ROOT.parent / "parity" / f"eval_rung{a.rung}_{a.onnx.stem}.json"
-    out.write_text(json.dumps(report, indent=1))
+    out.write_text(json.dumps(report, indent=1, default=_jsonable))
     print(f"G1 rung {a.rung}: {verdict['passed_seeds']}/{verdict['seeds']} seeds pass -> {'PASS' if verdict['PASS'] else 'FAIL'}  ({out.name})")
     return 0 if verdict["PASS"] else 1
 
@@ -85,7 +91,7 @@ def stance(a) -> int:
     verdict = ES.stance_verdict(results)
     report = {"onnx": str(a.onnx), **verdict, "episodes": [ES.to_json(r) for r in results]}
     out = a.out or ROOT.parent / "parity" / f"eval_rungS_{a.onnx.stem}.json"
-    out.write_text(json.dumps(report, indent=1))
+    out.write_text(json.dumps(report, indent=1, default=_jsonable))
     print(f"G1 rung S: {verdict['passed_seeds']}/{verdict['seeds']} seeds pass, per drill {verdict['per_drill']} -> "
           f"{'PASS' if verdict['PASS'] else 'FAIL'}  ({out.name})")
     return 0 if verdict["PASS"] else 1

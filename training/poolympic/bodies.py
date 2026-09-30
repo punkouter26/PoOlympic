@@ -30,6 +30,13 @@ class Body:
     strength: float = 1.0             # × the size-scaled actuator torque (the "weaker" knob)
     self_collision: bool = False      # True: every body geom collides with every other (parent/child pairs excepted)
     joint_defaults: dict = field(default_factory=dict)   # default pose overrides (deg) by joint name, both sides
+    rig: str | None = None            # variant of another body: reuse its skeleton/skin and its rules (same size)
+    torque_caps: dict | None = None   # per joint (base name) (Nm against, Nm towards the anatomical + direction)
+
+    @property
+    def family(self) -> str:
+        """The rig this body is built from ('matt' for MATT and his variants): picks size-dependent rules."""
+        return self.rig or self.name
 
     # ---- paths -------------------------------------------------------------------------------------------------
     @property
@@ -37,9 +44,9 @@ class Body:
     @property
     def scene_xml(self) -> Path: return ASSETS / f"scene_{self.name}.xml"
     @property
-    def skeleton_json(self) -> Path: return DERIVED / f"skeleton_{self.name}.json"
+    def skeleton_json(self) -> Path: return DERIVED / f"skeleton_{self.family}.json"
     @property
-    def skin_npz(self) -> Path: return DERIVED / f"skin_{self.name}.npz"
+    def skin_npz(self) -> Path: return DERIVED / f"skin_{self.family}.npz"
     @property
     def body_report(self) -> Path: return DERIVED / ("body_report.json" if self.name == "matt" else f"body_report_{self.name}.json")
     @property
@@ -75,6 +82,33 @@ BODIES = {
         joint_defaults={"abdomen_flex": 15.0, "hip_flex": 20.0, "hip_abd": 5.0, "knee": 35.0, "ankle_dorsi": 15.0,
                         "shoulder_elev": -10.0, "shoulder_flex": 75.0, "elbow": 20.0}),
 }
+
+
+# MATT-bio (STAGED 2026-09-29, not trained; needs the user's OK before it replaces MATT — DESIGN §2 change, every MATT
+# brain retrains): MATT with (1) full self-collision like the zombie (arms can no longer pass through the trunk / thighs;
+# checked: no geom pair touches at the T-pose, the default stance or a ±40° running arm swing, so no new excludes) and
+# (2) joint-specific, direction-specific torque caps instead of one symmetric cap per group. Values = approximate
+# peak isometric torques of a strong adult male (Anderson et al. 2007 J Biomech 40:3105; Harbo et al. 2012 Eur J Appl
+# Physiol 112:267), rounded, capped at MATT's current group caps. Tuple = (cap against the + direction, cap towards it);
+# + = flexion / abduction / dorsiflexion / inversion / elevation / left-lateral / left-twist (build_mjcf sign convention).
+BIO_TORQUE_CAPS = {
+    "abdomen_flex": (220.0, 180.0),   # extension (back) is stronger than flexion (abs)
+    "abdomen_lat": (150.0, 150.0),
+    "abdomen_twist": (80.0, 80.0),    # trunk rotation is weak compared with flexion
+    "shoulder_elev": (80.0, 70.0),    # adduction / abduction
+    "shoulder_flex": (80.0, 70.0),    # extension / flexion
+    "shoulder_twist": (50.0, 50.0),   # internal / external rotation
+    "elbow": (55.0, 70.0),            # extension / flexion
+    "hip_flex": (280.0, 200.0),       # extension (glutes, hamstrings) / flexion
+    "hip_abd": (150.0, 150.0),        # adduction / abduction
+    "hip_rot": (80.0, 80.0),          # was 280: hip rotators produce ~60-100 Nm
+    "knee": (280.0, 150.0),           # extension (quads) / flexion (hamstrings)
+    "ankle_dorsi": (220.0, 60.0),     # plantarflexion (calf) / dorsiflexion (tibialis, was 220)
+    "ankle_inv": (45.0, 60.0),        # eversion / inversion (was 220 both ways)
+}
+
+BODIES["mattbio"] = Body("mattbio", BODIES["matt"].glb, 52, (1.80, 1.90), MATT_MASS, 1.0, self_collision=True, rig="matt",
+                         torque_caps=BIO_TORQUE_CAPS)
 
 
 def current() -> Body:

@@ -66,6 +66,39 @@ namespace PoOlympic.Editor
             return full;
         }
 
+        /// <summary>Play mode, any 8-athlete event: step deterministically and screenshot the broadcast HUD 4 s into the
+        /// heat (`prefix`_live.png) and 3 s into the result (`prefix`_result.png), then leave Play mode. Poll
+        /// `CaptureBusy` — the editor update loop drives it after this call returns.</summary>
+        public static string CaptureBoardStates(string prefix, float liveAt = 4f, float resultAt = 3f)
+        {
+            if (!EditorApplication.isPlaying) throw new InvalidOperationException("enter Play mode first");
+            IBroadcastBoard board = null;
+            foreach (var mb in UnityEngine.Object.FindObjectsByType<MonoBehaviour>())
+                if (mb is IBroadcastBoard b) { board = b; break; }
+            if (board == null) return "no IBroadcastBoard in the scene";
+            Time.captureDeltaTime = 0.02f;
+            EditorApplication.isPaused = true;
+            CaptureBusy = true;
+            BoardPhase last = board.BoardState;
+            float since = 0f;
+            int stage = 0, wait = 0;
+            EditorApplication.CallbackFunction step = null;
+            step = () =>
+            {
+                if (!Application.isPlaying) { EditorApplication.update -= step; CaptureBusy = false; return; }
+                if (wait > 0 && --wait == 0 && stage == 2) { EditorApplication.update -= step; CaptureBusy = false; EditorApplication.isPlaying = false; return; }
+                if (board.BoardState != last) { last = board.BoardState; since = 0f; }
+                since += 0.02f;
+                if (stage == 0 && last == BoardPhase.Live && since >= liveAt) { Screenshot(prefix + "_live.png"); stage = 1; }
+                else if (stage == 1 && last == BoardPhase.Result && since >= resultAt) { Screenshot(prefix + "_result.png"); stage = 2; wait = 3; }
+                EditorApplication.Step();
+            };
+            EditorApplication.update += step;
+            return "capturing " + prefix;
+        }
+
+        public static bool CaptureBusy { get; private set; }
+
         /// <summary>Render a free view (temporary camera → render texture → PNG at a project-relative path), in edit or
         /// Play mode: close-ups of the stadium dressing without moving the broadcast cameras.</summary>
         public static string RenderView(Vector3 position, Vector3 lookAt, float fov, string projectRelativePath, int width = 1200, int height = 700)

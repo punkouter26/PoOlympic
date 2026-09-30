@@ -18,7 +18,7 @@ Rules for any AI agent working in this repository (Unity 6000.6 + MuJoCo RL athl
 - When training starts, check TensorBoard for obsolete runs taking up room and remove them.
 - When training in MuJoCo or Isaac Lab, show the app's viewer so the user can watch how the creature moves during and after training. Use Newton's viewer if that is the better option.
 - When 30+ minutes of RL training is needed, close the Unity / Unreal editor if that dramatically speeds up training, and tell the user when it can be opened again (training is over).
-- When a run has more than 30 minutes of training, take screenshots of the 3 most consequential TensorBoard charts, review all 3 and explain in simple terms what they show. Put the screenshots and review in an HTML file, describing each chart at 3 levels: (1) toddler, (2) child, (3) adult.
+- When a run has more than 30 minutes of training, take screenshots of the 3 most consequential TensorBoard charts, review all 3 and explain in simple terms what they show. Compare the running training with previous runs of the same task (same charts, both runs visible) and say in simple terms whether it is doing better or worse, and why. Put the screenshots and review in an HTML file, describing each chart at 3 levels: (1) toddler, (2) child, (3) adult. Screenshots: `training/tools/tb_shots.py`; example page: `parity/tb/rs_v2/review.html`.
 
 ## Unity
 - Interact with Unity through whichever tool gives the best result: Unity CLI pipeline (`unity command …`), https://github.com/CoplayDev/unity-mcp, or https://github.com/IvanMurzak/Unity-MCP.

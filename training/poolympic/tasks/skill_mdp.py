@@ -145,37 +145,30 @@ class AthleteSkillCommand(AthleteCommand):
         self.mode[env_ids] = mode
         sk = torch.zeros(n, C.SKILL_DIM, device=dev)
 
-        def U(lo, hi, k):
-            return torch.empty(k, device=dev).uniform_(lo, hi)
+        def U(lo, hi):                     # drawn for every env, kept where the mode matches (no GPU->CPU sync)
+            return torch.empty(n, device=dev).uniform_(lo, hi)
 
         r = SKILL_RANGES
-        m = mode == MODE["squat"]
-        sk[m, 0] = U(*r["pelvis_height"], int(m.sum()))
-        m = mode == MODE["flamingo"]
+        is_ = {k: mode == MODE[k] for k in SKILL_MODES}
+        sk[:, 0] = torch.where(is_["squat"], U(*r["pelvis_height"]), 0.0)
         left = torch.rand(n, device=dev) < 0.5
-        sk[m & left, 1] = 1.0
-        sk[m & ~left, 2] = 1.0
-        m = mode == MODE["march"]
-        sk[m, 3] = U(*r["march_hz"], int(m.sum()))
-        sk[m, 4] = U(*r["knee_lift"], int(m.sum()))
-        m = mode == MODE["torso"]
-        sk[m, 5] = U(*r["torso_yaw"], int(m.sum()))
-        sk[m, 6] = U(*r["torso_pitch"], int(m.sum()))
-        m = mode == MODE["reach"]
-        k = int(m.sum())
-        if k:
-            arm = torch.where(torch.rand(k, device=dev) < 0.5, -1.0, 1.0)
-            az, el = U(*REACH_AZ, k), U(*REACH_EL, k)
-            rad = U(*REACH_FRAC, k) * r["hand_reach"]
-            dirn = torch.stack([torch.cos(el) * torch.cos(az), -arm * torch.cos(el) * torch.sin(az), torch.sin(el)], -1)
-            sk[m, 7:10] = self._shoulder[(arm > 0).long()] + dirn * rad[:, None]
-            sk[m, 10] = arm
+        sk[:, 1] = (is_["flamingo"] & left).float()
+        sk[:, 2] = (is_["flamingo"] & ~left).float()
+        sk[:, 3] = torch.where(is_["march"], U(*r["march_hz"]), 0.0)
+        sk[:, 4] = torch.where(is_["march"], U(*r["knee_lift"]), 0.0)
+        sk[:, 5] = torch.where(is_["torso"], U(*r["torso_yaw"]), 0.0)
+        sk[:, 6] = torch.where(is_["torso"], U(*r["torso_pitch"]), 0.0)
+        arm = torch.where(torch.rand(n, device=dev) < 0.5, -1.0, 1.0)
+        az, el = U(*REACH_AZ), U(*REACH_EL)
+        rad = U(*REACH_FRAC) * r["hand_reach"]
+        dirn = torch.stack([torch.cos(el) * torch.cos(az), -arm * torch.cos(el) * torch.sin(az), torch.sin(el)], -1)
+        target = self._shoulder[(arm > 0).long()] + dirn * rad[:, None]
+        sk[:, 7:10] = torch.where(is_["reach"][:, None], target, 0.0)
+        sk[:, 10] = torch.where(is_["reach"], arm, 0.0)
         self.skill[env_ids] = sk
-        still = env_ids[mode != MODE["locomotion"]]
-        if len(still):
-            self.is_standing_env[still] = True
-            self.vel_command_b[still] = 0.0
-
+        still = mode != MODE["locomotion"]
+        self.is_standing_env[env_ids] = self.is_standing_env[env_ids] | still
+        self.vel_command_b[env_ids] = torch.where(still[:, None], 0.0, self.vel_command_b[env_ids])
 
 @dataclass(kw_only=True)
 class AthleteSkillCommandCfg(AthleteCommandCfg):
@@ -207,14 +200,21 @@ def skill_squat(env, std: float, command_name: str = "athlete") -> torch.Tensor:
     return skill_pelvis_height(env, std, command_name) * (_term(env, command_name).mode == MODE["squat"])
 
 
-def skill_flamingo(env, clearance: float = 0.10, command_name: str = "athlete") -> torch.Tensor:
-    """Lifted foot off the ground and at least `clearance` up; the stance foot planted."""
+def skill_flamingo(env, clearance: float = 0.10, slip_speed: float | None = None,
+                   command_name: str = "athlete") -> torch.Tensor:
+    """Lifted foot off the ground and at least `clearance` up; the stance foot planted. `slip_speed` (m/s, rs_v3) also
+    scales the reward by exp(-|stance foot xy speed| / slip_speed): rs_v2 hopped / shuffled on the stance foot (0.40 m
+    slide in the G1 drill, bar 0.10 m) because contact alone was rewarded."""
     term = _term(env, command_name)
     lift = term.skill[:, 1:3]
     contact = _foot_contact(env).float()
     rise = measure_foot_rise(env)
     lifted_ok = ((1 - contact) * torch.clamp(rise / clearance, 0.0, 1.0) * lift).sum(-1)
     stance_ok = (contact * (1 - lift)).sum(-1)
+    if slip_speed is not None:
+        s = _sidx(env)
+        v = torch.linalg.norm(s.ent.data.body_link_lin_vel_w[:, [s.b["foot_l"], s.b["foot_r"]], :2], dim=-1)
+        stance_ok = stance_ok * torch.exp(-((v * (1 - lift)).sum(-1)) / slip_speed)
     return lifted_ok * stance_ok * (term.mode == MODE["flamingo"])
 
 
@@ -228,6 +228,18 @@ def skill_march(env, std: float, command_name: str = "athlete") -> torch.Tensor:
     term = _term(env, command_name)
     err = ((measure_knee_rise(env) - march_profile(term.phase, term.skill[:, 4])) ** 2).sum(-1)
     return torch.exp(-err / std**2) * (term.mode == MODE["march"])
+
+
+def skill_march_lift(env, command_name: str = "athlete") -> torch.Tensor:
+    """rs_v4: swing-knee lift as a fraction of the commanded lift, only while that knee's march profile is up (> 30 % of
+    the lift). Standing still pays 0 here, unlike an exp kernel on the profile error (std 0.25 paid ~73 % for no lift,
+    so rs_v3 never lifted a knee)."""
+    term = _term(env, command_name)
+    lift = term.skill[:, 4:5].clamp(min=1e-3)
+    prof = march_profile(term.phase, term.skill[:, 4])
+    swing = (prof > 0.3 * lift).float()
+    frac = torch.clamp(measure_knee_rise(env) / lift, 0.0, 1.0)
+    return (swing * frac).sum(-1) * (term.mode == MODE["march"])
 
 
 def skill_torso(env, std: float, command_name: str = "athlete") -> torch.Tensor:
@@ -268,6 +280,55 @@ def _posture_locomotion_cls():
 
 
 posture_locomotion = _posture_locomotion_cls()
+
+
+def _joints(prefixes: tuple[str, ...], side: str | None = None) -> list[bool]:
+    from .mdp import CONTRACT_ACTUATORS
+    return [n.startswith(prefixes) and (side is None or n.endswith(f"_{side}")) for n in CONTRACT_ACTUATORS]
+
+
+# Joints a stance skill moves on purpose; every other joint should stay near the default pose (the Rung 2 posture term
+# is off outside locomotion, so without this the idle arms / legs drift and flail while the skill is tracked).
+_LEGS = ("hip_", "knee_", "ankle_")
+_ARMS = ("shoulder_", "elbow_")
+_SKILL_ACTIVE = {
+    "squat": _LEGS + ("abdomen_flex",),
+    "flamingo": _LEGS + ("abdomen_lat",),
+    "march": _LEGS + _ARMS,             # arm swing with the knees is natural
+    "torso": ("abdomen_", "ankle_"),    # the trunk aims; ankles balance the shifted mass
+}
+
+
+def _idle_masks(device) -> torch.Tensor:
+    """[len(SKILL_MODES) + 1, 23] 1 = idle joint (posture applies). Row len(SKILL_MODES) = reach with the RIGHT arm; the
+    reach row itself is the left-arm reach."""
+    rows = []
+    for mode in SKILL_MODES:
+        if mode == "locomotion":
+            rows.append([0.0] * 23)                    # handled by posture_locomotion
+        elif mode == "reach":
+            rows.append([0.0 if a else 1.0 for a in (np.array(_joints(_ARMS, "l")) | np.array(_joints(("abdomen_",))))])
+        else:
+            rows.append([0.0 if a else 1.0 for a in _joints(_SKILL_ACTIVE[mode])])
+    rows.append([0.0 if a else 1.0 for a in (np.array(_joints(_ARMS, "r")) | np.array(_joints(("abdomen_",))))])
+    return torch.as_tensor(rows, device=device, dtype=torch.float32)
+
+
+def posture_skill_idle(env, std: float = 0.5, command_name: str = "athlete") -> torch.Tensor:
+    """Stance-skill modes: exp(−mean over the idle joints of ((q − q_default)/std)²). 0 in locomotion (posture_locomotion
+    pays there). Keeps a reaching athlete's legs planted and free arm quiet, a squatter's arms at the sides, etc."""
+    from .mdp import _idx
+    term = _term(env, command_name)
+    masks = getattr(env, "_poolympic_idle_masks", None)
+    if masks is None:
+        masks = _idle_masks(env.device)
+        env._poolympic_idle_masks = masks
+    row = torch.where((term.mode == MODE["reach"]) & (term.skill[:, 10] > 0), len(SKILL_MODES), term.mode)
+    mk = masks[row]
+    ix = _idx(env)
+    err = (ix.entity.data.joint_pos[:, ix.joint_ids] - ix.default) / std
+    val = torch.exp(-(mk * err**2).sum(-1) / mk.sum(-1).clamp(min=1.0))
+    return val * (term.mode != MODE["locomotion"])
 
 
 def upright_unless_aiming(env, std: float, command_name: str = "athlete") -> torch.Tensor:

@@ -154,15 +154,14 @@ class AthleteCommand(UniformVelocityCommand):
         frac = getattr(self.cfg, "sprint_fraction", 0.0)
         if frac:  # r2_v8: extra mass on fast running with a mild turn (the G1 margin misses: 3.2-3.8 m/s, |wz| 0.2-0.5)
             n = len(env_ids)
-            pick = torch.rand(n, device=self.device) < frac
-            if pick.any():
-                ids = env_ids[pick]
-                lo, hi = self.cfg.sprint_vx
-                self.vel_command_b[ids, 0] = torch.empty(len(ids), device=self.device).uniform_(lo, hi)
-                self.vel_command_b[ids, 1] = 0.0
-                self.vel_command_b[ids, 2] = torch.empty(len(ids), device=self.device).uniform_(-self.cfg.sprint_wz, self.cfg.sprint_wz)
-                if hasattr(self, "is_standing_env"):
-                    self.is_standing_env[ids] = False
+            pick = torch.rand(n, device=self.device) < frac      # masked writes: no GPU->CPU sync
+            lo, hi = self.cfg.sprint_vx
+            cur = self.vel_command_b[env_ids]
+            sprint = torch.stack([torch.empty(n, device=self.device).uniform_(lo, hi), torch.zeros(n, device=self.device),
+                                  torch.empty(n, device=self.device).uniform_(-self.cfg.sprint_wz, self.cfg.sprint_wz)], -1)
+            self.vel_command_b[env_ids] = torch.where(pick[:, None], sprint, cur)
+            if hasattr(self, "is_standing_env"):
+                self.is_standing_env[env_ids] = self.is_standing_env[env_ids] & ~pick
         a_max = getattr(self.cfg, "max_lateral_accel", None)
         if a_max:  # |wz| <= a_max / |v|: no physically impossible sprint-and-spin commands (r2_v6)
             v = torch.linalg.norm(self.vel_command_b[env_ids, :2], dim=-1).clamp(min=1e-3)
@@ -200,9 +199,19 @@ def joint_vel_limit_excess(env, limit: float) -> torch.Tensor:
     return torch.relu(qd - limit).sum(-1)
 
 
+def _body_id(env, name: str) -> int:
+    """Entity body index, looked up once per env (find_bodies is a regex search over all bodies)."""
+    cache = getattr(env, "_poolympic_body_ids", None)
+    if cache is None:
+        cache = env._poolympic_body_ids = {}
+    if name not in cache:
+        cache[name] = env.scene["robot"].find_bodies(name)[0][0]
+    return cache[name]
+
+
 def torso_tilt_rad(env, body_name: str = "torso") -> torch.Tensor:
     ent = env.scene["robot"]
-    bid = ent.find_bodies(body_name)[0][0]
+    bid = _body_id(env, body_name)
     q = ent.data.body_link_quat_w[:, bid]
     z = torch.zeros(q.shape[0], 3, device=q.device, dtype=q.dtype)
     z[:, 2] = 1.0
@@ -394,6 +403,18 @@ def drop_cube_on_athlete(env, env_ids, cube_names: tuple[str, ...], height_above
     n = len(env_ids)
     dev = env.device
     root = env.sim.data.qpos[env_ids][:, ix.q_free]
+    if len(cube_names) == 1:                                   # recipe v5: no per-cube masking (no GPU->CPU sync)
+        pose = torch.zeros(n, 7, device=dev)
+        pose[:, 0:2] = root[:, 0:2] + (torch.rand(n, 2, device=dev) * 2 - 1) * xy_jitter
+        pose[:, 2] = root[:, 2] + shoulder_above_pelvis + height_above_shoulder
+        pose[:, 3] = 1.0
+        vel = torch.zeros(n, 6, device=dev)
+        lo, hi = down_speed_range
+        vel[:, 2] = -(lo + torch.rand(n, device=dev) * (hi - lo))
+        cube = env.scene[cube_names[0]]
+        cube.write_root_link_pose_to_sim(pose, env_ids=env_ids)
+        cube.write_root_link_velocity_to_sim(vel, env_ids=env_ids)
+        return
     which = torch.randint(0, len(cube_names), (n,), device=dev)
     for k, name in enumerate(cube_names):
         sel = env_ids[which == k]
@@ -527,6 +548,68 @@ def foot_slip(env) -> torch.Tensor:
     return ((v**2).sum(-1) * _foot_contact(env).float()).sum(-1)
 
 
+# ---- bio-realism (recipe v5, reward-side only: the MJCF, contract and ONNX graph are untouched) ----------------
+def _act_torque_vel(env) -> tuple[torch.Tensor, torch.Tensor]:
+    """[N, 23] actuator torque and joint speed, both in contract order (actuators are declared in joint-tree order ==
+    contract order; asserted once)."""
+    ix = _idx(env)
+    ids = getattr(env, "_poolympic_act_ids", None)
+    if ids is None:
+        a, names = ix.entity.find_actuators(list(CONTRACT_ACTUATORS), preserve_order=True)
+        assert list(names) == list(CONTRACT_ACTUATORS), f"actuator order mismatch: {names}"
+        ids = torch.as_tensor(a, device=env.device, dtype=torch.long)
+        env._poolympic_act_ids = ids
+    return ix.entity.data.actuator_force[:, ids], ix.entity.data.joint_vel[:, ix.joint_ids]
+
+
+def mechanical_power(env) -> torch.Tensor:
+    """Σ|τ·q̇| (W) — positive + negative joint work, a metabolic-cost proxy (use with a negative weight). Minimising
+    energy is what makes gaits look human (Fu et al. 2021, "Minimizing energy consumption leads to the emergence of
+    gaits"); τ² alone lets the policy spin light joints fast and stiffen heavy ones."""
+    tau, qd = _act_torque_vel(env)
+    return (tau * qd).abs().sum(-1)
+
+
+# Hill-type torque-velocity envelope: the torque a muscle group can still produce falls linearly from the actuator cap
+# at rest to 0 at w_max (joint-group shortening speed, rad/s; sprint data: knee ~20+, hip ~12-15, ankle ~15-20).
+HILL_W_MAX = {"abdomen": 8.0, "shoulder": 20.0, "elbow": 20.0, "hip": 15.0, "knee": 22.0, "ankle": 18.0}
+
+
+def _hill_tables(env):
+    t = getattr(env, "_poolympic_hill", None)
+    if t is None:
+        import mujoco
+        m = mujoco.MjModel.from_xml_path(str(C.SCENE_XML))
+        cap, wmax = [], []
+        for n in CONTRACT_ACTUATORS:
+            a = m.actuator(n).id
+            cap.append(float(max(abs(m.actuator_forcerange[a][0]), abs(m.actuator_forcerange[a][1]))))
+            group = next(g for g in HILL_W_MAX if n.startswith(g))
+            wmax.append(HILL_W_MAX[group])
+        t = (torch.as_tensor(cap, device=env.device), torch.as_tensor(wmax, device=env.device))
+        env._poolympic_hill = t
+    return t
+
+
+def torque_speed_excess(env) -> torch.Tensor:
+    """Σ relu(|τ| − cap·(1 − |q̇|/w_max)) / cap while the joint moves WITH the torque (concentric work; eccentric
+    braking may exceed it, as in muscle). The physics keeps the flat cap (Unity parity); this teaches the policy not to
+    ask for peak torque at peak speed, which real legs cannot do (use with a negative weight)."""
+    tau, qd = _act_torque_vel(env)
+    cap, wmax = _hill_tables(env)
+    concentric = (tau * qd) > 0
+    allowed = cap * torch.clamp(1.0 - qd.abs() / wmax, min=0.0)
+    return (torch.relu(tau.abs() - allowed) * concentric / cap).sum(-1)
+
+
+def foot_impact(env, body_weight_n: float, limit_bw: float = 3.0) -> torch.Tensor:
+    """Σ over feet of relu(|F_ground| − limit_bw · body weight) / body weight: soft landings. Human ground reaction
+    peaks at ~1.2 BW walking and ~2.5-3 BW running (bio_probe: rung2.onnx per foot p95 1.9 / max 2.6 BW at 3.0 m/s,
+    r2f_v3 max 3.4 BW) — a guard against stamping, not a shaping term (use with a negative weight; needs the feet_ground sensor with fields ('found', 'force'))."""
+    f = env.scene[FOOT_SENSOR].data.force                        # [N, 2, 3] net force per foot subtree
+    return (torch.relu(torch.linalg.norm(f, dim=-1) - limit_bw * body_weight_n) / body_weight_n).sum(-1)
+
+
 def heading_yaw(qpos_quat: torch.Tensor) -> torch.Tensor:
     """mjlab heading: yaw of the pelvis x-axis (EntityData.heading_w). Unity's heading controller uses the same."""
     w, x, y, z = qpos_quat.unbind(-1)
@@ -605,7 +688,7 @@ def torso_pitch_tracking(env, target_deg: float, std_deg: float, body_name: str 
     """Reward the torso leaning forward by target_deg (zombie hunch) instead of standing upright: signed pitch of the
     torso z axis towards the heading direction."""
     ent = env.scene["robot"]
-    bid = ent.find_bodies(body_name)[0][0]
+    bid = _body_id(env, body_name)
     w, x, y, z = ent.data.body_link_quat_w[:, bid].unbind(-1)
     axis = torch.stack([2 * (x * z + w * y), 2 * (y * z - w * x)], dim=-1)          # torso z axis, world xy part
     up = 1.0 - 2.0 * (x * x + y * y)

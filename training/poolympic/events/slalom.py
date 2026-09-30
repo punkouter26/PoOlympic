@@ -2,9 +2,12 @@
 brain. Mirror of Unity SlalomEvent.
 
 Course (runner frame, lane origin = start): poles at x = POLE_X0 + g * POLE_DX (g = 0..N_POLES-1) on y = 0, finish at
-DISTANCE. Pole g must be passed on the left (y > 0) for even g, on the right for odd g.
-Racing line = y*(x) = A cos(pi (x - POLE_X0) / POLE_DX) between half a pole gap before the first pole and after the
-last one (0 outside): A is the runner's seeded "line" (how wide it swings round the poles, LINE range).
+DISTANCE. Mirror slalom (crowd rule, 2026-09-30): neighbouring lanes weave in mirror image, so every pair of lanes
+converges at every other pole — even lanes pass even poles on the RIGHT (y < 0), odd lanes on the LEFT (course_side).
+Lane 0 is the leftmost lane (+y), so lanes 0|1, 2|3, … meet at even poles and 1|2, 3|4, … at odd poles: a wide line
+keeps clear of the pole but swings into the neighbour, a tight line clips the pole.
+Racing line = y*(x) = side A cos(pi (x - POLE_X0) / POLE_DX) between half a pole gap before the first pole and after
+the last one (0 outside): A is the runner's seeded "line" (how wide it swings round the poles, LINE range).
 Command every control tick (slalom_command, = C# SlalomEvent.Steer): vx = VX; heading towards the line —
     psi* = atan(y*'(x + LOOKAHEAD)) + atan(-Y_GAIN (y - y*(x)));  wz = clip(HEADING_GAIN wrap(psi* - yaw), +-WZ_LIMIT)
 Penalties: a pole passed on the wrong side = MISS_PENALTY s; every new contact with a pole = CLIP_PENALTY s; a fall =
@@ -30,10 +33,13 @@ LAYOUT = C.ROOT / "assets" / "slalom8_layout.json"
 DISTANCE = 32.0
 POLE_X0, POLE_DX, N_POLES = 3.0, 4.0, 7      # = venues.json "poles" (checked against the layout in run_heat)
 # Tuned on CPU (see rl_optimization_log.md): at 2.5-3 m/s the alternating yaw commands topple the Rung 2 brain even
-# without pole contact; 2.2 m/s with the training lateral-acceleration cap finishes 16/16.
-VX = 2.2
-LINE = (0.40, 0.56)       # m — racing-line amplitude range (seeded per runner). At VX: 0.40 ~5 clips, 0.45 ~2-3,
-                          # 0.50 ~1, 0.55 no clips but ~1 in 2 falls — the runner's line is its risk
+# without pole contact; 2.2 m/s with the training lateral-acceleration cap finishes 16/16 alone — but a shoulder bump at
+# 2.2 m/s floors it, so the mirror slalom (1.4 m lanes, every runner meets its neighbours) runs at 1.6 m/s: ~7 of 8
+# finish, 4-7 pair-seconds of contact per heat, neighbours knock each other into the poles.
+VX = 1.6
+LINE = (0.40, 0.56)       # m — racing-line amplitude range (seeded per runner). At 2.2 m/s alone: 0.40 ~5 clips,
+                          # 0.45 ~2-3, 0.50 ~1, 0.55 no clips — in the mirror slalom a wide line also swings into the
+                          # neighbour (closest approach 1.4 - A_left - A_right)
 LOOKAHEAD = 0.8           # m
 Y_GAIN, HEADING_GAIN = 1.0, 2.0
 WZ_LIMIT = 4.0 / VX       # rad/s — v * wz <= 4 m/s^2, the Rung 2 training cap (AthleteCommandCfg.max_lateral_accel)
@@ -42,13 +48,18 @@ CLIP_PENALTY = 0.5        # s per pole contact
 MAX_S = 30.0
 
 
+def course_side(lane: int) -> int:
+    """+1: pole 0 on the left (odd lanes), -1: on the right (even lanes) — neighbours weave in mirror image."""
+    return 1 if lane % 2 else -1
+
+
 def line_y(x: float, a: float) -> tuple[float, float]:
     """Racing line y*(x) and its slope."""
     lo, hi = POLE_X0 - POLE_DX / 2, POLE_X0 + (N_POLES - 1) * POLE_DX + POLE_DX / 2
     if x < lo or x > hi:
         return 0.0, 0.0
     w = math.pi / POLE_DX
-    return a * math.cos(w * (x - POLE_X0)), -a * w * math.sin(w * (x - POLE_X0))
+    return a * math.cos(w * (x - POLE_X0)), -a * w * math.sin(w * (x - POLE_X0))   # a < 0: the mirrored course
 
 
 def slalom_command(quat: np.ndarray, x: float, y: float, a: float, vx: float = VX) -> np.ndarray:
@@ -110,7 +121,7 @@ def run_heat(onnx, seed: int, traits: list[Traits] | None = None, lines: list[fl
                 ln.control(ln.sess, d, np.zeros(3))
             else:
                 ln.control(ln.sess, d, slalom_command(d.qpos[ra + 3: ra + 7], d.qpos[ra] - ln.origin[0],
-                                                   d.qpos[ra + 1] - ln.origin[1], lines[i], vx))
+                                                   d.qpos[ra + 1] - ln.origin[1], course_side(ln.k) * lines[i], vx))
         for s in range(C.DECIMATION):
             for ln in lanes:
                 ln.write_ctrl(d, s)
@@ -139,7 +150,7 @@ def run_heat(onnx, seed: int, traits: list[Traits] | None = None, lines: list[fl
                 r.clips += 1
             touching[i] = now
             while next_pole[i] < N_POLES and x >= POLE_X0 + next_pole[i] * POLE_DX:
-                if (y > 0) != (next_pole[i] % 2 == 0):
+                if (course_side(ln.k) * y > 0) != (next_pole[i] % 2 == 0):
                     r.misses += 1
                 next_pole[i] += 1
             if x >= DISTANCE:

@@ -13,6 +13,9 @@ namespace PoOlympic
     /// the runner's seeded "line" — wide lines avoid clipping poles but may topple the runner. Every control tick
     /// (PolicyRunner.steer): vx = speed, wz steers onto the line (heading + look-ahead), |wz| ≤ 4 m/s² / speed.
     /// Penalties: wrong side of a pole, pole contacts; a fall = out. Rank by time + penalties.
+    /// Mirror slalom (mirrorCourse, crowd rule 2026-09-30): neighbouring lanes weave in mirror image (CourseSide: even lanes
+    /// pass pole 0 on the right), so every pair of 1.4 m lanes converges at every other pole — a wide line keeps clear of
+    /// the pole but swings into the neighbour. Speed 1.6 m/s: a shoulder bump at 2.2 m/s floors the Rung 2 brain.
     ///   Ready (countdown) → Live → Result → auto restart (new seed)
     /// </summary>
     public class SlalomEvent : MonoBehaviour, IBroadcastBoard, ILaneRoster
@@ -43,7 +46,8 @@ namespace PoOlympic
         public float distance = 32f;
         public float poleX0 = 3f, poleDx = 4f;
         public int nPoles = 7;
-        public float speed = 2.2f;
+        public float speed = 1.6f;
+        public bool mirrorCourse = true;
         public Vector2 lineRange = new(0.40f, 0.56f);
         public float lookahead = 0.8f, yGain = 1f, headingGain = 2f, maxLateralAccel = 4f;
         public float missPenalty = 2f, clipPenalty = 0.5f;
@@ -73,6 +77,9 @@ namespace PoOlympic
             double w = Math.PI / poleDx;
             return (a * Math.Cos(w * (x - poleX0)), -a * w * Math.Sin(w * (x - poleX0)));
         }
+
+        /// <summary>= slalom.py course_side: +1 = pole 0 on the left (odd lanes), -1 = on the right (even lanes).</summary>
+        public int CourseSide(int lane) => !mirrorCourse || lane % 2 == 1 ? 1 : -1;
 
         /// <summary>= slalom.py slalom_command.</summary>
         public Vector3 Steer(double x, double y, double yaw, double a)
@@ -163,7 +170,7 @@ namespace PoOlympic
                         _liveStartTick = lead.ControlTick;
                         foreach (var r in racers)
                         {
-                            double a = r.line;
+                            double a = CourseSide(r.lane) * r.line;
                             r.runner.steer = (x, y, yaw, _) => Steer(x, y, yaw, a);
                         }
                     }
@@ -184,7 +191,7 @@ namespace PoOlympic
                         r.touching = touching;
                         while (r.nextPole < nPoles && r.x >= poleX0 + r.nextPole * poleDx)
                         {
-                            if ((r.y > 0) != (r.nextPole % 2 == 0)) r.misses++;
+                            if ((CourseSide(r.lane) * r.y > 0) != (r.nextPole % 2 == 0)) r.misses++;
                             r.nextPole++;
                         }
                         if (r.x >= distance) { r.status = "FINISHED"; r.finishS = LiveTime; Stand(r); }

@@ -1,0 +1,135 @@
+{
+ "onnx": "r2f_v3_it100.onnx",
+ "drills": {
+  "stand": {
+   "cmd": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fell": null,
+   "speed": 0.01,
+   "grf_peak_bw_p95": 0.85,
+   "grf_peak_bw_max": 1.12,
+   "power_w": 4,
+   "cot": null,
+   "hill_viol_pct": 0.0,
+   "cap_sat_pct": 0.0,
+   "vel18_pct": 0.0,
+   "qd_peak": {
+    "abdomen": 0.2,
+    "shoulder": 0.5,
+    "elbow": 0.3,
+    "hip": 0.3,
+    "knee": 0.5,
+    "ankle": 2.0
+   },
+   "clip_cm": 1.6,
+   "clip_pct": 28.8
+  },
+  "walk_1.2": {
+   "cmd": [
+    1.2,
+    0.0,
+    0.0
+   ],
+   "fell": null,
+   "speed": 1.15,
+   "grf_peak_bw_p95": 1.52,
+   "grf_peak_bw_max": 2.25,
+   "power_w": 315,
+   "cot": 0.35,
+   "hill_viol_pct": 0.0,
+   "cap_sat_pct": 0.0,
+   "vel18_pct": 0.0,
+   "qd_peak": {
+    "abdomen": 1.5,
+    "shoulder": 2.3,
+    "elbow": 1.7,
+    "hip": 2.2,
+    "knee": 6.2,
+    "ankle": 6.0
+   },
+   "clip_cm": 0.0,
+   "clip_pct": 0.0
+  },
+  "run_3.0": {
+   "cmd": [
+    3.0,
+    0.0,
+    0.0
+   ],
+   "fell": null,
+   "speed": 2.95,
+   "grf_peak_bw_p95": 2.21,
+   "grf_peak_bw_max": 3.12,
+   "power_w": 645,
+   "cot": 0.28,
+   "hill_viol_pct": 0.0,
+   "cap_sat_pct": 0.0,
+   "vel18_pct": 0.0,
+   "qd_peak": {
+    "abdomen": 2.2,
+    "shoulder": 2.6,
+    "elbow": 1.8,
+    "hip": 3.6,
+    "knee": 7.8,
+    "ankle": 9.3
+   },
+   "clip_cm": 0.0,
+   "clip_pct": 0.0
+  },
+  "sprint_3.8": {
+   "cmd": [
+    3.8,
+    0.0,
+    0.0
+   ],
+   "fell": null,
+   "speed": 3.7,
+   "grf_peak_bw_p95": 2.49,
+   "grf_peak_bw_max": 3.37,
+   "power_w": 901,
+   "cot": 0.31,
+   "hill_viol_pct": 0.0,
+   "cap_sat_pct": 0.0,
+   "vel18_pct": 0.0,
+   "qd_peak": {
+    "abdomen": 2.9,
+    "shoulder": 3.2,
+    "elbow": 2.0,
+    "hip": 4.2,
+    "knee": 8.6,
+    "ankle": 11.2
+   },
+   "clip_cm": 0.0,
+   "clip_pct": 0.0
+  },
+  "spin_2.5": {
+   "cmd": [
+    0.0,
+    0.0,
+    2.5
+   ],
+   "fell": null,
+   "speed": 0.0,
+   "grf_peak_bw_p95": 1.18,
+   "grf_peak_bw_max": 1.43,
+   "power_w": 235,
+   "cot": null,
+   "hill_viol_pct": 0.0,
+   "cap_sat_pct": 0.0,
+   "vel18_pct": 0.0,
+   "qd_peak": {
+    "abdomen": 2.0,
+    "shoulder": 3.9,
+    "elbow": 3.7,
+    "hip": 4.3,
+    "knee": 4.6,
+    "ankle": 4.6
+   },
+   "clip_cm": 0.0,
+   "clip_pct": 0.0
+  }
+ }
+}

@@ -8,13 +8,18 @@ using UnityEngine.UIElements;
 namespace PoOlympic
 {
     /// <summary>
-    /// Main menu (UI Toolkit, Assets/PoOlympic/UI/MainMenu.uxml): a roster of athlete cards (MeetLineup.Roster), 8 lane
-    /// tiles (tap a lane, then an athlete; "Fill all 8" puts the last tapped athlete in every lane), the playable events
-    /// (filled in by EventScenes.BuildMainMenu from the catalogue); PLAY loads the event scene. GAUNTLET mode: tapping
-    /// events builds an ordered series (Gauntlet), PLAY runs it (one heat per event, points per place). WORLD RECORDS opens
-    /// the records board (Records: world record per event, tap for the all-time top 5); the selected event's world
-    /// record shows under its rules. Runs in edit mode too,
-    /// so the full layout shows in the Game view / Device Simulator without entering Play mode.
+    /// Main menu (UI Toolkit, Assets/PoOlympic/UI/MainMenu.uxml) — one viewport, nothing scrolls (UI consolidation
+    /// 2026-09-29):
+    ///   HudAnchors frame  TL POOLYMPICS + the lineup / gauntlet status · TC FPS · TR menu sheet (lineup presets,
+    ///                     performance) · BL debug · BR version; bottom centre: the last gauntlet result
+    ///   roster            one card per athlete (MeetLineup.Roster): tap = that athlete in all 8 lanes
+    ///   lanes             4 × 2 tiles: tap a lane = the next athlete in it
+    ///   events            fixed grid of the playable events (filled in by EventScenes.BuildMainMenu from the catalogue)
+    ///   detail            the selected event: name, brain, rules and its world record — or, with ★ on, its all-time
+    ///                     top 5 (the ★ toggle also puts every event's world record on its tile: the old records board)
+    ///   actions           ★ records · GAUNTLET (tapping events builds an ordered series, Gauntlet; one heat per event,
+    ///                     points per place) · PLAY (loads the event scene / starts the gauntlet)
+    /// Runs in edit mode too, so the full layout shows in the Game view / Device Simulator without entering Play mode.
     /// </summary>
     [ExecuteAlways]
     [RequireComponent(typeof(UIDocument))]
@@ -32,24 +37,23 @@ namespace PoOlympic
         }
 
         public List<MenuEvent> events = new();
+        [Tooltip("Event tiles per row of the grid.")]
+        public int columns = 3;
 
         readonly string[] _lineup = new string[8];
         readonly List<(Button tile, Label name)> _slots = new();
         readonly List<Button> _eventButtons = new();
         readonly List<Label> _orderBadges = new();
+        readonly List<Label> _marks = new();
         readonly List<MenuEvent> _gauntlet = new();
-        bool _gauntletMode;
-        Button _gauntletButton;
-        Label _coins;
-        VisualElement _slotsRoot;
+        bool _gauntletMode, _recordsMode;
+        Button _gauntletButton, _recordsButton, _play;
+        VisualElement _root, _slotsRoot, _detail, _recordTop;
         MenuEvent _selected;
-        int _lane;
-        string _lastAthlete;
-        Label _rules, _status, _eventRecord;
-        Button _play, _fillAll, _recordsButton, _recordsClose;
-        VisualElement _recordsPanel;
-        ScrollView _recordsList;
-        int _recordsOpenEvent = -1;
+        Label _rules, _eventRecord, _eventTitle, _eventBrain, _last;
+        HudAnchors _anchors;
+
+        public HudAnchors Anchors => _anchors;
 
         void OnEnable() => Populate();
 
@@ -57,47 +61,70 @@ namespace PoOlympic
         {
             // the UIDocument rebuilds its tree when its assets reload: repopulate when our elements are gone
             if (_slotsRoot == null || _slotsRoot.panel == null || _slotsRoot.childCount == 0) Populate();
+            if (_anchors == null) return;
+            _anchors.Tick();
+            FitSafeArea();
         }
 
-        void Populate()
+        /// <summary>Keep the column inside the safe area (status bar, camera cut-out, navigation bar).</summary>
+        public void FitSafeArea()
+        {
+            var full = _root?.panel?.visualTree.layout ?? Rect.zero;
+            if (float.IsNaN(full.width) || full.width <= 1f) return;
+            var safe = HudAnchors.SafeRectIn(full.size);
+            _root.style.paddingLeft = safe.xMin;
+            _root.style.paddingTop = safe.yMin;
+            _root.style.paddingRight = Mathf.Max(0f, full.width - safe.xMax);
+            _root.style.paddingBottom = Mathf.Max(0f, full.height - safe.yMax);
+        }
+
+        public void Populate()
         {
             var doc = GetComponent<UIDocument>();
             var root = doc != null ? doc.rootVisualElement : null;
             var slots = root?.Q<VisualElement>("slots");
             if (slots == null) return;
+            _root = root.Q<VisualElement>("root") ?? root;
             var roster = root.Q<VisualElement>("roster");
-            var list = root.Q<ScrollView>("eventList");
+            var grid = root.Q<VisualElement>("eventList");
+            var top = root.Q<VisualElement>("anchorTop");
+            var bottom = root.Q<VisualElement>("anchorBottom");
+            var overlay = root.Q<VisualElement>("overlay");
+            _detail = root.Q<VisualElement>("detail");
             _rules = root.Q<Label>("eventRules");
-            _status = root.Q<Label>("status");
-            _play = root.Q<Button>("playButton");
-            _fillAll = root.Q<Button>("fillAllButton");
-            _gauntletButton = root.Q<Button>("gauntletButton");
-            _coins = root.Q<Label>("coins");
+            _eventTitle = root.Q<Label>("eventTitle");
+            _eventBrain = root.Q<Label>("eventBrain");
             _eventRecord = root.Q<Label>("eventRecord");
+            _recordTop = root.Q<VisualElement>("recordTop");
+            _play = root.Q<Button>("playButton");
+            _gauntletButton = root.Q<Button>("gauntletButton");
             _recordsButton = root.Q<Button>("recordsButton");
-            _recordsClose = root.Q<Button>("recordsClose");
-            _recordsPanel = root.Q<VisualElement>("recordsPanel");
-            _recordsList = root.Q<ScrollView>("recordsList");
             _slotsRoot = slots;
-            slots.Clear();
-            roster.Clear();
-            list.Clear();
+            root.style.flexGrow = 1;                     // the document root fills the panel: the column is one viewport tall
+            foreach (var v in new[] { slots, roster, grid, top, bottom, overlay }) v.Clear();
             _slots.Clear();
             _eventButtons.Clear();
             _orderBadges.Clear();
-            _lastAthlete = MeetLineup.Roster[0];
-            _lane = 0;
+            _marks.Clear();
+
+            _anchors = new HudAnchors(top, bottom, overlay, overlay, "POOLYMPICS", "", "v" + Application.version);
+            _anchors.SetMenu(MenuItems);
+            _last = new Label();
+            _last.AddToClassList("menu-last");
+            _anchors.BottomCentre.Add(_last);
 
             foreach (var athlete in MeetLineup.Roster)
             {
-                var card = new Button(() => Assign(athlete));
+                var card = new Button(() => FillAll(athlete)) { tooltip = MeetLineup.Stats(athlete).Replace("\n", " · ") };
                 card.AddToClassList("athlete-card");
-                var name = new Label(athlete);
-                name.AddToClassList("athlete-name");
-                var stats = new Label(MeetLineup.Stats(athlete));
-                stats.AddToClassList("athlete-stats");
-                card.Add(name);
-                card.Add(stats);
+                card.EnableInClassList("athlete-card--gap", athlete != MeetLineup.Roster[^1]);
+                card.Add(Chip(athlete));
+                var text = new VisualElement();
+                text.AddToClassList("athlete-text");
+                text.Add(MakeLabel(athlete, "athlete-name"));
+                text.Add(MakeLabel(MeetLineup.Stats(athlete).Split('\n')[0], "athlete-stats"));
+                card.Add(text);
+                card.Add(MakeLabel("×8", "athlete-fill"));
                 roster.Add(card);
             }
 
@@ -106,58 +133,75 @@ namespace PoOlympic
                 string a = MeetLineup.Athletes[k];
                 _lineup[k] = Array.IndexOf(MeetLineup.Roster, a) >= 0 ? a : MeetLineup.Roster[0];
                 int lane = k;
-                var tile = new Button(() => SelectLane(lane));
+                var tile = new Button(() => NextAthlete(lane));
                 tile.AddToClassList("slot");
-                var laneLabel = new Label($"LANE {k + 1}");
-                laneLabel.AddToClassList("slot-lane");
-                var name = new Label();
-                name.AddToClassList("slot-athlete");
-                tile.Add(laneLabel);
+                tile.Add(MakeLabel($"LANE {k + 1}", "slot-lane"));
+                var name = MakeLabel("", "slot-athlete");
                 tile.Add(name);
                 slots.Add(tile);
                 _slots.Add((tile, name));
             }
 
-            foreach (var ev in events)
+            int cols = Mathf.Max(1, columns);
+            VisualElement row = null;
+            for (int i = 0; i < events.Count || i % cols != 0; i++)
             {
-                var button = new Button(() => SelectEvent(ev));
+                if (i % cols == 0)
+                {
+                    row = new VisualElement();
+                    row.AddToClassList("event-row");
+                    row.EnableInClassList("event-row--gap", i + cols < events.Count);
+                    grid.Add(row);
+                }
+                string gap = i % cols < cols - 1 ? "event-button--gap" : "event-button--end";
+                if (i >= events.Count) { var pad = new VisualElement(); pad.AddToClassList("event-button"); pad.AddToClassList(gap); pad.AddToClassList("event-button--empty"); row.Add(pad); continue; }
+                var ev = events[i];
+                var button = new Button(() => SelectEvent(ev)) { tooltip = ev.brain };
                 button.AddToClassList("event-button");
-                var number = new Label($"{ev.number:00}");
-                number.AddToClassList("event-number");
-                var title = new Label(ev.name);
-                title.AddToClassList("event-name");
-                var brain = new Label(ev.brain);
-                brain.AddToClassList("event-brain");
-                var order = new Label();
-                order.AddToClassList("event-order");
+                button.AddToClassList(gap);
+                button.Add(MakeLabel($"{ev.number:00}", "event-number"));
+                button.Add(MakeLabel(ev.name, "event-name"));
+                var mark = MakeLabel("", "event-mark");
+                button.Add(mark);
+                var order = MakeLabel("", "event-order");
                 order.style.display = DisplayStyle.None;
-                button.Add(number);
-                button.Add(title);
-                button.Add(brain);
                 button.Add(order);
-                list.Add(button);
+                row.Add(button);
                 _eventButtons.Add(button);
                 _orderBadges.Add(order);
+                _marks.Add(mark);
             }
 
             _play.clicked -= Play;
             _play.clicked += Play;
-            _fillAll.clicked -= FillAll;
-            _fillAll.clicked += FillAll;
-            if (_gauntletButton != null)
-            {
-                _gauntletButton.clicked -= ToggleGauntlet;
-                _gauntletButton.clicked += ToggleGauntlet;
-            }
-            if (_recordsButton != null)
-            {
-                _recordsButton.clicked -= OpenRecords;
-                _recordsButton.clicked += OpenRecords;
-                _recordsClose.clicked -= CloseRecords;
-                _recordsClose.clicked += CloseRecords;
-            }
+            _gauntletButton.clicked -= ToggleGauntlet;
+            _gauntletButton.clicked += ToggleGauntlet;
+            _recordsButton.clicked -= ToggleRecords;
+            _recordsButton.clicked += ToggleRecords;
             RefreshSlots();
+            RefreshRecords();
             SelectEvent(events.FirstOrDefault(e => e.number == MeetLineup.EventNumber) ?? events.FirstOrDefault());
+        }
+
+        IEnumerable<(string, Action)> MenuItems()
+        {
+            foreach (var a in MeetLineup.Roster) yield return ($"All {a}", () => FillAll(a));
+            if (MeetLineup.Roster.Length > 1)
+                yield return ("Alternate " + string.Join(" / ", MeetLineup.Roster), () =>
+                {
+                    if (LineupFixed) return;
+                    for (int k = 0; k < _lineup.Length; k++) _lineup[k] = MeetLineup.Roster[k % MeetLineup.Roster.Length];
+                    RefreshSlots();
+                });
+            yield return (HudAnchors.DebugOn ? "Performance: hide" : "Performance: show", () => HudAnchors.DebugOn = !HudAnchors.DebugOn);
+        }
+
+        static Label Chip(string athlete)
+        {
+            bool z = athlete == "ZOMBIE";
+            var chip = MakeLabel(z ? "Z" : athlete.Substring(0, 1), "menu-chip");
+            chip.EnableInClassList("menu-chip--zombie", z);
+            return chip;
         }
 
         /// <summary>The selected event's scene fixes the lineup (athlete taps are ignored). Unity serialises a null
@@ -165,26 +209,19 @@ namespace PoOlympic
         /// lineup is fixed.</summary>
         bool LineupFixed => _selected?.lineup != null && _selected.lineup.Length == _lineup.Length;
 
-        void SelectLane(int lane)
-        {
-            _lane = lane;
-            RefreshSlots();
-        }
-
-        /// <summary>Put `athlete` in the selected lane and move the selection on to the next lane.</summary>
-        void Assign(string athlete)
+        /// <summary>Tap a lane: the next athlete of the roster in it.</summary>
+        void NextAthlete(int lane)
         {
             if (LineupFixed) return;                     // lineup fixed by the event scene
-            _lastAthlete = athlete;
-            _lineup[_lane] = athlete;
-            _lane = (_lane + 1) % _lineup.Length;
+            int i = Array.IndexOf(MeetLineup.Roster, _lineup[lane]);
+            _lineup[lane] = MeetLineup.Roster[(i + 1) % MeetLineup.Roster.Length];
             RefreshSlots();
         }
 
-        void FillAll()
+        void FillAll(string athlete)
         {
             if (LineupFixed) return;
-            for (int k = 0; k < _lineup.Length; k++) _lineup[k] = _lastAthlete;
+            for (int k = 0; k < _lineup.Length; k++) _lineup[k] = athlete;
             RefreshSlots();
         }
 
@@ -194,8 +231,8 @@ namespace PoOlympic
             {
                 var (tile, name) = _slots[k];
                 name.text = _lineup[k] ?? "empty";
-                name.EnableInClassList("slot-athlete--empty", _lineup[k] == null);
-                tile.EnableInClassList("slot--selected", k == _lane);
+                tile.EnableInClassList("slot--zombie", _lineup[k] == "ZOMBIE");
+                tile.EnableInClassList("slot--fixed", LineupFixed);
             }
             UpdateStatus();
         }
@@ -210,8 +247,7 @@ namespace PoOlympic
 
         void RefreshGauntlet()
         {
-            if (_gauntletButton == null) return;
-            _gauntletButton.text = _gauntletMode ? $"GAUNTLET: {_gauntlet.Count}" : "GAUNTLET: OFF";
+            _gauntletButton.text = _gauntletMode ? $"GAUNTLET {_gauntlet.Count}" : "GAUNTLET";
             _gauntletButton.EnableInClassList("gauntlet-toggle--on", _gauntletMode);
             for (int i = 0; i < _orderBadges.Count && i < events.Count; i++)
             {
@@ -220,8 +256,47 @@ namespace PoOlympic
                 _orderBadges[i].text = (at + 1).ToString();
                 _eventButtons[i].EnableInClassList("event-button--in-gauntlet", _gauntletMode && at >= 0);
             }
-            if (_play != null) _play.text = _gauntletMode ? $"PLAY GAUNTLET ({_gauntlet.Count})" : "PLAY";
+            _play.text = _gauntletMode ? $"PLAY {_gauntlet.Count}" : "PLAY";
             UpdateStatus();
+        }
+
+        void ToggleRecords()
+        {
+            _recordsMode = !_recordsMode;
+            RefreshRecords();
+        }
+
+        /// <summary>★: every tile shows its event's world record and the detail panel the selected event's top 5.</summary>
+        void RefreshRecords()
+        {
+            _recordsButton.EnableInClassList("records-button--on", _recordsMode);
+            _detail.EnableInClassList("detail--records", _recordsMode);
+            for (int i = 0; i < _marks.Count && i < events.Count; i++)
+            {
+                var top = Records.Top(events[i].number);
+                _marks[i].text = top.Count > 0 ? top[0].mark : "no mark yet";
+                _marks[i].EnableInClassList("event-mark--none", top.Count == 0);
+                _marks[i].style.display = _recordsMode ? DisplayStyle.Flex : DisplayStyle.None;
+            }
+            FillTop5();
+        }
+
+        void FillTop5()
+        {
+            _recordTop.Clear();
+            if (_selected == null) return;
+            var top = Records.Top(_selected.number);
+            if (top.Count == 0) _recordTop.Add(MakeLabel("No mark yet: the first valid winning mark sets it.", "record-top-none"));
+            for (int i = 0; i < top.Count; i++)
+            {
+                var row = new VisualElement();
+                row.AddToClassList("record-top-row");
+                row.Add(MakeLabel((i + 1).ToString(), "record-top-rank"));
+                row.Add(MakeLabel(top[i].mark, "record-top-mark"));
+                row.Add(MakeLabel(top[i].holder + (string.IsNullOrEmpty(top[i].body) ? "" : $" · {top[i].body}"), "record-top-who"));
+                row.Add(MakeLabel(top[i].date ?? "", "record-top-date"));
+                _recordTop.Add(row);
+            }
         }
 
         void SelectEvent(MenuEvent ev)
@@ -232,86 +307,35 @@ namespace PoOlympic
                 RefreshGauntlet();
             }
             _selected = ev;
-            if (LineupFixed)   // the scene's own lineup
-            {
-                Array.Copy(ev.lineup, _lineup, _lineup.Length);
-                RefreshSlots();
-            }
+            if (LineupFixed) Array.Copy(ev.lineup, _lineup, _lineup.Length);   // the scene's own lineup
+            RefreshSlots();
             for (int i = 0; i < _eventButtons.Count; i++)
                 _eventButtons[i].EnableInClassList("event-button--selected", events[i] == ev);
+            _eventTitle.text = ev != null ? $"{ev.number:00}  {ev.name}" : "";
+            _eventBrain.text = ev?.brain ?? "";
+            _eventBrain.style.display = string.IsNullOrEmpty(ev?.brain) ? DisplayStyle.None : DisplayStyle.Flex;
             _rules.text = ev?.rules ?? "";
-            if (_eventRecord != null)
-                _eventRecord.text = ev != null && Records.TryGet(ev.number, out _, out var wr) ? $"WORLD RECORD  {wr}" : ev != null ? "WORLD RECORD  none yet" : "";
+            _eventRecord.text = ev != null && Records.TryGet(ev.number, out _, out var wr) ? $"★ WORLD RECORD  {wr}" : ev != null ? "★ WORLD RECORD  none yet" : "";
+            FillTop5();
             UpdateStatus();
         }
 
         void UpdateStatus()
         {
-            if (_play == null) return;
+            if (_play == null || _anchors == null) return;
             bool full = _lineup.All(a => a != null);
             bool loadable = _gauntletMode
                 ? _gauntlet.Count > 0 && _gauntlet.All(e => !Application.isPlaying || Application.CanStreamedLevelBeLoaded(e.scene))
                 : _selected != null && (!Application.isPlaying || Application.CanStreamedLevelBeLoaded(_selected.scene));
             _play.SetEnabled(full && loadable);
-            _status.text = _selected == null ? "No playable events"
+            // the status line lives in the title chip (TL): no separate status label under PLAY
+            _anchors.Sub.text = _selected == null ? "No playable events"
                 : !full ? "Fill all 8 lanes"
                 : !loadable ? $"{_selected.scene} is not in Build Settings"
                 : _gauntletMode ? (_gauntlet.Count == 0 ? "Tap events to build the gauntlet"
-                    : $"Gauntlet: {string.Join(" → ", _gauntlet.Select(e => e.number.ToString("00")))}  ·  10-8-6-5-4-3-2-1 points")
-                : $"{string.Join(" · ", _lineup.GroupBy(a => a).Select(g => $"{g.Count()}× {g.Key}"))}  ·  event {_selected.number}";
-            if (_coins != null)
-                _coins.text = Gauntlet.LastResult.Length > 0 ? $"Last gauntlet:\n{Gauntlet.LastResult}" : "";   // no betting: just play
-        }
-
-        void OpenRecords()
-        {
-            _recordsOpenEvent = -1;
-            FillRecords();
-            _recordsPanel?.AddToClassList("records-panel--open");
-        }
-
-        void CloseRecords() => _recordsPanel?.RemoveFromClassList("records-panel--open");
-
-        /// <summary>One card per playable event: world record + holder; the tapped event expands to its top 5.</summary>
-        void FillRecords()
-        {
-            if (_recordsList == null) return;
-            _recordsList.Clear();
-            foreach (var ev in events)
-            {
-                var top = Records.Top(ev.number);
-                int number = ev.number;
-                var card = new Button(() => { _recordsOpenEvent = _recordsOpenEvent == number ? -1 : number; FillRecords(); });
-                card.AddToClassList("record-event");
-                var head = new VisualElement();
-                head.AddToClassList("record-event-head");
-                head.Add(MakeLabel($"{ev.number:00}", "record-event-number"));
-                head.Add(MakeLabel(ev.name, "record-event-name"));
-                var mark = MakeLabel(top.Count > 0 ? top[0].mark : "no mark yet", "record-event-mark");
-                mark.EnableInClassList("record-event-mark--none", top.Count == 0);
-                head.Add(mark);
-                card.Add(head);
-                if (top.Count > 0)
-                    card.Add(MakeLabel($"{top[0].holder}" + (string.IsNullOrEmpty(top[0].body) ? "" : $" · {top[0].body}") +
-                                   (string.IsNullOrEmpty(top[0].date) ? "" : $" · {top[0].date}"), "record-event-holder"));
-                if (_recordsOpenEvent == number && top.Count > 0)
-                {
-                    var list = new VisualElement();
-                    list.AddToClassList("record-top");
-                    for (int i = 0; i < top.Count; i++)
-                    {
-                        var row = new VisualElement();
-                        row.AddToClassList("record-top-row");
-                        row.Add(MakeLabel((i + 1).ToString(), "record-top-rank"));
-                        row.Add(MakeLabel(top[i].mark, "record-top-mark"));
-                        row.Add(MakeLabel(top[i].holder + (string.IsNullOrEmpty(top[i].body) ? "" : $" · {top[i].body}"), "record-top-who"));
-                        row.Add(MakeLabel(top[i].date ?? "", "record-top-date"));
-                        list.Add(row);
-                    }
-                    card.Add(list);
-                }
-                _recordsList.Add(card);
-            }
+                    : $"Gauntlet {string.Join(" → ", _gauntlet.Select(e => e.number.ToString("00")))} · 10-8-6-5-4-3-2-1")
+                : $"{string.Join(" · ", _lineup.GroupBy(a => a).Select(g => $"{g.Count()}× {g.Key}"))}" + (LineupFixed ? " (event lineup)" : "");
+            _last.text = Gauntlet.LastResult.Length > 0 ? "Last gauntlet: " + Gauntlet.LastResult.Replace("\n", " · ") : "";
         }
 
         static Label MakeLabel(string text, string cls)

@@ -435,3 +435,104 @@ One entry per run or decision. Newest at the bottom.
 - Unity: PolicyRunner runs the critic every 5th control tick (10 Hz, staggered per lane) on the brain's own observation;
   never feeds ctrl. EditMode parity gates (G2-G4) unchanged: PASS.
 
+
+## 2026-09-29 late · AUDIT + recipe v5 STAGED (no training run) — throughput, bio-realism, MATT-bio body
+- **Throughput** (`tools/bench_env.py`: stepping only, r2_v8 drives the envs; `parity/bench/bench.jsonl`). Rung 2 recipe
+  at 4096 envs = 80k env-steps/s (the logged 1.8 s collection per iteration). MuJoCo is only ~36 % of a step; the rest
+  is eager torch managers (rewards 16 %, commands 11 %, events 10 %, observations 9 %), which cost the same per step at
+  any env count. Solver already exits after 2.3 iterations; peak contacts 18 / world, peak nefc 117-132 (njmax was 500).
+  Knobs: 8192 envs 109k (1.35x) · 1 pool cube 105k (1.31x: the 3 parked cubes = 12 resting contacts + 18 dofs per world)
+  · buffers alone ~1.07x · ls_iterations 10 no gain (dropped: solver options stay == Unity) · 12288 envs only +9 % over
+  8192 · all together 118-134k (1.5-1.7x; runs were noisy: 3 Unity editors, Blender and a parallel session's APK build
+  were active). The first 43k baseline was a cold run — ignore it.
+- **Bio-realism audit** (`tools/bio_probe.py`, CPU, `parity/bio/`): rung2.onnx is already human-range — per-foot GRF p95
+  1.4 BW walking / 1.9 running (max 2.6), Hill torque-velocity violations 0.03 %, torque-cap saturation ~0, no joint over
+  18 rad/s, no arm-through-body clipping in the locomotion drills. r2f_v3 (flight brain) lands harder (max 3.4 BW) and
+  clips 1.6 cm arm-into-hip on 29 % of standing frames. Clipping shows up in falls / odd poses (r0 brain mid-fall 9 cm).
+- **MATT full self-collision check:** no geom pair touches at the T-pose, the default stance or a ±40° running arm swing;
+  only arms pressed past −85° elevation reach the hips (−95°, the joint limit, sinks the forearm 6 cm into the pelvis
+  today) → no new excludes needed.
+- **Staged body `mattbio`** (`POOLYMPIC_BODY=mattbio`; `bodies.BIO_TORQUE_CAPS`, `assets/mattbio.xml`,
+  `scene_mattbio.xml`, `parity/contract_mattbio.json`, fingerprint): MATT + full self-collision + joint- and
+  direction-specific torque caps (e.g. ankle dorsiflexion 220 → 60 Nm, inversion/eversion 220 → 60/45, hip rotation
+  280 → 80, knee flexion 280 → 150, trunk twist 200 → 80). matt.xml / scene_matt.xml byte-identical. **The current brains
+  pass G1 on it with no retraining: rung2.onnx 10/10 (turntable 2.6 s, brake 1.25 m, 0 falls), r0_v2_it1000 10/10**;
+  only ankle torques would bind (dorsi 1.6-1.9 % of running frames, inversion 8 % while spinning). Not adopted: DESIGN
+  §2 change → needs the user's OK, then Unity re-import + G0/G2-G6 + event-scene regeneration.
+- **Recipe v5 (staged tasks):** `matt_env.fast_sim` (8192 envs, 1 pool cube, nconmax 64 / njmax 256 — training copy only,
+  not for lying tasks), `matt_ppo_v5_cfg` (8 mini-batches = same 24.6k mini-batch, checkpoints every 50),
+  `add_bio_rewards` (mechanical power Σ|τq̇| w −2e-4 ≈ −0.13 per step on the Rung 2 mix vs torques −0.24; Hill
+  envelope and > 3 BW foot-impact guards). `PoOlympic-Matt-RungS-Stance` now = v5 + `posture_skill_idle` (joints a
+  skill does not use hold the default pose) — C1 PASS (obs 3.1e-7, clock 3.1e-7, skill measures ≤ 5.6e-7, wiring 0),
+  97.5k steps/s at 8192. New: `PoOlympic-Matt-Rung2-V5`, `PoOlympic-MattBio-{Rung0-Stand,Rung2-Omni,RungS-Stance}`.
+- **Not done / no gain:** pruning the 35 registered tasks saves ~0 s (registration is free; the 11.8 s is the mjlab
+  import) → kept for log reproducibility. Launch checks: `tools/preflight.ps1` (GPU temp, competing apps, power, TensorBoard,
+  run sizes; reports only). At audit time the idle GPU sat at 77-84 °C and two TensorBoard processes were running.
+- **Launch (when approved):** `pwsh tools/preflight.ps1` → close Unity/Blender →
+  `uv run train PoOlympic-Matt-RungS-Stance --log-root runs --agent.resume True --agent.load-run rs_init
+  --agent.load-checkpoint model_0.pt --agent.run-name rs_v1` (no `--env.scene.num-envs 4096`: v5 defaults to 8192).
+
+## 2026-09-30 · DECISION — crowd contact in every event scene + 6 events laid out for collisions (no training)
+- **Change:** user: "more interaction and collisions between the 8 players … do all 6". Event scenes get per-lane crowd
+  bits (`build_mjcf.crowd_bits`: lane k owns bit 16+k, collides with every other lane's; own parts unchanged); the G6
+  testbed `scene_meet8` stays lane-isolated. Venues (`build_venues.py` crowd constants, Blender pass `build_crowd.py`,
+  Stadium.glb re-exported): 1 one iron beam, 5 one shaker floor (8 × mass/stiffness/damping → still 2.0 Hz, ζ 0.2),
+  8 crawl lanes 1.1 m (own scene `crawl8`; track8 now from venue 22), 11 1.4 m lanes, 12 ring, 19 green break line.
+  Rules: 11 mirror slalom (neighbours weave in mirror image) at 1.6 m/s; 12 DQ radius 0.75 m; 19 lane break at 15 m
+  (field squeezes to SQUEEZE 0.5 of its distance to lane 1, merge ≤ 12°); 8 DNFs rank by distance covered.
+- **Tuning (CPU heats, all-MATT unless noted; "pair-s" = seconds of athlete↔athlete contact summed over pairs):**
+  - 01 beam pitch 0.65 / 0.75 / 0.9 m: heats 35-39 / 32-46 / 32-44 s (old pedestals 27-35 s), pair-s 49-90 / 7-36 / 2-10
+    → **0.7 m**. Mixed MATT/zombie: 32-41 s, pair-s 0.4-17.
+  - 05 floor grid 0.9 / 0.8 / 1.0×1.2 m: survivors 0-2 / 1-3 / 1-3 (old 0-1), pair-s 5-12 / 12-23 / 2-3 → **0.8 m**.
+    Mixed: 2-5 survivors, pair-s 5-13.
+  - 08 crawl pitch 1.22 / 1.15 / 1.1 / 1.0 / 0.85 / 0.7 / 0.6 m: below 1.1 m crawlers interlock (2-5 DNF per heat,
+    pair-s 80-160); 1.1 m: 3 of 4 heats 8/8 finish (pair-s ~30), 1 tangle → **1.1 m** + DNF ranked by distance.
+  - 11 every fall follows a contact: 2.2 m/s floors the Rung 2 brain after any bump (mirror at 1.22-2.0 m lanes: 1-6
+    finish); no-contact control (3 m lanes) 8/8. **1.4 m lanes at 1.6 m/s**: 6-8 finish (mean ~7), pair-s 4-7, pole
+    clips 0-21 (neighbours knock each other into poles); 1.8 m/s: 4-7 finish. Mixed lineups barely touch (zombie narrower).
+  - 12 ring pitch 0.65 / 0.75 / 0.8 / 0.9 m: max drift 0.2-1.7 / 0.17-1.13 / 0.14-0.78 / 0.07-0.39 m (old 0.03-0.12), no
+    falls → **0.75 m, DQ at 0.75 m**. Mixed: drift 0.03-0.6.
+  - 19 one shared inside line (GAP 0.5-0.65 m to runners alongside, look-ahead 3 m): rear-end pile-ups, 2-6 of 8 down,
+    slower zombies run over (1-6 falls mixed) → rejected. **Squeeze 0.5**: 1-3 of 8 MATTs down, pair-s ~4, mixed 0 falls;
+    0.45: 2-5 down.
+- **Verification:** `tools/check_crowd_contacts.py` — every event scene, all-MATT + mixed: 16,184/16,184 cross-athlete
+  part pairs pass the filter and produce a real `mj_collision` contact, no support / self-collision change (negative
+  control scene_meet8: 0/16,184); `tests/test_crowd_contacts.py` 17/17, `tests/test_events.py` 10/10;
+  `compose_mixed --verify` all PASS; Unity EditMode `CrowdContactTests` 11/11 built event scenes.
+- **Decision:** keep. The brains never saw another athlete in training; a "crowd" training run (2-4 colliding athletes
+  per env) is the next step if contact falls feel too frequent (19, 11).
+
+## 2026-09-30 00:00-00:30 · 8 h training block — INTERRUPTED after 26 min (session ended, background jobs died)
+- Done first ("do all"): GPU-sync / per-step lookup fixes in our task code (Rung 2 v5 105k → 137k steps/s, Rung S 97k →
+  111k at 8192 envs; 1.7x the old 4096-env setup), `tools/{watch_gate,plain_init,train_queue.sh}`, reverse-curriculum
+  get-up task (`tasks/getup_env.py`, PoOlympic-MattBio-Getup-Rev: squat → kneel → sit → lying), mattbio crawl task
+  (crawl_matt.onnx on mattbio: 5/5 but 29.7-43.9 s and 13.4 m lane drift vs 0.12 m), mattbio flight task, rsl_rl
+  git-diff UTF-8 crash patched, 28 obsolete runs moved to training/runs_archive (reversible).
+- **rs_v1** (PoOlympic-MattBio-RungS-Stance from rs_init, 8192 envs): 00:04-00:30, stopped at it 213 when the Claude
+  session ended (no traceback; checkpoints 0-200 kept). 4.3-7 s/it: GPU in SW thermal slowdown at its 87 °C target
+  (~40 W of 110 W) and a parallel fit_odds.py (12 workers) pegged the CPU for the first 15 min. It 20 → 213: episode
+  length 498 → 996, skill rewards flamingo 0.024 → 0.33, torso 0.006 → 0.15, march 0.05 → 0.11, squat 0.02 → 0.05,
+  **reach ~0 (not learning)**.
+- The queue (r2bio_v1, r0bio_v1, r2fbio_v1, crawl_bio_v1, getup_rev_v1) never started. The it-200 gate hit two watcher
+  bugs: Rung S report JSON (numpy int64) and Rung 2 drills fed 84 obs to a 95-obs brain.
+- mattbio → MATT promotion still waiting for poolympic-c1 (it owns build_mjcf / event scenes / Unity event code).
+
+## 2026-09-30 09:45-11:xx · Rung S rs_v2 → rs_v3 (MATT, mattbio body)
+- **Watcher fixes:** `eval_cpu.py` JSON default for numpy scalars; `evaluate.Sim` zero-pads the obs to the brain's
+  input width (v4 brains in the Rung 2 drills = zero skill block).
+- **rs_v2** (from rs_v1 model_200, + `skill_reach_coarse` σ 0.50 m, w/2): rs_v1's reach rewards (σ 0.10 / 0.03) paid
+  ~0 from a resting hand 0.5-1.2 m away → reach stuck at 0 for 213 its. With the coarse term: reach_coarse 0 → 0.21,
+  precise reach 0 → 0.020, torso 0.14 → 0.33; squat 0.06 → 0.08, march 0.10 flat, flamingo 0.34 flat; action std
+  rising 0.47 → 0.54 (entropy 12 → 14). G1 S it400 / it600: torso 6/10, others 0/10 (median squat err 0.29 / 0.34 m,
+  flamingo stance slip 0.40 / 0.07 m, march no knee lift, reach 0.30 / 0.25 m); Rung 2 G1 9/10 → **7/10**. Stopped at
+  it 600 (10:37). Throughput 77k → 14k env-steps/s while RealityScan + Maestro ran on the laptop (09:55-10:25).
+- **rs_v3** (from rs_v2 model_600, 600 its, entropy_coef 0.005 → 0.0025 via CLI): squat and march had reach's flaw
+  (σ 0.05 / 0.06 m vs 0.3 m errors) → `skill_squat_coarse` / `skill_march_coarse` σ 0.25 (w/2); flamingo reward × 
+  exp(−|stance-foot xy speed| / 0.05 m/s) (rs_v2 was paid for contact while sliding). Gates at 800 / 1000 / 1199.
+- Review page with TensorBoard charts: `parity/tb/rs_v2/review.html` (tool `training/tools/tb_shots.py`).
+- **rs_v3 it800 gate (11:14):** G1 S torso 7/10, others 0/10; Rung 2 8/10. Median drill: squat err 0.265 m (v2 0.337),
+  reach 0.248, torso 0.093 rad, flamingo slip 0.141 m / 46 touch ticks (v2 it600 0.07 / 9: the slip gate did not
+  help the drill), march **no knee lift**. The march coarse kernel (σ 0.25) pays ~73 % for standing still (lift 0.15-0.30
+  → err² ≈ 0.02) → no reason to march. Stopped at it 800.
+- **rs_v4** (from rs_v3 model_800, 600 its, entropy 0.0025): `skill_march_coarse` → `skill_march_lift` (swing-knee rise /
+  commanded lift while that knee's profile is > 30 % up; standing pays 0), w/2. Gates at 1000 / 1200 / 1399.

@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UI consolidation before/after</title>
+<style>
+  :root { --bg: #0c1220; --panel: #151d31; --ink: #eef1f7; --muted: #a3aec4; --accent: #ffd84a; --new: #ff5a4a; --good: #78e68c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 1280px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { color: var(--accent); font-size: 26px; margin: 0 0 4px; }
+  h2 { font-size: 20px; margin: 40px 0 8px; }
+  p, li { color: var(--muted); }
+  code { color: var(--accent); }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  @media (max-width: 720px) { .pair { grid-template-columns: 1fr; } }
+  figure { margin: 0; background: var(--panel); border-radius: 10px; padding: 12px; }
+  figcaption { margin: 0 0 8px; font-weight: 600; }
+  figcaption.before { color: var(--muted); }
+  figcaption.after { color: var(--good); }
+  .shot { position: relative; line-height: 0; }
+  .shot img { width: 100%; height: auto; display: block; border-radius: 6px; }
+  .mk { position: absolute; border: 3px solid var(--new); border-radius: 6px; box-shadow: 0 0 0 1px rgba(0,0,0,.6); }
+  .mk.old { border-style: dashed; border-color: #ff9a5a; }
+  .mk b { position: absolute; top: -13px; left: -13px; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 13px;
+          background: var(--new); color: #fff; font: 700 14px/26px "Segoe UI", sans-serif; text-align: center; }
+  .mk.old b { background: #ff9a5a; color: #1a1206; }
+  ol, ul { padding-left: 22px; }
+  li { margin: 4px 0; }
+  .tag { display: inline-block; min-width: 22px; padding: 0 5px; border-radius: 11px; background: var(--new); color: #fff; font-weight: 700; text-align: center; font-size: 13px; }
+  .tag.old { background: #ff9a5a; color: #1a1206; }
+  table { border-collapse: collapse; margin-top: 8px; }
+  td, th { padding: 4px 12px; border-bottom: 1px solid #26314d; text-align: left; color: var(--muted); }
+  th { color: var(--ink); }
+</style>
+</head>
+<body>
+<main>
+  <h1>UI consolidation: before vs after</h1>
+  <p>Portrait "top 10" (29 Sep 2026): one viewport and no scrolling, the result shown inside the standings, one shared
+     5-slot anchor frame (<b>top-left</b> title · <b>top-centre</b> FPS · <b>top-right</b> menu · <b>bottom-left</b>
+     debug · <b>bottom-right</b> version), shared size tokens, and a layout test at 4 phone sizes. Portrait Game view
+     960 × 2658 in the editor (narrower than any real phone, so the tightest case).
+     <span class="tag old">A</span> dashed orange = the problem before, <span class="tag">1</span> red = what changed.</p>
+
+  <h2>Main menu</h2>
+  <div class="pair">
+    <figure>
+      <figcaption class="before">Before</figcaption>
+      <div class="shot">
+        <img src="consolidate/before/menu.png" alt="Before: menu with overlapping roster cards, a scrolling event list and a status line under PLAY">
+        <div class="mk old" style="left:5%;top:12.2%;width:33.5%;height:12.8%"><b>A</b></div>
+        <div class="mk old" style="left:57.5%;top:10.2%;width:37.5%;height:12.8%"><b>B</b></div>
+        <div class="mk old" style="left:5%;top:40.2%;width:90%;height:4.9%"><b>C</b></div>
+        <div class="mk old" style="left:5%;top:45.2%;width:90%;height:38.2%"><b>D</b></div>
+        <div class="mk old" style="left:34%;top:96.2%;width:32%;height:1.9%"><b>E</b></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption class="after">After</figcaption>
+      <div class="shot">
+        <img src="consolidate/after/menu.png" alt="After: anchor bar, roster cards, 4x2 lanes, event grid, detail panel, action row, bottom bar">
+        <div class="mk" style="left:2%;top:4%;width:96%;height:5.6%"><b>1</b></div>
+        <div class="mk" style="left:2%;top:10.1%;width:96%;height:5.6%"><b>2</b></div>
+        <div class="mk" style="left:2%;top:16.2%;width:96%;height:11.3%"><b>3</b></div>
+        <div class="mk" style="left:2%;top:28.1%;width:96%;height:44.8%"><b>4</b></div>
+        <div class="mk" style="left:2%;top:73.5%;width:96%;height:15.5%"><b>5</b></div>
+        <div class="mk" style="left:2%;top:89.7%;width:96%;height:5.5%"><b>6</b></div>
+        <div class="mk" style="left:2%;top:95.7%;width:96%;height:4%"><b>7</b></div>
+      </div>
+    </figure>
+  </div>
+  <ul>
+    <li><span class="tag">1</span> New anchor bar: title with the lineup status under it (this was <span class="tag old">E</span>, the status line under PLAY), the FPS pill, and the ☰ menu.</li>
+    <li><span class="tag old">A</span> <span class="tag old">B</span> → <span class="tag">2</span> The roster cards overlapped the LANES heading, and there was a separate "Fill all 8" button with a hint. Now one card per athlete: tap it to put that athlete in all 8 lanes (×8).</li>
+    <li><span class="tag old">C</span> → <span class="tag">3</span> Lanes 7–8 ran into the EVENT row. Now a 4 × 2 grid: tap a lane to switch its athlete. The LANES and ROSTER headings are gone.</li>
+    <li><span class="tag old">D</span> → <span class="tag">4</span> The event ScrollView is now a fixed 3-column grid that grows to fill the screen, so all 11 events are visible with no scrolling.</li>
+    <li><span class="tag">5</span> Detail panel with a fixed height: name, brain badge, rules and world record for the selected event.</li>
+    <li><span class="tag">6</span> One action row: ★ records · GAUNTLET · PLAY (all 104 px tall).</li>
+    <li><span class="tag">7</span> Bottom bar: debug (bottom-left), the last gauntlet result, and the version (bottom-right).</li>
+  </ul>
+
+  <h2>World records: a separate screen → a mode of the menu</h2>
+  <div class="pair">
+    <figure>
+      <figcaption class="before">Before (a second, scrolling screen)</figcaption>
+      <div class="shot">
+        <img src="consolidate/before/menu_records.png" alt="Before: full-screen world records board">
+        <div class="mk old" style="left:4%;top:2.5%;width:92%;height:59.5%"><b>F</b></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption class="after">After (★ on, gauntlet on)</figcaption>
+      <div class="shot">
+        <img src="consolidate/after/menu_records_gauntlet.png" alt="After: world records on every event tile, top 5 in the detail panel, gauntlet order badges">
+        <div class="mk" style="left:2%;top:28.1%;width:96%;height:44.8%"><b>8</b></div>
+        <div class="mk" style="left:2%;top:73.5%;width:96%;height:15.5%"><b>9</b></div>
+        <div class="mk" style="left:17.8%;top:89.7%;width:34%;height:5.5%"><b>10</b></div>
+      </div>
+    </figure>
+  </div>
+  <ul>
+    <li><span class="tag old">F</span> → <span class="tag">8</span> <span class="tag">9</span> The records board is no longer a separate screen. With ★ on, every event tile shows its world record and the detail panel shows the selected event's all-time top 5.</li>
+    <li><span class="tag">10</span> Gauntlet: "GAUNTLET: OFF" is now a chip that lights up with a count, the tiles show their order badges, and PLAY shows how many events.</li>
+  </ul>
+
+  <h2>Race, live (Event 19 Terminal Velocity)</h2>
+  <div class="pair">
+    <figure>
+      <figcaption class="before">Before</figcaption>
+      <div class="shot">
+        <img src="consolidate/before/race_live.png" alt="Before: title block, standings header row, 3-tile stats card, ticker box, button row">
+        <div class="mk old" style="left:3%;top:9%;width:94%;height:1.6%"><b>G</b></div>
+        <div class="mk old" style="left:2%;top:85.8%;width:96%;height:6.4%"><b>H</b></div>
+        <div class="mk old" style="left:2%;top:92.5%;width:96%;height:3.1%"><b>I</b></div>
+        <div class="mk old" style="left:2%;top:95.9%;width:43%;height:3.8%"><b>J</b></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption class="after">After</figcaption>
+      <div class="shot">
+        <img src="consolidate/after/race_live.png" alt="After: anchor bar with clock and menu, 4 standings rows, one-row story strip, bottom bar with ticker">
+        <div class="mk" style="left:2%;top:4.2%;width:40%;height:2.9%"><b>11</b></div>
+        <div class="mk" style="left:43.5%;top:4.6%;width:13.5%;height:2.2%"><b>12</b></div>
+        <div class="mk" style="left:61%;top:3.8%;width:37.5%;height:3.8%"><b>13</b></div>
+        <div class="mk" style="left:2%;top:7.9%;width:96%;height:6.4%"><b>14</b></div>
+        <div class="mk" style="left:2%;top:94.5%;width:96%;height:2.4%"><b>15</b></div>
+        <div class="mk" style="left:2%;top:97%;width:96%;height:2.8%"><b>16</b></div>
+      </div>
+    </figure>
+  </div>
+  <ul>
+    <li><span class="tag">11</span> <span class="tag">12</span> <span class="tag">13</span> Top-left: title with a one-line subtitle ("Event 19" becomes "E19"). Top-centre: FPS. Top-right: the clock and info line next to the ☰ menu. The title block and clock box used to be two separate panels.</li>
+    <li><span class="tag old">G</span> → <span class="tag">14</span> The column header row (# LANE RESULT CONF) is gone. The expand hint ("8 ▼") sits in the last row.</li>
+    <li><span class="tag old">H</span> → <span class="tag">15</span> The 3-tile stats card (about 150 px) is now one 64 px story strip: chip · lane · LEADER / IN TROUBLE / WINNER · speed · power · confidence and sparkline.</li>
+    <li><span class="tag old">I</span> <span class="tag old">J</span> → <span class="tag">16</span> The ticker box and the New heat / Menu buttons are merged into the bottom bar: debug (bottom-left), 2-line ticker, version (bottom-right). New heat and Main menu moved into the ☰ sheet.</li>
+    <li>The camera gap (where the game is visible) is about 17 % taller: in these shots it grows from 1362 to 1590 of 2000 px (68 % → 80 % of the screen).</li>
+  </ul>
+
+  <h2>Race, result</h2>
+  <div class="pair">
+    <figure>
+      <figcaption class="before">Before</figcaption>
+      <div class="shot">
+        <img src="consolidate/before/race_result.png" alt="Before: result card covering the middle of the game">
+        <div class="mk old" style="left:4.6%;top:26.6%;width:90.8%;height:24%"><b>K</b></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption class="after">After</figcaption>
+      <div class="shot">
+        <img src="consolidate/after/race_result.png" alt="After: gold / silver / bronze rows, WR + bests lines, New heat in the bottom bar">
+        <div class="mk" style="left:2.5%;top:7.7%;width:95%;height:5%"><b>17</b></div>
+        <div class="mk" style="left:2.5%;top:14.6%;width:95%;height:3%"><b>18</b></div>
+        <div class="mk" style="left:70%;top:96%;width:24%;height:3.6%"><b>19</b></div>
+        <div class="mk" style="left:18%;top:50.5%;width:64%;height:10.6%"><b>20</b></div>
+      </div>
+    </figure>
+  </div>
+  <ul>
+    <li><span class="tag old">K</span> → <span class="tag">17</span> <span class="tag">18</span> The result card that covered the game is gone. The standings become the result: gold / silver / bronze rows, a WR badge on a record-setting winner, one world-record line (mark · holder · "#5 ALL-TIME" / "NEW RECORD!" pulse), and the heat bests as badges (TOP / PWR / CLOSE).</li>
+    <li><span class="tag">19</span> The primary action appears in the bottom bar (New heat, or Next event in a gauntlet), 104 px tall.</li>
+    <li><span class="tag">20</span> The winner banner shows for 2.5 s and then clears, so the podium and winner shots stay clear.</li>
+  </ul>
+
+  <h2>Iron Pedestal heat (Event 1)</h2>
+  <div class="pair">
+    <figure>
+      <figcaption class="before">Before (result)</figcaption>
+      <div class="shot"><img src="consolidate/before/pedestal_result.png" alt="Before: pedestal result card"></div>
+    </figure>
+    <figure>
+      <figcaption class="after">After (result)</figcaption>
+      <div class="shot"><img src="consolidate/after/pedestal_result.png" alt="After: pedestal result in the standings"></div>
+    </figure>
+    <figure>
+      <figcaption class="before">Before (live)</figcaption>
+      <div class="shot"><img src="consolidate/before/pedestal_live.png" alt="Before: pedestal live"></div>
+    </figure>
+    <figure>
+      <figcaption class="after">After (live: confidence under 90 %, IN TROUBLE story)</figcaption>
+      <div class="shot"><img src="consolidate/after/pedestal_live.png" alt="After: pedestal live"></div>
+    </figure>
+  </div>
+
+  <h2>Menu sheet + debug readout</h2>
+  <div class="pair">
+    <figure>
+      <figcaption class="after">HUD: ☰ sheet (top-right), performance readout (bottom-left)</figcaption>
+      <div class="shot">
+        <img src="consolidate/after/race_sheet_debug.png" alt="After: menu sheet under the top-right button, performance line above the bottom dock">
+        <div class="mk" style="left:57.5%;top:7.6%;width:41%;height:15.8%"><b>21</b></div>
+        <div class="mk" style="left:1%;top:90.8%;width:98%;height:3.7%"><b>22</b></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption class="after">Menu: ☰ sheet (lineup presets)</figcaption>
+      <div class="shot"><img src="consolidate/after/menu_sheet.png" alt="After: menu sheet on the main menu"></div>
+    </figure>
+  </div>
+  <ul>
+    <li><span class="tag">21</span> ☰ sheet: New heat · Main menu · Standings all 8 / top 4 · Performance. On the main menu: All MATT · All ZOMBIE · Alternate · Performance.</li>
+    <li><span class="tag">22</span> The performance line used to float at 19 % from the top, over the game. It now grows up from the bottom-left debug button. The same switch works as before (F3, three-finger tap, or the button).</li>
+  </ul>
+
+  <h2>Checks</h2>
+  <table>
+    <tr><th>Test</th><th>Phones</th><th>Result</th></tr>
+    <tr><td><code>PortraitLayoutTests.Menu_OneViewport</code>: no ScrollView, nothing outside the safe area, text ≥ 28, anchors in their corners, tiles ≥ 104 (plain, ★ + gauntlet, sheet open)</td><td>1080×1920 · Pixel 9 Pro · 720×1280 · 1080×2400</td><td>4 / 4 pass</td></tr>
+    <tr><td><code>PortraitLayoutTests.Hud_OneViewport_EveryPhase</code>: the same checks for Ready / Live / Result, top 4 and all 8, plus sheet open; camera gap ≥ 60 % live, ≥ 55 % at the result</td><td>same 4</td><td>4 / 4 pass</td></tr>
+    <tr><td>All PoOlympic EditMode tests</td><td>—</td><td>58 / 58 pass</td></tr>
+  </table>
+</main>
+</body>
+</html>

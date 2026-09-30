@@ -1,5 +1,7 @@
 """5 The Gust Gauntlet — 8 athletes on spring-mounted shaker platforms (assets/scene_shaker8.xml), Rung 2 brain.
-Mirror of Unity GustGauntletEvent.
+Mirror of Unity GustGauntletEvent. Crowd stage (2026-09-30): all 8 share ONE shaker floor (joints shaker_x/_y) in a
+tight 2 x 4 grid — the wind bursts push the two rows into each other, a floor jolt throws everyone at once (one seeded
+direction per round, FLOOR_SEED); scenes with a platform per lane (L<k>_shaker) keep their own per-lane jolts.
 
 Every athlete homes on its spot (the platform's rest centre = lane origin): each control tick (homing_command, = C#
 GustGauntletEvent.Steer) the offset in the pelvis frame becomes a walk command back, vxy = clip(-HOME_GAIN * offset,
@@ -37,6 +39,7 @@ GUST_SPREAD = math.radians(30)
 SHAKE_EVERY, SHAKE_V = 2, 2.0           # every 2nd round a 2 m/s platform jolt (~16 cm travel at 2 Hz)
 HOME_GAIN, HOME_V, HOME_DEADBAND = 1.5, 0.6, 0.08
 CALM_R, CALM_V, CALM_S = 0.15, 0.2, 0.5
+FLOOR_SEED = 5999                       # shared floor: jolt direction stream
 
 
 def homing_command(quat: np.ndarray, x: float, y: float) -> np.ndarray:
@@ -82,7 +85,9 @@ def run_heat(onnx, seed: int, traits: list[Traits] | None = None, scene=None, la
     traits = traits or [Traits.sample(rng) for _ in range(len(layout["lanes"]))]
     lanes = make_lanes(m, d, layout, seed, traits, onnx, brains)
     mujoco.mj_forward(m, d)
-    shaker = [m.jnt_dofadr[m.joint(ln.prefix + "shaker_x").id] for ln in lanes]
+    shared = any(m.joint(j).name == "shaker_x" for j in range(m.njnt))
+    shaker = [m.jnt_dofadr[m.joint("shaker_x" if shared else ln.prefix + "shaker_x").id] for ln in lanes]
+    floor = np.random.default_rng([seed, FLOOR_SEED])
     res = [GauntletLane(ln.k, ln.traits) for ln in lanes]
     dirs = [np.random.default_rng([seed, 5000 + i]) for i in range(len(lanes))]
     dt = m.opt.timestep * C.DECIMATION
@@ -99,6 +104,9 @@ def run_heat(onnx, seed: int, traits: list[Traits] | None = None, scene=None, la
         if tick in round_ticks:
             r = round_ticks[tick]
             dv = GUST_START + GUST_STEP * r
+            fa = floor.uniform(0, 2 * math.pi)       # shared floor jolt direction (drawn every round)
+            if shared and r % SHAKE_EVERY == SHAKE_EVERY - 1 and any(x.out_at_s is None for x in res):
+                d.qvel[shaker[0]: shaker[0] + 2] += SHAKE_V * np.array([math.cos(fa), math.sin(fa)])
             for i, ln in enumerate(lanes):
                 g = dirs[i]
                 ux, uy = burst(g)
@@ -109,7 +117,7 @@ def run_heat(onnx, seed: int, traits: list[Traits] | None = None, scene=None, la
                     res[i].recoveries.append(ROUND_S)
                 da = ln.ath.root_dofadr
                 d.qvel[da: da + 2] += dv * np.array([ux, uy])
-                if r % SHAKE_EVERY == SHAKE_EVERY - 1:
+                if not shared and r % SHAKE_EVERY == SHAKE_EVERY - 1:
                     d.qvel[shaker[i]: shaker[i] + 2] += SHAKE_V * np.array([math.cos(sa), math.sin(sa)])
                 burst_t[i], calm[i] = tick * dt, 0.0
         for s in range(C.DECIMATION):

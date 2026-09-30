@@ -6,7 +6,8 @@ namespace PoOlympic
     /// <summary>
     /// Minimal testbed HUD (Phase B6 / C6): FPS, sim time, control tick, per-lane pelvis height / distance / state, and
     /// native-MuJoCo interaction buttons (shove, cube drop, reset) acting on the selected lane. The broadcast HUD
-    /// proper is Phase D.
+    /// proper is Phase D. Shared anchors (HudAnchors): TL title + sim time / lanes · TC FPS · TR menu · BL debug
+    /// controls · BR version.
     /// </summary>
     public class TestbedHud : MonoBehaviour
     {
@@ -59,10 +60,11 @@ namespace PoOlympic
             var r = cam != null ? cam.pixelRect : new Rect(0, 0, Screen.width, Screen.height);
             var area = new Rect(r.x, Screen.height - r.yMax, r.width, r.height); // GUI space is y-down
             GUI.Label(new Rect(area.x + 10, area.y + 8, 300, 24), title);
-            GUI.Label(new Rect(area.x + area.width * 0.5f - 110, area.y + 8, 220, 40),
-                $"FPS {_fps:F0}  |  t {Time.fixedTime:F2} s\ntick {(runner ? runner.ControlTick : 0)}");
+            GUI.Label(new Rect(area.x + 10, area.y + 30, 300, 24), $"t {Time.fixedTime:F2} s · tick {(runner ? runner.ControlTick : 0)}");
+            GUI.Label(new Rect(area.x + area.width * 0.5f - 40, area.y + 8, 80, 24), $"FPS {_fps:F0}");
+            if (MeetLineup.MenuAvailable && GUI.Button(new Rect(area.xMax - 90, area.y + 8, 80, 34), "Menu")) MeetLineup.ReturnToMenu();
             if (lanes.Length == 0)
-                GUI.Label(new Rect(area.x + area.width * 0.5f - 110, area.y + 44, 260, 24), $"lane 0: {LaneLine(runner)}");
+                GUI.Label(new Rect(area.x + 10, area.y + 56, 320, 24), $"lane 0: {LaneLine(runner)}");
             else
                 for (int i = 0; i < lanes.Length; i++)
                 {
