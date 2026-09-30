@@ -552,3 +552,9 @@ One entry per run or decision. Newest at the bottom.
 - **Run:** from rs_v4 model_950, 600 its (→ 1549), entropy 0.0025, 8192 envs; 8.8 s/it (GPU 84 °C idle before the start
   → throttled). Gates (watch_gate S,2) at 1150 / 1350 / 1549. Obsolete intermediate rs_v1-v4 checkpoints (not warm-start
   sources) moved to `training/runs_archive/mattbio_stance/` (reversible).
+- **rs_v5 died at it ~1068 (13:55)** with its Claude session — third run lost this way. By then the new guides were
+  learning (it 950 → 1068: leg_progress 0 → 0.29, leg_pose 0 → 0.30, squat 0.095 → 0.14; rs_v4 was flat).
+- **Fix: `training/tools/detached_run.ps1`** — training + watch_gate started through WMI (`Win32_Process.Create`), so the
+  job's parent is WmiPrvSE, outside the session's process tree. **rs_v5b** (14:37): from rs_v5 model_1050, 500 its
+  (→ 1549), entropy 0.0025, same gates (prefix rs_v5 → `parity/watch_rs_v5.jsonl`) at 1150 / 1350 / 1549.
+  2.7 s/it at the start (rs_v5: 8.8 s/it on a throttled GPU). Unity editor open alongside (opened 14:32, left running).
