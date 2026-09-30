@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rung S Leg Guides</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --card: #ffffff; --text: #1d1d1f; --muted: #5d5d66; --line: #e2e0da;
+    --v4: #8e3ee0; --v5: #6aaa3a; --v5b: #e8710a; --v5c: #3c4a5e; --good: #1f8a4c; --warn: #b8660b; --bad: #c2372b;
+    --t1: #fff4d6; --t2: #e3f3ff; --t3: #eeeaf8; --verdict: #e8f6ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+      --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+      --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+    --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+    --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.8rem; margin: 0 0 4px; }
+  h2 { margin: 0 0 4px; font-size: 1.3rem; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+  .verdict { background: var(--verdict); }
+  .verdict p { margin: 6px 0 0; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 10px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+  .up { color: var(--good); font-weight: 600; } .same { color: var(--muted); font-weight: 600; }
+  .down { color: var(--warn); font-weight: 600; } .fail { color: var(--bad); font-weight: 600; }
+  .tag { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--muted); }
+  img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); margin: 12px 0 16px; background: #fff; }
+  .levels { display: grid; gap: 12px; }
+  .lvl { border-radius: 10px; padding: 12px 16px; }
+  .lvl h3 { margin: 0 0 4px; font-size: .95rem; }
+  .lvl p { margin: 0; }
+  .l1 { background: var(--t1); } .l2 { background: var(--t2); } .l3 { background: var(--t3); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 8px; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+  footer { color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Rung S training review: joint-space leg guides</h1>
+  <p class="sub">2026-09-30 15:15, iteration 1549 · MATT (<code>mattbio</code> body) ·
+    <span class="dot" style="background:var(--v4)"></span>rs_v4 = previous recipe (950)
+    <span class="dot" style="background:var(--v5)"></span>rs_v5 (950 → 1068, died with its session)
+    <span class="dot" style="background:var(--v5b)"></span>rs_v5b = same recipe resumed (1050 → 1549)
+    <span class="dot" style="background:var(--v5c)"></span>rs_v5c = continuing now (→ 2548)</p>
+
+  <div class="box verdict">
+    <h2>Verdict: rs_v5 is doing better than rs_v4, but no leg skill passes yet</h2>
+    <p><strong>In one sentence:</strong> telling the robot which way to bend its hips, knees and ankles got the squat and the march moving for the first time, but it still squats about 9 cm too shallow, lifts its knees about 6 cm instead of 15–30 cm, and standing on one leg hasn't improved.</p>
+    <p><strong>Why:</strong> rs_v1–v4 only rewarded the result (pelvis height, knee height). A robot standing straight was too far from any payoff to feel which way to move. rs_v5 adds two rewards on the joint angles of a plausible squat, march or flamingo pose, so every small bend toward the pose now pays. In the training rewards, squat and march lift climb steadily through rs_v5b, where rs_v4 went flat. Flamingo was already close to its drill and doesn't benefit. In the drills, torso aim fell from 7/10 to 4/10 and running from 9/10 to 8/10 while the legs improved, so the new skills are competing a little with the old ones.</p>
+    <div class="scroll">
+    <table>
+      <tr><th>Drill (median of 10 seeds)</th><th>rs_v4 950</th><th>rs_v5 1150</th><th>rs_v5 1350</th><th>rs_v5 1549</th><th>Pass needs</th></tr>
+      <tr><td>E3 Squat, worst depth error</td><td>0.258 m</td><td>0.231</td><td>0.201</td><td class="up">0.139</td><td>&lt; 0.05 (0/10 so far)</td></tr>
+      <tr><td>E7 March, knee lift peak</td><td>1.8 cm</td><td>3.7</td><td>5.2</td><td class="up">6.0</td><td>≥ 75 % of 15–30 cm (0/10)</td></tr>
+      <tr><td>E6 Flamingo, foot touches / stance slip</td><td>154 / 0.18 m</td><td>51 / 0.13</td><td class="up">14 / 0.095</td><td class="down">50 / 0.165</td><td>0 / &lt; 0.10 (0/10)</td></tr>
+      <tr><td>E2 Torso aim, passes</td><td>5/10</td><td>7/10</td><td>5/10</td><td class="down">4/10</td><td>error &lt; 0.15 rad</td></tr>
+      <tr><td>E4 Reach, worst error</td><td>0.227 m</td><td>0.213</td><td>0.209</td><td class="same">0.236</td><td>&lt; 0.08 (0/10)</td></tr>
+      <tr><td>Rung 2 running (G1)</td><td>8/10</td><td>9/10</td><td>9/10</td><td class="same">8/10</td><td>0 falls in every gate</td></tr>
+    </table>
+    </div>
+  </div>
+
+  <section class="box">
+    <h2>1 · Squat: rs_v4 stalled, rs_v5 keeps climbing</h2>
+    <div class="tag">Episode_Reward/skill_squat_coarse (pelvis height vs the squat target, wide kernel σ 0.25 m; same term in both runs)</div>
+    <img src="1_squat.png" alt="Squat reward: rs_v4 plateaus near 0.146; rs_v5 reaches 0.165 by 1068; rs_v5b climbs steadily from 0.15 to 0.21 by 1549">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The robot is learning to sit down low. The orange line goes up and up, so it's getting better!</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This score goes up when the robot's hips get to the right height for a squat. The purple try (old way) got stuck. For the new tries we also told the robot how to bend its knees, and the orange line keeps rising. In the test its squat is now 14 cm off instead of 26 cm. That's much better, but it needs to get within 5 cm to pass.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>Same term in every run, so this is a fair comparison. rs_v4 settled at ~0.146 after its post-resume ramp. rs_v5/v5b rise to ~0.21 (smoothed), still trending up at 1549 with no sign of a plateau. Each resume starts at 0 because the episode buffer refills (~40 iterations); that ramp is an artifact. Drill worst-case depth error 0.258 → 0.139 m. The guide's squat pose comes from an FK table capped at the 24° ankle limit, so the target itself is reachable with flat feet.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>2 · March knee lift: nearly doubled, still far from the target</h2>
+    <div class="tag">Episode_Reward/skill_march_lift (swing-knee rise ÷ commanded lift, only while that knee should be up)</div>
+    <img src="2_march_lift.png" alt="March lift reward: rs_v4 flat at 0.017; rs_v5 0.020; rs_v5b climbs to about 0.031 by 1549">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The robot should lift its knees up high like marching. It's starting to lift them a tiny bit more!</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This score counts how high the robot lifts its knee compared with how high we asked. The old try barely moved. The new one lifts a bit more (orange keeps rising), but it's still a small bump, about 6 cm when we ask for 15–30 cm. Marching means standing on one leg for a moment, which is scary for the robot, so it's learning slowly.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>rs_v4 was flat at ~0.017. rs_v5b reaches ~0.031, and the slope flattens after ~1450. In the drill (1.3 Hz, 0.25 m command), measured knee rise went 1.8 → 3.7 → 5.2 → 6.0 cm across the gates. A known weakness: <code>skill_leg_progress</code> normalises by the default pose's error, floored at 0.1 rad. Near the profile's zero crossings the target is almost the standing pose, so standing still still earns part of the march guide. If rs_v5c plateaus, the fix is to pay march progress only on the swing leg while its profile is up, and/or a lift-height curriculum (start at 5–10 cm).</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>3 · Flamingo: flat in every run</h2>
+    <div class="tag">Episode_Reward/skill_flamingo (lifted foot ≥ 10 cm up, stance foot planted, × slip gate)</div>
+    <img src="3_flamingo.png" alt="Flamingo reward: about 0.10 in rs_v4, rs_v5 and rs_v5b, no trend">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>Standing on one leg like a flamingo. All the lines are the same height, so it isn't getting better.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>The robot already knows how to lift a foot, but its standing foot still slides and its lifted foot sometimes taps the floor. The new knee-bending hint didn't help this trick, because the robot was already bending the knee. What it needs is better balance, not a different pose.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>~0.10 (≈ 2/3 of its ceiling) in rs_v4, v5 and v5b with no trend. The drill bounced: touches 154 → 51 → 14 → 50, slip 0.18 → 0.095 → 0.165 m. Every seed gives nearly identical flamingo numbers (the drill uses a fixed command per seed), so each gate is effectively one sample and checkpoint-to-checkpoint noise is large. The bottleneck is stance-foot stability. The next candidate is an explicit stance-foot velocity penalty or a longer hold, not more pose guidance.</p></div>
+    </div>
+  </section>
+
+  <footer>Charts are TensorBoard screenshots (smoothing 0.6) from <code>training/tools/tb_shots.py</code>. Drill numbers come from
+    <code>parity/watch/g1_rungS_rs_v{4,5}_it*.json</code>, knee lift from a 10 s march probe (1.3 Hz, 0.25 m). rs_v5 died with its Claude session at ~1068.
+    Runs now start through WMI (<code>training/tools/detached_run.ps1</code>). The GPU sat at its 87 °C limit (~40 W) for most of the run.</footer>
+</main>
+</body>
+</html>

@@ -558,3 +558,18 @@ One entry per run or decision. Newest at the bottom.
   job's parent is WmiPrvSE, outside the session's process tree. **rs_v5b** (14:37): from rs_v5 model_1050, 500 its
   (→ 1549), entropy 0.0025, same gates (prefix rs_v5 → `parity/watch_rs_v5.jsonl`) at 1150 / 1350 / 1549.
   2.7 s/it at the start (rs_v5: 8.8 s/it on a throttled GPU). Unity editor open alongside (opened 14:32, left running).
+- **rs_v5b gates** (median of 10 seeds; knee lift from a 10 s march probe at 1.3 Hz / 0.25 m):
+
+  | it | G1 S | squat err | march knee lift | flamingo touch / slip | torso | reach | Rung 2 |
+  |---|---|---|---|---|---|---|---|
+  | rs_v4 950 | torso 5 | 0.258 m | 1.8 cm | 154 / 0.184 m | 5/10 | 0.227 m | 8/10 |
+  | 1150 | torso 7 | 0.231 | 3.7 | 51 / 0.134 | 7/10 | 0.213 | 9/10 |
+  | 1350 | torso 5 | 0.201 | 5.2 | 14 / 0.095 | 5/10 | 0.209 | 9/10 |
+  | 1549 | torso 4 | 0.139 | 6.0 | 50 / 0.165 | 4/10 | 0.236 | 8/10 |
+
+  0 falls in every gate. Squat and march lift finally trend (training: squat_coarse 0.146 → 0.21, march_lift 0.017 →
+  0.031); flamingo training reward flat at ~0.10 in every run (drill is one command per seed → noisy). Torso trades off.
+  Known guide flaw: leg_progress floors err0 at 0.1 rad, so near the march profile's zero crossings standing still pays
+  → if rs_v5c stalls, pay march progress on the swing leg only / lift curriculum. Review: `parity/tb/rs_v5/review.html`.
+- **rs_v5c** (15:11, chained detached via `runs/chain_rs_v5c.ps1`): from rs_v5b model_1549, 1000 its (→ 2548), same
+  recipe, gates at 1800 / 2050 / 2300 / 2548. GPU at its 87 °C limit (~40 W), ~4 s/it → ~70 min.
