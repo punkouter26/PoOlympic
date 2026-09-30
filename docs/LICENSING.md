@@ -20,7 +20,10 @@ below, read on that date. **Not legal advice** — the blockers need a lawyer's 
 | PrimeTween 1.4.11 (Kyrylo Kuzyk) | npm scoped registry (`Packages/manifest.json`) | PrimeTween licence: free in commercial games; do not redistribute its source / tarball | yes | ok (installed as an npm package, as the licence asks) |
 | Impact + interface sounds (Kenney) | `Assets/PoOlympic/Audio/Sfx/`, `Audio/Ui/` | CC0 | yes, credit optional | ok (credit "Kenney.nl" in the credits screen) |
 | Crowd cheering / ambience (Gregor Quendel, "Free Crowd Cheering Sounds", opengameart.org) | `Assets/PoOlympic/Audio/Crowd/` (trimmed loops + stingers) | CC-BY 4.0 | yes, **attribution required** | **credit needed**: "Crowd sounds by Gregor Quendel (CC-BY 4.0)" in the credits / store page |
-| "Olympic" rings / cauldron / name | `SourceArt/Stadium/build_dressing.py`, stadium signage, "POOLYMPICS" | protected marks (e.g. 36 U.S.C. §220506) | **no** without consent | **blocker** |
+| Announcer voice lines (Windows SAPI TTS, "Microsoft David Desktop", generated 2026-09-29) | `Assets/PoOlympic/Audio/Announcer/` | Windows licence terms for the built-in voices (output of a desktop TTS voice in a shipped product: **unverified**) | unverified | **check** — or re-record / use a TTS with explicit commercial terms |
+| Event SFX (starter gun, whistle, air horn, buzzer, PA chime, fanfare, shutter) | `Assets/PoOlympic/Audio/Sfx/Event/` | synthesised in-house (numpy, original fanfare melody) | yes | ok |
+| "Olympic" rings / cauldron | was: stadium scoreboards + facade (`build_dressing.py`) | protected marks (e.g. 36 U.S.C. §220506) | **no** without consent | **removed from the game** (2026-09-29, `build_showcase.py`: rings, facade identity and cauldron moved to the non-exported Offstage collection; scoreboards show the live board) |
+| "Olympic" in the name | "PoOlympic / POOLYMPICS" (LED boards, HUD, title) | protected word (36 U.S.C. §220506) | **no** without consent | **blocker** (name decision) |
 
 ## Details
 
@@ -42,13 +45,14 @@ hosted-service generations (web studio, Tencent Cloud API) fall under a differen
 Sources: https://huggingface.co/tencent/Hunyuan3D-2/blob/main/LICENSE, https://huggingface.co/tencent/Hunyuan3D-2.1/blob/main/LICENSE
 
 **Olympic marks.** The five interlocking rings, "Olympic" and "Olympiad" are reserved in the US (36 U.S.C. §220506) and
-protected elsewhere; the stadium dressing builds a five-ring emblem in the official colours, an Olympic cauldron and
-"POOLYMPICS" signage. Store review / takedown risk.
+protected elsewhere. Since the showcase pass (2026-09-29) the exported stadium has no ring emblem and no cauldron (they
+stay only in the `.blend`'s non-exported Offstage collection); "POOLYMPICS" lettering remains on the LED boards and in
+the UI. Store review / takedown risk until the name is cleared or changed.
 
 ## Checklist before a commercial release
 
-1. Remove the five-ring emblem from `build_dressing.py` (re-export the stadium) and get legal advice on the
-   "PoOlympic / POOLYMPICS" name.
+1. ~~Remove the five-ring emblem~~ (done 2026-09-29, `build_showcase.py`); get legal advice on the
+   "PoOlympic / POOLYMPICS" name. Check the terms of the Windows TTS voice used for the announcer lines (or replace them).
 2. Hunyuan3D: confirm tool + version for ZOMBIE and GRANDMA; replace them with owned / licensed meshes, **or** exclude
    the EU, UK and South Korea from Play Store and Windows distribution.
 3. Avaturn: notify hello@avaturn.me with the store links; get written OK for commercial use and re-rigging; check the

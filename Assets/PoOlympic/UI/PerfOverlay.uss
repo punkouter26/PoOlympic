@@ -1,0 +1,15 @@
+/* PerfOverlay.cs: one telemetry line, top of the camera view, readable over any background. */
+.perf-line {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 19%;
+    padding: 6px 12px;
+    font-size: 28px;
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
+    -unity-text-align: middle-center;
+    white-space: normal;
+    color: rgb(120, 255, 170);
+    background-color: rgba(0, 0, 0, 0.62);
+    border-radius: 8px;
+}

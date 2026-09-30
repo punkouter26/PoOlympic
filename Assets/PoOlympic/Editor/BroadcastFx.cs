@@ -96,6 +96,7 @@ namespace PoOlympic.Editor
             var focus = Child(rig, "FocusProxy").transform;
             var hot = Child(rig, "HotProxy").transform;
             var winner = Child(rig, "WinnerProxy").transform;
+            var leaderT = Child(rig, "LeaderProxy").transform;
             var noise = AssetDatabase.LoadAssetAtPath<NoiseSettings>(NoiseProfile);
             var lens = LensSettings.FromCamera(cam);
             CinemachineCamera Cam(string name, Transform target, float damping, bool handheld, int priority, float screenY = 0f)
@@ -135,10 +136,23 @@ namespace PoOlympic.Editor
             director.high = Cam("CM_HighWide", focus, 0.5f, false, 10);
             director.hot = Cam("CM_Hot_Closeup", hot, 0.25f, true, 10);
             director.winner = Cam("CM_Winner", winner, 0.6f, false, 10, 0.22f);    // below the result card (CM3: +y = lower on screen)
+            director.leaderClose = Cam("CM_Leader_Closeup", leaderT, 0.12f, false, 10, 0f);   // locked on (runners move 4 m/s)
+            var closeLens = director.leaderClose.Lens;
+            closeLens.FieldOfView = 42f;                                            // 3.2 m away: head to feet
+            director.leaderClose.Lens = closeLens;
+            director.leaderProxy = leaderT;
             director.focusProxy = focus;
             director.hotProxy = hot;
             director.winnerProxy = winner;
             director.tension = tension;
+            // camera on the most relevant athletes (user, 2026-09-29): the current winner, and anyone close to falling
+            // calm pacing (user: "too many camera cuts"): ≥ 4 s shots, winner close-ups, near falls ≥ 0.7 danger, 8 s apart
+            director.hotCutDanger = 0.7f;
+            director.minShotSeconds = 4f;
+            director.hotCooldown = 8f;
+            director.closeupSeconds = 8f;
+            director.contextSeconds = 5f;
+            director.leaderSwitchSeconds = 5f;
             EditorUtility.SetDirty(director);
 
             // impact FX pools
@@ -213,6 +227,9 @@ namespace PoOlympic.Editor
             hud.tension = tension;
             hud.arenaAudio = audio;
             EditorUtility.SetDirty(hud);
+
+            // showcase: crowd director, stadium screens, medal ceremony, mixer + PA + crowd sectors, perf overlay
+            StadiumShowcase.InstallBroadcast(hud, director, root, tension, audio, rig);
         }
 
         static GameObject Child(GameObject parent, string name)

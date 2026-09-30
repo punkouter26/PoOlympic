@@ -1,7 +1,16 @@
 {
   "name": "PoOlympic.Runtime",
   "rootNamespace": "PoOlympic",
-  "references": ["Mujoco.Runtime", "Unity.InferenceEngine", "Unity.Cinemachine", "Unity.VisualEffectGraph.Runtime", "PrimeTween.Runtime"],
+  "references": [
+    "Mujoco.Runtime",
+    "Unity.InferenceEngine",
+    "Unity.Cinemachine",
+    "Unity.VisualEffectGraph.Runtime",
+    "PrimeTween.Runtime",
+    "Unity.InputSystem",
+    "Unity.RenderPipelines.Universal.Runtime",
+    "Unity.RenderPipelines.Core.Runtime"
+  ],
   "allowUnsafeCode": true,
   "autoReferenced": true
 }

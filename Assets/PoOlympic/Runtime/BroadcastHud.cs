@@ -16,8 +16,8 @@ namespace PoOlympic
     ///                until a bet is placed / skipped, or betWindowSeconds pass; stake Wallet.Stake coins, paid at the odds
     ///   banner       countdown / GO
     ///   ticker       play-by-play lines (Commentary: start, lead changes, athletes out, result)
-    ///   stats card   live telemetry of the athlete the story is about (TensionMeter.Hot: in trouble / leader /
-    ///                winner): speed + peak, power, cadence, ground contact, joint load, confidence (feature 7)
+    ///   stats card   the athlete the camera is on (BroadcastDirector.Subject: current winner / in trouble / winner):
+    ///                speed + peak, power + peak, confidence (feature 7); refreshed once a second
     ///   result card  podium · bet outcome · world records (top 3, new-record highlight, the record to beat) · heat bests
     ///                · gauntlet points (Gauntlet) · New heat / Next / Menu
     /// Docked layout (user, 2026-09-29: "HUD on top and bottom so the gameplay is not covered"): the layout is authored
@@ -25,6 +25,10 @@ namespace PoOlympic
     /// (stats card + ticker + buttons) are opaque panels, and the camera renders only into the gap between them
     /// (BroadcastCamera.SetViewport). Only the countdown banner and the modal overlays (betting slip, result card) sit
     /// over the game.
+    /// One-screen portrait pass (GFX/UI idea 9, 2026-09-29): the standings show 4 rows (top 3 + the athlete in trouble /
+    /// your bet; tap them for all 8), ODDS only with betting on, CONF only when a brain drops under 90 %, 28 px minimum
+    /// text at 1080 wide, one action row (the result card no longer repeats "New heat"), 104 px buttons, and the safe
+    /// area strips (status / navigation bar) filled with the dock colour instead of black.
     /// </summary>
     [RequireComponent(typeof(UIDocument))]
     public class BroadcastHud : MonoBehaviour
@@ -43,20 +47,28 @@ namespace PoOlympic
         [Tooltip("Feature 7 stats card + confidence column source (optional).")]
         public TensionMeter tension;
         public ArenaAudio arenaAudio;
+        [Tooltip("Stadium screens (optional): world records and winners flash on them.")]
+        public ScreenFeed screens;
+        [Tooltip("Standings rows while collapsed (tap the standings for all).")]
+        public int collapsedRows = 4;
 
         IBroadcastBoard B => board as IBroadcastBoard;
         Odds.Model _odds;
         readonly Commentary _pbp = new();
-        VisualElement _root, _frame, _slip, _card, _rowsBox, _slipRows, _cardBody, _dockTop, _hole, _dockBottom;
+        VisualElement _root, _frame, _slip, _card, _rowsBox, _slipRows, _cardBody, _dockTop, _hole, _dockBottom, _safeTop, _safeBottom;
+        Label _expandHint;
+        Button _barNewHeat;
+        bool _expanded;
         BroadcastCamera _viewCam;
         Label _title, _sub, _clock, _info, _banner, _ticker, _version, _coins, _slipTimer, _cardTitle;
-        Button _cardNewHeat;
         List<(int place, string name, string result, bool bad, PolicyRunner runner)> _frozen;   // gauntlet: the scored heat
         readonly List<(VisualElement row, Label place, Label chip, Label name, Label result, Sparkline spark, Label conf, Label odds)> _rows = new();
         VisualElement _stats;
-        Label _statsChip, _statsName, _statsTag, _sSpeed, _sSpeedSub, _sPower, _sPowerSub, _sCad, _sCadSub, _sContact, _sLoad, _sLoadSub, _sConf;
+        Label _statsChip, _statsName, _statsTag, _sSpeed, _sSpeedSub, _sPower, _sPowerSub, _sConf;
+        float _statsNext;
         Sparkline _statsSpark;
         PolicyRunner _statsFor;
+        BroadcastDirector _director;
         float _lastCall = -99f;
         float _heatTopSpeed, _liveSince;
         readonly Dictionary<PolicyRunner, float> _oddsBy = new();
@@ -75,6 +87,8 @@ namespace PoOlympic
             _root.Clear();
             if (style != null) _root.styleSheets.Add(style);
             _root.pickingMode = PickingMode.Ignore;
+            _safeTop = Add(_root, "bh-safe");                 // status / navigation bar strips: dock colour, not black
+            _safeBottom = Add(_root, "bh-safe");
             _frame = Add(_root, "bh-frame");
             _frame.pickingMode = PickingMode.Ignore;
 
@@ -97,8 +111,11 @@ namespace PoOlympic
             AddLabel(head, "bh-c-name", "LANE");
             AddLabel(head, "bh-c-result", "RESULT");
             AddLabel(head, "bh-c-conf", "CONF");
-            AddLabel(head, "bh-c-odds", "ODDS");
+            // the last column: ODDS with betting on, else the expand hint (rows keep an empty odds cell: aligned)
+            if (offerBets) { AddLabel(head, "bh-c-odds", "ODDS"); _expandHint = new Label(); }
+            else { _expandHint = AddLabel(head, "bh-c-odds", ""); _expandHint.AddToClassList("bh-expand"); }
             _rowsBox = Add(standings, "bh-rows");
+            standings.RegisterCallback<ClickEvent>(_ => _expanded = !_expanded);
 
             _banner = AddLabel(_hole, "bh-banner", "");
             _banner.pickingMode = PickingMode.Ignore;
@@ -107,10 +124,12 @@ namespace PoOlympic
             var bottom = Add(_dockBottom, "bh-bottom");
             _ticker = AddLabel(bottom, "bh-ticker", "");
             var bar = Add(bottom, "bh-bar");
-            Button(bar, "New heat", () => { CloseSlip(); B?.Restart(); }, "bh-btn-small");
+            _barNewHeat = Button(bar, "New heat", () => { CloseSlip(); _card.style.display = DisplayStyle.None; B?.Restart(); }, "bh-btn-small");
             if (MeetLineup.MenuAvailable) Button(bar, "Menu", () => { Gauntlet.Abandon(); MeetLineup.ReturnToMenu(); }, "bh-btn-small");
             _coins = AddLabel(bar, "bh-coins", "");
-            _version = AddLabel(bar, "bh-version", version);
+            _version = AddLabel(bar, "bh-version", "ⓘ " + version.Split('·')[0].Trim());   // tap: performance overlay
+            _version.tooltip = version;
+            _version.RegisterCallback<ClickEvent>(_ => PerfOverlay.Toggle());
 
             // betting slip
             _slip = Add(_frame, "bh-overlay", "bh-slip");
@@ -126,9 +145,7 @@ namespace PoOlympic
             _card = Add(_frame, "bh-overlay", "bh-card");
             _cardTitle = AddLabel(_card, "bh-overlay-title", "RESULT");
             _cardBody = Add(_card, "bh-card-body");
-            var cardBar = Add(_card, "bh-slip-bar");
-            _cardNewHeat = Button(cardBar, "New heat", () => { _card.style.display = DisplayStyle.None; B?.Restart(); }, "bh-btn");
-            _card.style.display = DisplayStyle.None;
+            _card.style.display = DisplayStyle.None;          // its action is the bottom bar's New heat (one action row)
             if (tension != null) { tension.NearFall -= OnNearFall; tension.NearFall += OnNearFall; tension.Save -= OnSave; tension.Save += OnSave; }
         }
 
@@ -173,10 +190,11 @@ namespace PoOlympic
             _clock.text = b.ClockLine;
             _info.text = b.InfoLine;
             _banner.text = _slipOpen || stageDone || b.BoardState == BoardPhase.Result ? "" : b.Banner;
-            _ticker.text = string.Join("\n", _pbp.Lines.AsEnumerable().Reverse().Take(3));
+            _ticker.text = string.Join("\n", _pbp.Lines.AsEnumerable().Reverse().Take(2));
             _coins.text = offerBets ? $"{Wallet.Coins} coins" + (_bet != null ? $" · bet {Short(_bet, rows)} @ {Odds.Format(_betOdds)}" : "") : "";
             DrawRows(rows);
             UpdateStats(b, rows);
+            _barNewHeat.EnableInClassList("bh-btn-primary", b.BoardState == BoardPhase.Result && !Gauntlet.Active);
 
             if (b.BoardState == BoardPhase.Result && _settledHeat != b.Heat) Settle(b, rows);
             if (b.BoardState != BoardPhase.Result && _card.style.display == DisplayStyle.Flex && !Gauntlet.Active) _card.style.display = DisplayStyle.None;
@@ -250,8 +268,27 @@ namespace PoOlympic
         static string Short(PolicyRunner r, List<(int place, string name, string result, bool bad, PolicyRunner runner)> rows) =>
             rows.FirstOrDefault(x => x.runner == r).name ?? "?";
 
-        void DrawRows(List<(int place, string name, string result, bool bad, PolicyRunner runner)> rows)
+        /// <summary>Collapsed standings: the top 3 + the story's 4th row (athlete in trouble, else your bet, else 4th).</summary>
+        List<(int place, string name, string result, bool bad, PolicyRunner runner)> Shown(
+            List<(int place, string name, string result, bool bad, PolicyRunner runner)> rows, out List<int> ranks)
         {
+            ranks = Enumerable.Range(0, rows.Count).ToList();
+            int n = Mathf.Max(1, collapsedRows);
+            _expandHint.text = rows.Count <= n ? "" : _expanded ? "TOP ▴" : $"ALL {rows.Count} ▾";
+            if (_expanded || rows.Count <= n) return rows;
+            var pick = Enumerable.Range(0, n - 1).ToList();
+            var hot = tension != null && tension.HotDanger >= 0.45f ? tension.Hot : null;
+            int extra = rows.FindIndex(r => r.runner != null && r.runner == hot && !r.bad);
+            if (extra < n - 1) extra = rows.FindIndex(r => r.runner != null && r.runner == _bet);
+            if (extra < n - 1) extra = n - 1;
+            pick.Add(extra);
+            ranks = pick;
+            return pick.Select(i => rows[i]).ToList();
+        }
+
+        void DrawRows(List<(int place, string name, string result, bool bad, PolicyRunner runner)> all)
+        {
+            var rows = Shown(all, out var ranks);
             while (_rows.Count < rows.Count)
             {
                 var row = Add(_rowsBox, "bh-row");
@@ -273,16 +310,17 @@ namespace PoOlympic
                 if (!on) continue;
                 var r = rows[i];
                 bool z = Odds.IsZombie(r.runner);
-                ui.place.text = (r.place > 0 ? r.place : i + 1).ToString();
+                ui.place.text = (r.place > 0 ? r.place : ranks[i] + 1).ToString();
                 ui.chip.text = z ? "Z" : "M";
                 ui.chip.EnableInClassList("bh-chip-zombie", z);
                 ui.chip.EnableInClassList("bh-chip-matt", !z);
                 ui.name.text = r.name;
                 ui.result.text = r.result;
-                ui.odds.text = _oddsBy.TryGetValue(r.runner, out var o) ? Odds.Format(o) : "";
+                ui.odds.text = offerBets && _oddsBy.TryGetValue(r.runner, out var o) ? Odds.Format(o) : "";
                 var tel = Telemetry(r.runner);
-                bool hasConf = tel != null && !float.IsNaN(tel.Confidence) && !r.bad;
-                ui.conf.text = hasConf ? $"{tel.Confidence * 100f:0}%" : "—";
+                // confidence only when it tells something: a brain under 90 % (a column of "100%" is noise)
+                bool hasConf = tel != null && !float.IsNaN(tel.Confidence) && !r.bad && tel.Confidence < 0.9f;
+                ui.conf.text = hasConf ? $"{tel.Confidence * 100f:0}%" : r.bad ? "—" : "";
                 ui.conf.style.color = hasConf ? Sparkline.ColorOf(tel.Confidence) : new Color(0.55f, 0.6f, 0.69f);
                 if (tel != null) ui.spark.SetValues(tel.ConfidenceHistory);
                 ui.spark.style.visibility = hasConf ? Visibility.Visible : Visibility.Hidden;
@@ -324,8 +362,8 @@ namespace PoOlympic
             if (eventNumber > 0) WorldRecords(b, winner);
             HeatBests(rows);
             if (winner.name != null) _pbp.Add($"{winner.name} wins — {winner.result}");
+            if (winner.name != null && screens != null) screens.Banner($"{winner.name} WINS", 4f);
             // gauntlet
-            _cardNewHeat.style.display = Gauntlet.Active ? DisplayStyle.None : DisplayStyle.Flex;
             if (Gauntlet.Active && !Gauntlet.CurrentHeatPlayed)
             {
                 Gauntlet.Award(rows.Select(r => (r.name, r.place)));
@@ -377,6 +415,7 @@ namespace PoOlympic
             {
                 _pbp.Add($"WORLD RECORD! {winner.name} — {text}");
                 if (arenaAudio != null) arenaAudio.NewRecord();
+                if (screens != null) screens.Banner("WORLD RECORD", 7f);
                 Tween.Custom(1f, 1.08f, 0.35f, s => tag.style.scale = new Scale(new Vector3(s, s, 1f)), ease: Ease.InOutSine,
                              cycles: 6, cycleMode: CycleMode.Yoyo, useUnscaledTime: true);
             }
@@ -416,11 +455,9 @@ namespace PoOlympic
                 AddLabel(t, "bh-tile-title", title);
                 return (AddLabel(t, "bh-tile-value", "—"), AddLabel(t, "bh-tile-sub", ""));
             }
+            // simple card (user, 2026-09-29: "simplify this … no more than once a second"): speed, power, confidence
             (_sSpeed, _sSpeedSub) = Tile("SPEED");
             (_sPower, _sPowerSub) = Tile("POWER");
-            (_sCad, _sCadSub) = Tile("CADENCE");
-            (_sContact, _) = Tile("CONTACT");
-            (_sLoad, _sLoadSub) = Tile("JOINT LOAD");
             var conf = Add(grid, "bh-tile", "bh-tile-conf");
             AddLabel(conf, "bh-tile-title", "CONFIDENCE");
             var row = Add(conf, "bh-tile-conf-row");
@@ -434,44 +471,50 @@ namespace PoOlympic
         void UpdateStats(IBroadcastBoard b, List<(int place, string name, string result, bool bad, PolicyRunner runner)> rows)
         {
             if (_stats == null) return;
-            PolicyRunner who;
-            string tag;
-            if (b.BoardState == BoardPhase.Result) { who = rows.FirstOrDefault(r => r.place == 1).runner; tag = "WINNER"; }
-            else if (tension != null && tension.Hot != null && tension.HotDanger >= 0.45f) { who = tension.Hot; tag = "IN TROUBLE"; }
-            else { who = rows.FirstOrDefault(r => !r.bad).runner; tag = b.BoardState == BoardPhase.Live ? "LEADER" : "LANE CAM"; }
-            var t = Telemetry(who);
-            bool show = t != null && t.Ready && !_slipOpen;          // docked: shows the winner at the result too
-            _stats.style.visibility = show ? Visibility.Visible : Visibility.Hidden;
-            if (!show) { _statsFor = null; return; }
-            if (who != _statsFor)
+            if (_director == null) _director = FindAnyObjectByType<BroadcastDirector>();
+            // the card follows the camera's story (the athlete on screen) and refreshes once a second: no flicker
+            if (Time.unscaledTime >= _statsNext || _slipOpen)
             {
-                _statsFor = who;
-                Tween.Custom(1.12f, 1f, 0.35f, s => _stats.style.scale = new Scale(new Vector3(s, s, 1f)), ease: Ease.OutBack, useUnscaledTime: true);
-                Tween.Custom(0.2f, 1f, 0.25f, a => _stats.style.opacity = a, useUnscaledTime: true);
+                _statsNext = Time.unscaledTime + 1f;
+                PolicyRunner who;
+                string tag;
+                if (b.BoardState == BoardPhase.Result) { who = rows.FirstOrDefault(r => r.place == 1).runner; tag = "WINNER"; }
+                else
+                {
+                    who = _director != null && _director.Subject != null ? _director.Subject
+                        : tension != null && tension.Leader != null ? tension.Leader : rows.FirstOrDefault(r => !r.bad).runner;
+                    tag = _director != null && _director.Current == BroadcastDirector.Shot.Hot ? "IN TROUBLE"
+                        : b.BoardState == BoardPhase.Live ? "LEADER" : "ON THE LINE";
+                }
+                var t = Telemetry(who);
+                bool show = t != null && t.Ready && !_slipOpen && rows.Any(r => r.runner == who);
+                _stats.style.visibility = show ? Visibility.Visible : Visibility.Hidden;
+                if (!show) _statsFor = null;
+                else
+                {
+                    if (who != _statsFor)
+                    {
+                        _statsFor = who;
+                        Tween.Custom(0.4f, 1f, 0.3f, a => _stats.style.opacity = a, useUnscaledTime: true);
+                    }
+                    var row = rows.First(r => r.runner == who);
+                    bool z = Odds.IsZombie(who);
+                    _statsChip.text = z ? "Z" : "M";
+                    _statsChip.EnableInClassList("bh-chip-zombie", z);
+                    _statsChip.EnableInClassList("bh-chip-matt", !z);
+                    _statsName.text = $"{row.name}  {Body(who)}";
+                    _statsTag.text = tag;
+                    _statsTag.EnableInClassList("bh-stats-tag-hot", tag == "IN TROUBLE");
+                    _sSpeed.text = $"{t.SpeedMps:0.0} m/s";
+                    _sSpeedSub.text = $"peak {t.PeakSpeedMps:0.0}";
+                    _sPower.text = $"{t.PowerW:N0} W";
+                    _sPowerSub.text = $"peak {t.PeakPowerW:N0}";
+                    bool hasConf = !float.IsNaN(t.Confidence);
+                    _sConf.text = hasConf ? $"{t.Confidence * 100f:0}%" : "—";
+                    _sConf.style.color = hasConf ? Sparkline.ColorOf(t.Confidence) : new Color(0.55f, 0.6f, 0.69f);
+                    _statsSpark.SetValues(t.ConfidenceHistory);
+                }
             }
-            var row = rows.First(r => r.runner == who);
-            bool z = Odds.IsZombie(who);
-            _statsChip.text = z ? "Z" : "M";
-            _statsChip.EnableInClassList("bh-chip-zombie", z);
-            _statsChip.EnableInClassList("bh-chip-matt", !z);
-            _statsName.text = $"{row.name}  {Body(who)}";
-            _statsTag.text = tag;
-            _statsTag.EnableInClassList("bh-stats-tag-hot", tag == "IN TROUBLE");
-            _sSpeed.text = $"{t.SpeedMps:0.0} m/s";
-            _sSpeedSub.text = $"peak {t.PeakSpeedMps:0.0}";
-            _sPower.text = $"{t.PowerW:N0} W";
-            _sPowerSub.text = $"peak {t.PeakPowerW:N0}";
-            bool stepping = t.CadenceSpm > 1f;
-            _sCad.text = stepping ? $"{t.CadenceSpm:0} spm" : "—";
-            _sCadSub.text = stepping ? "steps / min" : "standing";
-            _sContact.text = stepping && !who.crawlSteering && t.GroundContactS > 0.01f ? $"{t.GroundContactS:0.00} s" : "—";   // feet only: not on all fours
-            _sLoad.text = $"{t.StressMax * 100f:0}%";
-            _sLoadSub.text = t.StressJoint.Replace("_", " ");
-            _sLoad.style.color = t.StressMax > 0.85f ? new Color(1f, 0.4f, 0.4f) : t.StressMax > 0.6f ? new Color(1f, 0.8f, 0.3f) : new Color(0.94f, 0.95f, 0.97f);
-            bool hasConf = !float.IsNaN(t.Confidence);
-            _sConf.text = hasConf ? $"{t.Confidence * 100f:0}%" : "—";
-            _sConf.style.color = hasConf ? Sparkline.ColorOf(t.Confidence) : new Color(0.55f, 0.6f, 0.69f);
-            _statsSpark.SetValues(t.ConfidenceHistory);
 
             // play-by-play from the telemetry: a new heat top speed (runs above 2.5 m/s), with a cooldown
             if (b.BoardState != BoardPhase.Live) _liveSince = Time.unscaledTime;
@@ -516,6 +559,10 @@ namespace PoOlympic
             float w = br.x - tl.x, h = br.y - tl.y;
             if (w <= 1 || h <= 1) return;
             float s = w / DesignWidth;
+            var full = panel.visualTree.layout;
+            _safeTop.style.left = 0; _safeTop.style.right = 0; _safeTop.style.top = 0; _safeTop.style.height = Mathf.Max(0f, tl.y);
+            _safeBottom.style.left = 0; _safeBottom.style.right = 0; _safeBottom.style.top = br.y;
+            _safeBottom.style.height = float.IsNaN(full.height) ? 0f : Mathf.Max(0f, full.height - br.y);
             _frame.style.left = tl.x;
             _frame.style.top = tl.y;
             _frame.style.width = DesignWidth;

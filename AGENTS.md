@@ -18,13 +18,13 @@ Rules for any AI agent working in this repository (Unity 6000.6 + MuJoCo RL athl
 - When training starts, check TensorBoard for obsolete runs taking up room and remove them.
 - When training in MuJoCo or Isaac Lab, show the app's viewer so the user can watch how the creature moves during and after training. Use Newton's viewer if that is the better option.
 - When 30+ minutes of RL training is needed, close the Unity / Unreal editor if that dramatically speeds up training, and tell the user when it can be opened again (training is over).
-- When a run has more than 30 minutes of training, take screenshots of the 3 most consequential TensorBoard charts, review all 3 and explain in simple terms what they show.
+- When a run has more than 30 minutes of training, take screenshots of the 3 most consequential TensorBoard charts, review all 3 and explain in simple terms what they show. Put the screenshots and review in an HTML file, describing each chart at 3 levels: (1) toddler, (2) child, (3) adult.
 
 ## Unity
 - Interact with Unity through whichever tool gives the best result: Unity CLI pipeline (`unity command …`), https://github.com/CoplayDev/unity-mcp, or https://github.com/IvanMurzak/Unity-MCP.
 - Create as many prefabs / objects in the scene as possible (via MCP / the editor) rather than generating them from code at runtime, so the user can adjust the positions of static objects directly in the scene.
 - To avoid stalling: enable "No Throttling" (Preferences › General › Interaction Mode) in the editor and "Run In Background" in Player settings (via MCP / the Unity CLI); turn on auto-tick so the editor keeps updating in the background.
-- When a change to the UI is made, take an annotated screenshot showing the old and the new UI, with the changes marked.
+- When a change to the UI is made, take an annotated screenshot showing the old and the new UI, with the changes marked. Put it in an HTML file.
 
 ## Platforms
 - Use https://github.com/joanllobera/mujoco-bin/ to compile MuJoCo for Android phones.

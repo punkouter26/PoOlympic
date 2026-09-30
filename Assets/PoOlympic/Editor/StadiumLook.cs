@@ -88,10 +88,11 @@ namespace PoOlympic.Editor
                     data.antialiasing = AntialiasingMode.FastApproximateAntialiasing;
                 }
             ArenaLighting(stadium);
+            StadiumShowcase.Dress(stadium, false);        // screens go live when the broadcast layer is installed
         }
 
         // ---------------------------------------------------------------- indoor arena (SourceArt/Stadium/build_indoor.py)
-        public const float SpotIntensity = 450f, WashIntensity = 320f;
+        public const float SpotIntensity = 450f, WashIntensity = 420f;   // wash baked since the showcase pass (free at runtime)
         public const int FieldSpots = 24;                       // Spot_00-23 field rig, Spot_24+ crowd wash
 
         /// <summary>
@@ -136,8 +137,9 @@ namespace PoOlympic.Editor
                 l.transform.SetParent(rig, false);
                 l.transform.SetPositionAndRotation(t.position, Quaternion.LookRotation(aim.position - t.position));
                 l.type = LightType.Spot;
-                l.spotAngle = wash ? 80f : 70f;
-                l.innerSpotAngle = wash ? 50f : 40f;
+                // crowd wash: wide + very soft (showcase pass: the 80/50 cones left 12 hard ovals on the stands)
+                l.spotAngle = wash ? 115f : 70f;
+                l.innerSpotAngle = wash ? 30f : 40f;
                 l.range = Vector3.Distance(t.position, aim.position) * 1.8f;
                 l.intensity = wash ? WashIntensity : SpotIntensity;
                 l.color = new Color(1f, 0.97f, 0.92f);

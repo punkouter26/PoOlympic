@@ -71,6 +71,8 @@ namespace PoOlympic
             {
                 _heat = b.Heat;
                 _out.Clear();
+                _calm.Clear();
+                _leaderPick = null;
                 _nearSince.Clear();
                 _overSince.Clear();
                 foreach (var r in rows) TelemetryOf(r.runner)?.ResetHeat();
@@ -100,6 +102,8 @@ namespace PoOlympic
                 live++;
                 float d = DangerOf(TelemetryOf(r));
                 Danger[r] = d;
+                // ~3 s smoothed danger: who is steady over time (a gust makes everyone wobble for a moment)
+                _calm[r] = _calm.TryGetValue(r, out var c) ? Mathf.Lerp(c, d, 1f - Mathf.Exp(-Time.unscaledDeltaTime / 3f)) : d;
                 if (d > maxDanger) { maxDanger = d; hot = r; }
                 // near fall → save bookkeeping (live phase only)
                 if (_phase != BoardPhase.Live) continue;
@@ -126,8 +130,10 @@ namespace PoOlympic
                 }
             }
 
-            // leader + closeness (races: progress along the race axis)
-            Leader = rows.FirstOrDefault(x => !x.bad && x.runner != null && x.runner.isActiveAndEnabled).runner;
+            // leader = the current winner: the first live row (events rank their rows live). When the top rows are tied
+            // (Iron Pedestal: everyone still standing reads "IN") the steadiest athlete of the tie — lowest danger — is
+            // the favourite, with hysteresis (a clearly steadier rival, or the pick dropping out of the tie, switches it)
+            Leader = PickLeader(rows);
             float closeness = 0f;
             LeadGapM = float.NaN;
             if (kind == BroadcastDirector.Kind.Race && live >= 2)
@@ -153,6 +159,25 @@ namespace PoOlympic
             };
             float rate = target > Tension ? 4f : 0.6f;          // fast attack, slow release
             Tension += (target - Tension) * (1f - Mathf.Exp(-rate * Time.unscaledDeltaTime));
+        }
+
+        PolicyRunner _leaderPick;
+        float _leaderPickAt = -99f;
+        readonly Dictionary<PolicyRunner, float> _calm = new();
+
+        PolicyRunner PickLeader(List<(int place, string name, string result, bool bad, PolicyRunner runner)> rows)
+        {
+            var live = rows.Where(x => !x.bad && x.runner != null && x.runner.isActiveAndEnabled).ToList();
+            if (live.Count == 0) { _leaderPick = null; return null; }
+            var tied = live.Where(x => x.result == live[0].result).Select(x => x.runner).ToList();
+            if (tied.Count < 2 || _phase != BoardPhase.Live) { _leaderPick = live[0].runner; return _leaderPick; }
+            float D(PolicyRunner r) => _calm.TryGetValue(r, out var d) ? d : 1f;
+            var best = tied.OrderBy(D).First();
+            float now = Time.unscaledTime;
+            // stay on the pick for ≥ 5 s unless it drops out of the tie; then only a clearly steadier rival takes over
+            bool keep = _leaderPick != null && tied.Contains(_leaderPick) && (now - _leaderPickAt < 5f || D(_leaderPick) <= D(best) + 0.1f);
+            if (!keep) { _leaderPick = best; _leaderPickAt = now; }
+            return _leaderPick;
         }
 
         /// <summary>0 = rock solid, 1 = going down.</summary>

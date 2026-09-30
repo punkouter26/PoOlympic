@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Showcase before/after</title>
+<style>
+  :root { --bg: #0c1220; --panel: #151d31; --ink: #eef1f7; --muted: #a3aec4; --accent: #ffd84a; --new: #ff5a4a; --good: #78e68c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 1280px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { color: var(--accent); font-size: 26px; margin: 0 0 4px; }
+  h2 { font-size: 20px; margin: 40px 0 8px; }
+  p, li { color: var(--muted); }
+  code { color: var(--accent); }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  @media (max-width: 720px) { .pair { grid-template-columns: 1fr; } }
+  figure { margin: 0; background: var(--panel); border-radius: 10px; padding: 12px; }
+  figcaption { margin: 0 0 8px; font-weight: 600; }
+  figcaption.before { color: var(--muted); }
+  figcaption.after { color: var(--good); }
+  .shot { position: relative; line-height: 0; }
+  .shot img { width: 100%; height: auto; display: block; border-radius: 6px; }
+  .mk { position: absolute; border: 3px solid var(--new); border-radius: 6px; box-shadow: 0 0 0 1px rgba(0,0,0,.6); }
+  .mk.old { border-style: dashed; border-color: #ff9a5a; }
+  .mk b { position: absolute; top: -13px; left: -13px; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 13px;
+          background: var(--new); color: #fff; font: 700 14px/26px "Segoe UI", sans-serif; text-align: center; }
+  .mk.old b { background: #ff9a5a; color: #1a1206; }
+  ol, ul { padding-left: 22px; }
+  li { margin: 4px 0; }
+  .tag { display: inline-block; min-width: 22px; padding: 0 5px; border-radius: 11px; background: var(--new); color: #fff; font-weight: 700; text-align: center; font-size: 13px; }
+  .tag.old { background: #ff9a5a; color: #1a1206; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; margin-top: 12px; }
+  .grid img { width: 100%; height: auto; display: block; border-radius: 6px; }
+  .grid figcaption { font-weight: 400; color: var(--muted); margin: 8px 0 0; font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Showcase pass: before vs after</h1>
+  <p>GFX / sound top 10 (29 Sep 2026): one-screen portrait HUD, living crowd, live stadium screens, baked arena lighting,
+     light beams, podium ceremony, spatial audio + announcer, performance overlay. Portrait Game view 960 × 2658 in the
+     editor. <span class="tag old">A</span> dashed orange = the problem before, <span class="tag">1</span> red = what changed.</p>
+
+  <h2>Race, live (Event 19 Terminal Velocity)</h2>
+  <div class="pair">
+    <figure>
+      <figcaption class="before">Before</figcaption>
+      <div class="shot">
+        <img src="after/dock_race_live.png" alt="Before: race HUD with 8 standings rows, odds and a column of 100% confidence">
+        <div class="mk old" style="left:1%;top:0%;width:98%;height:3.4%"><b>A</b></div>
+        <div class="mk old" style="left:1.5%;top:9.8%;width:97%;height:11%"><b>B</b></div>
+        <div class="mk old" style="left:71%;top:8.8%;width:16.5%;height:12%"><b>C</b></div>
+        <div class="mk old" style="left:88%;top:8.8%;width:10%;height:12%"><b>D</b></div>
+        <div class="mk old" style="left:0.5%;top:21.4%;width:99%;height:9.8%"><b>E</b></div>
+        <div class="mk old" style="left:1.5%;top:88.3%;width:97%;height:4.8%"><b>F</b></div>
+        <div class="mk old" style="left:1.5%;top:97.2%;width:27%;height:2.5%"><b>G</b></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption class="after">After</figcaption>
+      <div class="shot">
+        <img src="../showcase/after_race_live.png" alt="After: 4 standings rows, bigger stats tiles, big buttons, dense crowd">
+        <div class="mk" style="left:1%;top:0%;width:98%;height:3.4%"><b>1</b></div>
+        <div class="mk" style="left:1.5%;top:10.2%;width:97%;height:6.5%"><b>2</b></div>
+        <div class="mk" style="left:64%;top:8.6%;width:14%;height:1.6%"><b>3</b></div>
+        <div class="mk" style="left:84%;top:8.6%;width:14%;height:1.6%"><b>4</b></div>
+        <div class="mk" style="left:0.5%;top:17.6%;width:99%;height:21%"><b>5</b></div>
+        <div class="mk" style="left:1.5%;top:81.6%;width:97%;height:10.6%"><b>6</b></div>
+        <div class="mk" style="left:1.5%;top:92.4%;width:60%;height:3%"><b>7</b></div>
+        <div class="mk" style="left:1.5%;top:95.6%;width:44%;height:3.8%"><b>8</b></div>
+      </div>
+    </figure>
+  </div>
+  <ul>
+    <li><span class="tag old">A</span> → <span class="tag">1</span> The status-bar strip (phone safe area) was black; it now takes the dock colour.</li>
+    <li><span class="tag old">B</span> → <span class="tag">2</span> Standings: 8 rows used a fifth of the screen. Now 4 rows (top 3 + the athlete in trouble or your bet);
+        tap them for all 8. The camera view is taller.</li>
+    <li><span class="tag old">C</span> → <span class="tag">3</span> CONF showed "100%" on every row (noise). It now appears only when a brain drops under 90 % (see the Iron Pedestal shots below).</li>
+    <li><span class="tag old">D</span> → <span class="tag">4</span> ODDS is hidden while betting is off; the slot shows the "ALL 8 ▾" hint.</li>
+    <li><span class="tag old">E</span> → <span class="tag">5</span> The stands were flat stripes; now 4,704 crowd cards with cut-out fans who stand up, cheer and do the wave with the tension.</li>
+    <li><span class="tag old">F</span> → <span class="tag">6</span> Stats: six tiles with 14-15 px captions ("hip flex l" truncated) → 3 × 2 tiles, no text under 28 px (≈ 10 sp on the phone).</li>
+    <li><span class="tag">7</span> Ticker: two lines at 30 px instead of three at 26 px.</li>
+    <li><span class="tag old">G</span> → <span class="tag">8</span> Buttons were 60 px with the label stuck to the top; now 104 px, centred.</li>
+  </ul>
+
+  <h2>Result (Event 1 Iron Pedestal)</h2>
+  <div class="pair">
+    <figure>
+      <figcaption class="before">Before</figcaption>
+      <div class="shot">
+        <img src="after/dock_pedestal_result.png" alt="Before: result card with its own New heat button over a fallen athlete">
+        <div class="mk old" style="left:1.5%;top:9.8%;width:97%;height:11%"><b>A</b></div>
+        <div class="mk old" style="left:7.5%;top:47.8%;width:21%;height:3.2%"><b>B</b></div>
+        <div class="mk old" style="left:1.5%;top:97.2%;width:27%;height:2.5%"><b>C</b></div>
+        <div class="mk old" style="left:5%;top:52.5%;width:90%;height:27%"><b>D</b></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption class="after">After</figcaption>
+      <div class="shot">
+        <img src="../showcase/after_pedestal_result.png" alt="After: result card without the duplicate button, podium ceremony below, New heat highlighted">
+        <div class="mk" style="left:1.5%;top:10.2%;width:97%;height:6.5%"><b>1</b></div>
+        <div class="mk" style="left:62%;top:11.5%;width:23%;height:5.2%"><b>2</b></div>
+        <div class="mk" style="left:5%;top:47.5%;width:90%;height:3%"><b>3</b></div>
+        <div class="mk" style="left:1.5%;top:95.6%;width:22%;height:3.8%"><b>4</b></div>
+        <div class="mk" style="left:3%;top:52%;width:94%;height:28%"><b>5</b></div>
+        <div class="mk" style="left:1%;top:17.8%;width:98%;height:9%"><b>6</b></div>
+      </div>
+    </figure>
+  </div>
+  <ul>
+    <li><span class="tag old">A</span> → <span class="tag">1</span> Four rows here too (winner + the last three out); tap for all 8.</li>
+    <li><span class="tag">2</span> CONF: the winner's live confidence with its sparkline; athletes who are out show "—".</li>
+    <li><span class="tag old">B</span> → <span class="tag">3</span> The card repeated "New heat" (two identical actions on screen). One action row now: the card just reports.</li>
+    <li><span class="tag old">C</span> → <span class="tag">4</span> The bottom New heat turns green with a white border at the result, so the next step is obvious.</li>
+    <li><span class="tag old">D</span> → <span class="tag">5</span> The winner close-up of a fallen athlete gives way to the medal ceremony: photo statues of the top 3 on the podium, flags up, fanfare.</li>
+    <li><span class="tag">6</span> Confetti and press-camera flashes in the stands (with shutter clicks and the crowd on its feet).</li>
+  </ul>
+
+  <h2>Follow-up: camera on the current winner, simpler stats card</h2>
+  <p>User feedback on the live heats: too many cuts, the camera should show the current winner close enough to see the
+     face (whole body in the picture), never shoot from inside the stands, and the stats card flickered.</p>
+  <div class="pair">
+    <figure>
+      <figcaption class="before">Before</figcaption>
+      <div class="shot">
+        <img src="../showcase/after_race_live.png" alt="Before: wide shot, six-tile stats card">
+        <div class="mk old" style="left:0.5%;top:17.6%;width:99%;height:63.5%"><b>A</b></div>
+        <div class="mk old" style="left:1.5%;top:81.6%;width:97%;height:10.6%"><b>B</b></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption class="after">After</figcaption>
+      <div class="shot">
+        <img src="../showcase/camera_leader_race.png" alt="After: full-body front close-up of the race leader, three-tile stats card">
+        <div class="mk" style="left:18%;top:28%;width:62%;height:48%"><b>1</b></div>
+        <div class="mk" style="left:1.5%;top:85.6%;width:97%;height:6.6%"><b>2</b></div>
+        <div class="mk" style="left:83%;top:85.8%;width:14%;height:1.8%"><b>3</b></div>
+      </div>
+    </figure>
+  </div>
+  <ul>
+    <li><span class="tag old">A</span> → <span class="tag">1</span> Live pacing: a front close-up of the current winner (3.2 m, 42° lens: head to feet,
+        face visible) for ~8 s, then one context shot (trackside / head-on / high-wide; arenas: the slow orbit) for 5 s.
+        No shot under 4 s, no tension-driven fast cutting; the close-up keeps its athlete for the whole shot. A near
+        fall (danger ≥ 0.7, 8 s apart) still cuts to that athlete. In a tie (last one standing) the "winner" is the
+        steadiest athlete over ~3 s, held ≥ 5 s. Every camera is clamped inside the bowl (never past the track's outer
+        edge into the crowd).</li>
+    <li><span class="tag old">B</span> → <span class="tag">2</span> Stats card: speed, power, confidence only; refreshed once a second; it shows the athlete the
+        camera is on.</li>
+    <li><span class="tag">3</span> The tag says why that athlete is on screen: LEADER, IN TROUBLE (near fall) or WINNER.</li>
+  </ul>
+
+  <h2>Stadium (render and audio only)</h2>
+  <div class="grid">
+    <figure><img src="../showcase/after_crowd_close.png" alt="Close view of the crowd cards"><figcaption>Living crowd: 1 m cut-out cards on every row, seated and cheering textures of the same 64 seats per strip; the shader picks who stands and bobs from the heat's tension.</figcaption></figure>
+    <figure><img src="../showcase/after_scoreboard_live.png" alt="Scoreboard showing live standings and camera feed"><figcaption>Live screens: both scoreboards and the video cube show standings, a live camera on the athlete the story is about, event and clock; WORLD RECORD / winner banners.</figcaption></figure>
+    <figure><img src="../showcase/cube_beams.png" alt="Video cube, speakers, catwalks and light beams under the roof"><figcaption>Roof: centre-hung video cube, 8 line-array speakers, catwalks, acoustic panels and soft light beams under the 24 field spots.</figcaption></figure>
+    <figure><img src="../showcase/start_baked.png" alt="Start line with baked lighting"><figcaption>Baked arena lighting (one lightmap per scene, 579 probes for the athletes and podium); the Olympic rings and cauldron are gone from the export.</figcaption></figure>
+    <figure><img src="../showcase/podium.png" alt="Podium and flag poles"><figcaption>Podium with three flag poles on the free infield at the end of the home straight (edit mode: flags parked).</figcaption></figure>
+    <figure><img src="../showcase/stands_wide_baked.png" alt="Wide view of the stands"><figcaption>Soft crowd wash (115° cones, re-aimed between the tiers) instead of 12 hard ovals; infield pads on a granule sports floor with a thin phase-colour border.</figcaption></figure>
+  </div>
+
+  <p>Sources: before = <code>parity/ui/after/dock_*.png</code> (the docked HUD as committed), after = <code>parity/showcase/*.png</code>.
+     Code: <code>SourceArt/Stadium/build_showcase.py</code>, <code>Assets/PoOlympic/Editor/StadiumShowcase.cs</code>,
+     <code>BroadcastHud.cs/.uss</code>, <code>ScreenFeed</code>, <code>CrowdDirector</code>, <code>PodiumCeremony</code>,
+     <code>ArenaAudio</code>, <code>PerfOverlay</code>, shaders <code>PoOlympic/Crowd</code> and <code>PoOlympic/LightBeam</code>.</p>
+</main>
+</body>
+</html>

@@ -65,5 +65,42 @@ namespace PoOlympic.Editor
             ScreenCapture.CaptureScreenshot(full);
             return full;
         }
+
+        /// <summary>Render a free view (temporary camera → render texture → PNG at a project-relative path), in edit or
+        /// Play mode: close-ups of the stadium dressing without moving the broadcast cameras.</summary>
+        public static string RenderView(Vector3 position, Vector3 lookAt, float fov, string projectRelativePath, int width = 1200, int height = 700)
+        {
+            var full = Path.Combine(Path.GetDirectoryName(Application.dataPath), projectRelativePath);
+            Directory.CreateDirectory(Path.GetDirectoryName(full));
+            var go = new GameObject("RenderView_tmp") { hideFlags = HideFlags.HideAndDontSave };
+            var rt = new RenderTexture(width, height, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
+            try
+            {
+                var cam = go.AddComponent<Camera>();
+                cam.transform.SetPositionAndRotation(position, Quaternion.LookRotation(lookAt - position, Vector3.up));
+                cam.fieldOfView = fov;
+                cam.nearClipPlane = 0.1f;
+                cam.farClipPlane = 1500f;
+                cam.targetTexture = rt;
+                var data = UnityEngine.Rendering.Universal.CameraExtensions.GetUniversalAdditionalCameraData(cam);
+                data.renderPostProcessing = true;
+                cam.Render();
+                var prev = RenderTexture.active;
+                RenderTexture.active = rt;
+                var tex = new Texture2D(width, height, TextureFormat.RGB24, false);
+                tex.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+                tex.Apply();
+                RenderTexture.active = prev;
+                File.WriteAllBytes(full, tex.EncodeToPNG());
+                UnityEngine.Object.DestroyImmediate(tex);
+                return full;
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(go);
+                rt.Release();
+                UnityEngine.Object.DestroyImmediate(rt);
+            }
+        }
     }
 }

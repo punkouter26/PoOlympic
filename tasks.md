@@ -283,6 +283,47 @@ apply: TensorBoard + MuJoCo viewer for every run, close Unity during 30 min+ run
     result card / betting slip sit over the game; the winner close-up is framed below the result card. Before/after
     `parity/ui/dock_before_after.png` (in the same HTML page)
   - [ ] Android: rebuild the APK and re-measure (VFX Graph, 8 critics at 10 Hz, audio) on the Pixel 9 Pro
+- [x] **Showcase pass — GFX / sound top 10** (2026-09-29, user: "do all"). Blender half `SourceArt/Stadium/build_showcase.py`
+  (run after build_polish; re-exports Stadium.glb, 125k tris, 240 lane anchors asserted unchanged), Unity half
+  `Editor/StadiumShowcase.cs` (*PoOlympic › Stadium › Upgrade showcase (all scenes)*, called by StadiumLook.Dress +
+  BroadcastFx.Install). All render / audio only (parity untouched).
+  - **1 lighting**: crowd-wash fixtures re-aimed between the tiers + 115°/30° soft cones (no more 12 ovals); baked GI
+    (`Settings/ArenaLighting.lighting`: GPU lightmapper, 3 texels/m, non-directional, AO) with the 36 arena spots baked,
+    key light realtime; 504-probe grid over the event area; ~40 s bake per scene, 1 lightmap
+  - **2 screens**: centre-hung video cube + both scoreboards on `Screen_Live` → `ScreenFeed` (UI Toolkit into a
+    1280×448 render texture: standings | live feed camera of the story athlete at 1/3 rate | event + clock; winner /
+    WORLD RECORD banners); the cube shows the centre 840 px
+  - **3 crowd**: 4,704 one-metre crowd cards on the rows (the fans painted on 0.4 m risers read as thin lines from
+    trackside), seated + cheering textures of the same 64 seats (`Art/Stadium/Crowd/`), `PoOlympic/Crowd` shader (URP
+    Simple Lit lighting + lightmaps): per-seat stand-up / bob from `CrowdDirector` (tension, bursts at the start / saves
+    / result / records, Mexican wave in quiet spells, camera flashes)
+  - **4 roof**: catwalks on the four long trusses, 8 hanging line-array speakers (`Speaker_##`), acoustic ceiling
+    panels, cube cables; 24 light-beam cones (`PoOlympic/LightBeam`: additive, fresnel edge, near / fog fade)
+  - **5 infield**: pads = granule sports floor tinted a muted phase colour (world-scale UVs) + a thin saturated border
+  - **6 podium**: 1-2-3 podium + 3 flag poles on the free infield D; `PodiumCeremony` (2.5 s into the result: photo
+    statues of the top 3 = SkinnedMeshRenderer.BakeMesh on the steps, flags up, confetti, fanfare, flashes;
+    `BroadcastDirector` cuts to `CM_Podium` for 5.5 s)
+  - **7 branding**: Olympic rings, facade identity, cauldron + surroundings → non-exported `Offstage` collection
+    (docs/LICENSING.md updated; the "POOLYMPICS" name is still the open blocker)
+  - **8 audio**: `Audio/PoOlympicMix.mixer` (Crowd / Sfx / Ui / Announcer; snapshots Ready, Live, Result, Announce =
+    duck), 4 spatial crowd sectors, PA announcer (31 lines, Windows TTS; chime, echo; marks / set / lead changes / out /
+    save / photo finish / winner / record / next heat), starter gun / whistle / horn / buzzer / fanfare / shutters
+    (synthesised), arena reverb zone, listener low-pass during hit-stop
+  - **9 HUD** (one screen, portrait): 4 standings rows (top 3 + the story; tap for all 8), ODDS only with betting,
+    CONF only under 90 %, ≥ 28 px text at 1080, 3 stats tiles, 2-line ticker, 104 px buttons, one action row (result
+    card no longer repeats New heat; New heat turns green at the result), safe-area strips in the dock colour.
+    Before / after: `parity/ui/showcase_before_after.html`
+  - **10 perf**: `PerfOverlay` (F3 / three-finger tap / tap ⓘ): fps, CPU / GPU ms, sim ms (FixedUpdate bracketed in
+    the player loop), draw calls, Android thermal + battery °C, quality tier; CSV per second in persistentDataPath/perf;
+    auto quality on phones (render scale −0.1 → beams off + screen feed ⅓ → critics 5 Hz + shadow distance ½)
+  - **camera + card follow-up** (user: "camera on the current winner and anyone close to falling", "too many cuts",
+    "closer so you can see the face", "back up so the whole body is in the picture", "not from behind the stands",
+    stats card "no more than once a second"): `TensionMeter.Leader` = the live ranking's first row, ties (everyone
+    "IN") broken by the steadiest athlete (3 s smoothed danger, held ≥ 5 s); `BroadcastDirector` live = full-body front
+    close-up of the winner (`CM_Leader_Closeup`, 3.2 m, 42°, facing from the pelvis yaw) 8 s ↔ one context shot 5 s,
+    ≥ 4 s per shot, near-fall cuts at danger ≥ 0.7 / 8 s apart, `ClampToBowl` keeps every camera inside the track's
+    outer edge; `Subject` drives the stats card (speed / power / confidence, 1 Hz) and the stadium screens
+  - [ ] Android: rebuild + re-measure with the showcase (baked lighting should pay for the crowd cards / screens)
 - [x] Licensing review (Avaturn, Hunyuan3D) before any commercial release → `docs/LICENSING.md` (2026-09-29). Blockers
   to act on before a store release: Olympic rings / name, Hunyuan3D territory (EU / UK / KR), Avaturn notification +
   attribution; checklist in the doc

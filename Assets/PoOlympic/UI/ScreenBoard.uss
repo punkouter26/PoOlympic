@@ -1,0 +1,59 @@
+/* Stadium screens (ScreenFeed.cs): drawn into a 1280 x 448 render texture, seen from far away — big type, high
+   contrast, no fine lines. The video cube shows only the centre 840 px (.sb-cam). */
+
+.sb-frame {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    flex-direction: row;
+    background-color: rgb(6, 10, 22);
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
+    color: rgb(245, 247, 252);
+}
+
+.sb-left, .sb-right { width: 220px; padding: 14px 14px; }
+.sb-left { border-right-width: 4px; border-right-color: rgb(255, 216, 74); }
+.sb-right { border-left-width: 4px; border-left-color: rgb(120, 220, 255); justify-content: space-between; }
+
+.sb-head { font-size: 22px; letter-spacing: 3px; color: rgb(255, 216, 74); margin-bottom: 8px; }
+.sb-rows { flex-grow: 1; justify-content: space-around; }
+.sb-row { flex-direction: row; flex-wrap: wrap; align-items: center; padding: 4px 6px; border-radius: 6px; }
+.sb-row-first { background-color: rgba(255, 216, 74, 0.22); }
+.sb-row-bad > Label { color: rgb(255, 120, 120); }
+.sb-place { width: 34px; font-size: 34px; color: rgb(255, 216, 74); }
+.sb-lane { font-size: 34px; }
+.sb-result { width: 100%; font-size: 20px; color: rgb(185, 198, 222); overflow: hidden; white-space: nowrap; }
+
+.sb-cam { width: 840px; overflow: hidden; }
+.sb-feed { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
+.sb-brand {
+    position: absolute; left: 18px; top: 14px;
+    font-size: 24px; letter-spacing: 4px;
+    padding: 4px 12px;
+    background-color: rgba(6, 10, 22, 0.7);
+    border-left-width: 6px; border-left-color: rgb(255, 216, 74);
+}
+.sb-bar {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    height: 70px;
+    flex-direction: row; align-items: center; justify-content: space-between;
+    padding: 0 22px;
+    background-color: rgba(6, 10, 22, 0.8);
+}
+.sb-name { font-size: 40px; }
+.sb-tag {
+    font-size: 24px; letter-spacing: 2px;
+    padding: 4px 14px; border-radius: 6px;
+    color: rgb(8, 12, 24); background-color: rgb(120, 220, 255);
+}
+.sb-banner {
+    position: absolute; left: 60px; right: 60px; top: 150px; height: 120px;
+    align-items: center; justify-content: center;
+    background-color: rgba(255, 216, 74, 0.94);
+    border-radius: 12px;
+}
+.sb-banner-text { font-size: 64px; letter-spacing: 4px; color: rgb(10, 14, 28); }
+
+.sb-title { font-size: 30px; white-space: normal; color: rgb(255, 255, 255); }
+.sb-sub { font-size: 20px; color: rgb(175, 188, 212); }
+.sb-clock { font-size: 52px; color: rgb(255, 216, 74); }
+.sb-info { font-size: 20px; white-space: normal; color: rgb(175, 188, 212); }
