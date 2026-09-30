@@ -259,6 +259,18 @@ apply: TensorBoard + MuJoCo viewer for every run, close Unity during 30 min+ run
   `Wallet` (100 start, 10-coin stake, top-up when broke), betting slip before every heat (12 s window; **off by default since 2026-09-29, user: "just play"** — `BroadcastHud.offerBets`, odds column still shown), `Records` (best
   winning mark per event, PlayerPrefs), `Gauntlet` series (menu GAUNTLET toggle: tap events to order them; one heat per
   event, 10-8-6-5-4-3-2-1 points per lane; final podium back on the menu)
+- [x] **Demo (attract) mode** (2026-09-30, user ideas 1 2 3 4 8 9): `Runtime/DemoMode.cs`. Main menu idle 45 s (or ☰ →
+  Demo mode) → endless Gauntlet of the 11 playable events, shuffled per series, random lineup per series (50 % mixed,
+  25 % all one body, 25 % rivalry: 4 v 4 / one among 7); result card counts down "Next event in 6" and advances itself;
+  after the last event the series goes into the season table (PlayerPrefs: series, wins per body, points per event per
+  body; result box + menu) and the next series starts; any tap / key / pad button exits to the menu. `DemoRunner`
+  watchdog skips a stalled event (no board 20 s, Ready 30 s, live > 180 s, result not advanced, 10 exceptions, scene >
+  300 s). Verified in Play: idle start after 46 s, full 11-event series in 7.5 min with 0 skips, rollover into series 2,
+  injected touch exits to MainMenu; EditMode `DemoModeTests` 3/3 (+ RuntimeRules, BroadcastFx, PortraitLayout,
+  Showcase, Steering all pass). Before/after: `parity/ui/demo_before_after.html`.
+  - Found by the watchdog: Gust Gauntlet threw on every shake round in Unity (`mj_name2id("shaker_x")` misses the plug-in
+    name `shaker_x_255` → per-lane `L5_shaker_x` fallback) and All Fours read `xmat[-1]` for the torso tilt (same cause).
+    Fixed with `ModelFingerprint.Id` (suffix-tolerant lookup).
 - [x] **Broadcast FX** (features 2, 3, 5, 6, 7, 10 + world records; 2026-09-29). Free add-ons: Cinemachine 3 (6.6.0),
   Visual Effect Graph 17.6.0 (+ "Additions" sample), PrimeTween 1.4.11 (npm), Kenney CC0 sounds + Gregor Quendel crowd
   (CC-BY 4.0, credit required — docs/LICENSING.md). All render / audio only, read from mjData (parity untouched).

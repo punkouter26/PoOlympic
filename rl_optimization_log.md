@@ -573,3 +573,11 @@ One entry per run or decision. Newest at the bottom.
   → if rs_v5c stalls, pay march progress on the swing leg only / lift curriculum. Review: `parity/tb/rs_v5/review.html`.
 - **rs_v5c** (15:11, chained detached via `runs/chain_rs_v5c.ps1`): from rs_v5b model_1549, 1000 its (→ 2548), same
   recipe, gates at 1800 / 2050 / 2300 / 2548. GPU at its 87 °C limit (~40 W), ~4 s/it → ~70 min.
+- **rs_v5c gates** (G1 S per drill · Rung 2): it1800 squat **10/10**, torso 5, rest 0 · R2 7/10 (1 fall) | it2050 squat 10,
+  torso 7 · R2 5/10 (tracking_lin misses, 0 falls) | it2300 squat 10, torso **8** · R2 8/10 | it2548 squat 10, torso 5,
+  **march 1/10** (first ever) · R2 6/10. Squat solved from 1800 on; torso noisy 5-8; flamingo / reach 0/10. Rung 2 speed
+  tracking erodes with only 20 % locomotion envs → next run: locomotion share up (0.20 → ~0.35), march swing-leg-only
+  progress, flamingo stance-slip penalty; reach needs a new approach. Best checkpoint so far: **it2300**. Cooler Boost
+  measured: 2.9 s/it vs 3.7-4.1 s/it on Auto fans (~30-40 % faster).
+- **Unity:** `Testbed_Stance.unity` (StanceTestbed.Build / Configure, StanceSkillDemo) plays rs_v5 brains on mattbio:
+  squat and torso aim visible, reach short of the target.

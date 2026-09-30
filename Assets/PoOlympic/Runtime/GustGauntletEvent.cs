@@ -129,7 +129,7 @@ namespace PoOlympic
             var d = MjScene.Instance.Data;
             foreach (var a in athletes) a.judge ??= new AthleteJudge(m, a.runner, "ground", a.ShakerPrefix + "shaker", "shaker");
             if (_shared == null)
-                _shared = MujocoLib.mj_name2id(m, (int)MujocoLib.mjtObj.mjOBJ_JOINT, "shaker_x") >= 0;
+                _shared = ModelFingerprint.Id(m, (int)MujocoLib.mjtObj.mjOBJ_JOINT, "shaker_x") >= 0;
             if (_traitsPending) { DrawTraits(); _traitsPending = false; }
             PhaseTime += Time.deltaTime;
             var lead = athletes[0].runner;

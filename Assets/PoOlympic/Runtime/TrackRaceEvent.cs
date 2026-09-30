@@ -148,7 +148,7 @@ namespace PoOlympic
                 if (mode == Mode.Steeplechase && r.gait == null) r.gait = new FootGait(m, r.runner.athletePrefix, minFlight);
                 if (r.torsoId < 0)
                 {
-                    r.torsoId = MujocoLib.mj_name2id(m, (int)MujocoLib.mjtObj.mjOBJ_BODY, r.runner.athletePrefix + "torso");
+                    r.torsoId = ModelFingerprint.Id(m, (int)MujocoLib.mjtObj.mjOBJ_BODY, r.runner.athletePrefix + "torso");
                     double k = r.runner.Contract.SpeedScale;
                     r.lambda = (float)(k * k);
                 }

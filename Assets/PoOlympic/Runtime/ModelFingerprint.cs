@@ -32,6 +32,18 @@ namespace PoOlympic
             return p == IntPtr.Zero ? "" : PluginSuffix.Replace(Marshal.PtrToStringAnsi(p), "");
         }
 
+        /// <summary>mj_name2id for a body or joint by its MJCF name (without the plug-in suffix); -1 if absent. A raw
+        /// mj_name2id("shaker_x") misses "shaker_x_255" (Gust Gauntlet threw on every shake round in Unity).</summary>
+        public static int Id(MujocoLib.mjModel_* m, int type, string name)
+        {
+            int id = MujocoLib.mj_name2id(m, type, name);
+            if (id >= 0) return id;
+            int count = type == ObjBody ? (int)m->nbody : type == ObjJoint ? (int)m->njnt : type == ObjGeom ? (int)m->ngeom : 0;
+            for (int i = 0; i < count; i++)
+                if (Name(m, type, i) == name) return i;
+            return -1;
+        }
+
         public static string Dump(MujocoLib.mjModel_* m, string athletePrefix = "", string cubeName = "cube0")
         {
             string Keep(string n) => athletePrefix.Length == 0 ? n : (n.StartsWith(athletePrefix) ? n.Substring(athletePrefix.Length) : null);

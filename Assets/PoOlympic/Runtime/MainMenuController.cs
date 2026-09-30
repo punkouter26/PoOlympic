@@ -39,6 +39,9 @@ namespace PoOlympic
         public List<MenuEvent> events = new();
         [Tooltip("Event tiles per row of the grid.")]
         public int columns = 3;
+        [Tooltip("Seconds without a tap / key before demo mode starts on its own (0 = never).")]
+        public float idleDemoSeconds = 45f;
+        float _lastInput;
 
         readonly string[] _lineup = new string[8];
         readonly List<(Button tile, Label name)> _slots = new();
@@ -55,15 +58,36 @@ namespace PoOlympic
 
         public HudAnchors Anchors => _anchors;
 
-        void OnEnable() => Populate();
+        void OnEnable()
+        {
+            _lastInput = Time.unscaledTime;
+            Populate();
+        }
 
         void Update()
         {
+            if (Application.isPlaying) IdleDemo();
             // the UIDocument rebuilds its tree when its assets reload: repopulate when our elements are gone
             if (_slotsRoot == null || _slotsRoot.panel == null || _slotsRoot.childCount == 0) Populate();
             if (_anchors == null) return;
             _anchors.Tick();
             FitSafeArea();
+        }
+
+        /// <summary>Demo mode after idleDemoSeconds without a tap, click, key or gamepad button.</summary>
+        void IdleDemo()
+        {
+            if (DemoRunner.AnyInput(held: true)) _lastInput = Time.unscaledTime;
+            else if (idleDemoSeconds > 0f && !DemoMode.Active && Time.unscaledTime - _lastInput > idleDemoSeconds) StartDemo();
+        }
+
+        /// <summary>Endless gauntlet of every playable event with random lineups (DemoMode); scenes with a fixed
+        /// lineup are left out (their lineup would not match the random one).</summary>
+        public void StartDemo()
+        {
+            if (!Application.isPlaying) return;
+            _lastInput = Time.unscaledTime;
+            DemoMode.Begin(events.Where(e => e.lineup == null || e.lineup.Length != _lineup.Length).Select(e => (e.number, e.scene)));
         }
 
         /// <summary>Keep the column inside the safe area (status bar, camera cut-out, navigation bar).</summary>
@@ -194,6 +218,8 @@ namespace PoOlympic
                     RefreshSlots();
                 });
             yield return (HudAnchors.DebugOn ? "Performance: hide" : "Performance: show", () => HudAnchors.DebugOn = !HudAnchors.DebugOn);
+            yield return ($"Demo mode (starts by itself after {idleDemoSeconds:0} s idle)", StartDemo);
+            if (DemoSeason.SeriesPlayed > 0) yield return ("Demo season: reset", () => { DemoSeason.Reset(); UpdateStatus(); });
         }
 
         static Label Chip(string athlete)
@@ -335,7 +361,8 @@ namespace PoOlympic
                 : _gauntletMode ? (_gauntlet.Count == 0 ? "Tap events to build the gauntlet"
                     : $"Gauntlet {string.Join(" → ", _gauntlet.Select(e => e.number.ToString("00")))} · 10-8-6-5-4-3-2-1")
                 : $"{string.Join(" · ", _lineup.GroupBy(a => a).Select(g => $"{g.Count()}× {g.Key}"))}" + (LineupFixed ? " (event lineup)" : "");
-            _last.text = Gauntlet.LastResult.Length > 0 ? "Last gauntlet: " + Gauntlet.LastResult.Replace("\n", " · ") : "";
+            _last.text = (Gauntlet.LastResult.Length > 0 ? "Last gauntlet: " + Gauntlet.LastResult.Replace("\n", " · ") : "") +
+                         (DemoSeason.SeriesPlayed > 0 ? (Gauntlet.LastResult.Length > 0 ? "\n" : "") + "Demo " + DemoSeason.Summary() : "");
         }
 
         static Label MakeLabel(string text, string cls)

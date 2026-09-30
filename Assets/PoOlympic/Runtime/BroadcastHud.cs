@@ -57,6 +57,10 @@ namespace PoOlympic
         /// <summary>Tests / previews: a board that is not a scene component.</summary>
         public IBroadcastBoard BoardOverride { get; set; }
         IBroadcastBoard B => BoardOverride ?? board as IBroadcastBoard;
+        /// <summary>The event board (DemoRunner's watchdog reads its phase).</summary>
+        public IBroadcastBoard Board => B;
+        /// <summary>Unscaled time the current result was settled (-99 before any).</summary>
+        public float ResultSince => _resultSince;
 
         public VisualElement Frame => _frame;
         public VisualElement Hole => _hole;
@@ -230,7 +234,8 @@ namespace PoOlympic
             _pbp.Update(b, Time.unscaledTime);
 
             bool result = stageDone || b.BoardState == BoardPhase.Result;
-            _anchors.Sub.text = $"{subtitle.Replace("Event ", "E")} · {b.SubtitleExtra}";
+            _anchors.Sub.text = (DemoMode.Active ? $"DEMO · tap to exit · {DemoMode.Theme}\n" : "") +   // theme may be cut
+                                $"{subtitle.Replace("Event ", "E")} · {b.SubtitleExtra}";
             _clock.text = b.ClockLine;
             _info.text = b.InfoLine;
             // winner banner only for a moment: the result now lives in the standings, the game stays visible
@@ -245,6 +250,14 @@ namespace PoOlympic
 
             _primary.style.display = result ? DisplayStyle.Flex : DisplayStyle.None;
             _primary.text = stageDone ? (Gauntlet.IsLast ? "Final standings" : "Next event") : "New heat";
+            _primary.SetEnabled(!DemoMode.Active);           // demo: any tap exits, the countdown advances
+            if (DemoMode.Active && stageDone)
+            {
+                float left = DemoMode.ResultSeconds - (Time.unscaledTime - _resultSince);
+                _primary.text = Gauntlet.IsLast ? $"New series in {Mathf.CeilToInt(Mathf.Max(0f, left))}"
+                                                : $"Next event in {Mathf.CeilToInt(Mathf.Max(0f, left))}";
+                if (left <= 0f) DemoMode.Advance(null);
+            }
         }
 
         void NewHeat(IBroadcastBoard b)
@@ -257,7 +270,7 @@ namespace PoOlympic
             _oddsBy.Clear();
             _resultBox.Clear();
             if (Gauntlet.Active && Gauntlet.CurrentHeatPlayed) { b.HoldStart = true; return; }   // one heat per gauntlet stage
-            if (offerBets) { b.HoldStart = true; _slipOpen = true; _slip.style.display = DisplayStyle.Flex; _slipBuilt = false; }
+            if (offerBets && !DemoMode.Active) { b.HoldStart = true; _slipOpen = true; _slip.style.display = DisplayStyle.Flex; _slipBuilt = false; }
         }
 
         bool _slipBuilt;
@@ -414,6 +427,7 @@ namespace PoOlympic
                 _frozen = rows;
                 AddLabel(_resultBox, "bh-card-line", $"GAUNTLET {Gauntlet.Index + 1}/{Gauntlet.Events.Length} · " +
                     string.Join(" · ", Gauntlet.Table().Take(4).Select(t => $"{t.lane} {t.points}")));
+                if (DemoMode.Active && DemoSeason.Summary().Length > 0) AddLabel(_resultBox, "bh-card-line", DemoSeason.Summary());
             }
         }
 

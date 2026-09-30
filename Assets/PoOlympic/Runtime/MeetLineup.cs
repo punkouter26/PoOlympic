@@ -94,11 +94,15 @@ namespace PoOlympic
             Enumerable.Range(0, 8).OrderByDescending(k => _points[k])
                 .Select(k => ($"Lane {k + 1} {MeetLineup.Athletes[k]}", _points[k]));
 
+        /// <summary>Points of lane index 0-7 in the running gauntlet.</summary>
+        public static int PointsOf(int laneIndex) => _points[laneIndex];
+
         public static void Next()
         {
             if (IsLast)
             {
                 LastResult = string.Join("\n", Table().Take(3).Select((x, i) => $"{i + 1}. {x.lane} — {x.points} pts"));
+                if (DemoMode.Active) { DemoMode.SeriesFinished(); return; }   // demo: straight into the next series
                 Abandon();
                 MeetLineup.ReturnToMenu();
                 return;
