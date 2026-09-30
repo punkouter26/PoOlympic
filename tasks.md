@@ -291,7 +291,9 @@ apply: TensorBoard + MuJoCo viewer for every run, close Unity during 30 min+ run
     the gap (`BroadcastCamera.SetViewport`, replaces the 9:16 letterbox in event scenes). Only the countdown banner and the
     result card / betting slip sit over the game; the winner close-up is framed below the result card. Before/after
     `parity/ui/dock_before_after.png` (in the same HTML page)
-  - [ ] Android: rebuild the APK and re-measure (VFX Graph, 8 critics at 10 Hz, audio) on the Pixel 9 Pro
+  - [x] Android: rebuild the APK and re-measure (VFX Graph, 8 critics at 10 Hz, audio) on the Pixel 9 Pro — done
+    2026-09-30 together with the showcase re-measure below
+    (`parity/android/perf/Event_SteeplechaseJog_20260930_133623.csv`)
 - [x] **Showcase pass — GFX / sound top 10** (2026-09-29, user: "do all"). Blender half `SourceArt/Stadium/build_showcase.py`
   (run after build_polish; re-exports Stadium.glb, 125k tris, 240 lane anchors asserted unchanged), Unity half
   `Editor/StadiumShowcase.cs` (*PoOlympic › Stadium › Upgrade showcase (all scenes)*, called by StadiumLook.Dress +
@@ -332,7 +334,12 @@ apply: TensorBoard + MuJoCo viewer for every run, close Unity during 30 min+ run
     close-up of the winner (`CM_Leader_Closeup`, 3.2 m, 42°, facing from the pelvis yaw) 8 s ↔ one context shot 5 s,
     ≥ 4 s per shot, near-fall cuts at danger ≥ 0.7 / 8 s apart, `ClampToBowl` keeps every camera inside the track's
     outer edge; `Subject` drives the stats card (speed / power / confidence, 1 Hz) and the stadium screens
-  - [ ] Android: rebuild + re-measure with the showcase (baked lighting should pay for the crowd cards / screens)
+  - [x] Android: rebuild + re-measure with the showcase (2026-09-30): APK 233 MB (8.5 min build, 14 scenes). 8-athlete
+    Steeplechase heats on the Pixel 9 Pro, 124 s (4+ heats, auto-cycling): **60 fps** every second but the scene-load one
+    (p50 60, CPU frame 16.7 ms = vsync-bound, **GPU 9.2 ms** mean / 10.7 max, sim 5.4 ms = physics + 8 brains + 8 critics),
+    thermal status 0, quality tier 0 throughout, battery 30.5 → 33.7 °C (baseline 2026-09-29: 57.6 fps). Found: the CONF
+    column shows 0 % for every athlete at the start line — the r2f_v3_it100 confidence fit (w_speed 4.3, b −17) was
+    calibrated on running samples only, so a standing athlete (cmd 0) extrapolates to ~0 %; not a device issue (open).
 - [x] **UI consolidation — portrait top 10** (2026-09-29, user: "do all"): one viewport, nothing scrolls, no dropped
   features. Before / after with annotations: `parity/ui/consolidate_before_after.html` (shots in `parity/ui/consolidate/`)
   - **1 anchors** `HudAnchors` (+ `UI/HudAnchors.uss`): one 5-slot frame on every UI Toolkit screen — TL title + one-line

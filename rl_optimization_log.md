@@ -536,3 +536,19 @@ One entry per run or decision. Newest at the bottom.
   → err² ≈ 0.02) → no reason to march. Stopped at it 800.
 - **rs_v4** (from rs_v3 model_800, 600 its, entropy 0.0025): `skill_march_coarse` → `skill_march_lift` (swing-knee rise /
   commanded lift while that knee's profile is > 30 % up; standing pays 0), w/2. Gates at 1000 / 1200 / 1399.
+- **rs_v4 died at it ~966 (12:04)** with its Claude session (no traceback; gates never ran). Gate on the last checkpoint,
+  **it950**: G1 S torso 5/10, squat / flamingo / march / reach 0/10; Rung 2 8/10, 0 falls. `skill_march_lift` flat at
+  ~0.015 the whole run; drill **mean knee peak 0.0 m on all 10 seeds** (cadence 0 Hz), squat worst err 0.18-0.31 m,
+  flamingo 154 touch ticks / 0.18 m slip. Diagnosis: every leg skill is paid in task space only (pelvis height, knee /
+  foot rise) — nothing points the policy toward the pose until it is already close.
+
+## 2026-09-30 13:37 · rs_v5 — joint-space leg guides (MATT, mattbio body)
+- **Change:** `skill_mdp.leg_pose_target` = plausible hip / knee / ankle angles for the commanded skill (hand-set
+  geometry, no mocap): squat from an FK table (flat feet: shin lean = knee − hip = ankle, capped at 24° for the 25° ankle
+  limit → 0.4 m = hip 83° / knee 107° / ankle 24°), march = swing thigh rotated so the knee rises by the profile, shin at
+  its default lean, flamingo = lifted leg hip 0.6 / knee 1.2 rad (foot ≈ 0.14 m up). Rewards (w/2 each):
+  `skill_leg_progress` = 1 − RMS err / RMS err of the default pose (standing pays 0, target 1, linear between) and
+  `skill_leg_pose` exp(−mean err² / 0.25²). C1 PASS.
+- **Run:** from rs_v4 model_950, 600 its (→ 1549), entropy 0.0025, 8192 envs; 8.8 s/it (GPU 84 °C idle before the start
+  → throttled). Gates (watch_gate S,2) at 1150 / 1350 / 1549. Obsolete intermediate rs_v1-v4 checkpoints (not warm-start
+  sources) moved to `training/runs_archive/mattbio_stance/` (reversible).

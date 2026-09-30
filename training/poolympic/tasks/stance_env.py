@@ -53,6 +53,10 @@ def matt_stance_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     r["skill_squat_coarse"] = RewardTermCfg(func=S.skill_squat, weight=w / 2, params={"std": 0.25})
     # rs_v4: the march coarse kernel paid ~73 % for standing still -> replaced by the swing-knee lift fraction
     r["skill_march_lift"] = RewardTermCfg(func=S.skill_march_lift, weight=w / 2)
+    # rs_v5: joint-space leg guides for squat / flamingo / march (rs_v4 it950: no knee lift at all, squats 0.25 m short —
+    # the task-space terms above pay ~0 until the pose is already close). Progress 0 at the default pose -> 1 at target.
+    r["skill_leg_progress"] = RewardTermCfg(func=S.skill_leg_progress, weight=w / 2)
+    r["skill_leg_pose"] = RewardTermCfg(func=S.skill_leg_pose, weight=w / 2, params={"std": 0.25})
     r["skill_torso"] = RewardTermCfg(func=S.skill_torso, weight=w, params={"std": math.radians(9)})
     # coarse term (rs_v2): the resting hand starts 0.5-1.2 m from the target, where std 0.10 pays ~0 (rs_v1 reach stayed 0)
     r["skill_reach_coarse"] = RewardTermCfg(func=S.skill_reach, weight=w / 2, params={"std": 0.50})

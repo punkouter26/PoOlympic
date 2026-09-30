@@ -242,6 +242,128 @@ def skill_march_lift(env, command_name: str = "athlete") -> torch.Tensor:
     return (swing * frac).sum(-1) * (term.mode == MODE["march"])
 
 
+# ---- rs_v5: joint-space leg guides for squat / flamingo / march ------------------------------------------------
+# rs_v1-v4 paid only the task-space result (pelvis height, knee rise, foot rise): a policy that never bends the knees far
+# gets ~no gradient (rs_v4 it950: 0.0 m knee lift in every march drill, squats 0.25 m short). These terms pay the hip /
+# knee / ankle angles of a plausible pose for the commanded skill (hand-set geometry, not mocap). Flat feet: shin lean
+# from vertical s = knee − hip = ankle dorsiflexion (the default pose obeys it: 10 / 20 / 10°).
+LEG_JOINTS = ("hip_flex_l", "knee_l", "ankle_dorsi_l", "hip_flex_r", "knee_r", "ankle_dorsi_r")
+SQUAT_SHIN_MAX = math.radians(24)          # ankle dorsiflexion limit is 25°: heels stay down
+FLAMINGO_HIP, FLAMINGO_KNEE = 0.6, 1.2     # lifted foot ≈ 0.14 m up (bar: 0.10 m clearance)
+
+
+def _leg_geometry() -> dict:
+    """CPU, once: thigh length, default leg angles and the squat table (pelvis drop -> hip / knee / ankle) by forward
+    kinematics of the pelvis-to-foot height with s = min(k / 2, SQUAT_SHIN_MAX), h = k − s, a = s."""
+    import mujoco
+
+    from .mdp import CONTRACT_ACTUATORS, CONTRACT_DEFAULTS
+    m = mujoco.MjModel.from_xml_path(str(C.SCENE_XML))
+    d = mujoco.MjData(m)
+    mujoco.mj_resetDataKeyframe(m, d, m.key("default").id)
+    adr = {n: m.jnt_qposadr[m.joint(n).id] for n in LEG_JOINTS}
+    q0 = d.qpos.copy()
+
+    def leg_height(h: float, k: float, a: float) -> float:
+        d.qpos[:] = q0
+        for side in "lr":
+            d.qpos[adr[f"hip_flex_{side}"]], d.qpos[adr[f"knee_{side}"]], d.qpos[adr[f"ankle_dorsi_{side}"]] = h, k, a
+        mujoco.mj_kinematics(m, d)
+        return float(d.xpos[m.body("pelvis").id][2] - d.xpos[m.body("foot_l").id][2])
+
+    dflt = dict(zip(CONTRACT_ACTUATORS, CONTRACT_DEFAULTS))
+    h0, k0, a0 = dflt["hip_flex_l"], dflt["knee_l"], dflt["ankle_dorsi_l"]
+    base = leg_height(h0, k0, a0)
+    ks = np.linspace(k0, math.radians(140), 300)
+    shin = np.minimum(ks / 2, SQUAT_SHIN_MAX)
+    drops = np.array([base - leg_height(k - s, k, s) for k, s in zip(ks, shin)])
+    drops = np.maximum.accumulate(drops)                        # monotone for interpolation
+    grid = np.linspace(0.0, 0.5, 101)
+    k_of = np.interp(grid, drops, ks)
+    s_of = np.minimum(k_of / 2, SQUAT_SHIN_MAX)
+    mujoco.mj_resetDataKeyframe(m, d, m.key("default").id)
+    mujoco.mj_kinematics(m, d)
+    thigh = float(np.linalg.norm(d.xpos[m.body("shin_l").id] - d.xpos[m.body("thigh_l").id]))
+    return {"h0": h0, "k0": k0, "a0": a0, "thigh": thigh, "squat_grid": grid,
+            "squat_hka": np.stack([k_of - s_of, k_of, s_of], -1), "leg_ix": [CONTRACT_ACTUATORS.index(n) for n in LEG_JOINTS]}
+
+
+class _LegGuide:
+    def __init__(self, env):
+        g = _leg_geometry()
+        dev = env.device
+        self.g = g
+        self.hka = torch.as_tensor(g["squat_hka"], device=dev, dtype=torch.float32)          # [101, 3]
+        self.step = float(g["squat_grid"][1] - g["squat_grid"][0])
+        self.ix = torch.as_tensor(g["leg_ix"], device=dev, dtype=torch.long)
+        self.q0 = torch.tensor([g["h0"], g["k0"], g["a0"]] * 2, device=dev, dtype=torch.float32)
+
+
+def _leg_guide(env) -> _LegGuide:
+    c = getattr(env, "_poolympic_leg_guide", None)
+    if c is None:
+        c = _LegGuide(env)
+        env._poolympic_leg_guide = c
+    return c
+
+
+def leg_pose_target(env, command_name: str = "athlete") -> tuple[torch.Tensor, torch.Tensor]:
+    """[N, 6] target (hip_flex, knee, ankle_dorsi) × (l, r) for the commanded skill, and the [N] mask of guided modes."""
+    term = _term(env, command_name)
+    lg = _leg_guide(env)
+    g = lg.g
+    n = term.mode.shape[0]
+    tgt = lg.q0.expand(n, -1).clone()
+    # squat: both legs from the table
+    depth = (-term.skill[:, 0]).clamp(0.0, 0.5)
+    i = (depth / lg.step).clamp(max=lg.hka.shape[0] - 1.001)
+    i0 = i.floor().long()
+    f = (i - i0)[:, None]
+    hka = lg.hka[i0] * (1 - f) + lg.hka[i0 + 1] * f
+    squat = term.mode == MODE["squat"]
+    tgt = torch.where(squat[:, None], hka.repeat(1, 2), tgt)
+    # march: the swing knee rises by the profile (thigh rotation about the hip), shin keeps its default lean
+    rise = march_profile(term.phase, term.skill[:, 4])                                     # [N, 2]
+    ch = torch.clamp(math.cos(g["h0"]) - rise / g["thigh"], -1.0, 1.0)
+    h = torch.acos(ch)
+    k = h + (g["k0"] - g["h0"])
+    a = torch.full_like(h, g["a0"])
+    march_t = torch.stack([h[:, 0], k[:, 0], a[:, 0], h[:, 1], k[:, 1], a[:, 1]], -1)
+    march = term.mode == MODE["march"]
+    tgt = torch.where(march[:, None], march_t, tgt)
+    # flamingo: the lifted leg folds up (hip 0.6, knee 1.2 rad), the stance leg holds the default
+    lift = term.skill[:, 1:3]                                                               # 1 = that foot lifted
+    fl = lg.q0.expand(n, -1).clone()
+    for side, col in ((0, 0), (1, 3)):
+        up = lift[:, side] > 0.5
+        fl[:, col] = torch.where(up, FLAMINGO_HIP, fl[:, col])
+        fl[:, col + 1] = torch.where(up, FLAMINGO_KNEE, fl[:, col + 1])
+    flam = term.mode == MODE["flamingo"]
+    tgt = torch.where(flam[:, None], fl, tgt)
+    return tgt, squat | march | flam
+
+
+def skill_leg_progress(env, command_name: str = "athlete") -> torch.Tensor:
+    """Linear progress from the default leg pose (0) to the skill's target pose (1): RMS angle error vs the default's
+    error (floored at 0.1 rad). Standing still pays 0, unlike an exp kernel wide enough to reach from standing."""
+    from .mdp import _idx
+    tgt, on = leg_pose_target(env, command_name)
+    lg = _leg_guide(env)
+    q = _idx(env).entity.data.joint_pos[:, _idx(env).joint_ids][:, lg.ix]
+    err = torch.sqrt(((q - tgt) ** 2).mean(-1))
+    err0 = torch.sqrt(((lg.q0 - tgt) ** 2).mean(-1)).clamp(min=0.1)
+    return torch.clamp(1.0 - err / err0, 0.0, 1.0) * on
+
+
+def skill_leg_pose(env, std: float, command_name: str = "athlete") -> torch.Tensor:
+    """Precision on the same target: exp(−mean((q − q*)²) / std²)."""
+    from .mdp import _idx
+    tgt, on = leg_pose_target(env, command_name)
+    lg = _leg_guide(env)
+    q = _idx(env).entity.data.joint_pos[:, _idx(env).joint_ids][:, lg.ix]
+    return torch.exp(-((q - tgt) ** 2).mean(-1) / std**2) * on
+
+
 def skill_torso(env, std: float, command_name: str = "athlete") -> torch.Tensor:
     term = _term(env, command_name)
     err = ((measure_torso_aim(env) - term.skill[:, 5:7]) ** 2).sum(-1)
