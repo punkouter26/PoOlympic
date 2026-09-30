@@ -71,6 +71,31 @@ namespace PoOlympic
         public Transform leaderProxy;
         public float closeupSeconds = 8f, contextSeconds = 5f, leaderSwitchSeconds = 5f;
 
+        [Header("Calm camera (user, 2026-09-30: \"fast movements hurt my eyes\")")]
+        [Tooltip("Ease-in/out blend between shots inside a heat (s): no hard cuts. Only a new heat cuts to the start line.")]
+        public float shotBlendSeconds = 2.5f;
+        [Tooltip("Blend into / out of the close-up of an athlete in trouble (s).")]
+        public float hotBlendSeconds = 2.0f;
+        [Tooltip("Only cameras this close (m) and this similar in direction (deg) blend; farther apart = a cut (a long " +
+                 "blend is a fast fly-through).")]
+        public float blendMaxDistance = 15f, blendMaxAngle = 45f;
+        [Tooltip("Scales every shot length (min shot, close-up, context, leader switch, hot cooldown): fewer shot changes.")]
+        public float pacingScale = 1.5f;
+        [Tooltip("Framing targets move with the athlete's average velocity (no lag); the stride sway (horizontal) and " +
+                 "bob (vertical) are filtered with these time constants (s).")]
+        public float targetSmoothH = 0.5f, targetSmoothV = 1.2f;
+        [Tooltip("Fastest the framing slides over to a different athlete (m/s, on top of the running speed).")]
+        public float switchSpeed = 2.5f;
+        [Tooltip("Fastest the close-up cameras swing round to follow where an athlete faces (deg/s): a spinning athlete " +
+                 "no longer whips the camera around.")]
+        public float maxOrbitDegPerSec = 20f;
+        [Tooltip("Floors for the Cinemachine position / aim damping of the shots (s); close-ups use half.")]
+        public float minPositionDamping = 0.6f, minAimDamping = 0.5f;
+        [Tooltip("Hand-held noise caps (amplitude 0 = tripod).")]
+        public float handheldAmplitude = 0.15f, handheldFrequency = 0.5f;
+        [Tooltip("Camera shake from body slams (Cinemachine impulse gain; 0 = none).")]
+        public float impactShakeGain = 0f;
+
         public Shot Current => _shotNow;
         /// <summary>The athlete the live shot is about: the one close to falling (Hot), the winner at the result, else
         /// the current winner of the heat. The HUD stats card follows it.</summary>
@@ -91,6 +116,37 @@ namespace PoOlympic
         CinemachineBrain _brain;
         readonly Dictionary<PolicyRunner, Quaternion> _startRot = new();
         readonly Dictionary<PolicyRunner, Vector3> _faceSmooth = new();
+        readonly Dictionary<PolicyRunner, int> _faceFrame = new();
+        readonly Glide _focusGlide = new(), _hotGlide = new(), _leaderGlide = new(), _winnerGlide = new();
+
+        /// <summary>
+        /// A framing target that follows an athlete smoothly without lagging behind: it moves with the target's average
+        /// velocity (low-passed, so the stride sway does not get in) and corrects the remaining error slowly (horizontal /
+        /// vertical time constants), at most switchSpeed m/s — a new athlete (a jump of the raw target) is glided to,
+        /// not snapped to.
+        /// </summary>
+        sealed class Glide
+        {
+            const float MaxTrackSpeed = 12f, VelocitySmooth = 0.4f;
+            Vector3 _p, _v, _last;
+            bool _init;
+
+            public Vector3 Step(Vector3 target, bool snap, BroadcastDirector d)
+            {
+                float dt = Time.unscaledDeltaTime;
+                if (!_init || snap) { _p = _last = target; _v = Vector3.zero; _init = true; return _p; }
+                if (dt <= 0f) return _p;
+                var step = (target - _last) / dt;
+                _last = target;
+                if (step.magnitude < MaxTrackSpeed)                      // a jump = another athlete: not a speed
+                    _v = Vector3.Lerp(_v, step, 1f - Mathf.Exp(-dt / VelocitySmooth));
+                _p += _v * dt;
+                var e = target - _p;
+                float h = 1f - Mathf.Exp(-dt / Mathf.Max(0.01f, d.targetSmoothH)), v = 1f - Mathf.Exp(-dt / Mathf.Max(0.01f, d.targetSmoothV));
+                _p += Vector3.ClampMagnitude(new Vector3(e.x * h, e.y * v, e.z * h), d.switchSpeed * dt);
+                return _p;
+            }
+        }
 
         /// <summary>Where the athlete faces (horizontal): every event starts them facing Unity +x; the pelvis' yaw since
         /// the start of the heat turns that (turntable spins, slalom, backward runners).</summary>
@@ -102,10 +158,17 @@ namespace PoOlympic
             var face = p.rotation * Quaternion.Inverse(q0) * Vector3.right;
             face.y = 0f;
             face = face.sqrMagnitude > 0.05f ? face.normalized : Vector3.right;
-            // ~1 s smoothing: the pelvis sways with every stride, the camera must not
+            // ~1.5 s smoothing (the pelvis sways with every stride, the camera must not) and a turn-rate cap (a spinning
+            // athlete must not swing the camera round); once per frame even when two shots ask
             if (!_faceSmooth.TryGetValue(r, out var sm)) sm = face;
-            sm = Vector3.Slerp(sm, face, 1f - Mathf.Exp(-Time.unscaledDeltaTime / 0.9f));
-            _faceSmooth[r] = sm;
+            if (!_faceFrame.TryGetValue(r, out var fr) || fr != Time.frameCount)
+            {
+                float dt = Time.unscaledDeltaTime;
+                var eased = Vector3.Slerp(sm, face, 1f - Mathf.Exp(-dt / 1.5f));
+                sm = Vector3.RotateTowards(sm, eased, maxOrbitDegPerSec * Mathf.Deg2Rad * dt, 0f);
+                _faceSmooth[r] = sm;
+                _faceFrame[r] = Time.frameCount;
+            }
             return sm.sqrMagnitude > 0.01f ? sm.normalized : Vector3.right;
         }
 
@@ -115,6 +178,30 @@ namespace PoOlympic
             if (cam != null) cam.target = null;         // this director owns the framing
             _brain = GetComponent<CinemachineBrain>();
             if (tension == null) tension = FindAnyObjectByType<TensionMeter>();
+            ApplyCalm();
+        }
+
+        /// <summary>Calm camera on the rig the scene builder made (BroadcastFx): damping floors, hand-held noise caps, no
+        /// impact shake, longer shots. At runtime, so the 11 event scenes need no rebuild; tune the fields above.</summary>
+        void ApplyCalm()
+        {
+            foreach (var c in new[] { wide, headOn, high, hot, winner, podium, leaderClose })
+            {
+                if (c == null) continue;
+                float s = c == leaderClose || c == hot ? 0.5f : 1f;       // close-ups stay on a moving athlete
+                if (c.TryGetComponent<CinemachineFollow>(out var follow))
+                    follow.TrackerSettings.PositionDamping = Vector3.Max(follow.TrackerSettings.PositionDamping, Vector3.one * (minPositionDamping * s));
+                if (c.TryGetComponent<CinemachineRotationComposer>(out var aim))
+                    aim.Damping = Vector2.Max(aim.Damping, Vector2.one * (minAimDamping * s));
+                if (c.TryGetComponent<CinemachineBasicMultiChannelPerlin>(out var noise))
+                {
+                    noise.AmplitudeGain = Mathf.Min(noise.AmplitudeGain, handheldAmplitude);
+                    noise.FrequencyGain = Mathf.Min(noise.FrequencyGain, handheldFrequency);
+                }
+                if (c.TryGetComponent<CinemachineImpulseListener>(out var shake)) shake.Gain = impactShakeGain;
+            }
+            float p = Mathf.Max(1f, pacingScale);
+            minShotSeconds *= p; closeupSeconds *= p; contextSeconds *= p; leaderSwitchSeconds *= p; hotCooldown *= p;
         }
 
         Vector3 LeaderPosition(List<((int place, string name, string result, bool bad, PolicyRunner runner) r, Transform t)> bodies)
@@ -169,10 +256,10 @@ namespace PoOlympic
         void Direct(IBroadcastBoard b, List<((int place, string name, string result, bool bad, PolicyRunner runner) r, Transform t)> bodies,
                     Vector3 focus, Vector3 f, Vector3 left)
         {
-            float k = 1f - Mathf.Exp(-followSharpness * Time.unscaledDeltaTime);
-            // a new phase (new heat at the start line, the gun, the result) is a hard cut: no drifting back along the track
-            bool snap = !_init || (_snap && b.BoardState != BoardPhase.Result);
-            focusProxy.position = snap ? focus : Vector3.Lerp(focusProxy.position, focus, k);
+            // only a new heat (back at the start line) is a hard cut: no drifting back along the track; the gun and the
+            // result blend (calm camera)
+            bool snap = !_init || (_snap && b.BoardState == BoardPhase.Ready);
+            focusProxy.position = _focusGlide.Step(focus, snap, this);
             if (snap) foreach (var c in new[] { wide, headOn, high, hot, winner, leaderClose }) if (c != null) c.PreviousStateIsValid = false;
             _snap = false;
             _init = true;
@@ -181,7 +268,7 @@ namespace PoOlympic
             // who is the story right now
             var hotRunner = tension != null && tension.HotDanger >= hotCutDanger ? tension.Hot : null;
             var w = bodies.FirstOrDefault(x => x.r.place == 1);
-            if (w.t != null) winnerProxy.position = w.t.position + Vector3.up * 0.2f;
+            if (w.t != null) winnerProxy.position = _winnerGlide.Step(w.t.position + Vector3.up * 0.2f, snap, this);
             Shot want;
             switch (b.BoardState)
             {
@@ -231,14 +318,17 @@ namespace PoOlympic
             {
                 _hotClock += Time.unscaledDeltaTime;
                 var ht = Pelvis(_hotRunner);
-                if (ht != null) hotProxy.position = Vector3.Lerp(hotProxy.position, ht.position, _shotNow == Shot.Hot ? k * 3f : 1f);
+                // entering: placed on the athlete (the hot camera is not live yet, the blend does the move); then glides
+                if (ht != null) hotProxy.position = _hotGlide.Step(ht.position, snap || _shotNow != Shot.Hot, this);
             }
             // leader close-up target: chest height (the composer centres it, the face sits in the upper third)
             bool crawl = _closeRunner != null && _closeRunner.crawlSteering;
             var lt = Pelvis(_closeRunner);
             if (leaderProxy != null && lt != null)
             {
-                leaderProxy.position = lt.position + Vector3.up * (crawl ? 0.1f : 0.05f);   // mid-body, attached (a lag = a runner off-frame)
+                // mid-body; Glide follows without lag (a lag = a runner off-frame) but filters the stride bob / sway and
+                // slides over to a new leader instead of jumping
+                leaderProxy.position = _leaderGlide.Step(lt.position + Vector3.up * (crawl ? 0.1f : 0.05f), snap, this);
             }
 
             // offsets (world space, relative to the proxies)
@@ -279,14 +369,20 @@ namespace PoOlympic
             _liveSet = true;
             if (_brain != null)
             {
-                _brain.DefaultBlend = s switch
-                {
-                    Shot.Hot => new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.EaseInOut, 0.6f),
-                    Shot.Winner when from == Shot.Podium => new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.Cut, 0f),
-                    Shot.Winner => new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.EaseInOut, 1.1f),
-                    _ when from == Shot.Hot => new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.EaseInOut, 0.7f),
-                    _ => new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.Cut, 0f),   // broadcast cuts
-                };
+                // calm camera (user, 2026-09-30): slow ease-in/out blends between nearby cameras; a far move is a cut —
+                // blending 90 m to the podium in 2.5 s flew the camera at 75 m/s (measured), the worst whip of all
+                var a = CameraOf(from);
+                var bCam = CameraOf(s);
+                bool near = a != null && bCam != null &&
+                            Vector3.Distance(a.transform.position, bCam.transform.position) <= blendMaxDistance &&
+                            Vector3.Angle(a.transform.forward, bCam.transform.forward) <= blendMaxAngle;
+                float secs = s == Shot.Hot || from == Shot.Hot ? hotBlendSeconds : shotBlendSeconds;
+                bool cut = s == Shot.Establishing || !near;
+                _brain.DefaultBlend = cut
+                    ? new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.Cut, 0f)
+                    : new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.EaseInOut, secs);
+                // a cut lands on a camera at rest: no damping catch-up slide just after it (0.4 s at up to 60 m/s measured)
+                if (cut && bCam != null) bCam.PreviousStateIsValid = false;
             }
             var live = CameraOf(s);
             foreach (var c in new[] { wide, headOn, high, hot, winner, podium, leaderClose })
@@ -363,8 +459,9 @@ namespace PoOlympic
             }
             want.y = Mathf.Min(want.y, maxCameraHeight);
             float k = 1f - Mathf.Exp(-followSharpness * Time.unscaledDeltaTime);
-            bool cut = !_init || _cut;             // hard cut between live race shots, smooth moves otherwise
+            bool cut = !_init;                     // calm camera: shot changes glide too (was a hard cut per shot)
             _cut = false;
+            k = Mathf.Min(k, 1f - Mathf.Exp(-1.2f * Time.unscaledDeltaTime));
             _pos = cut ? want : Vector3.Lerp(_pos, want, k);
             _look = cut ? look : Vector3.Lerp(_look, look, k);
             _init = true;

@@ -271,6 +271,14 @@ apply: TensorBoard + MuJoCo viewer for every run, close Unity during 30 min+ run
   - Found by the watchdog: Gust Gauntlet threw on every shake round in Unity (`mj_name2id("shaker_x")` misses the plug-in
     name `shaker_x_255` → per-lane `L5_shaker_x` fallback) and All Fours read `xmat[-1]` for the torso tilt (same cause).
     Fixed with `ModelFingerprint.Id` (suffix-tolerant lookup).
+- [x] **Calm camera** (2026-09-30, user: "fast movements hurt my eyes"): `BroadcastDirector` "Calm camera" fields,
+  applied at runtime (no scene rebuild; tune in the Inspector): 2.5 s ease-in/out blends between nearby cameras (≤ 15 m,
+  ≤ 45°), cuts between far ones (a 2.5 s blend to the podium flew the camera at 75 m/s) landing on a camera at rest;
+  framing targets glide (move with the athlete's average velocity, stride sway / bob filtered 0.5 / 1.2 s, ≤ 2.5 m/s
+  slide to a new athlete); close-ups orbit ≤ 20°/s after a spinning athlete; damping floors 0.6 / 0.5 s (close-ups
+  half); hand-held noise ≤ 0.15; no impact shake; shots 1.5× longer. `Editor/CameraMotionProbe` (per-frame camera
+  speed): fast frames (> 60°/s or > 12 m/s) 21 % → 0.0 % (Turntable), 15 % → 0 % (Terminal Velocity), 0 in Slalom,
+  All Fours, Iron Pedestal; turn p95 144 → 0 °/s.
 - [x] **Broadcast FX** (features 2, 3, 5, 6, 7, 10 + world records; 2026-09-29). Free add-ons: Cinemachine 3 (6.6.0),
   Visual Effect Graph 17.6.0 (+ "Additions" sample), PrimeTween 1.4.11 (npm), Kenney CC0 sounds + Gregor Quendel crowd
   (CC-BY 4.0, credit required — docs/LICENSING.md). All render / audio only, read from mjData (parity untouched).
