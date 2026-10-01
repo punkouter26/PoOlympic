@@ -216,3 +216,22 @@ def grandma_rung2_cap_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     cfg.curriculum = {"command_vel": CurriculumTermCfg(func=vel_mdp.commands_vel, params={
         "command_name": "athlete", "velocity_stages": [dict(last, step=0)]})}
     return cfg
+
+
+GRANDMA_VX_TOP = 3.0         # MATT units (× SS = 2.80 m/s): the Rung 1 top speed, which she tracked (2.8 -> 2.66 m/s)
+
+
+def grandma_rung2_cap28_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """g2_v5 = g2_v4's recipe with the forward command range cut to 3.0 × SS = 2.80 m/s (EXPERIMENT: the G1 bars and the
+    event command scaling are unchanged and still ask up to 3.5-3.7 m/s; lowering them for a "frail" body is a user
+    decision). Every run that commanded up to 4.0 × SS = 3.73 m/s ended with her refusing fast commands, top first
+    (g2_v1b it 1500: 0.24 m/s at >= 2.5; g2_v4 it 300: 3.7 -> 1.83 while 2.8 -> 2.53) with the mean reward RISING, i.e.
+    not attempting the top is what the reward prefers at 60 % strength."""
+    cfg = grandma_rung2_cap_env_cfg(play=play)
+    cmd = cfg.commands["athlete"]
+    env = dict(RUNG2_STAGES[-1])
+    env["lin_vel_x"] = (env["lin_vel_x"][0], GRANDMA_VX_TOP * SS)
+    cmd.ranges.lin_vel_x = env["lin_vel_x"]
+    cfg.curriculum = {"command_vel": CurriculumTermCfg(func=vel_mdp.commands_vel, params={
+        "command_name": "athlete", "velocity_stages": [dict(env, step=0)]})}
+    return cfg

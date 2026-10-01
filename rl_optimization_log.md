@@ -783,3 +783,23 @@ One entry per run or decision. Newest at the bottom.
 - **g2_v4** (05:58): `PoOlympic-Grandma-Rung2-Omni-Cap` = base recipe + `max_lateral_accel` 3.0, full stage-3 envelope
   from the start, entropy 0.001, start std <= 0.3, plain runner, from g2_v1b it 1000; 1200 its (2.7 s/it), gates 300 /
   600 / 900 / 1199. Not a test of the hypothesis alone (entropy and std changed too vs the base run).
+
+## 2026-10-01 06:30 · g2_v4 stopped at it 623 (the cliff again, with the cap) → g2_v5: forward range cut to 2.8 m/s
+- **g2_v4** (base recipe + lateral-accel cap 3, full envelope, entropy 0.001): it 300 **3/10** (0 falls; turntable 2.46 s,
+  brake, backward 10/10; yaw 6, lin 3) · it 600 2/10 (yaw 8, lin 2). Speed probe:
+
+  | command (m/s) | 1.0 | 1.5 | 2.0 | 2.5 | 2.8 | 3.1 | 3.4 | 3.7 |
+  |---|---|---|---|---|---|---|---|---|
+  | start (g2_v1b it1000) | 1.00 | 1.34 | 1.87 | 2.36 | 2.66 | 2.92 | 3.14 | 3.33 |
+  | g2_v4 it300 | 0.95 | 1.33 | 1.73 | 2.24 | 2.53 | 2.67 | 2.51 | 1.83 |
+  | g2_v4 it600 | 0.98 | 1.39 | 1.86 | 2.18 | 1.61 | 0.66 | 0.35 | 0.12 |
+
+  The refusal starts at the top command and moves down (non-monotonic at it 300, a cliff at ~2.6 by it 600) while the
+  mean reward RISES (100 → 114): the cap alone does not prevent it, so the infeasible-turn hypothesis is at best part of
+  the cause. At 60 % strength the 3.3-3.7 m/s band is not worth attempting under this reward (falls cost −200 × …,
+  the kernels pay little for a 0.4 m/s shortfall).
+- **g2_v5** (06:29): `PoOlympic-Grandma-Rung2-Omni-Cap28` = g2_v4's recipe with vx ∈ [−1.40, **2.80**] m/s (3.0 × SS, her
+  Rung 1 top), same warm start, 1200 its, gates 300 / 600 / 900 / 1199. EXPERIMENT ONLY: G1 still samples sprints to
+  3.55 m/s and events still scale commands by √λ, so official G1 cannot reach 10/10 with this brain; the reading
+  "segments with |vx| <= 2.8" is reported next to it. Lowering her envelope (and the bars / event commands with it)
+  is a user decision.
