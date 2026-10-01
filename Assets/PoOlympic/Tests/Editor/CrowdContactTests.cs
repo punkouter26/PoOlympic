@@ -22,7 +22,9 @@ namespace PoOlympic.Tests
     {
         static IEnumerable<string> EventScenes() => PoOlympic.Editor.EventScenes.EventScenePaths.Values.Distinct().OrderBy(p => p);
 
+        // roster scenes hold 3 bodies per lane (24 athletes, 145,656 part pairs): ~1 min each, up to 5 min on a busy editor
         [TestCaseSource(nameof(EventScenes))]
+        [Timeout(900000)]
         public void EveryPartCollidesWithEveryPartOfTheOtherLanes(string scenePath)
         {
             EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);

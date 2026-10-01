@@ -145,13 +145,14 @@ namespace PoOlympic
                 var card = new Button(() => FillAll(athlete)) { tooltip = MeetLineup.Stats(athlete).Replace("\n", " · ") };
                 card.AddToClassList("athlete-card");
                 card.EnableInClassList("athlete-card--gap", athlete != MeetLineup.Roster[^1]);
-                card.Add(Chip(athlete));
-                var text = new VisualElement();
-                text.AddToClassList("athlete-text");
-                text.Add(MakeLabel(athlete, "athlete-name"));
-                text.Add(MakeLabel(MeetLineup.Stats(athlete).Split('\n')[0], "athlete-stats"));
-                card.Add(text);
-                card.Add(MakeLabel("×8", "athlete-fill"));
+                // three cards share the row: chip + name + ×8 on one line, the stats on their own line below
+                var head = new VisualElement();
+                head.AddToClassList("athlete-head");
+                head.Add(Chip(athlete));
+                head.Add(MakeLabel(athlete, "athlete-name"));
+                head.Add(MakeLabel("×8", "athlete-fill"));
+                card.Add(head);
+                card.Add(MakeLabel(MeetLineup.Stats(athlete).Split('\n')[0], "athlete-stats"));
                 roster.Add(card);
             }
 
@@ -372,16 +373,18 @@ namespace PoOlympic
                 : !loadable ? $"{_selected.scene} is not in Build Settings"
                 : _gauntletMode ? (_gauntlet.Count == 0 ? "Tap events to build the gauntlet"
                     : $"Gauntlet {string.Join(" → ", _gauntlet.Select(e => e.number.ToString("00")))} · 10-8-6-5-4-3-2-1")
-                : $"{string.Join(" · ", _lineup.GroupBy(a => a).Select(g => $"{g.Count()}× {g.Key}"))}" + (LineupFixed ? " (event lineup)" : "") + SitOutNote();
+                : SitOutNote() ?? $"{string.Join(" · ", _lineup.GroupBy(a => a).Select(g => $"{g.Count()}× {g.Key}"))}" + (LineupFixed ? " (event lineup)" : "");
             _last.text = (Gauntlet.LastResult.Length > 0 ? "Last gauntlet: " + Gauntlet.LastResult.Replace("\n", " · ") : "") +
                          (DemoSeason.SeriesPlayed > 0 ? (Gauntlet.LastResult.Length > 0 ? "\n" : "") + "Demo " + DemoSeason.Summary() : "");
         }
 
-        /// <summary>" · GRANDMA → MATT here" when picked athletes have no brain for the selected event.</summary>
+        /// <summary>"GRANDMA → MATT here" when picked athletes have no brain for the selected event (their lane tiles are
+        /// dimmed), "MATT-only event" when the scene holds one body; null when everyone picked takes part.</summary>
         string SitOutNote()
         {
             var sitting = _lineup.Where(a => a != null && !InEvent(a)).Distinct().ToArray();
-            return sitting.Length == 0 ? "" : $" · {string.Join(", ", sitting)} → {StandIn} here";
+            if (sitting.Length == 0) return null;
+            return _selected.bodies.Length == 1 ? $"{StandIn}-only event" : $"{string.Join(", ", sitting)} → {StandIn} here";
         }
 
         static Label MakeLabel(string text, string cls)

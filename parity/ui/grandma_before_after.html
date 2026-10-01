@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GRANDMA and Cadence March UI</title>
+<style>
+  :root { --bg: #0c1220; --panel: #151d31; --ink: #eef1f7; --muted: #a3aec4; --accent: #ffd84a; --new: #ff5a4a; --good: #78e68c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 1280px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { color: var(--accent); font-size: 26px; margin: 0 0 4px; }
+  h2 { font-size: 20px; margin: 40px 0 8px; }
+  p, li { color: var(--muted); }
+  code { color: var(--accent); }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  @media (max-width: 720px) { .pair { grid-template-columns: 1fr; } }
+  figure { margin: 0; background: var(--panel); border-radius: 10px; padding: 12px; }
+  figcaption { margin: 0 0 8px; font-weight: 600; }
+  figcaption.before { color: var(--muted); }
+  figcaption.after { color: var(--good); }
+  .shot { position: relative; line-height: 0; }
+  .shot img { width: 100%; height: auto; display: block; border-radius: 6px; }
+  .mk { position: absolute; border: 3px solid var(--new); border-radius: 6px; box-shadow: 0 0 0 1px rgba(0,0,0,.6); }
+  .mk.old { border-style: dashed; border-color: #ff9a5a; }
+  .mk b { position: absolute; top: -13px; left: -13px; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 13px;
+          background: var(--new); color: #fff; font: 700 14px/26px "Segoe UI", sans-serif; text-align: center; }
+  .mk.old b { background: #ff9a5a; color: #1a1206; }
+  ol, ul { padding-left: 22px; }
+  li { margin: 4px 0; }
+  .tag { display: inline-block; min-width: 22px; padding: 0 5px; border-radius: 11px; background: var(--new); color: #fff; font-weight: 700; text-align: center; font-size: 13px; }
+  .tag.old { background: #ff9a5a; color: #1a1206; }
+</style>
+</head>
+<body>
+<main>
+  <h1>GRANDMA in the roster and Event 7 Cadence March: before vs after</h1>
+  <p>1 Oct 2026. GRANDMA (1.60 m, 65 kg) is the third athlete on the menu and in every standing event; Cadence March is
+     the 13th playable event. Red boxes mark what changed; dashed orange boxes mark the old state.</p>
+
+  <h2>Main menu</h2>
+  <div class="pair">
+    <figure>
+      <figcaption class="before">Before: two athletes, 12 events</figcaption>
+      <div class="shot">
+        <img src="grandma/menu_before.png" alt="Main menu before: MATT and ZOMBIE cards, 12 event tiles">
+        <div class="mk old" style="left:1.5%;top:9.4%;width:97%;height:5.7%"><b>A</b></div>
+        <div class="mk old" style="left:1.5%;top:27.2%;width:97%;height:46%"><b>B</b></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption class="after">After: three athletes, 13 events (30m All Fours selected)</figcaption>
+      <div class="shot">
+        <img src="grandma/menu_after_sitout.png" alt="Main menu after: MATT, ZOMBIE and GRANDMA cards, 13 event tiles">
+        <div class="mk" style="left:1.5%;top:9.4%;width:97%;height:5.7%"><b>1</b></div>
+        <div class="mk" style="left:1.5%;top:15.4%;width:97%;height:11.6%"><b>2</b></div>
+        <div class="mk" style="left:1.5%;top:6.1%;width:41%;height:2.4%"><b>3</b></div>
+        <div class="mk" style="left:1.5%;top:36.5%;width:32%;height:9%"><b>4</b></div>
+      </div>
+    </figure>
+  </div>
+  <ul>
+    <li><span class="tag old">A</span> Two wide roster cards with the name above the stats.</li>
+    <li><span class="tag old">B</span> A 3 × 4 grid of 12 events.</li>
+    <li><span class="tag">1</span> Three cards share the row: chip, name and ×8 on one line, height and mass below. GRANDMA has a pink chip.</li>
+    <li><span class="tag">2</span> Lane tiles cycle MATT → ZOMBIE → GRANDMA; GRANDMA lanes have a pink edge. A lane whose athlete
+        has no brain for the selected event is dimmed.</li>
+    <li><span class="tag">3</span> The status line says who stands in: here "GRANDMA → MATT here" (she has no crawl brain yet).
+        Deep Squat and Cadence March read "MATT-only event".</li>
+    <li><span class="tag">4</span> New tile: 07 Cadence March. The grid is now 3 × 5 with two empty slots.</li>
+  </ul>
+
+  <h2>Broadcast HUD</h2>
+  <div class="pair">
+    <figure>
+      <figcaption class="before">Before: MATT and ZOMBIE chips only (360 Turntable)</figcaption>
+      <div class="shot">
+        <img src="grandma/hud_before.png" alt="Turntable HUD before with M and Z chips">
+        <div class="mk old" style="left:2.5%;top:8.3%;width:95%;height:8.6%"><b>C</b></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption class="after">After: GRANDMA in lanes 3, 6 and 8</figcaption>
+      <div class="shot">
+        <img src="grandma/hud_after_live.png" alt="Turntable HUD after with a pink G chip for GRANDMA">
+        <div class="mk" style="left:2.5%;top:12.5%;width:95%;height:2.3%"><b>5</b></div>
+        <div class="mk" style="left:14%;top:45.5%;width:32%;height:26%"><b>6</b></div>
+      </div>
+    </figure>
+  </div>
+  <ul>
+    <li><span class="tag old">C</span> Standings showed two bodies: blue M and green Z.</li>
+    <li><span class="tag">5</span> GRANDMA's rows read G&lt;lane&gt; with a pink chip, and her confidence shows like the others'
+        (her brains have their own confidence model).</li>
+    <li><span class="tag">6</span> GRANDMA on the turntable ring between MATT and the zombie; every body part collides with the
+        neighbours.</li>
+  </ul>
+
+  <h2>New screen: Event 7 Cadence March</h2>
+  <div class="pair">
+    <figure>
+      <figcaption class="after">Live: stage 7 of 9</figcaption>
+      <div class="shot">
+        <img src="../e7/march_live.png" alt="Cadence March live: athletes marching with high knees beside the metronome tower">
+        <div class="mk" style="left:64%;top:3.7%;width:24%;height:4.1%"><b>7</b></div>
+        <div class="mk" style="left:2.5%;top:8.3%;width:95%;height:8.6%"><b>8</b></div>
+        <div class="mk" style="left:68%;top:17.5%;width:22%;height:60.5%"><b>9</b></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption class="after">Result</figcaption>
+      <div class="shot">
+        <img src="../e7/march_result.png" alt="Cadence March result card">
+        <div class="mk" style="left:2.5%;top:8.3%;width:95%;height:8.6%"><b>10</b></div>
+      </div>
+    </figure>
+  </div>
+  <ul>
+    <li><span class="tag">7</span> The clock shows the stage and the metronome rate in steps per minute (120 → 240).</li>
+    <li><span class="tag">8</span> Rows show points so far and the last stage's mean knee height.</li>
+    <li><span class="tag">9</span> The stadium's metronome tower is now a physical obstacle. It can block part of the leader
+        close-up, as here.</li>
+    <li><span class="tag">10</span> Out reasons are FELL or WANDERED (more than 60 cm from the spot); finishing all nine stages
+        earns a 10-point bonus.</li>
+  </ul>
+
+  <h2>GRANDMA in play</h2>
+  <div class="pair">
+    <figure>
+      <figcaption class="after">Solo testbed (Rung 0 brain)</figcaption>
+      <div class="shot"><img src="../g4/grandma_testbed_play.png" alt="GRANDMA standing in her Unity testbed"></div>
+    </figure>
+    <figure>
+      <figcaption class="after">Iron Pedestal, mixed lineup: result</figcaption>
+      <div class="shot"><img src="../g4/pedestal_mzg_result.png" alt="Iron Pedestal result with a GRANDMA row"></div>
+    </figure>
+  </div>
+</main>
+</body>
+</html>

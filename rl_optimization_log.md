@@ -874,3 +874,31 @@ One entry per run or decision. Newest at the bottom.
   promotion to MATT now has brains for stand / walk / flight; crawl + get-up still to train. GRANDMA: Rung 1 8/10,
   Rung 2 provisional 4/10 (decision pending on her envelope). MATT stance: march 9/10, squat 10/10, torso 7/10 on one
   brain; flamingo on another; reach unsolved.
+
+## 2026-10-01 afternoon · User decisions applied (GRANDMA envelope + stride yaw, per-event stance brains); no training
+- **Decisions (user: "do recommendations"):** (1) GRANDMA's envelope tops out at 2.8 m/s; (2) her yaw is judged per
+  stride; (3) MATT's stance events use per-event brains.
+- **Gate code:** `bodies.Body.vx_max` / `yaw_per_stride` → `evaluate.RUNG2_VX_MAX`, `BRAKE_V`, `rung2_checks` (the
+  zombie's 2026-09-29 stride ruling is now the pass criterion too, not report-only). Contract `vx_max` (GRANDMA only) →
+  Unity `PolicyRunner.BodyCommand` and Python `body_command` cap the forward command.
+- **GRANDMA Rung 2 re-scored** (G1, new bars, `parity/watch/g1cap_rung2_*.json`): g2_v5 it 300 3/10 · it 600 4/10 · it 900
+  4/10 · **it 1199 5/10**; g2_v1b it 1000 2/10; g2_v4 it 300 3/10. 0 falls, yaw now passes on every seed, turntable /
+  brake / backward 10/10; every miss is `tracking_lin` (sprint segments 0.21-0.37, crab 0.20-0.34 vs 0.187). The rule
+  change alone is worth one seed: precision still needs training.
+- **Torso aim check** (rs_v8 it 1199, CPU): the three failing seeds (1001, 1003, 1007: 0.21 / 0.20 / 0.18 rad) are aims
+  of yaw 57° at low pitch. The command range is ±60° but `abdomen_twist` stops at ±45°; a grid sweep of the three abdomen
+  joints gives a best possible error of 0.14-0.19 rad for those aims and ≤ 0.06 for every passing aim. Not a training
+  problem; narrowing the commanded yaw to about ±50° is a contract-range change (user).
+- **Per-event stance brains, measured on the events (CPU heats):** Deep Squat with rs_v8 it 1199: 0 finishers in 4 heats
+  (everyone STEPPED at 20-37 s); with rs_v6 it 3299: 1-4 finishers per heat, 80-104 pts → Event 3 keeps rs_v6 it 3299
+  although both pass the squat drill 10/10 (the drill squats to 40 cm with a 5 cm bar, the event to 45 cm with a 20 cm
+  foot-slide rule). Cadence March with rs_v8 it 1199: rhythm exact at every stage, 2-4 finishers; with rs_v7 it 1499:
+  half the field wanders off by 18 s → Event 7 uses rs_v8 it 1199. Event 6 = rs_v6 it 2550 (event not built yet).
+- **Brain confidence:** critics exported for grandma_rung0 / grandma_rung2 / rs_v8_it1199; `fit_confidence.py --groups
+  flight,stand_g,rung2_g` — grandma_rung0 AUC 0.70, grandma_rung2 0.67, r2f_v3_it100 0.87. The flight brain's fit now
+  includes standstills (1 command in 4): w_speed 4.32 → 0.73, b −17.0 → −0.42, so a runner standing on the start line no
+  longer reads 0 % (the 2026-09-30 Android finding).
+- **Odds** refitted with a GRANDMA weight (40 CPU heats per event on the MATT / zombie / GRANDMA lineup): she is the
+  underdog in the inverted sprint (−14.9), terminal velocity (−9.5) and crab (−8.5), neutral on the pedestal, turntable
+  and brake.
+- **Not run:** crawl_bio_v1, getup_rev_v1 (still in `runs/queue.txt`).
