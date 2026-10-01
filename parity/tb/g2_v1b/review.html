@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GRANDMA Rung 2 Base Review</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --card: #ffffff; --text: #1d1d1f; --muted: #5d5d66; --line: #e2e0da;
+    --g: #e8710a; --z: #f9ab00; --good: #1f8a4c; --warn: #b8660b; --bad: #c2372b;
+    --t1: #fff4d6; --t2: #e3f3ff; --t3: #eeeaf8; --verdict: #e8f6ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+      --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+      --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+    --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+    --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.8rem; margin: 0 0 4px; }
+  h2 { margin: 0 0 4px; font-size: 1.3rem; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+  .verdict { background: var(--verdict); }
+  .verdict p { margin: 6px 0 0; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 10px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+  .up { color: var(--good); font-weight: 600; } .same { color: var(--muted); font-weight: 600; }
+  .down { color: var(--warn); font-weight: 600; } .fail { color: var(--bad); font-weight: 600; }
+  .tag { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--muted); }
+  img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); margin: 12px 0 16px; background: #fff; }
+  .levels { display: grid; gap: 12px; }
+  .lvl { border-radius: 10px; padding: 12px 16px; }
+  .lvl h3 { margin: 0 0 4px; font-size: .95rem; }
+  .lvl p { margin: 0; }
+  .l1 { background: var(--t1); } .l2 { background: var(--t2); } .l3 { background: var(--t3); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 8px; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+  footer { color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>GRANDMA Rung 2 base training review: turning, sideways and backward walking</h1>
+  <p class="sub">2026-10-01 04:51, run g2_v1b, iteration 1999 · GRANDMA (1.60 m, 65 kg, 60 % strength) · 2000 iterations in 96 min, warm start g1_v1 iteration 1000 ·
+    <span class="dot" style="background:var(--g)"></span>GRANDMA g2_v1b (dark orange)
+    <span class="dot" style="background:var(--z)"></span>ZOMBIE z2_v2 (amber; same recipe on the zombie)</p>
+
+  <div class="box verdict">
+    <h2>Verdict: good at iteration 1000, then she stopped running fast</h2>
+    <p><strong>In one sentence:</strong> by iteration 1000 GRANDMA turns on the spot, brakes, walks backward and sideways, and runs at up to 3.3 m/s with no falls (3 of 10 seeds pass, the misses are small speed and wobble errors); after the top commanded speed was raised to 3.7 m/s she gave up on fast running, and by the end she shuffles at about 0.25 m/s whenever more than 2 m/s is asked.</p>
+    <p><strong>Compared with ZOMBIE on the same recipe:</strong> the zombie kept its speed and lost its turning; GRANDMA did the opposite, trading speed for turn accuracy. It is a training failure, not a strength limit: the same body ran 3.33 m/s 500 iterations earlier.</p>
+    <div class="scroll">
+    <table>
+      <tr><th>Test, 10 seeds (CPU)</th><th>it 500</th><th>it 1000 (kept)</th><th>it 1500</th><th>it 1999</th><th>Pass needs</th></tr>
+      <tr><td>G1 Rung 2</td><td>0/10</td><td class="up">3/10</td><td>2/10</td><td>2/10</td><td>10/10</td></tr>
+      <tr><td>Falls</td><td class="fail">1</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+      <tr><td>Turntable (360° on the spot)</td><td class="fail">0/10 (3.3–3.5 s)</td><td class="up">10/10 (2.64 s)</td><td>10/10</td><td>10/10 (2.4–2.5 s)</td><td>&lt; 2.8 s</td></tr>
+      <tr><td>Brake / backward 20 m</td><td>9 / 8</td><td>10 / 10</td><td>10 / 10</td><td>10 / 10</td><td>10 / 10</td></tr>
+      <tr><td>Speed tracking, seeds passing</td><td>0</td><td>3</td><td>2</td><td>2</td><td>all segments &lt; 0.187 m/s</td></tr>
+      <tr><td>Turn-rate tracking, seeds passing</td><td>3</td><td>4</td><td>6</td><td class="up">7</td><td>all segments &lt; 0.32 rad/s</td></tr>
+      <tr><td>Sprints above 2 m/s, median speed error</td><td>0.26 m/s</td><td class="up">0.25</td><td class="fail">1.13</td><td class="fail">2.09</td><td>&lt; 0.187</td></tr>
+      <tr><td>Speed reached at a 3.7 m/s command</td><td>3.20</td><td class="up">3.33 m/s</td><td class="fail">0.24</td><td class="fail">0.24</td><td></td></tr>
+    </table>
+    </div>
+    <p><strong>Decision taken:</strong> the final-recipe run had auto-started from iteration 1500; it was stopped after 20 iterations and restarted from iteration 1000 as g2_v2b. That recipe has heavier speed rewards, which is what stopped the zombie from standing still.</p>
+  </div>
+
+  <section class="box">
+    <h2>1 · Speed error: the collapse</h2>
+    <div class="tag">Metrics/athlete/error_vel_xy (m/s, lower is better). Steps at 500 and 1000 are the curriculum widening the commands; top forward speed 2.80 → 3.27 → 3.73 m/s for GRANDMA.</div>
+    <img src="1_speed_error.png" alt="Speed error: both runs fall to 1.0 by iteration 500 and step up at 500 and 1000; ZOMBIE then settles near 1.2 while GRANDMA climbs from 1.5 at iteration 1300 to 2.6 at the end">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>Grandma was running nicely. Then we asked her to run very fast, and she stopped trying. The dark line shooting up means she is far too slow.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This line shows how far the robot's speed is from the speed it was asked for. Low is good. Up to round 1000 Grandma's dark line matches Zombie's lighter one. After we raise the top speed she first copes, and then from about round 1300 her line climbs steeply. She decided that walking slowly was easier than sprinting.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>The two runs overlap until about iteration 1250 (1.49 against 1.35). From 1300 GRANDMA rises to 2.09 at 1500 and 2.61 at 1999 while ZOMBIE settles at 1.21. The metric averages over all commands including the top of the envelope, so its absolute level is not the gate's per-segment error. A CPU probe shows a cliff, not a gradual slowdown: iteration 1000 reaches 2.36 / 2.92 / 3.33 m/s at commands of 2.5 / 3.1 / 3.7; iterations 1500 and 1999 reach 0.46–0.24 m/s at every command from 2.5 up, while still tracking 2.0 (1.76 m/s). Fewer pelvis-height terminations (0.25 → 0.08 per iteration) and less torque effort over the same window are consistent with choosing not to run.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>2 · Speed reward</h2>
+    <div class="tag">Episode_Reward/track_lin (how closely the commanded speed is followed, sharp kernel)</div>
+    <img src="2_track_lin.png" alt="Speed reward: both peak near iteration 500, drop at the curriculum step, recover to about 1.1 at 1000; ZOMBIE then climbs to 1.22, GRANDMA drifts down to 0.92">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The light line (Zombie) keeps going up. The dark line (Grandma) goes down. Zombie kept trying to go the right speed. Grandma did not.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This score is high when the robot moves at the right speed. Both robots lose points each time the speeds get harder, then win some back. After round 1000 Zombie keeps improving but Grandma slowly loses points, because she no longer runs when asked to go fast.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>GRANDMA: 1.25 at iteration 500, 1.08 at 1000, 0.97 at 1500, 0.94 at 1999; the coarse kernel falls further (0.76 → 0.62). ZOMBIE: 1.36, 1.14, 1.17, 1.23. The decline looks mild because only the fast commands collapsed: stops, turns, crabs and speeds up to 2 m/s still pay. With both kernels paying almost nothing at errors above 1 m/s, a policy that stops at fast commands loses little reward and avoids the falls and effort of sprinting. The final recipe raises the speed weights from 2 + 1 to 3 + 1.5 with a wider kernel (0.5), which gives a gradient at large errors.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>3 · Turn-rate reward: where the effort went</h2>
+    <div class="tag">Episode_Reward/track_ang (how closely the commanded turn rate is followed)</div>
+    <img src="3_track_ang.png" alt="Turn tracking reward: ZOMBIE falls steadily from 0.65 to 0.20; GRANDMA falls to 0.44 by iteration 1300 and then recovers to 0.64">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>Grandma got better at turning the right way. But she got better by slowing down.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This score is high when the robot turns exactly as asked. Zombie's light line keeps sinking: it ran fast but stopped steering. Grandma's dark line turns back up after round 1300, at the very moment her speed fell apart. Turning is much easier when you are barely moving.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>GRANDMA 0.44 at iteration 1250 → 0.64 at 1999; ZOMBIE 0.24 → 0.20. In the gates her turn-rate tracking passes on 4, 6 and 7 seeds at 1000, 1500 and 1999, and the turntable improves from 2.64 s to 2.4–2.5 s. So the late checkpoints are better turners and worse runners, the mirror image of z2_v2. Iteration 1000 is kept because running is the capability that is hard to get back; its turn errors are mostly per-stride wobble on sprints (per-tick 0.47 rad/s, 0.06 averaged over a stride), which the final recipe's stride-filtered yaw terms address.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>Notes</h2>
+    <p>The warm-start checkpoints in the queue were fixed guesses (iteration 1500) copied from the zombie's history; both were wrong for GRANDMA and were corrected by hand after each gate, at a cost of a few minutes each. The style terms held throughout (careful steps 0.27–0.29 of 0.30). Whether the final recipe keeps her running under the full 3.7 m/s envelope is the open question for g2_v2b; if it collapses again the envelope top should be lowered for her.</p>
+  </section>
+
+  <footer>Charts: TensorBoard at localhost:6006, runs <code>g2_v1b</code> and <code>z2_v2</code> (z2_v2's event file copied back from <code>runs_archive</code>). Gate data: <code>parity/watch_g2_v1b.jsonl</code>, <code>parity/watch/g1_rung2_g2_v1b_it*.json</code>.</footer>
+</main>
+</body>
+</html>

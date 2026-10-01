@@ -727,3 +727,24 @@ One entry per run or decision. Newest at the bottom.
   g2_v2's prep now points at g2_v1b it 1500 (to be re-checked against g2_v1b's gates).
 - Review: `parity/tb/g1_v1/review.html` (vs r1_v2 and z1_v1; their event files were copied back from runs_archive for the
   screenshots and removed again).
+
+## 2026-10-01 04:55 · GRANDMA Rung 2 base (g2_v1b): good at it 1000, speed collapse after → g2_v2b from it 1000
+- **g2_v1b** (`-Rung2-Omni-Base`, warm start g1_v1 it 1000, 2000 its, 96 min). G1 rung 2 (grandma bars: lin < 0.187 m/s,
+  yaw < 0.32 rad/s per segment, turntable < 2.8 s):
+
+  | it | G1 | falls | turntable | lin seeds | yaw seeds | sprints > 2 m/s: median lin err | speed at 3.7 cmd |
+  |---|---|---|---|---|---|---|---|
+  | 500 | 0/10 | 1 | 0/10 (3.3-3.5 s) | 0 | 3 | 0.26 | 3.20 |
+  | **1000** | **3/10** | 0 | 10/10 (2.64 s) | 3 | 4 | 0.25 | **3.33** |
+  | 1500 | 2/10 | 0 | 10/10 | 2 | 6 | 1.13 | 0.24 |
+  | 1999 | 2/10 | 0 | 10/10 (2.4-2.5 s) | 2 | 7 | 2.09 | 0.24 |
+
+- **Speed collapse after the last curriculum stage** (top vx 3.27 → 3.73 m/s at it ~1040): training error_vel_xy 1.49
+  (it 1250) → 2.09 → 2.61, track_lin_coarse 0.72 → 0.62, track_ang 0.44 → 0.64, pelvis_low terminations and torque effort
+  down. CPU speed probe (8 s per command): it 1000 runs 2.36 / 2.92 / 3.33 m/s at 2.5 / 3.1 / 3.7; it 1500 and 1999
+  do 0.24-0.46 m/s at every command >= 2.5 (2.0 → 1.76 still fine). A cliff in the policy, not a strength limit. Mirror
+  image of z2_v2, which kept speed and lost yaw.
+- The queue had started g2_v2 from it 1500 (fixed guess); stopped after 20 its. **g2_v2b** (04:53): `-Rung2-Omni` (zombie
+  z2_v11 recipe: lin 3 + 1.5 with std 0.5, stride-filtered yaw, cap 3, wobble penalty, symmetric runner) from **g2_v1b
+  it 1000**, 2000 its, 3.2 s/it, gates every 400. If the sprint collapses again under the full envelope: lower her vx top.
+- Review: `parity/tb/g2_v1b/review.html`.
