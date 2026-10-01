@@ -853,3 +853,25 @@ One entry per run or decision. Newest at the bottom.
   numbers continue, watcher restarted for the remaining gates, stale watcher stopped). Tested by killing r0bio_v1's
   trainer on purpose at it ~96: RESUME from model_100.pt, continued at it 128/300.
 - Queue restarted 09:22: r0bio_v1 → rs_v8 → r2fbio_v1 → crawl_bio_v1 → getup_rev_v1. GPU no longer shared (1.95 s/it).
+
+## 2026-10-01 10:50 · End of the training block (user: "finish up", git sync)
+- **r0bio_v1** (mattbio Rung 0, 300 its, resumed once at it 100 by the deliberate kill test): G1 rung 0 **10/10** at it
+  100 / 200 / 299.
+- **rs_v8** (rs_v7's env, entropy 0.001, start std <= 0.3, from rs_v7 it 1499; 1200 its, 62 min): action std 0.27-0.28
+  (rs_v7 0.50 → 0.54), mean reward 158 → 168 (rs_v7 142), training track_ang 0.82 → 1.16 (rs_v7 0.83 → 0.71). Gates
+  (squat / flamingo / march / torso / reach · Rung 2): it 300 10 / 0 / 5 / 6 / 0 · 6/10 (1 fall) | 600 10 / 0 / 6 / 6 / 0 ·
+  6/10 | 900 10 / 0 / 4 / 5 / 0 · 5/10 | **1199 10 / 0 / 9 / 7 / 0 · 5/10** (squat worst 0.8 cm, march drift 0.06-0.17 m).
+  **The noise hypothesis explains the training curves, not the gates:** Rung 2 stays 5-6/10 and flamingo 0/10 with the
+  noise gone. March drift hovers at the bar between gates (4-6/10 at 300-900). Torso misses are the same two seeds
+  with the same 0.20-0.21 rad error at every checkpoint since rs_v6 (targets possibly outside the joint range;
+  unchecked). Review: `parity/tb/rs_v8/review.html`. Best single stance brain: **rs_v8 it 1199** (Events 3 + 7, torso
+  7/10); flamingo only in rs_v6 it 2550.
+- **r2fbio_v1** (mattbio Rung 2 flight, 300 its): G1 rung 2 9/10 at it 100 and 200 (0 falls); the it 299 gate was still
+  running at the sync.
+- Queue stopped by `runs/queue.stop` after r2fbio_v1. **Not run:** crawl_bio_v1, getup_rev_v1 (still in
+  `runs/queue.txt`; delete `runs/queue.stop` and restart `tools/train_queue.ps1` to run them).
+- **Block summary (23:10 → 10:50):** 13 runs started, 9 completed, 4 stopped on purpose after a gate. ~2 h 15 min of
+  GPU time lost to two unexplained Ctrl-C kills (23:43, 09:09). mattbio: Rung 0 10/10, Rung 2 10/10, flight 9/10 →
+  promotion to MATT now has brains for stand / walk / flight; crawl + get-up still to train. GRANDMA: Rung 1 8/10,
+  Rung 2 provisional 4/10 (decision pending on her envelope). MATT stance: march 9/10, squat 10/10, torso 7/10 on one
+  brain; flamingo on another; reach unsolved.

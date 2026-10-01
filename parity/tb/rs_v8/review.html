@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rung S rs_v8 Review</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --card: #ffffff; --text: #1d1d1f; --muted: #5d5d66; --line: #e2e0da;
+    --v7: #f9ab00; --v8: #e8710a; --good: #1f8a4c; --warn: #b8660b; --bad: #c2372b;
+    --t1: #fff4d6; --t2: #e3f3ff; --t3: #eeeaf8; --verdict: #e8f6ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+      --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+      --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+    --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+    --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.8rem; margin: 0 0 4px; }
+  h2 { margin: 0 0 4px; font-size: 1.3rem; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+  .verdict { background: var(--verdict); }
+  .verdict p { margin: 6px 0 0; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 10px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+  .up { color: var(--good); font-weight: 600; } .same { color: var(--muted); font-weight: 600; }
+  .down { color: var(--warn); font-weight: 600; } .fail { color: var(--bad); font-weight: 600; }
+  .tag { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--muted); }
+  img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); margin: 12px 0 16px; background: #fff; }
+  .levels { display: grid; gap: 12px; }
+  .lvl { border-radius: 10px; padding: 12px 16px; }
+  .lvl h3 { margin: 0 0 4px; font-size: .95rem; }
+  .lvl p { margin: 0; }
+  .l1 { background: var(--t1); } .l2 { background: var(--t2); } .l3 { background: var(--t3); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 8px; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+  footer { color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Rung S training review: rs_v8</h1>
+  <p class="sub">2026-10-01 10:40, iteration 1199 · MATT (<code>mattbio</code> body) · 1200 iterations in 62 min ·
+    <span class="dot" style="background:var(--v7)"></span>rs_v7 = previous run (amber)
+    <span class="dot" style="background:var(--v8)"></span>rs_v8 = this run (dark orange): the same task from rs_v7's last checkpoint, with less action noise</p>
+
+  <div class="box verdict">
+    <h2>Verdict: calmer training, slightly better aim, but the tests are about the same as rs_v7</h2>
+    <p><strong>In one sentence:</strong> turning down the policy's randomness made the training numbers look much better (reward 142 → 168, turn tracking 0.71 → 1.15), but in the tests the final checkpoint is only a little ahead of rs_v7: squat 10/10, march 9/10, torso 7/10 instead of 5, with flamingo and reach still at 0 and walking at 5/10.</p>
+    <p><strong>What this run was testing:</strong> whether growing action noise was the reason walking and the flamingo got worse over the last runs. It was not: the noise is gone and those tests did not recover.</p>
+    <div class="scroll">
+    <table>
+      <tr><th>Test (10 seeds, CPU)</th><th>rs_v7 1499 (start)</th><th>rs_v8 300</th><th>600</th><th>900</th><th>1199</th><th>Pass needs</th></tr>
+      <tr><td>E3 Squat</td><td>10/10</td><td>10/10</td><td>10/10</td><td>10/10</td><td class="up">10/10 (worst 0.8 cm)</td><td>&lt; 5 cm</td></tr>
+      <tr><td>E7 March</td><td>9/10</td><td class="down">5/10</td><td class="down">6/10</td><td class="down">4/10</td><td class="same">9/10</td><td>lift ≥ 75 %, rhythm ±5 %, drift &lt; 0.30 m</td></tr>
+      <tr><td>E7 March, drift from the spot</td><td>0.06–0.14 m</td><td>0.21–0.37</td><td>0.21–0.33</td><td>0.14–0.40</td><td>0.06–0.17 m</td><td>&lt; 0.30 m</td></tr>
+      <tr><td>E6 Flamingo (10 different trials)</td><td>0/10</td><td>0/10</td><td>0/10</td><td>0/10</td><td class="fail">0/10 (113–125 touches, 14 cm slip)</td><td>0 touches, slip &lt; 10 cm</td></tr>
+      <tr><td>E2 Torso aim</td><td>5/10</td><td>6/10</td><td>6/10</td><td>5/10</td><td class="up">7/10</td><td>error &lt; 0.15 rad, feet &lt; 5 cm</td></tr>
+      <tr><td>E4 Reach, worst error (median)</td><td>0.26 m</td><td>0.26</td><td>0.24</td><td>0.25</td><td class="same">0.24 m (0/10)</td><td>&lt; 0.08 m</td></tr>
+      <tr><td>Rung 2 walking / turning (G1)</td><td>6/10</td><td>6/10 (1 fall)</td><td>6/10</td><td>5/10</td><td class="same">5/10</td><td>10/10</td></tr>
+    </table>
+    </div>
+    <p><strong>Brain:</strong> rs_v8 iteration 1199 is the best single stance brain so far for squat + march + torso. rs_v6 iteration 2550 remains the only flamingo brain.</p>
+  </div>
+
+  <section class="box">
+    <h2>1 · Action noise</h2>
+    <div class="tag">Policy/mean_std (how random the policy's actions are during training)</div>
+    <img src="1_action_noise.png" alt="Action std: rs_v7 rises from 0.50 to 0.54; rs_v8 starts at 0.27 and ends at 0.28">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The dark line is much lower. The robot's moves are calmer and less wobbly in this try.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>While it practises, the robot adds some randomness to its moves so it can discover new things. In the amber try that randomness kept growing. In the dark try we set it to about half and it stayed there.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>rs_v7: 0.50 → 0.54 with the entropy coefficient at 0.0025. rs_v8: started at 0.27 (std capped at 0.3 in the warm start) and ends at 0.28 with the coefficient at 0.001, so it still creeps up slightly but stays near half the previous level. This is the only setting that differs between the two runs, apart from the starting checkpoint.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>2 · Training reward</h2>
+    <div class="tag">Train/mean_reward (measured with the action noise switched on)</div>
+    <img src="2_reward.png" alt="Mean reward: rs_v7 flat around 142; rs_v8 rises from 158 to about 168">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The dark line is higher. The robot gets more points when its moves are calmer.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>The robot scores more points in practice in the dark try. But practice is done with the randomness switched on, and the test is done with it switched off. Less randomness makes practice look better right away. It does not mean the robot learned new skills.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>158 within the first iterations (rs_v7 ended at 142 with the same weights), rising to about 168. Most of the jump is immediate, which marks it as the direct effect of lower noise on noisy rollouts, not learning. The gates use the mean action, and there the checkpoints at 300–900 are worse than the starting checkpoint on march (4–6 of 10 against 9), recovering to 9 only at 1199. Training reward is therefore a poor guide to the gate result across runs with different noise.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>3 · Turn tracking in training</h2>
+    <div class="tag">Episode_Reward/track_ang (how closely the commanded turn rate is followed; measured with the action noise on)</div>
+    <img src="3_track_ang.png" alt="Turn tracking reward: rs_v7 falls from 0.83 to 0.70; rs_v8 rises from 0.82 to 1.16">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>In practice the robot turns better and better. But in the real test it turns the same as before.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This line was going down for the last three tries, and we thought the growing randomness was to blame. With less randomness the line goes up nicely. So the randomness did explain this line. But the walking test, done without randomness, still passes only 5 or 6 times out of 10, so something else is wrong with the walking.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>0.82 → 1.16, reversing the decline of rs_v6 and rs_v7 (0.98 → 0.71) and exceeding rs_v5c's level. So the erosion seen in this training metric was the noise. The Rung 2 gate, however, is 5–6 of 10 at every rs_v8 checkpoint, as in rs_v6 and rs_v7, and the flamingo is 0 of 10. The noise hypothesis explains the chart and not the gates. The torso drill fails on the same seeds with the same errors (0.20–0.21 rad on two seeds) at every checkpoint since rs_v6, which points at specific aim targets, possibly outside the joint range; that has not been checked.</p></div>
+    </div>
+  </section>
+
+  <footer>Charts: TensorBoard at localhost:6006, runs <code>rs_v7</code> and <code>rs_v8</code>. Gate data: <code>parity/watch_rs_v8.jsonl</code>, <code>parity/watch/g1_rungS_rs_v8_it*.json</code>.</footer>
+</main>
+</body>
+</html>
