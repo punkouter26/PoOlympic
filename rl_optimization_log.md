@@ -842,3 +842,14 @@ One entry per run or decision. Newest at the bottom.
 - **rs_v8** queued after r0bio_v1: `-RungS-Stance-v8` = rs_v7's env, entropy 0.001, `plain_init --max-std 0.3`, from
   rs_v7 it 1499, 1200 its, gates 300 / 600 / 900 / 1199. One question: does lower action noise stop the erosion (and
   does flamingo come back)?
+
+## 2026-10-01 09:25 · Second Ctrl-C kill (09:09, PowerShell queue) → queue hardened: auto-resume, own consoles
+- r0bio_v1 (started 09:04) and the queue died at 09:09:41, `^C` in `runs/queue_launcher.log` again, 5 min into the run
+  (the 23:43 kill was 4.5 min into g1_v1). Found at 09:20 by the stall watcher (13 min lost). The PowerShell queue had
+  survived about fifteen turn ends in between and four runs; PoDecath's run had ended at 08:39. **Cause not found.**
+  r0bio_v1 it 100 gate before the kill: G1 rung 0 10/10.
+- `tools/train_queue.ps1` now: ignores Ctrl-C itself, starts training and watcher in their own hidden consoles, and
+  **resumes a run that ends early from its newest checkpoint** (up to 3 times; second `*_<name>` run dir, iteration
+  numbers continue, watcher restarted for the remaining gates, stale watcher stopped). Tested by killing r0bio_v1's
+  trainer on purpose at it ~96: RESUME from model_100.pt, continued at it 128/300.
+- Queue restarted 09:22: r0bio_v1 → rs_v8 → r2fbio_v1 → crawl_bio_v1 → getup_rev_v1. GPU no longer shared (1.95 s/it).
