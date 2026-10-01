@@ -28,6 +28,7 @@ class Body:
     total_mass: float                 # kg, distributed with the de Leva table
     length_scale: float               # λ relative to MATT (height ratio)
     strength: float = 1.0             # × the size-scaled actuator torque (the "weaker" knob)
+    stiffness: float | None = None    # × the size-scaled PD gains (kp, kv); None = `strength` (zombie: weak AND soft)
     self_collision: bool = False      # True: every body geom collides with every other (parent/child pairs excepted)
     joint_defaults: dict = field(default_factory=dict)   # default pose overrides (deg) by joint name, both sides
     rig: str | None = None            # variant of another body: reuse its skeleton/skin and its rules (same size)
@@ -66,6 +67,10 @@ class Body:
     def torque_scale(self) -> float: return self.mass_scale * self.length_scale * self.strength
     @property
     def inertia_scale(self) -> float: return self.mass_scale * self.length_scale ** 2
+    @property
+    def gain_scale(self) -> float:
+        """PD stiffness scale: mass × length × stiffness (default: the torque scale)."""
+        return self.mass_scale * self.length_scale * (self.strength if self.stiffness is None else self.stiffness)
 
 
 MATT_MASS = 80.0
@@ -84,11 +89,15 @@ BODIES = {
                         "shoulder_elev": -10.0, "shoulder_flex": 75.0, "elbow": 20.0}),
     # GRANDMA (user decisions 2026-09-30: Claude rigs the unrigged scan — SourceArt/Grandma/rig_grandma.py —, 1.60 m,
     # "frail but steady"): stocky 1.60 m woman, 65 kg; 60 % of the size-scaled torque (knee extension cap ≈ 119 Nm);
-    # full self-collision; slightly stooped soft-kneed stance (flat feet: shin lean = knee − hip = ankle = 10°).
+    # full self-collision; slightly stooped soft-kneed stance (flat feet: shin lean = knee − hip = ankle).
+    # stiffness 1.0: frail = weaker torque caps, not floppy servos. With kp × 0.6 (g0_v1) the hip stiffness (127 Nm/rad)
+    # was below the gravity gradient of her trunk (~150 Nm/rad): the trunk folded forward in 0.8 s, nothing to learn from.
     "grandma": Body(
         "grandma", ROOT.parent / "SourceArt" / "Grandma" / "grandma.glb", 22, (1.57, 1.63), 65.0,
-        GRANDMA_HEIGHT / MATT_HEIGHT, strength=0.6, self_collision=True,
-        joint_defaults={"abdomen_flex": 10.0, "hip_flex": 14.0, "hip_abd": 3.0, "knee": 24.0, "ankle_dorsi": 10.0}),
+        GRANDMA_HEIGHT / MATT_HEIGHT, strength=0.6, stiffness=1.0, self_collision=True,
+        # stance: pelvis level (hip − knee + ankle = 0), shins 7° forward; COM 35 % of the way heel -> toe like MATT (the
+        # first stance, hip 14 / ankle 10, put it at 43 %: 6 cm ahead of the ankles)
+        joint_defaults={"abdomen_flex": 10.0, "hip_flex": 17.0, "hip_abd": 3.0, "knee": 24.0, "ankle_dorsi": 7.0}),
 }
 
 

@@ -101,28 +101,28 @@
     <exclude body1="thigh_l" body2="thigh_r" />
   </contact>
   <actuator>
-    <position name="abdomen_flex" joint="abdomen_flex" kp="127.3816" kv="11.88809" forcelimited="true" forcerange="-84.92107 84.92107" />
-    <position name="abdomen_lat" joint="abdomen_lat" kp="127.3816" kv="11.88809" forcelimited="true" forcerange="-84.92107 84.92107" />
-    <position name="abdomen_twist" joint="abdomen_twist" kp="127.3816" kv="11.88809" forcelimited="true" forcerange="-84.92107 84.92107" />
-    <position name="shoulder_elev_l" joint="shoulder_elev_l" kp="25.47632" kv="2.377618" forcelimited="true" forcerange="-33.96843 33.96843" />
-    <position name="shoulder_flex_l" joint="shoulder_flex_l" kp="25.47632" kv="2.377618" forcelimited="true" forcerange="-33.96843 33.96843" />
-    <position name="shoulder_twist_l" joint="shoulder_twist_l" kp="25.47632" kv="2.377618" forcelimited="true" forcerange="-33.96843 33.96843" />
-    <position name="elbow_l" joint="elbow_l" kp="21.23027" kv="1.981348" forcelimited="true" forcerange="-29.72237 29.72237" />
-    <position name="shoulder_elev_r" joint="shoulder_elev_r" kp="25.47632" kv="2.377618" forcelimited="true" forcerange="-33.96843 33.96843" />
-    <position name="shoulder_flex_r" joint="shoulder_flex_r" kp="25.47632" kv="2.377618" forcelimited="true" forcerange="-33.96843 33.96843" />
-    <position name="shoulder_twist_r" joint="shoulder_twist_r" kp="25.47632" kv="2.377618" forcelimited="true" forcerange="-33.96843 33.96843" />
-    <position name="elbow_r" joint="elbow_r" kp="21.23027" kv="1.981348" forcelimited="true" forcerange="-29.72237 29.72237" />
-    <position name="hip_flex_l" joint="hip_flex_l" kp="127.3816" kv="11.88809" forcelimited="true" forcerange="-118.8895 118.8895" />
-    <position name="hip_abd_l" joint="hip_abd_l" kp="127.3816" kv="11.88809" forcelimited="true" forcerange="-118.8895 118.8895" />
-    <position name="hip_rot_l" joint="hip_rot_l" kp="127.3816" kv="11.88809" forcelimited="true" forcerange="-118.8895 118.8895" />
-    <position name="knee_l" joint="knee_l" kp="127.3816" kv="11.88809" forcelimited="true" forcerange="-118.8895 118.8895" />
-    <position name="ankle_dorsi_l" joint="ankle_dorsi_l" kp="84.92107" kv="7.925394" forcelimited="true" forcerange="-93.41317 93.41317" />
-    <position name="ankle_inv_l" joint="ankle_inv_l" kp="84.92107" kv="7.925394" forcelimited="true" forcerange="-93.41317 93.41317" />
-    <position name="hip_flex_r" joint="hip_flex_r" kp="127.3816" kv="11.88809" forcelimited="true" forcerange="-118.8895 118.8895" />
-    <position name="hip_abd_r" joint="hip_abd_r" kp="127.3816" kv="11.88809" forcelimited="true" forcerange="-118.8895 118.8895" />
-    <position name="hip_rot_r" joint="hip_rot_r" kp="127.3816" kv="11.88809" forcelimited="true" forcerange="-118.8895 118.8895" />
-    <position name="knee_r" joint="knee_r" kp="127.3816" kv="11.88809" forcelimited="true" forcerange="-118.8895 118.8895" />
-    <position name="ankle_dorsi_r" joint="ankle_dorsi_r" kp="84.92107" kv="7.925394" forcelimited="true" forcerange="-93.41317 93.41317" />
-    <position name="ankle_inv_r" joint="ankle_inv_r" kp="84.92107" kv="7.925394" forcelimited="true" forcerange="-93.41317 93.41317" />
+    <position name="abdomen_flex" joint="abdomen_flex" kp="212.3027" kv="19.81348" forcelimited="true" forcerange="-84.92107 84.92107" />
+    <position name="abdomen_lat" joint="abdomen_lat" kp="212.3027" kv="19.81348" forcelimited="true" forcerange="-84.92107 84.92107" />
+    <position name="abdomen_twist" joint="abdomen_twist" kp="212.3027" kv="19.81348" forcelimited="true" forcerange="-84.92107 84.92107" />
+    <position name="shoulder_elev_l" joint="shoulder_elev_l" kp="42.46053" kv="3.962697" forcelimited="true" forcerange="-33.96843 33.96843" />
+    <position name="shoulder_flex_l" joint="shoulder_flex_l" kp="42.46053" kv="3.962697" forcelimited="true" forcerange="-33.96843 33.96843" />
+    <position name="shoulder_twist_l" joint="shoulder_twist_l" kp="42.46053" kv="3.962697" forcelimited="true" forcerange="-33.96843 33.96843" />
+    <position name="elbow_l" joint="elbow_l" kp="35.38378" kv="3.302247" forcelimited="true" forcerange="-29.72237 29.72237" />
+    <position name="shoulder_elev_r" joint="shoulder_elev_r" kp="42.46053" kv="3.962697" forcelimited="true" forcerange="-33.96843 33.96843" />
+    <position name="shoulder_flex_r" joint="shoulder_flex_r" kp="42.46053" kv="3.962697" forcelimited="true" forcerange="-33.96843 33.96843" />
+    <position name="shoulder_twist_r" joint="shoulder_twist_r" kp="42.46053" kv="3.962697" forcelimited="true" forcerange="-33.96843 33.96843" />
+    <position name="elbow_r" joint="elbow_r" kp="35.38378" kv="3.302247" forcelimited="true" forcerange="-29.72237 29.72237" />
+    <position name="hip_flex_l" joint="hip_flex_l" kp="212.3027" kv="19.81348" forcelimited="true" forcerange="-118.8895 118.8895" />
+    <position name="hip_abd_l" joint="hip_abd_l" kp="212.3027" kv="19.81348" forcelimited="true" forcerange="-118.8895 118.8895" />
+    <position name="hip_rot_l" joint="hip_rot_l" kp="212.3027" kv="19.81348" forcelimited="true" forcerange="-118.8895 118.8895" />
+    <position name="knee_l" joint="knee_l" kp="212.3027" kv="19.81348" forcelimited="true" forcerange="-118.8895 118.8895" />
+    <position name="ankle_dorsi_l" joint="ankle_dorsi_l" kp="141.5351" kv="13.20899" forcelimited="true" forcerange="-93.41317 93.41317" />
+    <position name="ankle_inv_l" joint="ankle_inv_l" kp="141.5351" kv="13.20899" forcelimited="true" forcerange="-93.41317 93.41317" />
+    <position name="hip_flex_r" joint="hip_flex_r" kp="212.3027" kv="19.81348" forcelimited="true" forcerange="-118.8895 118.8895" />
+    <position name="hip_abd_r" joint="hip_abd_r" kp="212.3027" kv="19.81348" forcelimited="true" forcerange="-118.8895 118.8895" />
+    <position name="hip_rot_r" joint="hip_rot_r" kp="212.3027" kv="19.81348" forcelimited="true" forcerange="-118.8895 118.8895" />
+    <position name="knee_r" joint="knee_r" kp="212.3027" kv="19.81348" forcelimited="true" forcerange="-118.8895 118.8895" />
+    <position name="ankle_dorsi_r" joint="ankle_dorsi_r" kp="141.5351" kv="13.20899" forcelimited="true" forcerange="-93.41317 93.41317" />
+    <position name="ankle_inv_r" joint="ankle_inv_r" kp="141.5351" kv="13.20899" forcelimited="true" forcerange="-93.41317 93.41317" />
   </actuator>
 </mujoco>

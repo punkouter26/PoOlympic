@@ -11,7 +11,7 @@ namespace PoOlympic
     /// (contract v4 pelvis-height command). Mirror of training/poolympic/events/squat.py: a metronome calls `reps` squat
     /// reps that get deeper (depthStart + depthStep·r, capped at depthMax) and faster (down / up phases 0.1 s shorter per
     /// rep). Rep points = repPoints × clamp(1 − |pelvis drop − depth| / depthTol, 0, 1), the drop averaged over the last
-    /// `sampleFrac` of the down phase. Out = a fall (the fall line drops with the squat target − 0.10 m, like training)
+    /// `sampleFrac` of the down phase. Out = a fall (the fall line drops by the rep's depth + 0.10 m for the whole rep)
     /// or a foot sliding more than `stepTol` from its start spot (STEPPED). Finishing every rep in balance earns
     /// `balanceBonus`. Rank by points; ties: the later exit first.
     ///   Ready (countdown) → Live → Result → auto restart (new seed)
@@ -184,7 +184,9 @@ namespace PoOlympic
                     foreach (var s in squatters.Where(s => s.In))
                     {
                         s.runner.skill.pelvisHeight = Target;
-                        s.judge.fallPelvisZ = s.fallBase + Mathf.Min(0f, Target) - (Target < 0f ? 0.10 : 0.0);
+                        // the rep's depth lowers the fall line for the whole rep (down + up): it must not jump back
+                        // to standing height while the athlete is still at the bottom
+                        s.judge.fallPelvisZ = s.fallBase - Depth(Rep) - 0.10;
                         string why = s.judge.Eliminated(m, d);
                         if (why == null && (Vector2.Distance(FootXY(d, s.footL), s.startL) > stepTol ||
                                             Vector2.Distance(FootXY(d, s.footR), s.startR) > stepTol)) why = "STEPPED";

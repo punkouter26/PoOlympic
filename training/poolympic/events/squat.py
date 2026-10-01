@@ -5,8 +5,9 @@ A metronome calls REPS squat reps that get deeper and faster: rep r goes down to
 DEPTH_START + DEPTH_STEP x r) below the standing pelvis height for down_s(r), then back up to standing for up_s(r).
   rep points = REP_POINTS x clamp(1 − |pelvis drop − depth| / DEPTH_TOL, 0, 1), the drop averaged over the last
                SAMPLE_FRAC of the down phase (on time and on depth)
-  out        = a fall (FELL: pelvis below the fall line lowered by the squat target − 0.10 m like training, torso tilt,
-               non-foot ground contact) or a foot sliding more than STEP_TOL from its start spot (STEPPED)
+  out        = a fall (FELL: pelvis below the fall line lowered by the rep's depth + 0.10 m — for the whole rep, down
+               and up: the line must not jump back to standing height while the athlete is still at the bottom —,
+               torso tilt, non-foot ground contact) or a foot sliding more than STEP_TOL from its start spot (STEPPED)
 Finishing all reps in balance earns BALANCE_BONUS. Rank by total points; ties: the later exit first. Traits as in the Iron Pedestal heat.
 """
 
@@ -150,6 +151,8 @@ def run_heat(onnx, seed: int, traits: list[Traits] | None = None, scene=None, la
                 for j in judges:
                     j.mark_feet(d)
         target = sched[seg_i][2] if seg_i >= 0 else 0.0
+        # fall line of this rep: its down-phase depth, kept through the up phase (segments come in down / up pairs)
+        rep_low = sched[seg_i - (seg_i % 2)][2] if seg_i >= 0 else 0.0
         for i, ln in enumerate(lanes):
             if not res[i].status:
                 ln.skill[0] = target
@@ -164,7 +167,7 @@ def run_heat(onnx, seed: int, traits: list[Traits] | None = None, scene=None, la
             r = res[i]
             if r.status:
                 continue
-            why = j.out(m, d, ln.skill[0])
+            why = j.out(m, d, rep_low)
             if why:
                 r.status, r.out_at_s = why, t - START_S
                 ln.skill[0] = 0.0

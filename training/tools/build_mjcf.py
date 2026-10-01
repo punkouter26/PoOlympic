@@ -126,9 +126,10 @@ MATT_GAINS = {  # kp (Nm/rad), kv (Nm s/rad), force cap (Nm), armature
     "elbow": (50.0, 5.0, 70.0, 0.01),
 }
 # size scaling: stiffness and torque cap ∝ mass × length × strength, damping additionally × time scale, armature ∝ m l²
-_TS, _IS, _TT = BODY.torque_scale, BODY.inertia_scale, BODY.time_scale
+# (Body.stiffness scales kp / kv separately from the cap: GRANDMA is weak but not floppy)
+_TS, _IS, _TT, _GS = BODY.torque_scale, BODY.inertia_scale, BODY.time_scale, BODY.gain_scale
 GAINS = MATT_GAINS if BODY.name == "matt" else {
-    k: (kp * _TS, kv * _TS * _TT, cap * _TS, arm * _IS) for k, (kp, kv, cap, arm) in MATT_GAINS.items()}
+    k: (kp * _GS, kv * _GS * _TT, cap * _TS, arm * _IS) for k, (kp, kv, cap, arm) in MATT_GAINS.items()}
 _PS = BODY.mass_scale * L        # passive toe spring: size-scaled, not weakened
 TOE_PASSIVE = dict(stiffness=20.0, damping=1.0, armature=0.005) if BODY.name == "matt" else dict(
     stiffness=20.0 * _PS, damping=1.0 * _PS * _TT, armature=0.005 * _IS)

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rung S rs_v6 Review</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --card: #ffffff; --text: #1d1d1f; --muted: #5d5d66; --line: #e2e0da;
+    --v5c: #3c4a5e; --v6: #12b5cb; --good: #1f8a4c; --warn: #b8660b; --bad: #c2372b;
+    --t1: #fff4d6; --t2: #e3f3ff; --t3: #eeeaf8; --verdict: #e8f6ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+      --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+      --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+    --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+    --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.8rem; margin: 0 0 4px; }
+  h2 { margin: 0 0 4px; font-size: 1.3rem; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+  .verdict { background: var(--verdict); }
+  .verdict p { margin: 6px 0 0; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 10px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+  .up { color: var(--good); font-weight: 600; } .same { color: var(--muted); font-weight: 600; }
+  .down { color: var(--warn); font-weight: 600; } .fail { color: var(--bad); font-weight: 600; }
+  .tag { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--muted); }
+  img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); margin: 12px 0 16px; background: #fff; }
+  .levels { display: grid; gap: 12px; }
+  .lvl { border-radius: 10px; padding: 12px 16px; }
+  .lvl h3 { margin: 0 0 4px; font-size: .95rem; }
+  .lvl p { margin: 0; }
+  .l1 { background: var(--t1); } .l2 { background: var(--t2); } .l3 { background: var(--t3); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 8px; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+  footer { color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Rung S training review: rs_v6</h1>
+  <p class="sub">2026-09-30 21:17, iteration 3299 · MATT (<code>mattbio</code> body) · 1000 iterations in 50 min ·
+    <span class="dot" style="background:var(--v5c)"></span>rs_v5c = previous run (1549 → 2548)
+    <span class="dot" style="background:var(--v6)"></span>rs_v6 = this run (from rs_v5c 2300 → 3299)</p>
+
+  <div class="box verdict">
+    <h2>Verdict: better at marching, worse at walking and turning; no new skill passes</h2>
+    <p><strong>In one sentence:</strong> the march fix worked (every test athlete now lifts its knees to 83–97 % of the called height, where five of ten did not lift at all at the starting checkpoint), but the athlete wanders off its spot while marching, one-leg standing is still unreliable, and walking and turning got worse even though they were given more practice.</p>
+    <p><strong>What changed in rs_v6:</strong> (1) walking practice 20 % → 35 % of the environments, (2) march reward only for the leg that should be in the air, (3) a penalty when the standing foot slides during the one-leg stance.</p>
+    <p><strong>How to read the charts:</strong> each skill got 13 % of the environments in rs_v6 instead of 16 %, so the same performance scores about 19 % lower on a skill chart. A cyan line slightly below the dark one can mean "equal".</p>
+    <div class="scroll">
+    <table>
+      <tr><th>Test (10 seeds, CPU)</th><th>rs_v5c 2300 (start)</th><th>rs_v6 2550</th><th>2800</th><th>3050</th><th>3299</th><th>Pass needs</th></tr>
+      <tr><td>E3 Squat</td><td>10/10 (worst 2.5 cm)</td><td>10/10</td><td>10/10</td><td>10/10</td><td class="up">10/10 (worst 1.5 cm)</td><td>&lt; 5 cm</td></tr>
+      <tr><td>E7 March</td><td>0/10 (5 no lift)</td><td>0/10</td><td>2/10</td><td>4/10</td><td class="up">4/10 (all lift 83–97 %)</td><td>lift ≥ 75 %, rhythm ±5 %, drift &lt; 0.30 m</td></tr>
+      <tr><td>E7 March, drift from the spot</td><td>0.06–0.12 m</td><td></td><td></td><td></td><td class="fail">0.17–0.90 m (5 over)</td><td>&lt; 0.30 m</td></tr>
+      <tr><td>E6 Flamingo (one trial, see chart 2)</td><td>fail (10 touches, 7 cm slip)</td><td class="up">pass (0, 0.7 cm)</td><td class="fail">fail (55, 33 cm)</td><td class="fail">fail (176, 25 cm)</td><td class="fail">fail (67, 14 cm)</td><td>0 touches, slip &lt; 10 cm</td></tr>
+      <tr><td>E2 Torso aim</td><td>8/10</td><td>5/10</td><td>2/10</td><td>4/10</td><td class="down">5/10</td><td>error &lt; 0.15 rad, feet &lt; 5 cm</td></tr>
+      <tr><td>E4 Reach, worst error (median)</td><td>0.22 m</td><td></td><td></td><td></td><td class="down">0.25 m (0/10)</td><td>&lt; 0.08 m</td></tr>
+      <tr><td>Rung 2 walking / turning (G1)</td><td>8/10</td><td>4/10</td><td>6/10</td><td>5/10</td><td class="down">6/10</td><td>10/10; 0 falls in every test</td></tr>
+    </table>
+    </div>
+    <p><strong>Checkpoints to keep:</strong> 3299 for squat + march (Event 3 can use it; Event 7 needs the drift fix first); 2550 is the only checkpoint that passes the flamingo trial; rs_v5c 2300 is still the best for torso aim and walking.</p>
+  </div>
+
+  <section class="box">
+    <h2>1 · March: the knee-lift reward keeps climbing</h2>
+    <div class="tag">Episode_Reward/skill_march_lift (swing-knee height as a fraction of the called lift; same term in both runs)</div>
+    <img src="1_march_lift.png" alt="March lift reward: rs_v5c rises from 0.04 to 0.076 by 2548; rs_v6 restarts at 2300, rises from 0.055 to 0.084 by 3299">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The robot is learning to march and lift its knees high. The blue line keeps going up, so it is getting better!</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This score goes up when the robot lifts the correct knee as high as it was told. The light-blue try ends higher than the dark try, even though it practised marching less often. In the test, every robot now lifts its knees almost all the way. Before, half of them just stood still.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>rs_v6 ends at 0.084 (smoothed) against rs_v5c's 0.076, with 13 % march environments instead of 16 %. Corrected for that share it is about 0.108 against 0.076, roughly 40 % higher, and still rising at the end with no plateau. The swing-leg-only progress term removed the pay for standing still near the profile's zero crossings. Drill at 3299: mean peak lift 0.16–0.24 m for calls of 0.17–0.29 m. Of the six failures, five are pelvis drift of 0.43–0.90 m (all at cadences of 1.3 Hz and above) and one is rhythm 6 % fast. Nothing rewards staying on the spot while marching.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>2 · Flamingo: the slip penalty did not fix it</h2>
+    <div class="tag">Episode_Reward/skill_flamingo (lifted foot off the ground and 10 cm up, standing foot planted and still)</div>
+    <img src="2_flamingo.png" alt="Flamingo reward: rs_v5c drifts from 0.10 down to 0.09; rs_v6 sits near 0.075 and drifts down to 0.06">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The robot tries to stand on one leg like a flamingo. The line is not going up. It still wobbles.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This score is high when one foot stays in the air and the other foot does not slide. It was flat before and it is flat now, even a little lower. In one test the robot did it perfectly, but in the next three tests it hopped around again. So it has not really learned it yet.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>Share-corrected, rs_v6 ends near 0.072–0.083 against rs_v5c's 0.089–0.093: slightly worse, and trending down inside the run. The new slip penalty term stays at about −0.048 for the whole run, so the policy is not reducing stance-foot speed. The drill result is one trial, not ten: the flamingo drill has no random command, so all ten seeds are identical. It passed at 2550 (0 touches, 7 mm slip) and failed at 2800, 3050 and 3299 (55–176 touch ticks, 14–33 cm slip). A "10/10" in the gate log is this single trial. The drill needs randomised start states before its count means anything.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>3 · Turning accuracy keeps eroding</h2>
+    <div class="tag">Episode_Reward/track_ang (how closely the commanded turn rate is followed; paid in every mode)</div>
+    <img src="3_track_ang.png" alt="Turn tracking reward: rs_v5c falls from 1.12 to 0.99; rs_v6 starts at 0.99 and falls steadily to 0.83">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The robot is forgetting how to turn nicely. The line goes down. That is not good.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This score is high when the robot turns exactly as fast as it is told. It was already slowly going down in the dark try. In the light-blue try it goes down faster, even though we let the robot practise walking more often. Learning the new tricks is making it forget an old one.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>rs_v6 begins where rs_v5c left off (about 0.99, so the larger walking share did not shift the term by itself) and declines almost linearly to 0.83, about 17 % in 1000 iterations and faster than rs_v5c. <code>track_lin</code> falls too (1.23 → 1.18). The Rung 2 gate agrees: 4–6/10 against 8/10 at the starting checkpoint, with no falls. Raising the walking share to 35 % did not protect locomotion. The cause is not established; candidates are interference from in-place marching (it drives the same gait clock at zero velocity) and the walking-away habit seen in the march drill. Next run: penalise pelvis drift in march mode, and check whether yaw tracking recovers when march is trained with a spot-keeping term.</p></div>
+    </div>
+  </section>
+
+  <footer>Charts: TensorBoard at localhost:6006, runs <code>rs_v5c</code> and <code>rs_v6</code> (<code>training/tools/tb_shots.py</code>). Gate data: <code>parity/watch_rs_v6.jsonl</code>, <code>parity/watch/g1_rungS_rs_v6_it*.json</code>.</footer>
+</main>
+</body>
+</html>

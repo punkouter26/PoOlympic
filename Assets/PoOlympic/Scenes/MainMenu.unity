@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &169545688
+--- !u!1 &803079955
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,9 +127,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 169545691}
-  - component: {fileID: 169545690}
-  - component: {fileID: 169545689}
+  - component: {fileID: 803079958}
+  - component: {fileID: 803079957}
+  - component: {fileID: 803079956}
   m_Layer: 0
   m_Name: MainMenu
   m_TagString: Untagged
@@ -137,13 +137,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &169545689
+--- !u!114 &803079956
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 169545688}
+  m_GameObject: {fileID: 803079955}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 213e7403b4b52c348978b1782a2866f3, type: 3}
@@ -155,6 +155,12 @@ MonoBehaviour:
     rules: 8 athletes stand shoulder to shoulder on one narrow iron beam. Gusts shove them into each other; the last one still on the beam wins.
     brain: rung0
     scene: Event_IronPedestal_Heat
+    lineup: []
+  - number: 3
+    name: Deep Squat Endurance
+    rules: Rhythmic squat repetitions. Lowest torso drop combined with balance retention scores maximum points.
+    brain: stance skills
+    scene: Event_DeepSquat
     lineup: []
   - number: 5
     name: The Gust Gauntlet
@@ -217,13 +223,14 @@ MonoBehaviour:
     scene: Event_TrenchCrawl
     lineup: []
   columns: 3
---- !u!114 &169545690
+  idleDemoSeconds: 45
+--- !u!114 &803079957
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 169545688}
+  m_GameObject: {fileID: 803079955}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
@@ -240,13 +247,13 @@ MonoBehaviour:
   m_PivotReferenceSize: 0
   m_Pivot: 0
   m_WorldSpaceCollider: {fileID: 0}
---- !u!4 &169545691
+--- !u!4 &803079958
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 169545688}
+  m_GameObject: {fileID: 803079955}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -255,7 +262,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1411498633
+--- !u!1 &2010381848
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -263,8 +270,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1411498635}
-  - component: {fileID: 1411498634}
+  - component: {fileID: 2010381850}
+  - component: {fileID: 2010381849}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -272,13 +279,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!20 &1411498634
+--- !u!20 &2010381849
 Camera:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1411498633}
+  m_GameObject: {fileID: 2010381848}
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
@@ -323,13 +330,13 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!4 &1411498635
+--- !u!4 &2010381850
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1411498633}
+  m_GameObject: {fileID: 2010381848}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -342,5 +349,5 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1411498635}
-  - {fileID: 169545691}
+  - {fileID: 2010381850}
+  - {fileID: 803079958}

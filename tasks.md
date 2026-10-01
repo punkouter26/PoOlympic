@@ -162,7 +162,7 @@ Skill gaps: events marked **S** need behaviours the current contract cannot comm
 | **Phase 1 — Stability & Balance** |
 | 1 | The Iron Pedestal | 8 runners on 1 m × 1 m pedestals; last to keep equilibrium without stepping off wins | CentreStage | pedestal (per lane in the meet) | R0 | **playable**: 8-runner last-standing heat (D4) + solo practice scene |
 | 2 | Torso Archer | feet planted, track fast overhead flight targets with the upper body; angular accuracy, zero foot slip | CentreStage | flying target (mocap-free kinematic body) | **S** upper-body target cmd | Rung S ready to train (G1 drill `E2_*`) |
-| 3 | Deep Squat Endurance | rhythmic squat reps; lowest torso drop + balance retention | CentreStage | — | **S** pelvis-height cmd | **CPU playable** (2026-09-30): `scene_squat8.xml` (venue 2 x 4 grid), `events/squat.py` — 12 metronome reps, 0.25 → 0.45 m deep, tempo 4.5 → 2.2 s; 10 pts/rep for depth accuracy; FELL / STEPPED (foot slid > 0.20 m) = out. Runs **all-mattbio** (`compose_mixed.py squat8 mattbio×8`: the brain's training physics; Unity refuses a brain on a foreign fingerprint). +10 balance bonus for finishing. Heats 42 s, 0-2 finishers, exits 24-40 s (test_deep_squat_heat). Unity `DeepSquatEvent` + `EventScenes.BuildDeepSquat` written, **scene build after training (Unity closed)** |
+| 3 | Deep Squat Endurance | rhythmic squat reps; lowest torso drop + balance retention | CentreStage | — | **S** pelvis-height cmd (`rs_v6_it3299.onnx`) | **playable** (2026-09-30): 8 athletes on the 2 x 4 station grid, all-mattbio scene (`scene_squat8_mattbio.xml`: the brain's training body; Unity refuses a brain on a foreign fingerprint). 12 metronome reps, 25 → 45 cm deep, tempo 4.5 → 2.2 s; 10 pts/rep for depth accuracy, +10 for finishing in balance; FELL (fall line lowered by the rep's depth for the whole rep) / STEPPED (foot slid > 20 cm) = out. `events/squat.py` ≡ `DeepSquatEvent`, `Event_DeepSquat.unity`, in the hub + main menu (12 playable). CPU heats 42 s, 1-4 finishers; Unity play-through: S5 wins 101.0 pts (`parity/e3/`). Open: G0 / G5 parity run |
 | 4 | Precision Javelin Reach | single-arm extension to dynamic targets at max reach, stance anchored | CentreStage | target marker | **S** hand-target cmd | Rung S ready to train (G1 drill `E4_*`) |
 | 5 | The Gust Gauntlet | lateral wind bursts + floor shakers; scored on recovery time back to centre | CentreStage | shaker platform (spring-mounted, x/y slide joints) | R2 + homing steering | **playable** (10 rounds of escalating lateral bursts, floor jolt every 2nd round; rank by total recovery time, fall / stepped off = out, `Event_GustGauntlet.unity`) |
 | **Phase 2 — Fundamental Track & Gait** |
@@ -252,8 +252,9 @@ User decisions (2026-09-30): Claude rigs the unrigged scan in Blender (no AccuRi
   hip-slab skin: bone heat gives the buttocks to the thighs), `grandma.xml` / `scene_grandma.xml` (65.0 kg, root z
   0.678 m), fingerprint, `contract_grandma.json`; test_model 13/13 with POOLYMPIC_BODY=grandma.
 - [ ] **G3 Rung 0** — `tasks/grandma_env.py` (MATT's Rung 0 recipe, Froude-scaled like the zombie; stoop 10° +
-  steady stance style rewards), task `PoOlympic-Grandma-Rung0-Stand` (C1 PASS). Run g0_v1 (from scratch, 1500 its,
-  gates 0 at 500 / 1000 / 1499) chained after rs_v6. *Accept: G1 rung0 10/10.*
+  steady stance style rewards), task `PoOlympic-Grandma-Rung0-Stand` (C1 PASS). g0_v1 failed (launched with 1 env);
+  body: PD stiffness unscaled by strength (`Body.stiffness`), stance hip 17° / knee 24° / ankle 7°. **g0_v2** running
+  (4096 envs, 1500 its, gates 0 at 500 / 1000 / 1499). *Accept: G1 rung0 10/10.*
 - [ ] **G4 Unity** — visual binding + Testbed_Grandma (G0 / G2-G5), roster card, mixed lineups.
 - [ ] **G5 Rung 2 grandma** — short careful steps, size-scaled envelope.
 

@@ -592,8 +592,29 @@ One entry per run or decision. Newest at the bottom.
 - Launch: WMI could not start the Store `pwsh` (ReturnValue 9 / silent exit) and `-File` does not group single-quoted
   args → `detached_run.ps1` header documents powershell.exe + double quotes; LoadRun/Checkpoint now optional (scratch runs).
 - Archived rs_v5b / rs_v5c intermediate checkpoints (kept the gated ones + all TensorBoard logs) to runs_archive.
-- **it2550 gate:** G1 S squat **10/10**, **flamingo 10/10 (first ever; rs_v5c 0/10)**, torso 5, march 0, reach 0 ·
-  Rung 2 4/10 (0 falls).
+- **Gates** (G1 S per drill · Rung 2; 0 falls everywhere; 1000 its in 50 min, 2.5-2.9 s/it):
+
+  | it | squat | flamingo | march | torso | reach | Rung 2 |
+  |---|---|---|---|---|---|---|
+  | rs_v5c 2300 (start) | 10 | 0 | 0 | 8 | 0 | 8/10 |
+  | 2550 | 10 | 10 | 0 | 5 | 0 | 4/10 |
+  | 2800 | 10 | 0 | 2 | 2 | 0 | 6/10 |
+  | 3050 | 10 | 0 | 4 | 4 | 0 | 5/10 |
+  | 3299 | 10 | 0 | 4 | 5 | 0 | 6/10 |
+
+- **March: the fix worked.** 3299: every seed lifts 83-97 % of the commanded lift (0.16-0.24 m; rs_v5c 2300: 5 seeds no
+  lift, the rest ~0.12 m). 5 of the 6 misses are pelvis drift 0.43-0.90 m (bar 0.30 m), all at cadence >= 1.3 Hz; one is
+  cadence 6 % fast. Nothing pays staying on the spot -> next: drift penalty in march mode. Squat worst err 2.5 -> 1.5 cm.
+- **Flamingo: not fixed, and the drill is ONE trial.** `drill_flamingo` draws no random command, so all 10 seeds are
+  identical: "10/10" at 2550 = one pass (0 touches, 7 mm slip), then 55-176 touch ticks / 14-33 cm slip. Training
+  `skill_flamingo` share-corrected 0.07-0.08 vs rs_v5c 0.09, `skill_flamingo_slip` flat at -0.048 (the penalty is not
+  being reduced). Next: randomise the drill's start (settle time / small push) before trusting its count.
+- **Locomotion keeps eroding** despite 35 % walking envs: track_ang 0.99 -> 0.83, track_lin 1.23 -> 1.18 inside the run,
+  Rung 2 G1 4-6/10 (start 8/10). Cause not established (candidates: in-place marching drives the same gait clock; the
+  walking-away habit of the march). Torso 8 -> 2-5/10, reach median 0.22 -> 0.25 m.
+- Skill terms pay per env in that mode: 13 % share (was 16 %) -> the same skill scores ~19 % lower on the charts.
+- **Checkpoints:** 3299 = squat + march; 2550 = the only flamingo pass; rs_v5c 2300 still best for torso + Rung 2.
+  Review: `parity/tb/rs_v6/review.html`.
 - Side check: `rs_v5_it2300.onnx` on the plain MATT body (not mattbio) passes the squat drill 5/5 (worst err 1.3-2.4 cm,
   same as mattbio) → Event 3 can run in the MATT event scenes before the mattbio promotion.
 
@@ -605,4 +626,31 @@ One entry per run or decision. Newest at the bottom.
   elbow 30 Nm. MJCF 65.000 kg, root z 0.678 m, fall line 0.390 m (0.55 × 0.678 / 0.955).
 - `grandma_env.grandma_rung0_env_cfg`: MATT Rung 0 + zombie-style Froude scaling; style: `stoop` (torso pitch 10°,
   σ 10°, w 1) replaces upright, `steady_stance` (feet 0.26 m apart, w 0.5). C1 PASS.
-- **g0_v1** chained after rs_v6 (`runs/chain_g0_v1.ps1`): from scratch, 1500 its, watch_gate rung 0 at 500/1000/1499.
+- **g0_v1** chained after rs_v6: from scratch, 1500 its. **FAILED, my launch mistake: 1 environment** (this task has no
+  fast_sim default; the zombie runs passed `--env.scene.num-envs 4096` on the CLI). 0.5 s/it, episode length 40 -> 47
+  ticks in 260 its, every episode ending in torso_tilt. Run deleted. A zombie probe launched the same way is equally flat.
+- While chasing that (before finding the env count) two body changes were made on their own merits; neither is proven
+  necessary: (1) **`Body.stiffness` = 1.0** for GRANDMA (`gain_scale`): kp / kv no longer scaled by the 0.6 strength,
+  only the torque caps are. With kp x 0.6 her hip stiffness (127 Nm/rad) was below the gravity gradient of her trunk
+  (~150 Nm/rad) and the trunk folded to 62 deg in 0.8 s under a passive hold. Zombie MJCF byte-identical. (2) **stance**
+  hip 14 -> 17 deg, ankle 10 -> 7 deg (pelvis level, COM 43 % -> 32 % of heel -> toe; MATT 34 %, zombie 39 %).
+  Passive hold now: trunk sags ~14 deg at the waist, falls at ~1.2 s (zombie passive: 51 deg at 0.5 s; MATT ~2.3 s) —
+  the policy has to balance actively, as for the others. Joints not saturated (abdomen 50 / 85 Nm, hip 32 / 119).
+  New fingerprint de971d49, contract_grandma.json regenerated, test_model 13/13.
+- Probe with 4096 envs (100 its): episode length 14 -> 421 ticks (zombie z0_v1: 371 at it 100) -> learning normally.
+- **g0_v2** (21:35, detached): `--env.scene.num-envs 4096`, 1500 its, 1.8 s/it (~45 min), gates rung 0 at 500/1000/1499
+  (prefix grandma_r0).
+
+## 2026-09-30 21:50 · Event 3 Deep Squat Endurance playable (Unity)
+- Rung S brains carry the mattbio fingerprint, so the event scene is all-mattbio (`compose_mixed.py squat8 mattbio x 8`);
+  `BodyAssets("mattbio")` = contract_mattbio + MATT's visual; LaneLineup / BuildMeetScene fall back to the lane's own
+  body when a scene has no MATT.
+- Rules bug found with the stronger brain: the fall line returned to standing height at the down -> up switch while the
+  pelvis was still 43 cm down (5 athletes "FELL" at exactly 34.9 s with rs_v6_it3299; rs_v5_it2300 never squatted
+  that deep). Now the rep's depth lowers the line for the whole rep (Python + C#).
+- Brain `rs_v6_it3299.onnx` (squat worst err 1.5 cm). CPU, 6 seeds: winners 96-104 pts, 1-4 finishers per heat, exits
+  13-41 s (all STEPPED: feet creep > 20 cm). test_events 11/11.
+- Unity: `Event_DeepSquat.unity` built through the Unity CLI, play-through seed 1: S5 wins 101.0 pts (DONE) after
+  40.9 s; hub + main menu rebuilt (12 playable events). Captures `parity/e3/squat_{live,down,result}.png`.
+- Not done: G0 fingerprint check of the squat8 scene and a G5-style parity run of one attempt; EditMode test suite
+  not re-run after the LaneLineup / EventScenes changes.

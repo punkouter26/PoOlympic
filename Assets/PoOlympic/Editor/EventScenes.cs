@@ -358,7 +358,7 @@ namespace PoOlympic.Editor
         public const string SquatSource = "training/assets/scene_squat8_mattbio.xml";
         public const string SquatLayout = "training/assets/squat8_mattbio_layout.json";
         // Event 3: the Rung S brain (contract v4 pelvis-height command), trained on the mattbio body -> all-mattbio scene
-        public const string SquatBrain = "rs_v5_it2300.onnx";
+        public const string SquatBrain = "rs_v6_it3299.onnx";   // squat 10/10, worst depth error 1.5 cm
 
         /// <summary>Event 3: 8 mattbio athletes on the venue's 2 x 4 station grid (3 m x 4 m apart, scene_squat8_mattbio.xml),
         /// DeepSquatEvent + HUD.</summary>
@@ -377,7 +377,7 @@ namespace PoOlympic.Editor
             bc.target = meet.FocusPelvis;
             bc.focusOffset = new Vector3(-4.5f, 0f, -2f);    // grid centre (station S4 is the origin; rows at y = 0 / -4 m)
             bc.offset = new Vector3(8.5f, 4.0f, -5.0f);      // front three-quarter: the athletes face +x
-            AddBroadcast(ev, "DEEP SQUAT ENDURANCE", "Event 3", 3, $"v0 · {Path.GetFileNameWithoutExtension(brainFile)}", meet.Camera,
+            AddBroadcast(ev, "DEEP SQUAT", "Event 3", 3, $"v0 · {Path.GetFileNameWithoutExtension(brainFile)}", meet.Camera,
                          BroadcastDirector.Kind.Arena, Vector3.right);
             EditorSceneManager.SaveScene(meet.Scene, SquatScene);
             return $"{SquatScene}: {ev.squatters.Count} athletes, {ev.reps} reps, brain {brainFile}";

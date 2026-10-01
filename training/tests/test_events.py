@@ -135,7 +135,7 @@ def test_trench_crawl_heat():
     assert all(12.0 < l.finish_s < 30.0 for l in finished)
 
 
-SQUAT_BRAIN = C.ROOT.parent / "parity" / "brains" / "rs_v5_it2300.onnx"
+SQUAT_BRAIN = C.ROOT.parent / "parity" / "brains" / "rs_v6_it3299.onnx"
 
 
 @pytest.mark.skipif(not SQUAT_BRAIN.exists(), reason="Rung S brain not exported")
