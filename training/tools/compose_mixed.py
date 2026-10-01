@@ -37,6 +37,7 @@ SCENES = {  # scene -> the build_mjcf.compose_meet arguments of that event scene
     "track8": dict(event=22, park_offset=(0.0, -30.0, 0.0), crowd=True),
     "crawl8": dict(event=8, park_offset=(0.0, -30.0, 0.0), crowd=True),
     "turntable8": dict(event=12, crowd=True),
+    "squat8": dict(event=3, park_offset=(0.0, -30.0, 0.0), crowd=True),   # Event 3 runs all-mattbio (Rung S brain)
     "crab8": dict(event=10, yaw=90.0, park_offset=(0.0, -30.0, 0.0), props=B.crab_rails, crowd=True),
     "shaker8": dict(event=5, park_offset=(0.0, -30.0, 0.0), shaker=B.shaker_floor, crowd=True),
     "slalom8": dict(event=11, park_offset=(0.0, -30.0, 0.0), props=B.slalom_poles, crowd=True),

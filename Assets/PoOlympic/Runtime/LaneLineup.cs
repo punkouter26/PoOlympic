@@ -47,7 +47,8 @@ namespace PoOlympic
             for (int k = 0; k < lanes; k++)
             {
                 string want = k < MeetLineup.Athletes.Length ? MeetLineup.Athletes[k].ToLowerInvariant() : "matt";
-                if (!entries.Any(e => e.lane == k && e.body == want)) want = "matt";
+                if (!entries.Any(e => e.lane == k && e.body == want))   // MATT, else the lane's only body (Event 3: mattbio)
+                    want = entries.Any(e => e.lane == k && e.body == "matt") ? "matt" : entries.First(e => e.lane == k).body;
                 Kept[k] = want;
                 foreach (var e in entries.Where(e => e.lane == k && e.body != want))
                 {

@@ -1,5 +1,5 @@
 """3 Deep Squat Endurance — 8 athletes on the venue's 2 x 4 station grid (assets/scene_squat8.xml, stations 3 m x 4 m
-apart: no contact), Rung S brain (contract v4 pelvis-height command). Mirror of Unity DeepSquatEvent.
+apart: no contact; all-mattbio lineup), Rung S brain (contract v4 pelvis-height command). Mirror of Unity DeepSquatEvent.
 
 A metronome calls REPS squat reps that get deeper and faster: rep r goes down to depth(r) = min(DEPTH_MAX,
 DEPTH_START + DEPTH_STEP x r) below the standing pelvis height for down_s(r), then back up to standing for up_s(r).
@@ -7,7 +7,7 @@ DEPTH_START + DEPTH_STEP x r) below the standing pelvis height for down_s(r), th
                SAMPLE_FRAC of the down phase (on time and on depth)
   out        = a fall (FELL: pelvis below the fall line lowered by the squat target − 0.10 m like training, torso tilt,
                non-foot ground contact) or a foot sliding more than STEP_TOL from its start spot (STEPPED)
-Rank by total points; ties: the later exit first. Traits as in the Iron Pedestal heat.
+Finishing all reps in balance earns BALANCE_BONUS. Rank by total points; ties: the later exit first. Traits as in the Iron Pedestal heat.
 """
 
 from __future__ import annotations
@@ -23,8 +23,10 @@ import numpy as np
 from .. import contract as C
 from .iron_pedestal import FALL_TILT_DEG, Traits, _Lane, make_lanes
 
-SCENE = C.ROOT / "assets" / "scene_squat8.xml"
-LAYOUT = C.ROOT / "assets" / "squat8_layout.json"
+# the Rung S brains are trained on the mattbio body (MATT + self-collision + bio torque caps): the event runs all-mattbio
+# (tools/compose_mixed.py squat8 mattbio x 8), so physics == training and Unity's fingerprint check passes
+SCENE = C.ROOT / "assets" / "scene_squat8_mattbio.xml"
+LAYOUT = C.ROOT / "assets" / "squat8_mattbio_layout.json"
 REPS = 12
 DEPTH_START, DEPTH_STEP, DEPTH_MAX = 0.25, 0.02, 0.45    # m below standing (Rung S range: 0 .. 0.45)
 DOWN_START, UP_START, TEMPO_STEP = 2.5, 2.0, 0.1         # s; each rep 0.1 s faster down and up
@@ -33,6 +35,7 @@ SAMPLE_FRAC = 0.4
 REP_POINTS = 10.0
 DEPTH_TOL = 0.10       # m: zero points this far off the called depth
 STEP_TOL = 0.20        # m: a foot this far from its start spot = STEPPED
+BALANCE_BONUS = 10.0   # points for finishing every rep without falling / stepping (= one perfect rep)
 START_S = 1.0          # settle before the first rep (Unity countdown hand-off)
 
 
@@ -174,7 +177,7 @@ def run_heat(onnx, seed: int, traits: list[Traits] | None = None, scene=None, la
         _score_rep(sched[seg_i], res, buf)
     for r in res:
         r.status = r.status or "DONE"
-        r.points = round(sum(r.reps), 3)
+        r.points = round(sum(r.reps) + (BALANCE_BONUS if r.status == "DONE" else 0.0), 3)
     order = sorted(res, key=lambda r: (-r.points, -(r.out_at_s if r.out_at_s is not None else 1e9)))
     for p, r in enumerate(order, 1):
         r.place = p

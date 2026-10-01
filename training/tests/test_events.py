@@ -133,3 +133,22 @@ def test_trench_crawl_heat():
     assert len(finished) >= 7
     # 16 m: MATT squeezes under the 0.72 m ceiling (~15-19 s), the zombie crawls at its own pace (~17 s)
     assert all(12.0 < l.finish_s < 30.0 for l in finished)
+
+
+SQUAT_BRAIN = C.ROOT.parent / "parity" / "brains" / "rs_v5_it2300.onnx"
+
+
+@pytest.mark.skipif(not SQUAT_BRAIN.exists(), reason="Rung S brain not exported")
+def test_deep_squat_heat():
+    from poolympic.events import squat
+    res = squat.run_heat(SQUAT_BRAIN, seed=1)
+    assert sorted(l.place for l in res.lanes) == list(range(1, 9))
+    assert res.duration_s == pytest.approx(squat.START_S + squat.total_s(), abs=0.03)
+    for l in res.lanes:
+        assert l.status in ("DONE", "FELL", "STEPPED")
+        assert len(l.reps) >= 8                                   # nobody is out before the 9th rep (~27 s)
+        assert all(0.0 <= p <= squat.REP_POINTS for p in l.reps)
+        assert l.points == pytest.approx(sum(l.reps) + (squat.BALANCE_BONUS if l.status == "DONE" else 0.0), abs=1e-2)
+        assert all(e < 0.10 for e in l.errs_m[:6])               # the first six reps (25-35 cm) are accurate
+    by_place = sorted(res.lanes, key=lambda l: l.place)
+    assert all(a.points >= b.points for a, b in zip(by_place, by_place[1:]))

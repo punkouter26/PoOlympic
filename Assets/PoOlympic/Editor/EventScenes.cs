@@ -81,6 +81,7 @@ namespace PoOlympic.Editor
         {
             "matt" => ("Assets/PoOlympic/Models/contract.json", VisualBinding.MattAsset, "M"),
             "zombie" => ("Assets/PoOlympic/Models/contract_zombie.json", ZombieAsset, "Z"),
+            "mattbio" => ("Assets/PoOlympic/Models/contract_mattbio.json", VisualBinding.MattAsset, "M"),   // MATT's skeleton
             _ => throw new ArgumentException($"unknown athlete body '{body}'"),
         };
 
@@ -353,6 +354,35 @@ namespace PoOlympic.Editor
             return $"{TurntableScene}: {ev.spinners.Count} athletes, {ev.turns} turns at {ev.spinRate} rad/s, brain {brainFile}";
         }
 
+        public const string SquatScene = "Assets/PoOlympic/Scenes/Event_DeepSquat.unity";
+        public const string SquatSource = "training/assets/scene_squat8_mattbio.xml";
+        public const string SquatLayout = "training/assets/squat8_mattbio_layout.json";
+        // Event 3: the Rung S brain (contract v4 pelvis-height command), trained on the mattbio body -> all-mattbio scene
+        public const string SquatBrain = "rs_v5_it2300.onnx";
+
+        /// <summary>Event 3: 8 mattbio athletes on the venue's 2 x 4 station grid (3 m x 4 m apart, scene_squat8_mattbio.xml),
+        /// DeepSquatEvent + HUD.</summary>
+        [MenuItem("PoOlympic/Events/Build Event 3 — Deep Squat Endurance")]
+        public static string BuildDeepSquat() => BuildDeepSquat(SquatBrain);
+
+        public static string BuildDeepSquat(string brainFile)
+        {
+            var meet = BuildMeetScene(SquatSource, SquatLayout, 3, AthleteLane, 0f, brainFile,
+                                      new System.Collections.Generic.Dictionary<string, string> { { "mattbio", brainFile } });
+            var ev = new GameObject("DeepSquatEvent").AddComponent<DeepSquatEvent>();
+            foreach (var (k, r) in meet.Lanes) ev.squatters.Add(new DeepSquatEvent.Squatter { runner = r, name = $"S{k + 1}" });
+            meet.Pool.runner = ev.squatters[0].runner;
+
+            var bc = meet.Camera.GetComponent<BroadcastCamera>();
+            bc.target = meet.FocusPelvis;
+            bc.focusOffset = new Vector3(-4.5f, 0f, -2f);    // grid centre (station S4 is the origin; rows at y = 0 / -4 m)
+            bc.offset = new Vector3(8.5f, 4.0f, -5.0f);      // front three-quarter: the athletes face +x
+            AddBroadcast(ev, "DEEP SQUAT ENDURANCE", "Event 3", 3, $"v0 · {Path.GetFileNameWithoutExtension(brainFile)}", meet.Camera,
+                         BroadcastDirector.Kind.Arena, Vector3.right);
+            EditorSceneManager.SaveScene(meet.Scene, SquatScene);
+            return $"{SquatScene}: {ev.squatters.Count} athletes, {ev.reps} reps, brain {brainFile}";
+        }
+
         public const string CrabScene = "Assets/PoOlympic/Scenes/Event_CrabShuffle.unity";
         public const string CrabSource = "training/assets/scene_crab8_roster.xml";
         public const string CrabLayout = "training/assets/crab8_roster_layout.json";
@@ -568,7 +598,7 @@ namespace PoOlympic.Editor
                 meet.Lanes.Add((k, r));
                 var pelvis = Array.Find(physics.GetComponentsInChildren<MjBody>(true), bd => bd.name == prefix + "pelvis");
                 lanes.entries.Add(new LaneLineup.Entry { lane = k, body = body, runner = r, pelvis = pelvis.gameObject });
-                if (k == AthleteLane && body == "matt") meet.FocusPelvis = pelvis;
+                if (k == AthleteLane && (body == "matt" || meet.FocusPelvis == null)) meet.FocusPelvis = pelvis;   // MATT, else the lane's body
             }
             var cc = meet.Camera.GetComponent<Camera>();
             cc.nearClipPlane = 0.2f;
@@ -583,6 +613,7 @@ namespace PoOlympic.Editor
         public static readonly System.Collections.Generic.Dictionary<int, string> EventScenePaths = new()
         {
             { 1, IronPedestalHeatScene },   // official 8-runner heat (solo practice: Event_IronPedestal.unity)
+            { 3, SquatScene },
             { 5, GauntletScene },
             { 8, AllFoursScene },
             { 9, "Assets/PoOlympic/Scenes/Event_InvertedSprint.unity" },
