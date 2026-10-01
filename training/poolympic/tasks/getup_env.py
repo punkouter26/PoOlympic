@@ -398,3 +398,14 @@ def matt_getup_ladder_b_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     cfg.rewards["feet_under"] = RewardTermCfg(func=mdp.feet_under_pelvis, weight=3.0, params={"std": 0.3})
     cfg.curriculum["getup_rev"].params["assist_max"] = 0.8
     return cfg
+
+
+def matt_getup_ladder_c_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """getup_rev_v2c: v2b still straightened its legs on stage 2 (0 % for 60 its, assist at 0.8: it hangs from the assist
+    with straight legs). Zero action = the standing pose, so the knees open within 0.3 s, and with std 0.3 feet_under is
+    ~0 in the long sit (feet 0.85 m ahead: e^-8): no gradient left to pull them back. std 0.3 -> 0.5 (long sit 0.06,
+    tuck 0.6, squat 0.96), weight 3 -> 4."""
+    cfg = matt_getup_ladder_b_env_cfg(play=play)
+    cfg.rewards["feet_under"].weight = 4.0
+    cfg.rewards["feet_under"].params["std"] = 0.5
+    return cfg

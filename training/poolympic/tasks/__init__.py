@@ -239,7 +239,7 @@ if bodies.current().name == "mattbio":
     # STAGED (not trained; needs the user's OK — DESIGN §2 body change): MATT with full self-collision + bio torque caps
     # (bodies.BIO_TORQUE_CAPS). Same contract, so every MATT checkpoint warm-starts directly. POOLYMPIC_BODY=mattbio.
     from .matt_env import matt_ppo_v5_cfg, matt_rung0_v5_env_cfg, matt_rung2_flight_v5_env_cfg, matt_rung2_v5_env_cfg
-    from .getup_env import matt_getup_ladder_b_env_cfg, matt_getup_ladder_env_cfg, matt_getup_rev_env_cfg
+    from .getup_env import matt_getup_ladder_b_env_cfg, matt_getup_ladder_c_env_cfg, matt_getup_ladder_env_cfg, matt_getup_rev_env_cfg
     from .crawl_env import matt_crawl_v5_env_cfg
     from .stance_env import matt_stance_env_cfg, matt_stance_v6_env_cfg, matt_stance_v7_env_cfg
     from .symmetry import SymmetricRunner
@@ -255,6 +255,7 @@ if bodies.current().name == "mattbio":
             ("PoOlympic-MattBio-Getup-Rev", matt_getup_rev_env_cfg, "mattbio_getup", 1500, MjlabOnPolicyRunner),
             ("PoOlympic-MattBio-Getup-Ladder", matt_getup_ladder_env_cfg, "mattbio_getup", 1500, MjlabOnPolicyRunner),
             ("PoOlympic-MattBio-Getup-Ladder-b", matt_getup_ladder_b_env_cfg, "mattbio_getup", 1500, MjlabOnPolicyRunner),
+            ("PoOlympic-MattBio-Getup-Ladder-c", matt_getup_ladder_c_env_cfg, "mattbio_getup", 1500, MjlabOnPolicyRunner),
             ("PoOlympic-MattBio-Crawl", matt_crawl_v5_env_cfg, "mattbio_crawl", 600, MjlabOnPolicyRunner)):
         rl = matt_ppo_v5_cfg(exp, max_iterations=its)
         if task_id.endswith("Stance-v7"):
