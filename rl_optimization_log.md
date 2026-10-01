@@ -803,3 +803,17 @@ One entry per run or decision. Newest at the bottom.
   3.55 m/s and events still scale commands by √λ, so official G1 cannot reach 10/10 with this brain; the reading
   "segments with |vx| <= 2.8" is reported next to it. Lowering her envelope (and the bars / event commands with it)
   is a user decision.
+
+## 2026-10-01 07:30 · g2_v5 finished: stable, best 4/10 → provisional `grandma_rung2.onnx`; rs_v7 started
+- **g2_v5** (vx <= 2.80 m/s, 1200 its, 59 min at 2.9 s/it): error_vel_xy flat at 1.00-1.08, action std 0.29 → 0.20, mean
+  reward 113 → 124, yaw error 1.1 → 0.71. G1 rung 2 (official bars, sprints sampled to 3.55 m/s): it 300 2/10 ·
+  **it 600 4/10** · it 900 3/10 · it 1199 3/10; 0 falls, turntable 2.36-2.64 s, brake + backward 10/10 at every gate; lin
+  2-4 seeds, per-tick yaw 5 seeds. Reading "stride yaw + segments <= 2.8 m/s": 3 / 5 / 4 / 4.
+  Speed probe: 2.5 / 2.8 / 3.7 → 2.37 / 2.66 / 3.30 (it 600), 2.10 / 2.38 / 3.18 (it 1199): no cliff, monotonic.
+- Remaining misses inside her range: 6-8 % slow above 2.3 m/s (sprint lin median 0.26-0.32 vs 0.187), crab segments up
+  to 0.33, per-tick yaw 0.37-0.41 on sprints (0.03-0.07 per stride).
+- **`parity/brains/grandma_rung2.onnx` = g2_v5 it 600 — provisional, NOT a G1 pass.** Rung 2 for GRANDMA stays open:
+  (1) user decision on her command envelope (≈ 2.8 m/s top, bars + event scaling with it) and on judging yaw per
+  stride like the zombie; (2) precision work on the recipe either way.
+- Review of the four attempts: `parity/tb/g2_v5/review.html`.
+- Queue: **rs_v7** started 07:28 (4.5 s/it at the start), then r0bio_v1, r2fbio_v1, crawl_bio_v1, getup_rev_v1.

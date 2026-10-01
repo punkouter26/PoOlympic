@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GRANDMA Rung 2 Attempts</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --card: #ffffff; --text: #1d1d1f; --muted: #5d5d66; --line: #e2e0da;
+    --c1: #7cb342; --c2: #e8710a; --c3: #3c4a5e; --c4: #12b5cb; --c5: #e52592; --good: #1f8a4c; --warn: #b8660b; --bad: #c2372b;
+    --t1: #fff4d6; --t2: #e3f3ff; --t3: #eeeaf8; --verdict: #e8f6ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+      --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+      --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+    --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+    --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.8rem; margin: 0 0 4px; }
+  h2 { margin: 0 0 4px; font-size: 1.3rem; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+  .verdict { background: var(--verdict); }
+  .verdict p { margin: 6px 0 0; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 10px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+  .up { color: var(--good); font-weight: 600; } .same { color: var(--muted); font-weight: 600; }
+  .down { color: var(--warn); font-weight: 600; } .fail { color: var(--bad); font-weight: 600; }
+  .tag { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--muted); }
+  img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); margin: 12px 0 16px; background: #fff; }
+  .levels { display: grid; gap: 12px; }
+  .lvl { border-radius: 10px; padding: 12px 16px; }
+  .lvl h3 { margin: 0 0 4px; font-size: .95rem; }
+  .lvl p { margin: 0; }
+  .l1 { background: var(--t1); } .l2 { background: var(--t2); } .l3 { background: var(--t3); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 8px; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+  footer { color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>GRANDMA Rung 2 training review: four attempts after the base run</h1>
+  <p class="sub">2026-10-01 07:30 · GRANDMA (1.60 m, 65 kg, 60 % strength) · every attempt warm-starts from the base run's iteration 1000 ·
+    <span class="dot" style="background:var(--c1)"></span>g2_v1b base run (2000 it)
+    <span class="dot" style="background:var(--c2)"></span>g2_v2b final recipe (stopped at 443)
+    <span class="dot" style="background:var(--c3)"></span>g2_v3 same, low entropy (stopped at 659)
+    <span class="dot" style="background:var(--c4)"></span>g2_v4 base + turn cap (stopped at 623)
+    <span class="dot" style="background:var(--c5)"></span>g2_v5 same, top speed 2.8 m/s (1200 it, 59 min)</p>
+
+  <div class="box verdict">
+    <h2>Verdict: g2_v5 is the first stable result, 4 of 10 at best; Rung 2 is not passed</h2>
+    <p><strong>In one sentence:</strong> with her top commanded speed lowered from 3.7 to 2.8 m/s GRANDMA keeps running through the whole run instead of giving up on fast commands, never falls, and passes the turntable, brake and backward drills on every seed, but she still misses the speed and turn-wobble bars on most seeds.</p>
+    <p><strong>Is it better than the earlier attempts?</strong> Yes for stability: the three attempts that asked for up to 3.7 m/s all got worse the longer they trained. In pass counts it is only slightly ahead (4/10 against 3/10), and the official test still asks for sprints she was not trained on.</p>
+    <div class="scroll">
+    <table>
+      <tr><th>Attempt</th><th>What changed</th><th>Best gate</th><th>Speed at a 2.5 / 2.8 / 3.7 m/s command (last gate)</th><th>Outcome</th></tr>
+      <tr><td>g2_v1b it 1000 (start)</td><td>base recipe</td><td>3/10</td><td>2.36 / 2.66 / 3.33</td><td>collapsed later (0.24 m/s at any fast command)</td></tr>
+      <tr><td>g2_v2b</td><td>zombie's final recipe</td><td>0/10 (it 400)</td><td class="fail">1.25 / 1.45 / 1.80</td><td>action noise grew, reward fell; stopped</td></tr>
+      <tr><td>g2_v3</td><td>+ entropy 0.005 → 0.001</td><td>1/10 (it 300)</td><td class="down">1.90 / 2.06 / 1.89</td><td>noise fixed, speed plateau near 2 m/s; stopped</td></tr>
+      <tr><td>g2_v4</td><td>base + sideways-acceleration cap</td><td>3/10 (it 300)</td><td class="fail">2.18 / 1.61 / 0.12</td><td>refusal starts at the top and moves down; stopped</td></tr>
+      <tr><td>g2_v5 it 600 (kept)</td><td>+ top speed 2.8 m/s</td><td class="up">4/10</td><td class="up">2.37 / 2.66 / 3.30</td><td>stable for 1200 iterations; 3/10 at 900 and 1199</td></tr>
+    </table>
+    </div>
+    <p><strong>g2_v5 gates</strong> (0 falls everywhere; turntable 2.4–2.6 s, brake and backward 20 m pass on all seeds): it 300 2/10 · it 600 <strong>4/10</strong> · it 900 3/10 · it 1199 3/10. Speed tracking passes on 2–4 seeds, per-tick turn tracking on 5. Counting only test segments up to 2.8 m/s and judging turn error per stride adds one seed (5/10 at it 600).</p>
+    <p><strong>Brain:</strong> <code>parity/brains/grandma_rung2.onnx</code> = g2_v5 iteration 600, provisional. It is a usable walker and runner for events; it is not a Rung 2 pass.</p>
+  </div>
+
+  <section class="box">
+    <h2>1 · Speed error</h2>
+    <div class="tag">Metrics/athlete/error_vel_xy (m/s, lower is better). Not like for like: g2_v5 (pink) is only asked for up to 2.8 m/s, the others up to 3.7, so part of its lower line is the easier command set.</div>
+    <img src="1_speed_error.png" alt="Speed error: base run collapses after iteration 1300; g2_v2b, g2_v3 and g2_v4 all rise from 1.4 to 1.7-2.0; g2_v5 stays flat at 1.0-1.1 for 1200 iterations">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The pink line stays flat and low. That is Grandma running nicely the whole time. The other lines go up, which means she slowed down.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>Each line is one try at teaching Grandma. Low means she moves at the speed she is asked for. In the orange, dark and light-blue tries the line climbs: the longer she practised, the slower she got. In the pink try we stopped asking for her very fastest sprint, and the line stays flat from start to finish.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>g2_v2b rises 1.42 → 1.94 in 440 iterations, g2_v3 1.42 → 1.66, g2_v4 1.35 → 2.0 with the steepest part after iteration 450; g2_v5 holds 1.00–1.08 for all 1200. The fair comparison is the CPU speed probe, which uses the same commands for every checkpoint: at a 2.8 m/s command g2_v5 reaches 2.62–2.66 m/s at iterations 300–900 and 2.38 at 1199, and at 3.7 (outside its training range) 3.18–3.35, monotonic in the command. g2_v4 reached 1.61 at 2.8 and 0.12 at 3.7 by iteration 600. In g2_v4 the mean reward rose while the top speeds were dropped, so refusing 3.3–3.7 m/s was reward-optimal for this body, not a failure to learn.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>2 · Action noise</h2>
+    <div class="tag">Policy/mean_std (how random the policy's actions are during training)</div>
+    <img src="2_action_noise.png" alt="Action std: base run rises from 0.36 to 0.54; g2_v2b rises from 0.51 to 0.58; g2_v3 flat at 0.29; g2_v4 and g2_v5 fall from 0.29 to 0.22 and 0.20">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>When the orange line goes up, Grandma's moves get more wobbly and random. In the pink try her moves get calmer.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>While learning, the robot adds a little randomness to try new things. Too much randomness makes fast running fall over. In the green and orange tries the randomness kept growing. From the dark try on we turned that down, and in the light-blue and pink tries it shrinks, which is what we want late in training.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>With the default entropy coefficient (0.005) the std climbs: 0.36 → 0.54 over the base run and 0.51 → 0.58 in g2_v2b, where the mean reward fell from 112 to 102 at the same time. With 0.001 and a start capped at 0.3 it stays at 0.29 in g2_v3 (the symmetric-runner recipe) and decays to 0.22 and 0.20 in g2_v4 and g2_v5. Lower noise was necessary but not sufficient: g2_v3 and g2_v4 still lost speed for other reasons (the extra turn penalties; the 3.7 m/s band).</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>3 · Turn-rate error</h2>
+    <div class="tag">Metrics/athlete/error_vel_yaw (rad/s, lower is better; includes the body's roll and pitch rocking)</div>
+    <img src="3_yaw_error.png" alt="Yaw error: g2_v2b near 1.35, g2_v3 near 1.1, g2_v4 falls from 1.2 to 0.75, g2_v5 falls from 1.1 to 0.71">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The pink line goes down. Grandma wobbles less and less when she turns.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This line shows how far the robot's turning is from what it was asked. In the pink try it keeps improving all the way, and ends the lowest of all the tries. She turns on the spot in about two and a half seconds every time in the test.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>g2_v5 falls from 1.1 to 0.71 and is still declining at 1199; g2_v4 follows the same curve to 0.75 before it was stopped. The gate still fails per-tick turn tracking on half the seeds, on sprint segments only: per-tick RMS 0.37–0.41 rad/s against a 0.32 bar, but 0.03–0.07 when averaged over a stride. That is the per-stride body rocking the zombie also had, and for the zombie it is judged per stride by an earlier ruling; no such ruling exists for GRANDMA.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>What needs a decision</h2>
+    <p>Her official test and her event commands are scaled by height only, which asks for sprints up to 3.5–3.7 m/s. Training on that range made her worse every time. A lower range for the "frail" body (about 2.8 m/s) kept her stable. If that becomes her rule, the test bars and event commands change with it; that is a design decision, not made here. Separately, what still fails inside 2.8 m/s is precision (she runs 6–8 % slow above 2.3 m/s, sideways segments up to 0.33 m/s off), which needs more work on the recipe either way.</p>
+  </section>
+
+  <footer>Charts: TensorBoard at localhost:6006, runs <code>g2_v1b</code>, <code>g2_v2b</code>, <code>g2_v3</code>, <code>g2_v4</code>, <code>g2_v5</code>. Gate data: <code>parity/watch_g2_v*.jsonl</code>, <code>parity/watch/g1_rung2_g2_v*_it*.json</code>. Base run review: <code>parity/tb/g2_v1b/review.html</code>.</footer>
+</main>
+</body>
+</html>
