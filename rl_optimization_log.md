@@ -866,8 +866,7 @@ One entry per run or decision. Newest at the bottom.
   with the same 0.20-0.21 rad error at every checkpoint since rs_v6 (targets possibly outside the joint range;
   unchecked). Review: `parity/tb/rs_v8/review.html`. Best single stance brain: **rs_v8 it 1199** (Events 3 + 7, torso
   7/10); flamingo only in rs_v6 it 2550.
-- **r2fbio_v1** (mattbio Rung 2 flight, 300 its): G1 rung 2 9/10 at it 100 and 200 (0 falls); the it 299 gate was still
-  running at the sync.
+- **r2fbio_v1** (mattbio Rung 2 flight, 300 its): G1 rung 2 9/10 at it 100 and 200, **10/10 at it 299** (0 falls).
 - Queue stopped by `runs/queue.stop` after r2fbio_v1. **Not run:** crawl_bio_v1, getup_rev_v1 (still in
   `runs/queue.txt`; delete `runs/queue.stop` and restart `tools/train_queue.ps1` to run them).
 - **Block summary (23:10 → 10:50):** 13 runs started, 9 completed, 4 stopped on purpose after a gate. ~2 h 15 min of
