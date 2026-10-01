@@ -645,6 +645,19 @@ def feet_centred(env, std: float) -> torch.Tensor:
     return torch.exp(-(_foot_geom_xy(env) ** 2).sum(-1).mean(-1) / std**2)
 
 
+def feet_under_pelvis(env, std: float, max_height: float = 0.08, height_std: float = 0.10) -> torch.Tensor:
+    """Get-up: exp(-d^2 / std^2) on the horizontal distance d between the pelvis and the centre of the four foot / toe
+    boxes, times a factor that fades when the feet leave the ground (mean box height above max_height) so that legs
+    held in the air over the pelvis earn nothing. 1 when standing or squatting, ~0 in a long sit: the gradient that
+    pulls the feet back under the body (getup_rev_v2 straightened its legs and sat, at any assist)."""
+    ent = env.scene["robot"]
+    xy = _foot_geom_xy(env).mean(1)
+    _, qp, _ = _root(env)
+    d2 = ((xy - (qp[:, :2] - env.scene.env_origins[:, :2])) ** 2).sum(-1)
+    z = ent.data.data.geom_xpos[:, env._poolympic_foot_geom_ids, 2].mean(-1)
+    return torch.exp(-d2 / std**2) * torch.exp(-(torch.relu(z - max_height) / height_std) ** 2)
+
+
 # ------------------------------------------------------------------ Iron Pedestal v2: heat-shaped gusts + adaptive level
 def push_gust(env, env_ids, asset_cfg=None) -> None:
     """Heat gust: instantaneous horizontal Δv of the CURRENT curriculum magnitude in a uniformly random direction

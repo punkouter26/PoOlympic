@@ -342,7 +342,7 @@ def ladder_assist(env, env_ids, asset_cfg, body_weight_n: float) -> None:
     env.extras.setdefault("log", {})["Metrics/getup_assist_max"] = st["assist"]
 
 
-def getup_ladder_curriculum(env, env_ids, steps_per_it: int = 24) -> dict:
+def getup_ladder_curriculum(env, env_ids, steps_per_it: int = 24, assist_max: float = ASSIST_MAX) -> dict:
     """getup_rev_curriculum on the ladder, plus the assist controller (once per iteration, with the success EMA)."""
     st = _ladder_state(env)
     if env_ids is not None and len(env_ids) > 0:
@@ -359,7 +359,7 @@ def getup_ladder_curriculum(env, env_ids, steps_per_it: int = 24) -> dict:
             st["succ"] = st["count"] = 0.0
         st["since"] += 1
         if st["since"] > ASSIST_GRACE:
-            st["assist"] = min(ASSIST_MAX, max(0.0, st["assist"] + ASSIST_GAIN * (ADVANCE_AT - st["ema"])))
+            st["assist"] = min(assist_max, max(0.0, st["assist"] + ASSIST_GAIN * (ADVANCE_AT - st["ema"])))
         st["zero_its"] = st["zero_its"] + 1 if st["assist"] <= 0.0 else 0
         if (st["ema"] > ADVANCE_AT and st["since"] >= LADDER_MIN_ITS and st["zero_its"] >= ASSIST_ZERO_ITS
                 and st["level"] + 1 < len(st["table"])):
@@ -385,4 +385,16 @@ def matt_getup_ladder_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     cfg.curriculum = {"getup_rev": CurriculumTermCfg(func=getup_ladder_curriculum, params={})}
     add_bio_rewards(cfg)
     cfg.scene.num_envs = V5_ENVS
+    return cfg
+
+
+def matt_getup_ladder_b_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """getup_rev_v2b: v2 passed the squat and the first rock-back stage, then sat at 0 % on stage 2 (seated, leaning back)
+    for 130 its with the assist at its 0.6 cap. Rolled out on CPU it straightens its legs and sits upright, propped on its
+    arms, at any assist: an upright trunk pays, nothing pays for feet under the body. Added: feet_under_pelvis (w 3);
+    assist cap 0.6 -> 0.8."""
+    from mjlab.managers.reward_manager import RewardTermCfg
+    cfg = matt_getup_ladder_env_cfg(play=play)
+    cfg.rewards["feet_under"] = RewardTermCfg(func=mdp.feet_under_pelvis, weight=3.0, params={"std": 0.3})
+    cfg.curriculum["getup_rev"].params["assist_max"] = 0.8
     return cfg
