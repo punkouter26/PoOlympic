@@ -265,13 +265,14 @@ def ladder_poses() -> list[tuple[np.ndarray, float, np.ndarray]]:
     return out
 
 
-def _ladder_state(env) -> dict:
+def _ladder_state(env, start_level: int = 0) -> dict:
+    """start_level: the frontier a run starts at (a warm start that already passed the stages below it)."""
     st = getattr(env, "_poolympic_getup_ladder", None)
     if st is None:
         table = [(torch.as_tensor(q, device=env.device, dtype=torch.float32), float(z), quat) for q, z, quat in ladder_poses()]
-        st = {"level": 0, "ema": 0.0, "since": 0, "last_it": -1, "succ": 0.0, "count": 0.0, "assist": 0.0, "zero_its": 0,
+        st = {"level": start_level, "ema": 0.0, "since": 0, "last_it": -1, "succ": 0.0, "count": 0.0, "assist": 0.0, "zero_its": 0,
               "start": torch.zeros(env.num_envs, dtype=torch.long, device=env.device), "table": table,
-              "probs": _ladder_mix(0, len(table), env.device)}
+              "probs": _ladder_mix(start_level, len(table), env.device)}
         env._poolympic_getup_ladder = st
     return st
 
@@ -287,7 +288,7 @@ def _ladder_mix(level: int, n: int, device) -> torch.Tensor:
     return p / p.sum()
 
 
-def reset_ladder(env, env_ids, joint_noise: float = 0.05) -> None:
+def reset_ladder(env, env_ids, joint_noise: float = 0.05, start_level: int = 0) -> None:
     """Reset each env into a ladder stage drawn from the curriculum's current mix. The last stage is the event start
     (mdp.reset_lying, supine: tools/getup_probe.py); the others write their joint pose and a root placed on the ground
     at a random yaw."""
@@ -296,7 +297,7 @@ def reset_ladder(env, env_ids, joint_noise: float = 0.05) -> None:
     if len(env_ids) == 0:
         return
     dev = env.device
-    st = _ladder_state(env)
+    st = _ladder_state(env, start_level)
     stage = torch.multinomial(st["probs"], len(env_ids), replacement=True)
     st["start"][env_ids] = stage
     asset = env.scene["robot"]
@@ -408,4 +409,43 @@ def matt_getup_ladder_c_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     cfg = matt_getup_ladder_b_env_cfg(play=play)
     cfg.rewards["feet_under"].weight = 4.0
     cfg.rewards["feet_under"].params["std"] = 0.5
+    return cfg
+
+
+_TUCK_JOINTS = ("hip_flex", "knee", "ankle_dorsi")
+
+
+def tuck_when_low(env, std: float, target: float) -> torch.Tensor:
+    """(1 - pelvis height / target) x exp(-mean squared leg-joint error to the squat pose / std^2): while the pelvis is
+    low, legs folded as in the squat (feet ready under the body); fades to 0 as the athlete rises, so standing up costs
+    nothing. Joint-space on purpose (rs_v5 lesson): the task-space terms gave the knees no usable gradient."""
+    st = _ladder_state(env)
+    ix = mdp._idx(env)
+    legs = st.get("tuck_ix")
+    if legs is None:
+        legs = st["tuck_ix"] = torch.as_tensor(
+            [i for i, n in enumerate(mdp.CONTRACT_ACTUATORS) if n[:-2] in _TUCK_JOINTS], device=env.device)
+    q = ix.entity.data.joint_pos[:, ix.joint_ids][:, legs]
+    err = ((q - st["table"][0][0][legs]) ** 2).mean(-1)
+    return (1.0 - mdp.height_progress(env, target)) * torch.exp(-err / std**2)
+
+
+def upright_when_high(env, std: float, target: float) -> torch.Tensor:
+    """Rung 0's uprightness kernel, paid in proportion to the pelvis height: an upright trunk on the floor earns nothing."""
+    return mdp.torso_upright(env, std) * mdp.height_progress(env, target)
+
+
+def matt_getup_ladder_d_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """getup_rev_v2d: v2c sat at 0 % on stage 2 for 250 its. CPU rollout: in the first 0.2 s it throws its knees open
+    (knee action -1.6, target 0 deg) and uses the kick to sit bolt upright (tilt 1-5 deg, pelvis 0.16 m) with straight
+    legs, at any assist; the upright kernel pays that in full and feet_under moved nothing. Changes: the upright kernel
+    pays in proportion to height; tuck_when_low (w 3) pays for keeping the legs folded while the pelvis is low; the run
+    starts with stage 2 as its frontier (the warm start passes stages 0 and 1)."""
+    from mjlab.managers.reward_manager import RewardTermCfg
+    from .matt_env import DEFAULT_ROOT_Z
+    cfg = matt_getup_ladder_c_env_cfg(play=play)
+    cfg.rewards["upright"] = RewardTermCfg(func=upright_when_high, weight=1.0,
+                                           params={"std": math.radians(20), "target": DEFAULT_ROOT_Z})
+    cfg.rewards["tuck_low"] = RewardTermCfg(func=tuck_when_low, weight=3.0, params={"std": 0.6, "target": DEFAULT_ROOT_Z})
+    cfg.events["reset_base"].params["start_level"] = 2
     return cfg
