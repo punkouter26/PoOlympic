@@ -58,7 +58,9 @@ UnityMCP must be running for in-editor authoring. Licensing (Avaturn, Hunyuan3D)
 | foot ×2 | 0.85 | box | ankle dorsi 25/plantar 50, inv 30/ev 20 | 2 ea |
 | toe ×2 | 0.25 | box | dorsi 60/plantar 30, **passive** spring-damper | 0 |
 
-Total 80.0 kg (de Leva 1996 male). 23 actuators, 2 passive joints; nq = 32, nv = 31. Shoulder ranges are offset for the 90° T-pose abduction. Contacts: foot/toe↔ground expected; leg↔leg on; other self-contacts excluded.
+Total 80.0 kg (de Leva 1996 male). 23 actuators, 2 passive joints; nq = 32, nv = 31. Shoulder ranges are offset for the 90° T-pose abduction. Contacts: foot/toe↔ground expected; leg↔leg on; other self-contacts excluded (MATT only — see "Self-collision" below).
+
+**Self-collision** (AGENTS.md rule, 2026-10-01): colliders are capsules / boxes / spheres fitted inside the skinned mesh; on a self-colliding body (zombie, GRANDMA, mattbio) every pair of body parts collides except parent–child pairs and pairs that overlap in the zero / default pose (`build_mjcf.touching_pairs`): the inner thighs on mattbio (−6 mm), none on the zombie (+17 mm apart) or GRANDMA (+58 mm), whose thighs collide. MATT (legs-only) is the open exception until mattbio replaces him. Audit: `training/tools/check_self_collision.py` → `parity/self_collision.json`. Contact exclusions are not in the fingerprint hash; G0 compares them separately (`fingerprint.excludes`, Unity fingerprint key `excludes`).
 
 **Actuators** — `<position kp kv forcerange>`:
 

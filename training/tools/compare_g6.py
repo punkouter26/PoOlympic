@@ -62,7 +62,8 @@ def g0(scene: str = "meet8") -> int:
         solo = solos[body_of[lane.lane]]
         py = F.fingerprint(mm, lane.prefix, f"cube{lane.cubes[0]}")
         uni = json.loads((PARITY / f"fingerprint_unity_{scene}_L{lane.lane}.json").read_text())
-        errs = F.compare(F.normalize_for_compare(py), F.normalize_for_compare(uni))
+        errs = F.excludes_mismatch(mm, uni, lane.prefix)
+        errs += F.compare(F.normalize_for_compare(py), F.normalize_for_compare(uni))
         same = F.compare(solo_equivalent(solo), solo_equivalent(py))
         bits = {g["contype"] for key, g in py["geoms"].items() if key not in ("ground", "cube_geom")}
         print(f"L{lane.lane} {body_of[lane.lane]}: G0 {'PASS' if not errs else 'FAIL'} ({len(errs)} mismatches)  "

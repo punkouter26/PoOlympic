@@ -119,9 +119,7 @@
       <geom name="cube3_geom" type="box" size="0.1 0.1 0.1" contype="65535" conaffinity="65535" condim="3" friction="0.8 0.005 0.0001" />
     </body>
   </worldbody>
-  <contact>
-    <exclude body1="thigh_l" body2="thigh_r" />
-  </contact>
+  <contact />
   <actuator>
     <position name="abdomen_flex" joint="abdomen_flex" kp="212.3027" kv="19.81348" forcelimited="true" forcerange="-84.92107 84.92107" />
     <position name="abdomen_lat" joint="abdomen_lat" kp="212.3027" kv="19.81348" forcelimited="true" forcerange="-84.92107 84.92107" />

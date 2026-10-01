@@ -917,3 +917,26 @@ One entry per run or decision. Newest at the bottom.
 - Housekeeping: 588 MB of superseded TensorBoard runs moved to `runs_archive/2026-10-01/` (rs_v1-v5b, g2_v2b / v3 / v4);
   TensorBoard on `training/runs` (:6006); queue restarted through WMI at 14:10 (2.5 s/it at the start, GPU 85 C / 58 W
   with another project's Unity editor open and the fans on Auto).
+
+## 2026-10-01 15:20 · Self-collision rule (AGENTS.md) audited and fixed: thighs now collide on the zombie and GRANDMA
+- **Rule (user):** simple shapes fitted inside the mesh; every pair collides except parent-child and pairs overlapping at
+  rest; no contact in the T-pose / default stance / a normal swing; self-contact never ends an episode; prefer warm starts.
+- **Audit** `tools/check_self_collision.py` (135 part pairs per body): mattbio PASS (118 collide, thighs off: they overlap
+  6.4 mm at rest). MATT FAIL as known (97 pairs off: legs-only). Zombie and GRANDMA: the thigh pair was excluded although
+  the thighs are 17 mm / 58 mm apart at rest. No body has a self-contact in the T-pose, the default stance or a 21-phase
+  arm and leg swing. Terminations: time-out, pelvis height, torso tilt, non-foot ground contact, off pedestal — none on
+  self-contact.
+- **Fix:** `build_mjcf` tests every pair of a self-colliding body, the thighs included (`touching_pairs`); mattbio.xml is
+  byte-identical, zombie.xml / grandma.xml lose their one `<exclude>`. All composed scenes with a zombie or GRANDMA
+  regenerated (9 roster, 9 MATT / zombie, 7 MATT / zombie / GRANDMA); roster verify 35/35, crowd audit 22/22, pytest 65/65.
+- **Brains unchanged, no retraining:** G1 before → after on the same checkpoints: zombie Rung 0 10/10 → 10/10 (identical
+  report), Rung 2 8/10 → 8/10 (stride yaw rule), crawl 5/5 in 31.7-31.8 s → the same; GRANDMA Rung 0 10/10 → 10/10
+  (identical), Rung 2 4/10 → 4/10. With the old model the thighs never overlapped in 60 s of mixed commands (closest 1 mm
+  zombie, 23 mm GRANDMA); with the pair on, one of the 13 references changed (g6mixed_L5, the zombie's −1.9 rad/s spin).
+- **Parity gap closed:** the model fingerprint (schema 1) does not cover `<exclude>` pairs, so the hash did not change
+  and G0 could not have seen a stale Unity scene. `fingerprint.excludes()` + the `excludes` key in Unity's dump are now
+  compared in G0 without touching the hash (re-keying every brain was not worth it). Unity after the change: G0 zombie /
+  grandma / meet8_mzmzmzmz 8/8 PASS incl. excludes; G2-G4 13/13 references PASS; the 11 event scenes with zombies or
+  GRANDMA rebuilt and baked.
+- AGENTS.md rule 5 reworded (user: "fix"): prefer a warm start; from scratch only for a body's first brain or where a
+  warm start has been tried and failed (MATT's r1_v1).

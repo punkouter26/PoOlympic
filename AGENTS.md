@@ -27,7 +27,7 @@ Rules for any AI agent working in this repository (Unity 6000.6 + MuJoCo RL athl
 - All body-part pairs collide except parent–child pairs and pairs that overlap in the default standing pose; joint limits handle those.
 - Before training, verify that no pair touches in the T-pose, the default stance and a normal arm and leg swing.
 - Self-contact never ends an episode. If the policy leans on it, add a small self-contact force penalty.
-- Train a new skill from a warm start (a brain trained without self-collision, or the previous rung) rather than from scratch.
+- Prefer a warm start for a new skill (a brain trained without self-collision, or the previous rung). Train from scratch only for a body's first brain, or where a warm start has been tried and failed.
 
 ## Unity
 - Interact with Unity through whichever tool gives the best result: Unity CLI pipeline (`unity command …`), https://github.com/CoplayDev/unity-mcp, or https://github.com/IvanMurzak/Unity-MCP.

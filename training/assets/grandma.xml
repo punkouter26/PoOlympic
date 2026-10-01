@@ -97,9 +97,7 @@
       </body>
     </body>
   </worldbody>
-  <contact>
-    <exclude body1="thigh_l" body2="thigh_r" />
-  </contact>
+  <contact />
   <actuator>
     <position name="abdomen_flex" joint="abdomen_flex" kp="212.3027" kv="19.81348" forcelimited="true" forcerange="-84.92107 84.92107" />
     <position name="abdomen_lat" joint="abdomen_lat" kp="212.3027" kv="19.81348" forcelimited="true" forcerange="-84.92107 84.92107" />

@@ -824,13 +824,8 @@
   </worldbody>
   <contact>
     <exclude body1="L0_thigh_l" body2="L0_thigh_r" />
-    <exclude body1="L1_thigh_l" body2="L1_thigh_r" />
-    <exclude body1="L2_thigh_l" body2="L2_thigh_r" />
     <exclude body1="L3_thigh_l" body2="L3_thigh_r" />
-    <exclude body1="L4_thigh_l" body2="L4_thigh_r" />
-    <exclude body1="L5_thigh_l" body2="L5_thigh_r" />
     <exclude body1="L6_thigh_l" body2="L6_thigh_r" />
-    <exclude body1="L7_thigh_l" body2="L7_thigh_r" />
   </contact>
   <actuator>
     <position name="L0_abdomen_flex" joint="L0_abdomen_flex" kp="300" kv="30" forcelimited="true" forcerange="-200 200" />

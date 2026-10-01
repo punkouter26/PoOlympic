@@ -182,6 +182,20 @@ namespace PoOlympic
             j.Key("athlete_actuators").Int(athleteActuators);
             j.Close();
 
+            // <contact><exclude> body pairs of this athlete: "a|b,c|d", names sorted. Not part of the Python fingerprint
+            // hash (schema 1 predates it; adding it would re-key every brain) — G0 compares it separately
+            // (training/poolympic/fingerprint.py excludes()).
+            var excludes = new System.Collections.Generic.List<string>();
+            for (int i = 0; i < (int)m->nexclude; i++)
+            {
+                int sig = m->exclude_signature[i];
+                string a = Keep(Name(m, ObjBody, sig >> 16)), b = Keep(Name(m, ObjBody, sig & 0xFFFF));
+                if (a == null || b == null) continue;
+                excludes.Add(string.CompareOrdinal(a, b) <= 0 ? a + "|" + b : b + "|" + a);
+            }
+            excludes.Sort(string.CompareOrdinal);
+            j.Key("excludes").Str(string.Join(",", excludes));
+
             j.Close();
             return j.ToString();
         }

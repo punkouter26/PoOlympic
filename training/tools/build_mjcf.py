@@ -78,9 +78,13 @@ def vec(v) -> str:
     return " ".join(f(x) for x in v)
 
 
-# Body pairs that never collide (MuJoCo already skips parent/child). The inner thighs touch at rest on every body.
-# A self-colliding body adds the pairs that touch in its zero / default pose (filled in by build_zombie_excludes).
-EXCLUDES: list[tuple[str, str]] = [("thigh_l", "thigh_r")]
+# Body pairs that never collide (MuJoCo already skips parent/child). MATT (legs-only collision): the inner thighs, which
+# overlap at rest. A self-colliding body (AGENTS.md "Self-collision") switches a pair off only when it overlaps in its
+# zero / default pose — main() replaces this list with touching_pairs(): the thighs on mattbio (-6 mm), nothing on the
+# zombie (+17 mm apart) or GRANDMA (+58 mm), whose thighs therefore collide (2026-10-01; before, the thigh pair was
+# excluded on every body).
+THIGHS = ("thigh_l", "thigh_r")
+EXCLUDES: list[tuple[str, str]] = [THIGHS]
 
 
 def lane_bits(lane: int, leg: bool) -> tuple[int, int]:
@@ -767,10 +771,8 @@ def touching_pairs(skin, geoms, inertials) -> list[tuple[str, str]]:
         mujoco.mj_forward(m, d)
         for c in d.contact[: d.ncon]:
             b1, b2 = m.body(m.geom_bodyid[c.geom1]).name, m.body(m.geom_bodyid[c.geom2]).name
-            pair = tuple(sorted((b1, b2)))
-            if pair != ("thigh_l", "thigh_r"):
-                pairs.add(pair)
-    return sorted(pairs)
+            pairs.add(tuple(sorted((b1, b2))))
+    return ([THIGHS] if THIGHS in pairs else []) + sorted(pairs - {THIGHS})   # thighs first: mattbio's MJCF is unchanged
 
 
 def write_other_body(header, skin, geoms, inertials, geom_mass, qdef, scene_xml, robot_xml) -> int:
@@ -811,6 +813,7 @@ def main() -> int:
             if key in JOINT_DEFAULTS:
                 JOINT_DEFAULTS[key] = deg
     if BODY.self_collision:
+        EXCLUDES.clear()                               # test every pair, the thighs included
         EXCLUDES.extend(touching_pairs(skin, geoms, inertials))
     qdef = default_pose_qpos(skin, geoms, inertials)
     robot_xml = compose_model(skin, geoms, inertials, with_scene=False, n_cubes=0)

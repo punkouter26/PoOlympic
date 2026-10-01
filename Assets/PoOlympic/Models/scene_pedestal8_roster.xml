@@ -2275,29 +2275,13 @@
   </worldbody>
   <contact>
     <exclude body1="L0_thigh_l" body2="L0_thigh_r" />
-    <exclude body1="Z0_thigh_l" body2="Z0_thigh_r" />
-    <exclude body1="G0_thigh_l" body2="G0_thigh_r" />
     <exclude body1="L1_thigh_l" body2="L1_thigh_r" />
-    <exclude body1="Z1_thigh_l" body2="Z1_thigh_r" />
-    <exclude body1="G1_thigh_l" body2="G1_thigh_r" />
     <exclude body1="L2_thigh_l" body2="L2_thigh_r" />
-    <exclude body1="Z2_thigh_l" body2="Z2_thigh_r" />
-    <exclude body1="G2_thigh_l" body2="G2_thigh_r" />
     <exclude body1="L3_thigh_l" body2="L3_thigh_r" />
-    <exclude body1="Z3_thigh_l" body2="Z3_thigh_r" />
-    <exclude body1="G3_thigh_l" body2="G3_thigh_r" />
     <exclude body1="L4_thigh_l" body2="L4_thigh_r" />
-    <exclude body1="Z4_thigh_l" body2="Z4_thigh_r" />
-    <exclude body1="G4_thigh_l" body2="G4_thigh_r" />
     <exclude body1="L5_thigh_l" body2="L5_thigh_r" />
-    <exclude body1="Z5_thigh_l" body2="Z5_thigh_r" />
-    <exclude body1="G5_thigh_l" body2="G5_thigh_r" />
     <exclude body1="L6_thigh_l" body2="L6_thigh_r" />
-    <exclude body1="Z6_thigh_l" body2="Z6_thigh_r" />
-    <exclude body1="G6_thigh_l" body2="G6_thigh_r" />
     <exclude body1="L7_thigh_l" body2="L7_thigh_r" />
-    <exclude body1="Z7_thigh_l" body2="Z7_thigh_r" />
-    <exclude body1="G7_thigh_l" body2="G7_thigh_r" />
   </contact>
   <actuator>
     <position name="L0_abdomen_flex" joint="L0_abdomen_flex" kp="300" kv="30" forcelimited="true" forcerange="-200 200" />

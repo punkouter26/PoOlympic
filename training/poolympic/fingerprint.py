@@ -116,6 +116,30 @@ def fingerprint(m: mujoco.MjModel, athlete_prefix: str = "", cube_name: str = "c
     return fp
 
 
+def excludes(m: mujoco.MjModel, athlete_prefix: str = "") -> str:
+    """<contact><exclude> body pairs of one athlete as "a|b,c|d" (prefix stripped, names sorted) — the format of the
+    "excludes" key in Unity's fingerprint (ModelFingerprint.Dump). NOT part of fingerprint() / its hash: schema 1 predates
+    it and adding it would re-key every brain, contract and reference; G0 compares it separately (excludes_mismatch).
+    Which body parts may collide is physics (AGENTS.md "Self-collision"), so it must match Unity like everything else."""
+    out = []
+    for sig in m.exclude_signature:
+        a, b = m.body(int(sig) >> 16).name, m.body(int(sig) & 0xFFFF).name
+        if athlete_prefix and not (a.startswith(athlete_prefix) and b.startswith(athlete_prefix)):
+            continue
+        out.append("|".join(sorted((a[len(athlete_prefix):], b[len(athlete_prefix):]))))
+    return ",".join(sorted(out))
+
+
+def excludes_mismatch(m: mujoco.MjModel, unity_fp: dict, athlete_prefix: str = "") -> list[str]:
+    """Pops "excludes" from a Unity fingerprint and compares it with the Python model's; [] when equal (or when the
+    Unity dump predates the key)."""
+    uni = unity_fp.pop("excludes", None)
+    if uni is None:
+        return []
+    py = excludes(m, athlete_prefix)
+    return [] if py == uni else [f"/excludes: {py!r} != {uni!r}"]
+
+
 def canonical_bytes(fp: dict) -> bytes:
     return json.dumps(fp, sort_keys=True, separators=(",", ":")).encode()
 
@@ -193,8 +217,10 @@ def compare(a: dict, b: dict, path: str = "") -> list[str]:
 
 def main(argv: list[str]) -> int:
     if len(argv) == 2:
-        errs = compare(normalize_for_compare(json.loads(Path(argv[0]).read_text())),
-                       normalize_for_compare(json.loads(Path(argv[1]).read_text())))
+        from . import bodies
+        unity = json.loads(Path(argv[1]).read_text())
+        errs = excludes_mismatch(mujoco.MjModel.from_xml_path(str(bodies.current().scene_xml)), unity)
+        errs += compare(normalize_for_compare(json.loads(Path(argv[0]).read_text())), normalize_for_compare(unity))
         for e in errs[:200]:
             print("MISMATCH", e)
         print(f"G0 {'PASS' if not errs else 'FAIL'} ({len(errs)} mismatches)")
