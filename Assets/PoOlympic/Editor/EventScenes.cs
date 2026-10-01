@@ -393,6 +393,36 @@ namespace PoOlympic.Editor
             return $"{SquatScene}: {ev.squatters.Count} athletes, {ev.reps} reps, brain {brainFile}";
         }
 
+        public const string FlamingoScene = "Assets/PoOlympic/Scenes/Event_FlamingoClassic.unity";
+        // Event 6: Rung S brain rs_v6 it 2550 (the one checkpoint that passes the G1 flamingo drill 10/10; per-event stance
+        // brains, user decision 2026-10-01) on the all-mattbio scene of venue 6 (tools/compose_mixed.py flamingo8: the
+        // 2 x 4 station grid, no props).
+        public const string FlamingoSource = "training/assets/scene_flamingo8_mattbio.xml";
+        public const string FlamingoLayout = "training/assets/flamingo8_mattbio_layout.json";
+        public const string FlamingoBrain = "rs_v6_it2550.onnx";
+
+        /// <summary>Event 6: 8 mattbio athletes on the venue's 2 x 4 station grid, FlamingoEvent + HUD.</summary>
+        [MenuItem("PoOlympic/Events/Build Event 6 — The Flamingo Classic")]
+        public static string BuildFlamingo() => BuildFlamingo(FlamingoBrain);
+
+        public static string BuildFlamingo(string brainFile)
+        {
+            var meet = BuildMeetScene(FlamingoSource, FlamingoLayout, 6, AthleteLane, 0f, brainFile,
+                                      new System.Collections.Generic.Dictionary<string, string> { { "mattbio", brainFile } });
+            var ev = new GameObject("FlamingoEvent").AddComponent<FlamingoEvent>();
+            foreach (var (k, r) in meet.Lanes) ev.flamingos.Add(new FlamingoEvent.Flamingo { runner = r, name = $"S{k + 1}" });
+            meet.Pool.runner = ev.flamingos[0].runner;
+
+            var bc = meet.Camera.GetComponent<BroadcastCamera>();
+            bc.target = meet.FocusPelvis;
+            bc.focusOffset = new Vector3(-4.5f, 0f, -2f);    // grid centre (station S4 is the origin; rows at y = 0 / -4 m)
+            bc.offset = new Vector3(8.5f, 4.0f, -5.0f);      // front three-quarter: the athletes face +x
+            AddBroadcast(ev, "THE FLAMINGO CLASSIC", "Event 6", 6, $"v0 · {Path.GetFileNameWithoutExtension(brainFile)}", meet.Camera,
+                         BroadcastDirector.Kind.Arena, Vector3.right);
+            EditorSceneManager.SaveScene(meet.Scene, FlamingoScene);
+            return $"{FlamingoScene}: {ev.flamingos.Count} athletes, gust {ev.gustStart} + {ev.gustStep} m/s every {ev.roundSeconds} s, brain {brainFile}";
+        }
+
         public const string MarchScene = "Assets/PoOlympic/Scenes/Event_CadenceMarch.unity";
         // Event 7: Rung S brain rs_v8 it 1199 (G1 march drill 9/10, drift 6-17 cm) on the all-mattbio scene of venue 7
         // (tools/compose_mixed.py march8: the 2 x 4 station grid + the metronome tower at its centre as a MuJoCo box; the
@@ -659,6 +689,7 @@ namespace PoOlympic.Editor
             { 1, IronPedestalHeatScene },   // official 8-runner heat (solo practice: Event_IronPedestal.unity)
             { 3, SquatScene },
             { 5, GauntletScene },
+            { 6, FlamingoScene },
             { 7, MarchScene },
             { 8, AllFoursScene },
             { 9, "Assets/PoOlympic/Scenes/Event_InvertedSprint.unity" },

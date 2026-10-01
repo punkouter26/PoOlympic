@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flamingo Classic UI</title>
+<style>
+  :root { --bg: #0c1220; --panel: #151d31; --ink: #eef1f7; --muted: #a3aec4; --accent: #ffd84a; --new: #ff5a4a; --good: #78e68c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 1280px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { color: var(--accent); font-size: 26px; margin: 0 0 4px; }
+  h2 { font-size: 20px; margin: 40px 0 8px; }
+  p, li { color: var(--muted); }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  @media (max-width: 720px) { .pair { grid-template-columns: 1fr; } }
+  figure { margin: 0; background: var(--panel); border-radius: 10px; padding: 12px; }
+  figcaption { margin: 0 0 8px; font-weight: 600; }
+  figcaption.before { color: var(--muted); }
+  figcaption.after { color: var(--good); }
+  .shot { position: relative; line-height: 0; }
+  .shot img { width: 100%; height: auto; display: block; border-radius: 6px; }
+  .mk { position: absolute; border: 3px solid var(--new); border-radius: 6px; box-shadow: 0 0 0 1px rgba(0,0,0,.6); }
+  .mk.old { border-style: dashed; border-color: #ff9a5a; }
+  .mk b { position: absolute; top: -13px; left: -13px; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 13px;
+          background: var(--new); color: #fff; font: 700 14px/26px "Segoe UI", sans-serif; text-align: center; }
+  .mk.old b { background: #ff9a5a; color: #1a1206; }
+  ul { padding-left: 22px; }
+  li { margin: 4px 0; }
+  .tag { display: inline-block; min-width: 22px; padding: 0 5px; border-radius: 11px; background: var(--new); color: #fff; font-weight: 700; text-align: center; font-size: 13px; }
+  .tag.old { background: #ff9a5a; color: #1a1206; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Event 6 The Flamingo Classic: before vs after</h1>
+  <p>1 Oct 2026. The Flamingo Classic is the 14th playable event. Red boxes mark what changed; the dashed orange box
+     marks the old state.</p>
+
+  <h2>Main menu</h2>
+  <div class="pair">
+    <figure>
+      <figcaption class="before">Before: 13 events</figcaption>
+      <div class="shot">
+        <img src="flamingo/menu_before.png" alt="Main menu before: 13 event tiles, no event 06">
+        <div class="mk old" style="left:1.5%;top:27.2%;width:97%;height:46%"><b>A</b></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption class="after">After: 14 events</figcaption>
+      <div class="shot">
+        <img src="flamingo/menu_after.png" alt="Main menu after: tile 06 The Flamingo Classic added">
+        <div class="mk" style="left:1.5%;top:36.5%;width:32%;height:9%"><b>1</b></div>
+      </div>
+    </figure>
+  </div>
+  <ul>
+    <li><span class="tag old">A</span> The grid went from 05 straight to 07.</li>
+    <li><span class="tag">1</span> New tile: 06 The Flamingo Classic. Every later tile moved one slot; the 3 × 5 grid has one
+        empty slot left. Like Deep Squat and Cadence March it is a MATT-only event.</li>
+  </ul>
+
+  <h2>New screen: Event 6 The Flamingo Classic</h2>
+  <div class="pair">
+    <figure>
+      <figcaption class="after">Live: 18.5 s in, four still on one leg</figcaption>
+      <div class="shot">
+        <img src="../e6/flamingo_live.png" alt="Flamingo Classic live: the leader balancing on one leg inside his spot ring">
+        <div class="mk" style="left:56%;top:3.6%;width:31.5%;height:4.3%"><b>2</b></div>
+        <div class="mk" style="left:2.5%;top:8.3%;width:95%;height:8.6%"><b>3</b></div>
+        <div class="mk" style="left:38%;top:72.5%;width:22%;height:12.5%"><b>4</b></div>
+        <div class="mk" style="left:2.5%;top:96%;width:60%;height:3.4%"><b>5</b></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption class="after">Result</figcaption>
+      <div class="shot">
+        <img src="../e6/flamingo_result.png" alt="Flamingo Classic result: S3 wins with 38.1 s on one leg">
+        <div class="mk" style="left:2.5%;top:8.3%;width:95%;height:8.6%"><b>6</b></div>
+        <div class="mk" style="left:2.5%;top:17.3%;width:95%;height:2.2%"><b>7</b></div>
+      </div>
+    </figure>
+  </div>
+  <ul>
+    <li><span class="tag">2</span> The clock is the time on one leg; under it, how many are still up and the current gust
+        strength (it rises 0.012 m/s every 2 s).</li>
+    <li><span class="tag">3</span> Rows read UP while the athlete is on one leg.</li>
+    <li><span class="tag">4</span> One foot is held off the ground (about 17 cm when undisturbed, lower while fighting a
+        gust). The white ring is the athlete's spot.</li>
+    <li><span class="tag">5</span> The ticker calls each exit: DOWN (the lifted foot touched the ground), HOPPED (the
+        standing foot moved more than 30 cm) or FELL.</li>
+    <li><span class="tag">6</span> The winner's row shows the winning time; the others show when they came down.</li>
+    <li><span class="tag">7</span> The record is the longest time on one leg.</li>
+  </ul>
+</main>
+</body>
+</html>

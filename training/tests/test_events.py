@@ -152,3 +152,21 @@ def test_deep_squat_heat():
         assert all(e < 0.10 for e in l.errs_m[:6])               # the first six reps (25-35 cm) are accurate
     by_place = sorted(res.lanes, key=lambda l: l.place)
     assert all(a.points >= b.points for a, b in zip(by_place, by_place[1:]))
+
+
+FLAMINGO_BRAIN = C.ROOT.parent / "parity" / "brains" / "rs_v6_it2550.onnx"
+
+
+@pytest.mark.skipif(not FLAMINGO_BRAIN.exists(), reason="Rung S flamingo brain not exported")
+def test_flamingo_heat():
+    from poolympic.events import flamingo
+    res = flamingo.run_heat(FLAMINGO_BRAIN, seed=1)
+    assert res.foot in ("l", "r")
+    for l in res.lanes:
+        assert l.status in ("TOUCHDOWN", "HOPPED", "FELL")           # the rising gusts bring everyone down before MAX_S
+        assert l.status == "FELL" or l.out_at_s >= flamingo.LIFT_S   # touches during the lift time do not count
+        assert l.max_hop_m <= flamingo.HOP_TOL or l.status == "HOPPED"
+    by_place = sorted(res.lanes, key=lambda l: l.place)
+    assert by_place[0].place == 1 and all(a.out_at_s >= b.out_at_s for a, b in zip(by_place, by_place[1:]))
+    assert 15.0 < by_place[0].out_at_s < 60.0                        # heats last 23-38 s
+    assert res.duration_s == pytest.approx(flamingo.START_S + by_place[0].out_at_s, abs=0.03)

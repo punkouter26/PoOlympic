@@ -968,3 +968,28 @@ One entry per run or decision. Newest at the bottom.
   Review: `parity/tb/getup_rev_v1/review.html`.
 - Queue empty at 15:51. mattbio now has Rung 0, Rung 2, flight and crawl; get-up is the one brain missing for the
   promotion to MATT.
+
+## 2026-10-01 16:55 · Event 6 The Flamingo Classic playable (no training: rs_v6 it 2550)
+- **Brain probe** (CPU, 8 athletes with traits on `scene_flamingo8_mattbio.xml`, lift command at GO): the foot leaves the
+  ground 0.3 s after the command and is held 16.6 cm up (nominal traits). Without disturbance about half the field
+  stands on one leg for 120 s (some drift or hop up to 1.9 m), the rest tap the foot down within 80 s; athletes with
+  high latency / noise tap within 1.5-6 s. Nobody falls, even under gusts of 1.5 m/s: they put the foot down and recover.
+- **Rules** (`poolympic/events/flamingo.py` == Unity `FlamingoEvent`): everyone lifts the same foot (seeded per heat),
+  LIFT_S 2 s to get it up, then a gust every ROUND_S 2 s of GUST_START 0.04 + GUST_STEP 0.012 m/s per round in the lane's
+  own seeded direction. Out = TOUCHDOWN / HOPPED (stance foot > 0.30 m from its spot) / FELL. Mark = time on one leg; the
+  heat runs until the last one is down (cap 120 s).
+- **Tuning:** gust 0.1 + 0.05 every 3 s ended every heat at 9.5-12.9 s, bunched on the round edges. 0.04 + 0.012 every
+  2 s (10 seeds): winner 22.8-38.5 s (mean 31), median exit 14-17 s, first out 2.3-11 s; 79 TOUCHDOWN, 1 HOPPED, 0 FELL.
+  A longer lift time (3 s, 4 s) does not save the early tappers (they go out at the end of the grace instead): kept 2 s.
+- **Unity:** `Event_FlamingoClassic.unity` (venue 6 grid, baked), hub + main menu (14 playable; the hub scene was patched
+  in place, a rebuild drops its baked lighting and showcase dressing). Heat seed 1: S3 wins 38.1 s, identical on three runs.
+  Critic exported for rs_v6_it2550 (not calibrated, like the other stance brains).
+- **Parity:** G0 flamingo8_mattbio 8/8 lanes 0 mismatches; reference `flamingo_rs_v6` (left foot up, standard shove +
+  cube): G2 1.8e-15, G3 4.3e-6, G4 4.1e-7 @ 1 s (first tick over tolerance 194, after the cube hit), **G5 PASS** in
+  Testbed_Stance: 1 s drift 1.6e-6, 5 s drift 2.7e-2 (one-leg recovery from the cube is chaotic; march was 1.2e-5),
+  pelvis height RMS 1.0e-4 m, torque ratio 1.0004, same outcome.
+- **Tests:** pytest 66/66 (new `test_flamingo_heat`); compose --verify 35/35; Unity EditMode BroadcastFxTests 5/5 (this
+  also verifies the morning's Deep Squat critic fix), PortraitLayout 8/8, DemoMode 3/3, Showcase 3/3, RuntimeRules 2/2,
+  ContractV4 4/4, CrowdContact on Event_FlamingoClassic PASS and on Event_InvertedSprint PASS in 98.5 s (the morning's
+  timeout case). The other crowd-contact scenes were not re-run today.
+- Before / after page: `parity/ui/flamingo_before_after.html`.

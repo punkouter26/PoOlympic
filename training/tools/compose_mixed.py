@@ -50,7 +50,8 @@ SCENES = {  # scene -> the build_mjcf.compose_meet arguments of that event scene
     "crawl8": dict(event=8, park_offset=(0.0, -30.0, 0.0), crowd=True, roster=CRAWL_ROSTER),
     "turntable8": dict(event=12, crowd=True),
     "squat8": dict(event=3, park_offset=(0.0, -30.0, 0.0), crowd=True, roster=[]),   # Event 3 runs all-mattbio (Rung S brain): no roster scene
-    # Event 7 runs all-mattbio like Event 3; composed here only (no build_mjcf scene_march8.xml, no roster scene)
+    # Events 6 and 7 run all-mattbio like Event 3; composed here only (no build_mjcf scene, no roster scene)
+    "flamingo8": dict(event=6, park_offset=(0.0, -30.0, 0.0), crowd=True, roster=[]),
     "march8": dict(event=7, park_offset=(0.0, -30.0, 0.0), props=march_props, crowd=True, roster=[]),
     "crab8": dict(event=10, yaw=90.0, park_offset=(0.0, -30.0, 0.0), props=B.crab_rails, crowd=True),
     "shaker8": dict(event=5, park_offset=(0.0, -30.0, 0.0), shaker=B.shaker_floor, crowd=True),
@@ -184,7 +185,7 @@ def verify() -> int:
     from poolympic.fingerprint import canonical_bytes, fingerprint
     ok_all = True
     for scene in SCENES:
-        if not (ASSETS / f"scene_{scene}.xml").exists():      # composed-only scene (march8)
+        if not (ASSETS / f"scene_{scene}.xml").exists():      # composed-only scene (flamingo8, march8)
             continue
         xml, _ = compose(scene, ["matt"] * 8)
         a = mujoco.MjModel.from_xml_string(xml)

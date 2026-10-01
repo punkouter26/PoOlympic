@@ -1,0 +1,26 @@
+{
+ "reference": "flamingo_rs_v6",
+ "unity_run": "flamingo_rs_v6",
+ "body": "mattbio",
+ "frames": 250,
+ "fall_time_ref": null,
+ "fall_time_unity": null,
+ "pelvis_height_rms_m": 0.00010425338702844835,
+ "mean_abs_torque_ref": 10.886624751833425,
+ "mean_abs_torque_unity": 10.89076604369975,
+ "torque_ratio": 1.0003804018197309,
+ "cadence_ref_hz": 0.9523809523809523,
+ "cadence_unity_hz": 0.9523809523809523,
+ "qpos_max_abs_drift_1s": 1.5863978559960135e-06,
+ "qpos_max_abs_drift_5s": 0.026787476607085775,
+ "cube_qpos_max_abs_drift_after_fire": 0.0003017493886193767,
+ "obs_max_abs_diff": 0.2191309928894043,
+ "action_raw_max_abs_diff": 0.2245025634765625,
+ "checks": {
+  "same_fall_outcome": true,
+  "pelvis_height_rms_lt_3cm": true,
+  "mean_abs_torque_within_10pct": true,
+  "cadence_within_5pct": true
+ },
+ "G5_pass": true
+}

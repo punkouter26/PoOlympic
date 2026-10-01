@@ -49,6 +49,20 @@ namespace PoOlympic
             return null;
         }
 
+        /// <summary>True while the foot or toe geom of one side (0 left, 1 right) touches a support surface
+        /// (flamingo.py touchdown).</summary>
+        public bool FootDown(MujocoLib.mjData_* d, int side)
+        {
+            int foot = _feet[2 * side], toe = _feet[2 * side + 1];
+            for (int i = 0; i < d->ncon; i++)
+            {
+                var c = d->contact[i];
+                int other = _support.Contains(c.geom1) ? c.geom2 : _support.Contains(c.geom2) ? c.geom1 : -1;
+                if (other == foot || other == toe) return true;
+            }
+            return false;
+        }
+
         public (double x, double y, double z) Pelvis(MujocoLib.mjData_* d) =>
             (d->xpos[3 * _pelvis], d->xpos[3 * _pelvis + 1], d->xpos[3 * _pelvis + 2]);
     }
