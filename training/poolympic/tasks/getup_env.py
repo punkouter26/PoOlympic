@@ -343,9 +343,9 @@ def ladder_assist(env, env_ids, asset_cfg, body_weight_n: float) -> None:
     env.extras.setdefault("log", {})["Metrics/getup_assist_max"] = st["assist"]
 
 
-def getup_ladder_curriculum(env, env_ids, steps_per_it: int = 24, assist_max: float = ASSIST_MAX) -> dict:
+def getup_ladder_curriculum(env, env_ids, steps_per_it: int = 24, assist_max: float = ASSIST_MAX, start_level: int = 0) -> dict:
     """getup_rev_curriculum on the ladder, plus the assist controller (once per iteration, with the success EMA)."""
-    st = _ladder_state(env)
+    st = _ladder_state(env, start_level)
     if env_ids is not None and len(env_ids) > 0:
         _, qp, _ = mdp._root(env)
         up = (qp[env_ids, 2] > UP_Z) & (mdp.torso_tilt_rad(env)[env_ids] < math.radians(UP_TILT_DEG))
@@ -448,4 +448,36 @@ def matt_getup_ladder_d_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
                                            params={"std": math.radians(20), "target": DEFAULT_ROOT_Z})
     cfg.rewards["tuck_low"] = RewardTermCfg(func=tuck_when_low, weight=3.0, params={"std": 0.6, "target": DEFAULT_ROOT_Z})
     cfg.events["reset_base"].params["start_level"] = 2
+    return cfg
+
+
+def legs_folded_when_low(env, target: float, start_level: int = 0) -> torch.Tensor:
+    """(1 - pelvis height / target) x mean over hips and knees of clamp(1 - |q - q_squat| / |q_squat - q_default|, -0.5, 1):
+    1 with the legs folded as in the squat, 0 at the standing pose, negative past it. Linear, so there is a gradient at
+    every knee angle: v2d's kernel version (tuck_when_low) was flat once the knees had opened, and every sampled action
+    opens them (zero action = the standing pose; holding 125 deg of knee flexion takes an action of +7.3)."""
+    st = _ladder_state(env, start_level)
+    ix = mdp._idx(env)
+    legs = st.get("fold_ix")
+    if legs is None:
+        legs = st["fold_ix"] = torch.as_tensor(
+            [i for i, n in enumerate(mdp.CONTRACT_ACTUATORS) if n[:-2] in ("hip_flex", "knee")], device=env.device)
+        st["fold_span"] = (st["table"][0][0][legs] - ix.default[legs]).abs()
+    q = ix.entity.data.joint_pos[:, ix.joint_ids][:, legs]
+    frac = torch.clamp(1.0 - (q - st["table"][0][0][legs]).abs() / st["fold_span"], -0.5, 1.0).mean(-1)
+    return (1.0 - mdp.height_progress(env, target)) * frac
+
+
+def matt_getup_ladder_e_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """getup_rev_v2e: v2d changed nothing on stage 2 in 115 its (tuck_low 0.036 = the first frames only). The kernel
+    reward is flat once the knees are open, and every sampled action opens them. tuck_when_low -> legs_folded_when_low
+    (linear, w 3); the frontier really starts at stage 2 (v2d's start_level was read after the state existed); the init
+    gets an action std floor of 0.5."""
+    from mjlab.managers.reward_manager import RewardTermCfg
+    from .matt_env import DEFAULT_ROOT_Z
+    cfg = matt_getup_ladder_d_env_cfg(play=play)
+    cfg.rewards.pop("tuck_low")
+    cfg.rewards["legs_folded"] = RewardTermCfg(func=legs_folded_when_low, weight=3.0,
+                                               params={"target": DEFAULT_ROOT_Z, "start_level": 2})
+    cfg.curriculum["getup_rev"].params["start_level"] = 2
     return cfg
