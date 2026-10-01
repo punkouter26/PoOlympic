@@ -1,0 +1,192 @@
+[
+ {
+  "body": "matt",
+  "parts": 17,
+  "shape_types": [
+   "box",
+   "capsule",
+   "sphere"
+  ],
+  "non_simple": [],
+  "pairs": 135,
+  "parent_child": 16,
+  "colliding": 21,
+  "off_overlapping_at_rest": [
+   "thigh_l_geom0 / thigh_r_geom0"
+  ],
+  "off_violations": [
+   "chest_geom0 / foot_l_geom0",
+   "chest_geom0 / foot_r_geom0",
+   "chest_geom0 / forearm_l_geom0",
+   "chest_geom0 / forearm_r_geom0",
+   "chest_geom0 / shin_l_geom0",
+   "chest_geom0 / shin_r_geom0",
+   "chest_geom0 / thigh_l_geom0",
+   "chest_geom0 / thigh_r_geom0",
+   "chest_geom0 / toe_l_geom0",
+   "chest_geom0 / toe_r_geom0",
+   "forearm_l_geom0 / foot_l_geom0",
+   "forearm_l_geom0 / foot_r_geom0",
+   "forearm_l_geom0 / forearm_r_geom0",
+   "forearm_l_geom0 / shin_l_geom0",
+   "forearm_l_geom0 / shin_r_geom0",
+   "forearm_l_geom0 / thigh_l_geom0",
+   "forearm_l_geom0 / thigh_r_geom0",
+   "forearm_l_geom0 / toe_l_geom0",
+   "forearm_l_geom0 / toe_r_geom0",
+   "forearm_l_geom0 / upper_arm_r_geom0",
+   "forearm_r_geom0 / foot_l_geom0",
+   "forearm_r_geom0 / foot_r_geom0",
+   "forearm_r_geom0 / shin_l_geom0",
+   "forearm_r_geom0 / shin_r_geom0",
+   "forearm_r_geom0 / thigh_l_geom0",
+   "forearm_r_geom0 / thigh_r_geom0",
+   "forearm_r_geom0 / toe_l_geom0",
+   "forearm_r_geom0 / toe_r_geom0",
+   "head_geom0 / foot_l_geom0",
+   "head_geom0 / foot_r_geom0",
+   "head_geom0 / forearm_l_geom0",
+   "head_geom0 / forearm_r_geom0",
+   "head_geom0 / shin_l_geom0",
+   "head_geom0 / shin_r_geom0",
+   "head_geom0 / thigh_l_geom0",
+   "head_geom0 / thigh_r_geom0",
+   "head_geom0 / toe_l_geom0",
+   "head_geom0 / toe_r_geom0",
+   "head_geom0 / upper_arm_l_geom0",
+   "head_geom0 / upper_arm_r_geom0",
+   "head_geom1 / foot_l_geom0",
+   "head_geom1 / foot_r_geom0",
+   "head_geom1 / forearm_l_geom0",
+   "head_geom1 / forearm_r_geom0",
+   "head_geom1 / shin_l_geom0",
+   "head_geom1 / shin_r_geom0",
+   "head_geom1 / thigh_l_geom0",
+   "head_geom1 / thigh_r_geom0",
+   "head_geom1 / toe_l_geom0",
+   "head_geom1 / toe_r_geom0",
+   "head_geom1 / upper_arm_l_geom0",
+   "head_geom1 / upper_arm_r_geom0",
+   "pelvis_geom0 / chest_geom0",
+   "pelvis_geom0 / foot_l_geom0",
+   "pelvis_geom0 / foot_r_geom0",
+   "pelvis_geom0 / forearm_l_geom0",
+   "pelvis_geom0 / forearm_r_geom0",
+   "pelvis_geom0 / head_geom0",
+   "pelvis_geom0 / head_geom1",
+   "pelvis_geom0 / shin_l_geom0",
+   "pelvis_geom0 / shin_r_geom0",
+   "pelvis_geom0 / toe_l_geom0",
+   "pelvis_geom0 / toe_r_geom0",
+   "pelvis_geom0 / upper_arm_l_geom0",
+   "pelvis_geom0 / upper_arm_r_geom0",
+   "torso_geom0 / foot_l_geom0",
+   "torso_geom0 / foot_r_geom0",
+   "torso_geom0 / forearm_l_geom0",
+   "torso_geom0 / forearm_r_geom0",
+   "torso_geom0 / head_geom0",
+   "torso_geom0 / head_geom1",
+   "torso_geom0 / shin_l_geom0",
+   "torso_geom0 / shin_r_geom0",
+   "torso_geom0 / thigh_l_geom0",
+   "torso_geom0 / thigh_r_geom0",
+   "torso_geom0 / toe_l_geom0",
+   "torso_geom0 / toe_r_geom0",
+   "torso_geom0 / upper_arm_l_geom0",
+   "torso_geom0 / upper_arm_r_geom0",
+   "upper_arm_l_geom0 / foot_l_geom0",
+   "upper_arm_l_geom0 / foot_r_geom0",
+   "upper_arm_l_geom0 / forearm_r_geom0",
+   "upper_arm_l_geom0 / shin_l_geom0",
+   "upper_arm_l_geom0 / shin_r_geom0",
+   "upper_arm_l_geom0 / thigh_l_geom0",
+   "upper_arm_l_geom0 / thigh_r_geom0",
+   "upper_arm_l_geom0 / toe_l_geom0",
+   "upper_arm_l_geom0 / toe_r_geom0",
+   "upper_arm_l_geom0 / upper_arm_r_geom0",
+   "upper_arm_r_geom0 / foot_l_geom0",
+   "upper_arm_r_geom0 / foot_r_geom0",
+   "upper_arm_r_geom0 / shin_l_geom0",
+   "upper_arm_r_geom0 / shin_r_geom0",
+   "upper_arm_r_geom0 / thigh_l_geom0",
+   "upper_arm_r_geom0 / thigh_r_geom0",
+   "upper_arm_r_geom0 / toe_l_geom0",
+   "upper_arm_r_geom0 / toe_r_geom0"
+  ],
+  "rest_contacts": {
+   "T-pose": [],
+   "default stance": [],
+   "arm and leg swing": []
+  },
+  "ok": false
+ },
+ {
+  "body": "mattbio",
+  "parts": 17,
+  "shape_types": [
+   "box",
+   "capsule",
+   "sphere"
+  ],
+  "non_simple": [],
+  "pairs": 135,
+  "parent_child": 16,
+  "colliding": 118,
+  "off_overlapping_at_rest": [
+   "thigh_l_geom0 / thigh_r_geom0"
+  ],
+  "off_violations": [],
+  "rest_contacts": {
+   "T-pose": [],
+   "default stance": [],
+   "arm and leg swing": []
+  },
+  "ok": true
+ },
+ {
+  "body": "zombie",
+  "parts": 17,
+  "shape_types": [
+   "box",
+   "capsule",
+   "sphere"
+  ],
+  "non_simple": [],
+  "pairs": 135,
+  "parent_child": 16,
+  "colliding": 118,
+  "off_overlapping_at_rest": [],
+  "off_violations": [
+   "thigh_l_geom0 / thigh_r_geom0"
+  ],
+  "rest_contacts": {
+   "T-pose": [],
+   "default stance": [],
+   "arm and leg swing": []
+  },
+  "ok": false
+ },
+ {
+  "body": "grandma",
+  "parts": 17,
+  "shape_types": [
+   "box",
+   "capsule",
+   "sphere"
+  ],
+  "non_simple": [],
+  "pairs": 135,
+  "parent_child": 16,
+  "colliding": 118,
+  "off_overlapping_at_rest": [],
+  "off_violations": [
+   "thigh_l_geom0 / thigh_r_geom0"
+  ],
+  "rest_contacts": {
+   "T-pose": [],
+   "default stance": [],
+   "arm and leg swing": []
+  },
+  "ok": false
+ }
+]

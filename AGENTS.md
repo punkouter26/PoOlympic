@@ -22,6 +22,13 @@ Rules for any AI agent working in this repository (Unity 6000.6 + MuJoCo RL athl
 - When only doing RL training (no Unity changes), close the Unity editor, and open it again when training is complete.
 - When a run has more than 30 minutes of training, take screenshots of the 3 most consequential TensorBoard charts, review all 3 and explain in simple terms what they show. Compare the running training with previous runs of the same task (same charts, both runs visible) and say in simple terms whether it is doing better or worse, and why. Put the screenshots and review in an HTML file, describing each chart at 3 levels: (1) toddler, (2) child, (3) adult. Screenshots: `training/tools/tb_shots.py`; example page: `parity/tb/rs_v2/review.html`.
 
+## Self-collision
+- Every creature collides with itself using simple shapes (capsules, boxes, spheres) fitted inside its skinned mesh. Never use the visual mesh or the bones as colliders.
+- All body-part pairs collide except parent–child pairs and pairs that overlap in the default standing pose; joint limits handle those.
+- Before training, verify that no pair touches in the T-pose, the default stance and a normal arm and leg swing.
+- Self-contact never ends an episode. If the policy leans on it, add a small self-contact force penalty.
+- Train a new skill from a warm start (a brain trained without self-collision, or the previous rung) rather than from scratch.
+
 ## Unity
 - Interact with Unity through whichever tool gives the best result: Unity CLI pipeline (`unity command …`), https://github.com/CoplayDev/unity-mcp, or https://github.com/IvanMurzak/Unity-MCP.
 - Create as many prefabs / objects in the scene as possible (via MCP / the editor) rather than generating them from code at runtime, so the user can adjust the positions of static objects directly in the scene.
