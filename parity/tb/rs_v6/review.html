@@ -58,8 +58,8 @@
     <span class="dot" style="background:var(--v6)"></span>rs_v6 = this run (from rs_v5c 2300 → 3299)</p>
 
   <div class="box verdict">
-    <h2>Verdict: better at marching, worse at walking and turning; no new skill passes</h2>
-    <p><strong>In one sentence:</strong> the march fix worked (every test athlete now lifts its knees to 83–97 % of the called height, where five of ten did not lift at all at the starting checkpoint), but the athlete wanders off its spot while marching, one-leg standing is still unreliable, and walking and turning got worse even though they were given more practice.</p>
+    <h2>Verdict: better at marching, worse at walking and turning; flamingo was learned and then lost</h2>
+    <p><strong>In one sentence:</strong> the march fix worked (every test athlete now lifts its knees to 83–97 % of the called height, where five of ten did not lift at all at the starting checkpoint), but the athlete wanders off its spot while marching, the one-leg stance was solid at iteration 2550 and gone by 2800, and walking and turning got worse even though they were given more practice.</p>
     <p><strong>What changed in rs_v6:</strong> (1) walking practice 20 % → 35 % of the environments, (2) march reward only for the leg that should be in the air, (3) a penalty when the standing foot slides during the one-leg stance.</p>
     <p><strong>How to read the charts:</strong> each skill got 13 % of the environments in rs_v6 instead of 16 %, so the same performance scores about 19 % lower on a skill chart. A cyan line slightly below the dark one can mean "equal".</p>
     <div class="scroll">
@@ -68,13 +68,13 @@
       <tr><td>E3 Squat</td><td>10/10 (worst 2.5 cm)</td><td>10/10</td><td>10/10</td><td>10/10</td><td class="up">10/10 (worst 1.5 cm)</td><td>&lt; 5 cm</td></tr>
       <tr><td>E7 March</td><td>0/10 (5 no lift)</td><td>0/10</td><td>2/10</td><td>4/10</td><td class="up">4/10 (all lift 83–97 %)</td><td>lift ≥ 75 %, rhythm ±5 %, drift &lt; 0.30 m</td></tr>
       <tr><td>E7 March, drift from the spot</td><td>0.06–0.12 m</td><td></td><td></td><td></td><td class="fail">0.17–0.90 m (5 over)</td><td>&lt; 0.30 m</td></tr>
-      <tr><td>E6 Flamingo (one trial, see chart 2)</td><td>fail (10 touches, 7 cm slip)</td><td class="up">pass (0, 0.7 cm)</td><td class="fail">fail (55, 33 cm)</td><td class="fail">fail (176, 25 cm)</td><td class="fail">fail (67, 14 cm)</td><td>0 touches, slip &lt; 10 cm</td></tr>
+      <tr><td>E6 Flamingo (re-tested with 10 different trials, see chart 2)</td><td>fail (10 touches, 7 cm slip)</td><td class="up">10/10 (0 touches, slip 0.5–2.2 cm)</td><td class="fail">fail (55, 33 cm)</td><td class="fail">fail (176, 25 cm)</td><td class="fail">0/10 (65–85 touches, 14–18 cm)</td><td>0 touches, slip &lt; 10 cm</td></tr>
       <tr><td>E2 Torso aim</td><td>8/10</td><td>5/10</td><td>2/10</td><td>4/10</td><td class="down">5/10</td><td>error &lt; 0.15 rad, feet &lt; 5 cm</td></tr>
       <tr><td>E4 Reach, worst error (median)</td><td>0.22 m</td><td></td><td></td><td></td><td class="down">0.25 m (0/10)</td><td>&lt; 0.08 m</td></tr>
       <tr><td>Rung 2 walking / turning (G1)</td><td>8/10</td><td>4/10</td><td>6/10</td><td>5/10</td><td class="down">6/10</td><td>10/10; 0 falls in every test</td></tr>
     </table>
     </div>
-    <p><strong>Checkpoints to keep:</strong> 3299 for squat + march (Event 3 can use it; Event 7 needs the drift fix first); 2550 is the only checkpoint that passes the flamingo trial; rs_v5c 2300 is still the best for torso aim and walking.</p>
+    <p><strong>Checkpoints to keep:</strong> 3299 for squat + march (Event 3 can use it; Event 7 needs the drift fix first); 2550 passes flamingo 10/10 (and squat 10/10), so Event 6 could use it as its own brain; rs_v5c 2300 is still the best for torso aim and walking.</p>
   </div>
 
   <section class="box">
@@ -89,13 +89,13 @@
   </section>
 
   <section class="box">
-    <h2>2 · Flamingo: the slip penalty did not fix it</h2>
+    <h2>2 · Flamingo: learned by 2550, lost again as march was learned</h2>
     <div class="tag">Episode_Reward/skill_flamingo (lifted foot off the ground and 10 cm up, standing foot planted and still)</div>
     <img src="2_flamingo.png" alt="Flamingo reward: rs_v5c drifts from 0.10 down to 0.09; rs_v6 sits near 0.075 and drifts down to 0.06">
     <div class="levels">
       <div class="lvl l1"><h3>🧸 Toddler</h3><p>The robot tries to stand on one leg like a flamingo. The line is not going up. It still wobbles.</p></div>
-      <div class="lvl l2"><h3>🎒 Child</h3><p>This score is high when one foot stays in the air and the other foot does not slide. It was flat before and it is flat now, even a little lower. In one test the robot did it perfectly, but in the next three tests it hopped around again. So it has not really learned it yet.</p></div>
-      <div class="lvl l3"><h3>🎓 Adult</h3><p>Share-corrected, rs_v6 ends near 0.072–0.083 against rs_v5c's 0.089–0.093: slightly worse, and trending down inside the run. The new slip penalty term stays at about −0.048 for the whole run, so the policy is not reducing stance-foot speed. The drill result is one trial, not ten: the flamingo drill has no random command, so all ten seeds are identical. It passed at 2550 (0 touches, 7 mm slip) and failed at 2800, 3050 and 3299 (55–176 touch ticks, 14–33 cm slip). A "10/10" in the gate log is this single trial. The drill needs randomised start states before its count means anything.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This score is high when one foot stays in the air and the other foot does not slide. Early in this try the robot could do it perfectly, ten times out of ten. Then it learned to march, and it forgot how to stand on one leg: by the end it hops around again. The line slowly sinking shows that forgetting.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>Share-corrected, rs_v6 ends near 0.072–0.083 against rs_v5c's 0.089–0.093: slightly worse, and trending down inside the run. The new slip penalty term stays at about −0.048 for the whole run, so the policy is not reducing stance-foot speed. The original drill drew no random command, so its ten seeds were one trial. It was changed afterwards (extra settle of 0–1 s, random foot order) and two checkpoints were re-tested: 2550 passes 10/10 (0 touches, stance slip 0.5–2.2 cm) and 3299 fails 0/10 (65–85 touch ticks, 14–18 cm slip). So the skill was genuinely there at 2550 and was lost between 2550 and 2800, the same window in which march went from 0 to 2/10. 2800 and 3050 were not re-tested (single-trial fails).</p></div>
     </div>
   </section>
 

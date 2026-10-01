@@ -693,3 +693,12 @@ One entry per run or decision. Newest at the bottom.
   nothing changed for it.
 - **G1 S flamingo drill changed:** extra settle U(0, 1) s + random foot order, so the 10 seeds are 10 different trials
   (they were identical). Older flamingo counts are one trial each.
+
+## 2026-09-30 23:40 · Correction: rs_v6 it2550 flamingo is a real pass
+- Re-gated with the randomised flamingo drill (10 different trials): **rs_v6 it2550 flamingo 10/10** (0 touch ticks,
+  stance slip 0.5-2.2 cm; squat 10, torso 5, march 0) · **it3299 0/10** (65-85 touch ticks, 14-18 cm slip; squat 10,
+  march 4, torso 5). The "one lucky trial" reading above (and in the first version of the review page) was wrong: the
+  skill was learned by 2550 and lost between 2550 and 2800 while march was learned. Review page corrected.
+- Consequence: no single rs_v6 checkpoint has both. Options: per-event brains (Event 6 = it2550, Events 3 / 7 = it3299
+  line; events already use different brains) or a run that keeps both (rs_v7 starts from 3299 with the new terms; if
+  flamingo does not come back, try from 2550 with march's swing-leg term). User decision pending on per-event brains.
