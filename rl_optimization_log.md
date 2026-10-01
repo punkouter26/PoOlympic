@@ -702,3 +702,14 @@ One entry per run or decision. Newest at the bottom.
 - Consequence: no single rs_v6 checkpoint has both. Options: per-event brains (Event 6 = it2550, Events 3 / 7 = it3299
   line; events already use different brains) or a run that keeps both (rs_v7 starts from 3299 with the new terms; if
   flamingo does not come back, try from 2550 with march's swing-leg term). User decision pending on per-event brains.
+
+## 2026-10-01 01:40 · Queue killed by a Ctrl-C at 23:43 — 2 h lost; PowerShell queue
+- **r2bio_v1** (mattbio Rung 2 fine-tune, 400 its, 29 min): **G1 rung 2 10/10 at it 100 / 200 / 300 / 399**, 0 falls
+  (bio probe it300: walk 1.20, run 3.00, sprint 3.62 m/s at a 3.8 command, no torque clipping).
+- **g1_v1 died at it 71 (23:43:28)** together with the bash queue: `runs/queue_launcher.log` ends in `^C`. The queue was
+  started detached through WMI, but as Git bash; it got an interrupt when a Claude turn ended. Found at 01:39 (my
+  watcher only looked for END lines). Lost: 23:43-01:41 of GPU time. During that window the GPU was used only by the
+  other project's run (PoDecath `r1_speed`, 8192 envs, 23:12 → ~02:55), which also slows this queue ~35 % while it runs.
+- **Fix:** `tools/train_queue.ps1` (same queue.txt format; prep = uv arguments with `{run:<exp>/<name>}` tokens), started
+  like detached_run.ps1 (WMI → Windows PowerShell), which survived every turn end on 2026-09-30. Watcher now reports
+  a training log that has not been written for 10 minutes. g1_v1 restarted from scratch 01:41 (2.7 s/it).
