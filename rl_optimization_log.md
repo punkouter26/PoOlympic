@@ -654,3 +654,20 @@ One entry per run or decision. Newest at the bottom.
   40.9 s; hub + main menu rebuilt (12 playable events). Captures `parity/e3/squat_{live,down,result}.png`.
 - Not done: G0 fingerprint check of the squat8 scene and a G5-style parity run of one attempt; EditMode test suite
   not re-run after the LaneLineup / EventScenes changes.
+
+## 2026-09-30 22:35 · GRANDMA Rung 0 PASSED (g0_v2) · Android deploy with Event 3
+- **g0_v2** (4096 envs, from scratch, 1500 its, 58 min; 1.8-2.4 s/it with the Unity editor open and an Android build
+  running alongside): episode length >= 900 at it 119 (zombie z0_v1: 214, MATT r0_v2: 210); reward plateau ~87 from it 600.
+- **G1 rung 0 (grandma bars): it 500 9/10 · it 1000 10/10 · it 1499 10/10**, 0 falls, every hit recovered. 30 other
+  seeds (first-seed 2000): 24/30 for both 1000 and 1499 (zombie 25/30, MATT 29/30); all misses are foot excursion
+  0.44-0.52 m vs the 0.435 m box (recovery steps), 0 falls. Largest lean after a hit 9.6 deg (1000) vs 6.8 deg (1499)
+  -> **`parity/brains/grandma_rung0.onnx` = g0_v2 it 1499** (re-verified 10/10).
+- Quiet stance (5 s): torso pitch 9.1 deg (target 10), foot width 0.254 m (0.26), knees 24 deg, pelvis 0.673 m;
+  torques 24 / 85 Nm waist, 18 / 119 Nm hip. Relative effort (torques term) -0.155 vs MATT -0.049, zombie -0.204.
+- Review: `parity/tb/g0_v2/review.html` (charts vs z0_v1 and r0_v2 + a stand / shove / recover render). Intermediate
+  checkpoints archived to runs_archive/grandma_rung0 (kept 500 / 1000 / 1499).
+- **Android:** `AndroidBuild.Build` -> 236 MB APK, 15 scenes, 5.0 min; installed on the Pixel 9 Pro. Menu 60 fps with
+  "03 Deep Squat Endurance"; one Event 3 heat on the device: 60 fps, S6 wins 101.2 pts (DONE) after 40.9 s (editor,
+  same seed: S5 101.0 — no ARM parity run for this scene yet). Captures `parity/android/{menu_e3,e3_live,e3_result}.png`.
+  Seen, not fixed: the bottom bar tagged S3 "LEADER" while the standings listed S5 first.
+- Next for GRANDMA: Unity testbed (visual binding, G0 / G2-G5), roster card + lineups, then Rung 2 (short careful steps).

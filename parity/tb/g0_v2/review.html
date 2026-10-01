@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GRANDMA Rung 0 Review</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --card: #ffffff; --text: #1d1d1f; --muted: #5d5d66; --line: #e2e0da;
+    --g: #e52592; --m: #3c4a5e; --good: #1f8a4c; --warn: #b8660b; --bad: #c2372b;
+    --t1: #fff4d6; --t2: #e3f3ff; --t3: #eeeaf8; --verdict: #e8f6ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+      --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+      --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+    --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+    --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.8rem; margin: 0 0 4px; }
+  h2 { margin: 0 0 4px; font-size: 1.3rem; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+  .verdict { background: var(--verdict); }
+  .verdict p { margin: 6px 0 0; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 10px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+  .up { color: var(--good); font-weight: 600; } .same { color: var(--muted); font-weight: 600; }
+  .down { color: var(--warn); font-weight: 600; } .fail { color: var(--bad); font-weight: 600; }
+  .tag { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--muted); }
+  img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); margin: 12px 0 16px; background: #fff; }
+  .levels { display: grid; gap: 12px; }
+  .lvl { border-radius: 10px; padding: 12px 16px; }
+  .lvl h3 { margin: 0 0 4px; font-size: .95rem; }
+  .lvl p { margin: 0; }
+  .l1 { background: var(--t1); } .l2 { background: var(--t2); } .l3 { background: var(--t3); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 8px; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+  footer { color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>GRANDMA Rung 0 training review: standing and shove recovery</h1>
+  <p class="sub">2026-09-30 22:33, run g0_v2, iteration 1499 · GRANDMA (1.60 m, 65 kg, 60 % strength) · 1500 iterations in 58 min, 4096 environments ·
+    <span class="dot" style="background:var(--g)"></span>GRANDMA g0_v2 and ZOMBIE z0_v1 (TensorBoard gave both the same pink; each chart text says which is which)
+    <span class="dot" style="background:var(--m)"></span>MATT r0_v2</p>
+
+  <div class="box verdict">
+    <h2>Verdict: GRANDMA passes Rung 0, and learned to stand faster than ZOMBIE and MATT</h2>
+    <p><strong>In one sentence:</strong> she stands in her stooped, soft-kneed stance, recovers from every shove and dropped cube without falling, and passes the standing test 10 out of 10; in a harder 30-seed check she passes 24, the misses being recovery steps that travel a little too far.</p>
+    <p><strong>Compared with the earlier bodies on the same task:</strong> she reached full-length episodes by iteration 119 (ZOMBIE 214, MATT 210). Her wider check (24/30) is close to ZOMBIE's (25/30) and below MATT's (29/30).</p>
+    <div class="scroll">
+    <table>
+      <tr><th>Standing test (CPU MuJoCo)</th><th>it 500</th><th>it 1000</th><th>it 1499 (chosen)</th><th>Pass needs</th></tr>
+      <tr><td>G1 Rung 0, 10 seeds</td><td>9/10</td><td class="up">10/10</td><td class="up">10/10</td><td>10/10</td></tr>
+      <tr><td>Falls</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+      <tr><td>Hits recovered (8 per seed)</td><td>all</td><td>all</td><td>all</td><td>all</td></tr>
+      <tr><td>Largest lean after a hit</td><td></td><td>9.6°</td><td class="up">6.8°</td><td></td></tr>
+      <tr><td>30 other seeds</td><td></td><td>24/30</td><td class="same">24/30</td><td>not a gate (ZOMBIE 25/30, MATT 29/30)</td></tr>
+      <tr><td>Foot travel while recovering (30 seeds)</td><td></td><td>0.26–0.52 m</td><td class="down">0.26–0.52 m (6 over)</td><td>&lt; 0.435 m</td></tr>
+    </table>
+    </div>
+    <p><strong>Her style holds</strong> (quiet stand, 5 s): torso stooped 9.1° (target 10°), feet 25.4 cm apart (target 26 cm), knees 24°, using 24 of 85 Nm at the waist and 18 of 119 Nm at the hips.</p>
+    <p><strong>Brain:</strong> <code>parity/brains/grandma_rung0.onnx</code> = g0_v2 iteration 1499 (same pass counts as 1000, smaller lean after a hit).</p>
+  </div>
+
+  <section class="box">
+    <h2>What she looks like: standing, shoved, recovered</h2>
+    <div class="tag">Physics body (capsules), trained brain on CPU MuJoCo: quiet stand · 0.3 s after a shove from behind · 2 s later</div>
+    <img src="4_stand_shove_recover.png" alt="Three frames of the GRANDMA physics body: stooped quiet stand, knees bent and leaning after a shove, upright again">
+  </section>
+
+  <section class="box">
+    <h2>1 · How long she stays up</h2>
+    <div class="tag">Train/mean_episode_length (1000 = stood for the whole 20 s episode). The pink line that rises first is GRANDMA; the later pink line, on top of MATT's dark line, is ZOMBIE.</div>
+    <img src="1_episode_length.png" alt="Episode length: GRANDMA reaches 1000 at about iteration 150; ZOMBIE and MATT at about 300">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>Grandma learned to stand up without falling. She learned it faster than the others!</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>The line shows how long the robot stays on its feet before it falls. At the top it never falls. Grandma's line gets to the top after about 150 rounds of practice. Zombie and Matt needed about 300 rounds.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>First iteration at 900 of 1000 ticks: GRANDMA 119, ZOMBIE 214, MATT 210, then all three sit at ~998–1000 to the end. Her action noise also settles sooner (std 0.47 at iteration 200 against 0.75 and 0.71). A likely reason is her servo stiffness, which is not weakened by her 0.6 strength factor, so a passive hold already keeps her up for about 1.2 s; that was not tested against the alternative. The first attempt, g0_v1, is not on this chart: it was launched with one environment by mistake and learned nothing.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>2 · Total reward</h2>
+    <div class="tag">Train/mean_reward. Top pink line (ends at 97) is ZOMBIE; middle pink line (ends at 88) is GRANDMA; dark line (ends at 82) is MATT.</div>
+    <img src="2_reward.png" alt="Mean reward: GRANDMA rises fastest to about 86 by iteration 500 and ends at 88; ZOMBIE ends at 97; MATT at 82">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The robot gets points for standing nicely. Grandma's points go up fast and then stay high.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This is the robot's total score for each try. Grandma's score climbs quickly and levels off at about 88. The three robots are not scored in exactly the same way, so a higher line does not mean a better robot. What matters is that her line goes up and then stays flat.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>GRANDMA is at 86 by iteration 500 and 87.7 at the end, a plateau from about iteration 600: the last 900 iterations added little, and the 1000 and 1499 checkpoints test the same. The absolute levels are not comparable across bodies because the style terms differ (her stoop and stance terms; ZOMBIE's hunch, arms-forward and wide stance; MATT's upright term). Her style terms are near their ceilings: stoop 0.98 of 1.0, stance 0.47 of 0.5.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>3 · Effort</h2>
+    <div class="tag">Episode_Reward/torques (penalty on joint torque, scaled so equal effort relative to each body's strength costs the same). Upper pink line (−0.155) is GRANDMA; lower pink line (−0.204) is ZOMBIE; dark line (−0.049) is MATT.</div>
+    <img src="3_torques.png" alt="Torque penalty: MATT settles at -0.05, GRANDMA at -0.155, ZOMBIE at -0.20">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>Standing is harder work for Grandma than for Matt. She has to push more.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This line shows how hard the robot's muscles work. Closer to zero means less work. Matt barely has to try. Grandma works about three times as hard for her strength, because she is weaker and leans forward a little. Zombie works hardest of all.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>The penalty weight is divided by the body's torque scale squared, so the term measures effort relative to capacity. GRANDMA settles at −0.155, about three times MATT's −0.049 and below ZOMBIE's −0.204. That fits a 60 % strength body holding a 10° stoop with a forward chest and head: 24 Nm at the waist in a quiet stand. All three show the same shape: effort spikes while the policy learns to stay up (iterations 100–250), then falls as it finds a cheaper stance.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>What is not established</h2>
+    <p>Two body changes were made before the real cause of the failed first run (one environment) was found, and were kept without a controlled comparison: servo stiffness not scaled by her strength factor, and the stance moved back (hips 17°, ankles 7°). Her mass is 65 kg, chosen from the stocky mesh; the height question quoted about 60 kg. She is not in Unity or the phone build yet.</p>
+  </section>
+
+  <footer>Charts: TensorBoard at localhost:6006, runs <code>g0_v2</code>, <code>z0_v1</code>, <code>r0_v2</code> (<code>training/tools/tb_shots.py</code>). Gate data: <code>parity/watch_grandma_r0.jsonl</code>, <code>parity/watch/g1_rung0_grandma_r0_it*.json</code>.</footer>
+</main>
+</body>
+</html>

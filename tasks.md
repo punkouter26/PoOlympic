@@ -251,10 +251,11 @@ User decisions (2026-09-30): Claude rigs the unrigged scan in Blender (no AccuRi
 - [x] **G2 Body pipeline** — extract_skeleton (22 joints, mirror 0 mm, A4 PASS), build_mjcf (pelvis fitted to all
   hip-slab skin: bone heat gives the buttocks to the thighs), `grandma.xml` / `scene_grandma.xml` (65.0 kg, root z
   0.678 m), fingerprint, `contract_grandma.json`; test_model 13/13 with POOLYMPIC_BODY=grandma.
-- [ ] **G3 Rung 0** — `tasks/grandma_env.py` (MATT's Rung 0 recipe, Froude-scaled like the zombie; stoop 10° +
+- [x] **G3 Rung 0** — `tasks/grandma_env.py` (MATT's Rung 0 recipe, Froude-scaled like the zombie; stoop 10° +
   steady stance style rewards), task `PoOlympic-Grandma-Rung0-Stand` (C1 PASS). g0_v1 failed (launched with 1 env);
-  body: PD stiffness unscaled by strength (`Body.stiffness`), stance hip 17° / knee 24° / ankle 7°. **g0_v2** running
-  (4096 envs, 1500 its, gates 0 at 500 / 1000 / 1499). *Accept: G1 rung0 10/10.*
+  body: PD stiffness unscaled by strength (`Body.stiffness`), stance hip 17° / knee 24° / ankle 7°. **g0_v2 PASSED
+  2026-09-30: G1 rung 0 10/10 at it 1000 and 1499, 0 falls** (30-seed check 24/30; misses = recovery steps 0.44-0.52 m
+  vs the 0.435 m box) → `parity/brains/grandma_rung0.onnx` = it 1499. Review `parity/tb/g0_v2/review.html`.
 - [ ] **G4 Unity** — visual binding + Testbed_Grandma (G0 / G2-G5), roster card, mixed lineups.
 - [ ] **G5 Rung 2 grandma** — short careful steps, size-scaled envelope.
 
