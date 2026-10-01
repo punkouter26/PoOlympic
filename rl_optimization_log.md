@@ -902,3 +902,18 @@ One entry per run or decision. Newest at the bottom.
   underdog in the inverted sprint (−14.9), terminal velocity (−9.5) and crab (−8.5), neutral on the pedestal, turntable
   and brake.
 - **Not run:** crawl_bio_v1, getup_rev_v1 (still in `runs/queue.txt`).
+
+## 2026-10-01 14:10 · Training block started: crawl_bio_v1 → getup_rev_v1 (Unity closed)
+- Unity EditMode before closing the editor: full run 801 tests, 791 passed. The 8 `Mujoco.*` failures are the plug-in
+  package's own tests. PoOlympic: all passed except (1) `EventScenesCarryTheBroadcastFxLayer` — the Deep Squat runners
+  had no critic (since Event 3 was built; `rs_v6_it3299.critic.onnx` exported and attached now) and (2) the crowd-contact
+  case of Event_InvertedSprint, which checked all 145,656 part pairs with 0 failures but took 289 s against the runner's
+  180 s default (`[Timeout(900000)]` added). Crowd contacts with GRANDMA in the roster: 145,656 cross-lane part pairs
+  per 24-athlete scene, 0 failures in every scene.
+- The re-run of the PoOlympic assembly did NOT finish: the Iron Pedestal crowd case, 98 s in the first run, ran ~35 min
+  (one core busy, free RAM 3 GB, a second Unity project open) and the editor was force-closed while it was on the next
+  scene. Both fixes are therefore unverified by the test runner: re-run `BroadcastFxTests` and `CrowdContactTests` when the
+  editor is open again.
+- Housekeeping: 588 MB of superseded TensorBoard runs moved to `runs_archive/2026-10-01/` (rs_v1-v5b, g2_v2b / v3 / v4);
+  TensorBoard on `training/runs` (:6006); queue restarted through WMI at 14:10 (2.5 s/it at the start, GPU 85 C / 58 W
+  with another project's Unity editor open and the fans on Auto).
