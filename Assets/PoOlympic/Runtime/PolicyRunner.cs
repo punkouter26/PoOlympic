@@ -281,12 +281,16 @@ namespace PoOlympic
             if (_substep % Contract.decimation == 0) ControlTick++;
         }
 
-        /// <summary>Event command (MATT units) → this body's command: speeds × √λ, yaw rate ÷ √λ (Contract.SpeedScale).
-        /// Identity for MATT.</summary>
+        /// <summary>Event command (MATT units) → this body's command: speeds × √λ, yaw rate ÷ √λ (Contract.SpeedScale),
+        /// forward speed capped at the body's own top command (contract vx_max: GRANDMA 2.8 m/s). Identity for MATT.
+        /// Python mirror: training/poolympic/events/iron_pedestal.py body_command.</summary>
         public Vector3 BodyCommand(Vector3 c)
         {
             float k = (float)Contract.SpeedScale;
-            return k == 1f ? c : new Vector3(c.x * k, c.y * k, c.z / k);
+            if (k == 1f) return c;
+            float vx = c.x * k;
+            if (Contract.vx_max > 0.0) vx = Mathf.Min(vx, (float)Contract.vx_max);
+            return new Vector3(vx, c.y * k, c.z / k);
         }
 
         void ControlStep(MujocoLib.mjModel_* m, MujocoLib.mjData_* d)

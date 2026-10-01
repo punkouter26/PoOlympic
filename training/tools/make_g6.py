@@ -90,13 +90,11 @@ MIXED_SCENE = "meet8_mzmzmzmz"
 
 
 def body_command(command, body: str) -> tuple[float, float, float]:
-    """PolicyRunner.BodyCommand in float32: k = (float)(0.8 / gait_hz_base); (x·k, y·k, z / k). Identity for MATT."""
+    """PolicyRunner.BodyCommand in float32 (events/iron_pedestal.py body_command). Identity for MATT."""
     if body == "matt":
         return tuple(float(c) for c in command)
-    ct = json.loads(bodies.BODIES[body].contract_json.read_text())
-    k = np.float32(0.8 / ct["gait_hz_base"])
-    c = np.asarray(command, np.float32)
-    return float(c[0] * k), float(c[1] * k), float(c[2] / k)
+    from poolympic.events.iron_pedestal import body_command as scaled      # one implementation (incl. the vx_max cap)
+    return tuple(float(c) for c in scaled(np.asarray(command, float), body))
 
 
 def main_mixed(name: str, matt_brain: str = "../parity/brains/rung2.onnx",

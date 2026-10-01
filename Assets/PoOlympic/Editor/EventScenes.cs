@@ -69,6 +69,7 @@ namespace PoOlympic.Editor
         public const string PedestalMixedSource = "training/assets/scene_pedestal8_mzmzmzmz.xml";
         public const string PedestalMixedLayout = "training/assets/pedestal8_mzmzmzmz_layout.json";
         public const string ZombieAsset = "Assets/PoOlympic/Art/Zombie.glb";
+        public const string GrandmaAsset = "Assets/PoOlympic/Art/Grandma.glb";   // SourceArt/Grandma/grandma.glb (rig_grandma.py)
         // Roster scenes (training/tools/compose_mixed.py <scene> roster): MATT (L<k>_) + zombie (Z<k>_) in every lane;
         // LaneLineup keeps the body picked in the main menu and switches the other off before MuJoCo compiles.
         public const string PedestalRosterSource = "training/assets/scene_pedestal8_roster.xml";
@@ -82,6 +83,7 @@ namespace PoOlympic.Editor
             "matt" => ("Assets/PoOlympic/Models/contract.json", VisualBinding.MattAsset, "M"),
             "zombie" => ("Assets/PoOlympic/Models/contract_zombie.json", ZombieAsset, "Z"),
             "mattbio" => ("Assets/PoOlympic/Models/contract_mattbio.json", VisualBinding.MattAsset, "M"),   // MATT's skeleton
+            "grandma" => ("Assets/PoOlympic/Models/contract_grandma.json", GrandmaAsset, "G"),
             _ => throw new ArgumentException($"unknown athlete body '{body}'"),
         };
 

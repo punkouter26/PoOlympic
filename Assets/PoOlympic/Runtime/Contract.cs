@@ -64,6 +64,7 @@ namespace PoOlympic
         }
 
         public string body;                   // athlete body (Phase Z); absent = MATT
+        public double vx_max;                 // the body's own top forward command (m/s, own units); 0 / absent = none
         public int contract_version;
         public string mujoco_version;
         public double timestep;

@@ -279,6 +279,8 @@ def export_contract(fingerprint_sha256: str | None = None) -> dict:
         o += size
     contract = {
         **({} if BODY.name == "matt" else {"body": BODY.name}),
+        # top forward command (m/s, own units) of a body with its own cap: event commands (MATT units x √λ) stop here
+        **({} if BODY.vx_max is None else {"vx_max": BODY.vx_max}),
         "contract_version": CONTRACT_VERSION,
         "mujoco_version": mujoco.__version__,
         "timestep": float(m.opt.timestep),

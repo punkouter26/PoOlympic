@@ -33,6 +33,8 @@ class Body:
     joint_defaults: dict = field(default_factory=dict)   # default pose overrides (deg) by joint name, both sides
     rig: str | None = None            # variant of another body: reuse its skeleton/skin and its rules (same size)
     torque_caps: dict | None = None   # per joint (base name) (Nm against, Nm towards the anatomical + direction)
+    vx_max: float | None = None       # top forward command (m/s, own units); None = MATT's 3.8 m/s Froude-scaled
+    yaw_per_stride: bool = False      # G1 Rung 2 judges yaw tracking averaged over one stride (user rulings)
 
     @property
     def family(self) -> str:
@@ -64,6 +66,10 @@ class Body:
     @property
     def mass_scale(self) -> float: return self.total_mass / MATT_MASS
     @property
+    def top_speed(self) -> float:
+        """Top of the forward command envelope (m/s, own units): G1 Rung 2 sprints and event commands stop here."""
+        return 3.8 * self.speed_scale if self.vx_max is None else self.vx_max
+    @property
     def torque_scale(self) -> float: return self.mass_scale * self.length_scale * self.strength
     @property
     def inertia_scale(self) -> float: return self.mass_scale * self.length_scale ** 2
@@ -83,6 +89,7 @@ BODIES = {
     "zombie": Body(
         "zombie", ROOT.parent / "SourceArt" / "Zombie" / "zombie.glb", 22, (1.10, 1.17), 22.0,
         ZOMBIE_HEIGHT / MATT_HEIGHT, strength=0.7, self_collision=True,
+        yaw_per_stride=True,          # ruling 2026-09-29: the hunched shuffle sways the pelvis ±5° per step
         # zombie stance: slight forward lean, crouched legs, wide feet, arms held out forward (elevation ~0 = level,
         # flexion swings the level arm forward), elbows a little bent
         joint_defaults={"abdomen_flex": 15.0, "hip_flex": 20.0, "hip_abd": 5.0, "knee": 35.0, "ankle_dorsi": 15.0,
@@ -95,6 +102,9 @@ BODIES = {
     "grandma": Body(
         "grandma", ROOT.parent / "SourceArt" / "Grandma" / "grandma.glb", 22, (1.57, 1.63), 65.0,
         GRANDMA_HEIGHT / MATT_HEIGHT, strength=0.6, stiffness=1.0, self_collision=True,
+        # user decisions 2026-10-01: her envelope tops out at 2.8 m/s (= 3.0 × √λ, her Rung 1 top: every Rung 2 run that
+        # commanded up to 3.7 m/s lost its fast running), bars and event commands with it; yaw judged per stride
+        vx_max=2.8, yaw_per_stride=True,
         # stance: pelvis level (hip − knee + ankle = 0), shins 7° forward; COM 35 % of the way heel -> toe like MATT (the
         # first stance, hip 14 / ankle 10, put it at 43 %: 6 cm ahead of the ankles)
         joint_defaults={"abdomen_flex": 10.0, "hip_flex": 17.0, "hip_abd": 3.0, "knee": 24.0, "ankle_dorsi": 7.0}),

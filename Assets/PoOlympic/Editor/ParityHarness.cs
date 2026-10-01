@@ -23,7 +23,8 @@ namespace PoOlympic.Editor
         public const string TestbedScene = "Assets/PoOlympic/Scenes/Testbed_ZeroBrain.unity";
         /// <summary>Solo testbed per athlete body (Phase Z7): the scene whose compiled model the body's references
         /// were recorded on (training/assets/scene_&lt;body&gt;.xml).</summary>
-        public static string TestbedSceneOf(string body) => body == "matt" ? TestbedScene : ZombieTestbed.ScenePath;
+        public static string TestbedSceneOf(string body) =>
+            body == "matt" ? TestbedScene : body == "mattbio" ? StanceTestbed.ScenePath : SoloTestbed.ScenePathOf(body);
 
         /// <summary>Unity scene holding the reference's MJCF: the solo pedestal (Event 1 practice scene) or the body's testbed.</summary>
         public static string SceneFor(RefMeta meta, string body) =>

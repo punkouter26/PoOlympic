@@ -324,13 +324,15 @@ RUNG2_YAW_TOL = 0.3 * WS
 # DESIGN §1 lists wz in [-2, 2] AND "360 deg < 3 s", which 2 rad/s cannot meet (3.14 s at best). Event 12 is scored
 # on rotational speed, so the drill commands the maximum trained yaw rate (Rung 2 curriculum: +-2.5). Bars unchanged.
 TURNTABLE_WZ = 2.5 * WS
-RUNG2_VX_MAX = 3.8 * SS  # m/s — MATT's top speed with the elite-athlete torque caps (user decision 2026-09-28; spec said 4.0)
+RUNG2_VX_MAX = B.top_speed # m/s — MATT's top speed with the elite-athlete torque caps (user decision 2026-09-28; spec said 4.0)
+#       (other bodies: Froude-scaled, or the body's own cap — GRANDMA 2.8 m/s, user decision 2026-10-01)
+YAW_PER_STRIDE = B.yaw_per_stride   # zombie (2026-09-29), GRANDMA (2026-10-01): yaw error averaged over one stride
 TURNTABLE_MAX_S = 3.0 * TS
 TURNTABLE_MAX_DRIFT = 0.3 * LAM
 BRAKE_MAX_M = 2.0 * LAM          # stopping distance ∝ v² / a: × λ (accelerations do not scale)
 BACKWARD_M = 20.0                # event distance (rule), not scaled
 BACKWARD_V = 1.5 * SS
-BRAKE_V = 3.0 * SS
+BRAKE_V = min(3.0 * SS, RUNG2_VX_MAX)
 
 
 @dataclass
@@ -425,8 +427,9 @@ def rung2_episode(onnx_path: Path, seed: int, sim: Sim | None = None, shove_dv: 
                 vx, vy, wz = _vel_heading(sim)
                 lin.append(math.hypot(vx - cmd[0], vy - cmd[1]))
                 yaw.append(wz - cmd[2])
-        # report-only (not a pass criterion): yaw error averaged over one stride of the body's gait clock — the
-        # pelvis' natural transverse rotation (~±5° per step) shows up in the per-tick RMS as a yaw-rate wobble
+        # yaw error averaged over one stride of the body's gait clock — the pelvis' natural transverse rotation (~±5°
+        # per step) shows up in the per-tick RMS as a yaw-rate wobble. The pass criterion for bodies with
+        # yaw_per_stride (rung2_checks), report-only for the others
         period = max(1, int(round(1.0 / (C.gait_hz(cmd) * dt)))) if np.linalg.norm(cmd) >= C.PHASE_CMD_THRESHOLD else 1
         yaw_avg = np.convolve(yaw, np.ones(period) / period, mode="valid") if len(yaw) >= period else np.array(yaw)
         segments.append({"kind": kind, "cmd": cmd.round(3).tolist(),
@@ -489,12 +492,15 @@ def rung2_episode(onnx_path: Path, seed: int, sim: Sim | None = None, shove_dv: 
                        brake_m=brake, backward_m=back, joint_vel_over_fraction=jv / max(1, ticks))
 
 
+YAW_KEY = "yaw_rms_stride" if YAW_PER_STRIDE else "yaw_rms"
+
+
 def rung2_checks(r: Rung2Result) -> dict[str, bool]:
     return {
         "no_fall": r.fell is None,
         "tracking_lin": bool(r.segments) and all(s["lin_rms"] is not None and s["lin_rms"] < RUNG2_LIN_TOL
                                                  for s in r.segments),
-        "tracking_yaw": bool(r.segments) and all(s["yaw_rms"] is not None and s["yaw_rms"] < RUNG2_YAW_TOL
+        "tracking_yaw": bool(r.segments) and all(s[YAW_KEY] is not None and s[YAW_KEY] < RUNG2_YAW_TOL
                                                  for s in r.segments),
         "turntable": bool(r.turntable_s is not None and r.turntable_s < TURNTABLE_MAX_S
                           and r.turntable_drift_m < TURNTABLE_MAX_DRIFT),

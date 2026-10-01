@@ -155,12 +155,17 @@ class _Lane:
 
 
 def body_command(cmd: np.ndarray, body: str) -> np.ndarray:
-    """PolicyRunner.BodyCommand in float32: k = (float)(0.8 / gait_hz_base); (x·k, y·k, z / k). Identity for MATT."""
+    """PolicyRunner.BodyCommand in float32: k = (float)(0.8 / gait_hz_base); (min(x·k, vx_max), y·k, z / k).
+    Identity for MATT."""
     if body == "matt":
         return cmd
-    k = np.float32(0.8 / body_contract(body)["gait_hz_base"])
+    ct = body_contract(body)
+    k = np.float32(0.8 / ct["gait_hz_base"])
     c = np.asarray(cmd, np.float32)
-    return np.array([c[0] * k, c[1] * k, c[2] / k], dtype=np.float64)
+    vx = c[0] * k
+    if "vx_max" in ct:                 # the body's own top speed (GRANDMA 2.8 m/s)
+        vx = min(vx, np.float32(ct["vx_max"]))
+    return np.array([vx, c[1] * k, c[2] / k], dtype=np.float64)
 
 
 def body_contract(body: str) -> dict:
