@@ -5,7 +5,7 @@ when every drill passes, the rung when 10/10 seeds pass):
 
   E3 squat     3 reps, depth U(0.25, 0.40) m: down 2.5 s, up 2.0 s; pelvis within SQUAT_TOL of the target (mean of each
                hold's last 1 s); no fall (fall line lowered by the target − 0.10 m, like training)
-  E6 flamingo  lift left 8 s, both feet 1.5 s, lift right 8 s: after 1 s the lifted foot never touches the ground,
+  E6 flamingo  extra settle U(0, 1) s, then lift one foot 8 s, both feet 1.5 s, lift the other 8 s (random order): after 1 s the lifted foot never touches the ground,
                the stance foot moves < FLAMINGO_SLIP; no fall
   E7 march     cadence U(1.0, 1.6) Hz, knee lift U(0.15, 0.30) m, 10 s: stride cadence (left-knee peaks) within ±5 %,
                mean peak knee rise ≥ 0.75 x lift, pelvis drift < MARCH_DRIFT; no fall
@@ -120,8 +120,11 @@ def drill_squat(sim: SkillSim, rng: np.random.Generator) -> dict:
 
 def drill_flamingo(sim: SkillSim, rng: np.random.Generator) -> dict:
     fall = _settle(sim)
+    # 2026-09-30 (after rs_v6): the drill drew nothing from rng, so all seeds were ONE trial ("10/10" at it2550, "0/10"
+    # at the next three gates). Seeds now differ by an extra settle of 0-1 s and by which foot goes first.
+    fall = fall or sim.run(float(rng.uniform(0.0, 1.0)))
     touch, slip = 0, 0.0
-    for foot in ("l", "r"):
+    for foot in (("l", "r") if rng.uniform() < 0.5 else ("r", "l")):
         sim.skill = C.SkillCommand(lift_foot=foot).to_array()
         k = 0 if foot == "l" else 1
         stance = 1 - k

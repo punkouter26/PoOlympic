@@ -41,12 +41,14 @@ def _zombie(rung: str):
 TASKS.update({f"zombie_{r}": _zombie(r) for r in ("rung0", "rung1", "rung2", "rung2_base", "rung2_sym3")})
 
 
-def _grandma_rung0():   # needs POOLYMPIC_BODY=grandma
-    from poolympic.tasks import grandma_env
-    return grandma_env.grandma_rung0_env_cfg()
+def _grandma(rung: str):
+    def make():   # needs POOLYMPIC_BODY=grandma
+        from poolympic.tasks import grandma_env
+        return getattr(grandma_env, f"grandma_{rung}_env_cfg")()
+    return make
 
 
-TASKS["grandma_rung0"] = _grandma_rung0
+TASKS.update({f"grandma_{r}": _grandma(r) for r in ("rung0", "rung1", "rung2_base", "rung2")})
 
 
 def check_skill_measures(env, m) -> bool:

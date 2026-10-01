@@ -241,7 +241,7 @@ if bodies.current().name == "mattbio":
     from .matt_env import matt_ppo_v5_cfg, matt_rung0_v5_env_cfg, matt_rung2_flight_v5_env_cfg, matt_rung2_v5_env_cfg
     from .getup_env import matt_getup_rev_env_cfg
     from .crawl_env import matt_crawl_v5_env_cfg
-    from .stance_env import matt_stance_env_cfg, matt_stance_v6_env_cfg
+    from .stance_env import matt_stance_env_cfg, matt_stance_v6_env_cfg, matt_stance_v7_env_cfg
     from .symmetry import SymmetricRunner
 
     for task_id, fn, exp, its, runner in (
@@ -249,15 +249,27 @@ if bodies.current().name == "mattbio":
             ("PoOlympic-MattBio-Rung2-Omni", matt_rung2_v5_env_cfg, "mattbio_rung2", 800, SymmetricRunner),
             ("PoOlympic-MattBio-RungS-Stance", matt_stance_env_cfg, "mattbio_stance", 1000, SymmetricRunner),
             ("PoOlympic-MattBio-RungS-Stance-v6", matt_stance_v6_env_cfg, "mattbio_stance", 1000, SymmetricRunner),
+            ("PoOlympic-MattBio-RungS-Stance-v7", matt_stance_v7_env_cfg, "mattbio_stance", 1500, SymmetricRunner),
             ("PoOlympic-MattBio-Rung2-Flight", matt_rung2_flight_v5_env_cfg, "mattbio_rung2", 400, SymmetricRunner),
             ("PoOlympic-MattBio-Getup-Rev", matt_getup_rev_env_cfg, "mattbio_getup", 1500, MjlabOnPolicyRunner),
             ("PoOlympic-MattBio-Crawl", matt_crawl_v5_env_cfg, "mattbio_crawl", 600, MjlabOnPolicyRunner)):
-        register_mjlab_task(task_id=task_id, env_cfg=fn(), play_env_cfg=fn(play=True),
-                            rl_cfg=matt_ppo_v5_cfg(exp, max_iterations=its), runner_cls=runner)
+        rl = matt_ppo_v5_cfg(exp, max_iterations=its)
+        if task_id.endswith("Stance-v7"):
+            rl.algorithm.entropy_coef = 0.0025   # rs_v3-v6 passed this on the CLI; the queue has no train-args field
+        register_mjlab_task(task_id=task_id, env_cfg=fn(), play_env_cfg=fn(play=True), rl_cfg=rl, runner_cls=runner)
 
 if bodies.current().name == "grandma":
-    from .grandma_env import grandma_rung0_env_cfg
+    from .grandma_env import (grandma_rung0_env_cfg, grandma_rung1_env_cfg, grandma_rung2_base_env_cfg,
+                              grandma_rung2_env_cfg)
     from .matt_env import matt_ppo_cfg
+    from .symmetry import SymmetricRunner
+
+    for _tid, _fn, _exp, _its, _runner in (
+            ("PoOlympic-Grandma-Rung1-Run", grandma_rung1_env_cfg, "grandma_rung1", 3000, MjlabOnPolicyRunner),
+            ("PoOlympic-Grandma-Rung2-Omni-Base", grandma_rung2_base_env_cfg, "grandma_rung2", 2000, MjlabOnPolicyRunner),
+            ("PoOlympic-Grandma-Rung2-Omni", grandma_rung2_env_cfg, "grandma_rung2", 2000, SymmetricRunner)):
+        register_mjlab_task(task_id=_tid, env_cfg=_fn(), play_env_cfg=_fn(play=True),
+                            rl_cfg=matt_ppo_cfg(_exp, max_iterations=_its), runner_cls=_runner)
 
     register_mjlab_task(
         task_id="PoOlympic-Grandma-Rung0-Stand",

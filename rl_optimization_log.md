@@ -671,3 +671,25 @@ One entry per run or decision. Newest at the bottom.
   same seed: S5 101.0 — no ARM parity run for this scene yet). Captures `parity/android/{menu_e3,e3_live,e3_result}.png`.
   Seen, not fixed: the bottom bar tagged S3 "LEADER" while the standings listed S5 first.
 - Next for GRANDMA: Unity testbed (visual binding, G0 / G2-G5), roster card + lineups, then Rung 2 (short careful steps).
+
+## 2026-09-30 23:10 · 8 h+ training block (user: "train for at least the next 8 hours")
+- **Queue** `tools/train_queue.sh` (detached through WMI + Git bash; reads the next job from `runs/queue.txt`, log
+  `runs/queue.log`; stop = create `runs/queue.stop`). New: `scratch:<experiment>` inits and a `prep` field (a command
+  that builds the job's warm start from the previous run, so dependent runs chain without a live session).
+  Unity editor + MuJoCo viewer closed for the block (GPU idle 81 C / 57 W with them open, 76 C / 24 W after).
+- **Order** (sequential, ~8.6 h): r2bio_v1 (mattbio Rung 2, 400) → **g1_v1** GRANDMA Rung 1 from scratch (2000, gates 1)
+  → **g2_v1** Rung 2 base, warm_start from g1_v1 it1500 (2000, gates 2) → **g2_v2** Rung 2 final recipe, plain_init from
+  g2_v1 it1500 (2000, gates 2) → **rs_v7** (1500, gates S,2) → r0bio_v1 (300) → r2fbio_v1 (300) → crawl_bio_v1 (600) →
+  getup_rev_v1 (1500).
+- **GRANDMA locomotion tasks** (`grandma_env.py`, zombie chain on her scale, λ 0.871: speeds × 0.933, rates × 1.072):
+  `-Rung1-Run` (MATT rung 1 + `careful_steps` = feet_low, foot box centre <= 0.09 m, w 0.3), `-Rung2-Omni-Base`
+  (MATT r2_v1 recipe, stage 0 vx −0.93…2.80, vy ±0.47, wz ±1.07), `-Rung2-Omni` (zombie z2_v11 recipe in one function:
+  symmetric runner, full envelope, lateral-accel cap 3, track_lin std 0.5 w 3 + coarse 1.5, stride-filtered yaw terms,
+  yaw-wobble penalty). `num_envs` = 4096 is now in the cfg. Smoke 3/3, C1 PASS (rung2). The warm-start checkpoints
+  (it1500) are a fixed guess copied from the zombie; to be changed in queue.txt if the gates say otherwise.
+- **rs_v7** (`matt_stance_v7_env_cfg`, from rs_v6 it3299, entropy 0.0025 in the task's rl cfg): `skill_spot`
+  exp(−(pelvis xy distance from the command's start / 0.15 m)²) in every stance mode, w 1.5 (march drifted 0.43-0.90 m);
+  `skill_flamingo_lift` lifted-foot height with or without contact, w 1.5. Locomotion erosion: cause still unknown,
+  nothing changed for it.
+- **G1 S flamingo drill changed:** extra settle U(0, 1) s + random foot order, so the 10 seeds are 10 different trials
+  (they were identical). Older flamingo counts are one trial each.

@@ -84,3 +84,15 @@ def matt_stance_v6_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     r["skill_leg_progress"] = RewardTermCfg(func=S.skill_leg_progress_v6, weight=r["skill_leg_progress"].weight)
     r["skill_flamingo_slip"] = RewardTermCfg(func=S.skill_flamingo_slip, weight=-2.0)
     return cfg
+
+
+def matt_stance_v7_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """rs_v7 (from rs_v6 it3299: squat 10/10, march lifts 83-97 % but drifts, flamingo one trial in four, torso 5/10,
+    Rung 2 6/10). Adds `skill_spot` (stay on the spot in every stance mode, std 0.15 m, w/2) and `skill_flamingo_lift`
+    (lifted-foot height with or without contact, w/2). Mode shares as rs_v6 (35 % locomotion)."""
+    cfg = matt_stance_v6_env_cfg(play=play)
+    r = cfg.rewards
+    w = SKILL_REWARD_WEIGHT
+    r["skill_spot"] = RewardTermCfg(func=S.skill_spot, weight=w / 2, params={"std": 0.15})
+    r["skill_flamingo_lift"] = RewardTermCfg(func=S.skill_flamingo_lift, weight=w / 2, params={"clearance": 0.10})
+    return cfg

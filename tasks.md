@@ -257,7 +257,8 @@ User decisions (2026-09-30): Claude rigs the unrigged scan in Blender (no AccuRi
   2026-09-30: G1 rung 0 10/10 at it 1000 and 1499, 0 falls** (30-seed check 24/30; misses = recovery steps 0.44-0.52 m
   vs the 0.435 m box) → `parity/brains/grandma_rung0.onnx` = it 1499. Review `parity/tb/g0_v2/review.html`.
 - [ ] **G4 Unity** — visual binding + Testbed_Grandma (G0 / G2-G5), roster card, mixed lineups.
-- [ ] **G5 Rung 2 grandma** — short careful steps, size-scaled envelope.
+- [ ] **G5 Rung 1 + Rung 2 grandma** — tasks `PoOlympic-Grandma-Rung1-Run` / `-Rung2-Omni-Base` / `-Rung2-Omni` (zombie chain on
+  her scale + low careful steps). Queued 2026-09-30 23:10: g1_v1 → g2_v1 → g2_v2 (`runs/queue.txt`). *Accept: G1 rung 2 10/10.*
 
 ## Backlog (later rungs & platforms)
 

@@ -125,6 +125,7 @@ class AthleteSkillCommand(AthleteCommand):
         super().__init__(cfg, env)
         self.skill = torch.zeros(self.num_envs, C.SKILL_DIM, device=self.device)
         self.mode = torch.zeros(self.num_envs, dtype=torch.long, device=self.device)
+        self.resample_id = torch.zeros(self.num_envs, dtype=torch.long, device=self.device)   # +1 per command resample
         self._shoulder = torch.as_tensor(np.stack(SKILL_GEOM["shoulder"]), device=self.device, dtype=torch.float32)
 
     def compute(self, dt, env_ids=None):
@@ -143,6 +144,7 @@ class AthleteSkillCommand(AthleteCommand):
         dev = self.device
         mode = torch.multinomial(torch.as_tensor(self.cfg.mode_probs, device=dev, dtype=torch.float32), n, replacement=True)
         self.mode[env_ids] = mode
+        self.resample_id[env_ids] += 1
         sk = torch.zeros(n, C.SKILL_DIM, device=dev)
 
         def U(lo, hi):                     # drawn for every env, kept where the mode matches (no GPU->CPU sync)
@@ -385,6 +387,32 @@ def skill_flamingo_slip(env, command_name: str = "athlete") -> torch.Tensor:
     v = torch.linalg.norm(s.ent.data.body_link_lin_vel_w[:, [s.b["foot_l"], s.b["foot_r"]], :2], dim=-1)
     slip = (v * (1 - term.skill[:, 1:3])).sum(-1).clamp(max=1.0)
     return slip * (term.mode == MODE["flamingo"])
+
+
+def skill_spot(env, std: float, command_name: str = "athlete") -> torch.Tensor:
+    """rs_v7: stay on the spot in every stance mode — exp(−(pelvis xy distance from where this command started / std)²),
+    0 in locomotion. rs_v6 it3299 marched with the right lift and cadence but wandered 0.43-0.90 m in 10 s (bar 0.30):
+    the zero-velocity tracking kernels barely notice 0.05-0.09 m/s. The anchor is re-taken at every command resample."""
+    term = _term(env, command_name)
+    _, qp, _ = _root(env)
+    xy = qp[:, :2]
+    st = getattr(env, "_poolympic_spot", None)
+    if st is None:
+        st = {"anchor": xy.clone(), "id": term.resample_id.clone()}
+        env._poolympic_spot = st
+    new = st["id"] != term.resample_id
+    st["anchor"] = torch.where(new[:, None], xy, st["anchor"])
+    st["id"] = term.resample_id.clone()
+    d2 = ((xy - st["anchor"]) ** 2).sum(-1)
+    return torch.exp(-d2 / std**2) * (term.mode != MODE["locomotion"])
+
+
+def skill_flamingo_lift(env, clearance: float = 0.10, command_name: str = "athlete") -> torch.Tensor:
+    """rs_v7: how high the commanded foot is (fraction of `clearance`), whether or not it still touches: a gradient
+    towards lifting before skill_flamingo's all-or-nothing product (airborne x clear x planted x still) pays."""
+    term = _term(env, command_name)
+    frac = torch.clamp(measure_foot_rise(env) / clearance, 0.0, 1.0)
+    return (frac * term.skill[:, 1:3]).sum(-1) * (term.mode == MODE["flamingo"])
 
 
 def skill_leg_pose(env, std: float, command_name: str = "athlete") -> torch.Tensor:
