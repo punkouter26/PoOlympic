@@ -713,3 +713,17 @@ One entry per run or decision. Newest at the bottom.
 - **Fix:** `tools/train_queue.ps1` (same queue.txt format; prep = uv arguments with `{run:<exp>/<name>}` tokens), started
   like detached_run.ps1 (WMI → Windows PowerShell), which survived every turn end on 2026-09-30. Watcher now reports
   a training log that has not been written for 10 minutes. g1_v1 restarted from scratch 01:41 (2.7 s/it).
+
+## 2026-10-01 03:15 · GRANDMA Rung 1 (g1_v1) → Rung 2 base (g2_v1b)
+- **g1_v1** (from scratch, 4096 envs, 2000 its, 92 min at 2.7 s/it with the GPU shared): episode length 990 by it 170;
+  track_lin 1.67 at it 250, 1.58 at the end (top command 2.80 m/s; MATT r1_v2 1.60, zombie z1_v1 1.57 at it 2000);
+  yaw error 0.57 (it 500) → 0.66 → 1.05 after the last speed stage (zombie's curve; MATT 0.75).
+- **G1 rung 1 (grandma bars: vel RMS < 0.14 m/s, lateral < 0.435 m):** it 500 6/10 (2 falls at 1.7 / 1.9 m/s commands,
+  not yet in the curriculum) · **it 1000 8/10** (0 falls; lateral <= 0.29 m; 2 misses on speed, worst 0.21) · it 1500
+  6/10 (speed <= 0.144, lateral up to 2.02 m) · **it 1999 8/10** (speed <= 0.104, lateral 0.17-0.55 m, 2 over). Zombie's
+  best Rung 1 was 3/10. No checkpoint passes 10/10; Rung 1 is a stepping stone (no event uses a Rung 1 grandma brain).
+- **Warm start for Rung 2 changed to it 1000** (best lane keeping, as on the zombie): the queue had started g2_v1 from
+  it 1500; stopped after 14 its, **g2_v1b** = same task from g1_v1 it 1000 (03:15, 2.1 s/it, GPU no longer shared);
+  g2_v2's prep now points at g2_v1b it 1500 (to be re-checked against g2_v1b's gates).
+- Review: `parity/tb/g1_v1/review.html` (vs r1_v2 and z1_v1; their event files were copied back from runs_archive for the
+  screenshots and removed again).

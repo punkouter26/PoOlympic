@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GRANDMA Rung 1 Review</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --card: #ffffff; --text: #1d1d1f; --muted: #5d5d66; --line: #e2e0da;
+    --g: #e8710a; --m: #12b5cb; --z: #9334e6; --good: #1f8a4c; --warn: #b8660b; --bad: #c2372b;
+    --t1: #fff4d6; --t2: #e3f3ff; --t3: #eeeaf8; --verdict: #e8f6ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+      --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+      --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+    --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+    --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.8rem; margin: 0 0 4px; }
+  h2 { margin: 0 0 4px; font-size: 1.3rem; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+  .verdict { background: var(--verdict); }
+  .verdict p { margin: 6px 0 0; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 10px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+  .up { color: var(--good); font-weight: 600; } .same { color: var(--muted); font-weight: 600; }
+  .down { color: var(--warn); font-weight: 600; } .fail { color: var(--bad); font-weight: 600; }
+  .tag { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--muted); }
+  img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); margin: 12px 0 16px; background: #fff; }
+  .levels { display: grid; gap: 12px; }
+  .lvl { border-radius: 10px; padding: 12px 16px; }
+  .lvl h3 { margin: 0 0 4px; font-size: .95rem; }
+  .lvl p { margin: 0; }
+  .l1 { background: var(--t1); } .l2 { background: var(--t2); } .l3 { background: var(--t3); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 8px; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+  footer { color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>GRANDMA Rung 1 training review: walking and running forward</h1>
+  <p class="sub">2026-10-01 03:14, run g1_v1, iteration 1999 · GRANDMA (1.60 m, 65 kg, 60 % strength) · 2000 iterations in 92 min, 4096 environments, from scratch ·
+    <span class="dot" style="background:var(--g)"></span>GRANDMA g1_v1
+    <span class="dot" style="background:var(--m)"></span>MATT r1_v2
+    <span class="dot" style="background:var(--z)"></span>ZOMBIE z1_v1 (both 3000 iterations)</p>
+
+  <div class="box verdict">
+    <h2>Verdict: she walks and runs without falling, about as well as MATT did at this stage; steering is the weak point</h2>
+    <p><strong>In one sentence:</strong> GRANDMA covers the 30 m test at every commanded speed with no falls from iteration 1000 on and passes 8 of 10 seeds, but no checkpoint passes all ten: the earlier one misses the speed on two seeds and the later ones drift out of the lane on two to four.</p>
+    <p><strong>Compared with the earlier bodies:</strong> her speed tracking follows MATT's curve and she learned to stay up sooner than both. Her steering error rises after the last speed increase the same way ZOMBIE's did. ZOMBIE's best Rung 1 checkpoint passed 3/10; hers pass 8/10.</p>
+    <div class="scroll">
+    <table>
+      <tr><th>30 m test, 10 seeds (CPU)</th><th>it 500</th><th>it 1000</th><th>it 1500</th><th>it 1999</th><th>Pass needs</th></tr>
+      <tr><td>G1 Rung 1</td><td>6/10</td><td class="up">8/10</td><td>6/10</td><td class="up">8/10</td><td>10/10</td></tr>
+      <tr><td>Falls</td><td class="fail">2</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+      <tr><td>Speed error, worst seed</td><td></td><td class="down">0.21 m/s</td><td>0.144</td><td class="up">0.104</td><td>&lt; 0.14 m/s</td></tr>
+      <tr><td>Lane drift, worst seed</td><td>0.16 m</td><td class="up">0.29 m</td><td class="fail">2.02 m</td><td class="down">0.55 m</td><td>&lt; 0.435 m</td></tr>
+    </table>
+    </div>
+    <p><strong>Decision taken:</strong> Rung 2 (turning and sideways walking) warm-starts from iteration 1000, the checkpoint with the best lane keeping. The queue had started it from 1500; that run was stopped after 14 iterations and restarted as g2_v1b.</p>
+  </div>
+
+  <section class="box">
+    <h2>1 · Speed tracking</h2>
+    <div class="tag">Episode_Reward/track_lin (how closely the commanded forward speed is followed). The drops at about 600 and 1200 are the curriculum raising the top speed (0.93 → 1.87 → 2.80 m/s for GRANDMA).</div>
+    <img src="1_track_lin.png" alt="Speed tracking reward: all three bodies rise to about 1.8, drop at each speed increase and recover; GRANDMA ends at 1.58 at iteration 1999">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>Grandma is learning to walk as fast as she is told. Each time we ask her to go faster the line drops a little, then she catches up.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>The line is high when the robot moves at exactly the speed it was asked for. The two sudden drops are where we started asking for faster running. Grandma (orange) learned the slow speeds first of all three, and at the end she follows the speed about as well as Matt (blue).</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>GRANDMA reaches 1.67 by iteration 250 (MATT 1.53, ZOMBIE 0.91) and ends at 1.58 with a top command of 2.80 m/s; MATT is at 1.60 and ZOMBIE at 1.57 at the same point of their runs. After each curriculum step she recovers a little more slowly than MATT (1.66 against 1.71 at iteration 1000), which fits 60 % strength. Her run stops at 2000 iterations, so it has no counterpart to the third drop the other two show at 2000. The test only commands 0.47–1.90 m/s, so it does not probe the top of her envelope.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>2 · Steering error</h2>
+    <div class="tag">Metrics/athlete/error_vel_yaw (turn-rate error in rad/s; lower is better)</div>
+    <img src="2_yaw_error.png" alt="Yaw error: GRANDMA falls to 0.57 by iteration 600, sits at 0.66 until 1200, then climbs to 1.05, following ZOMBIE's curve; MATT stays near 0.75">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>When Grandma runs fast she wobbles left and right. The orange line going up means more wobble.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This line shows how much the robot turns when it should go straight. Lower is better. While Grandma walks slowly it is low. After we ask for fast running (the step at 1200) it climbs, just like Zombie's purple line. Matt's blue line stays lower. That is why she sometimes drifts out of her lane in the test.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>0.57 rad/s at iteration 500, 0.66–0.68 through the second stage, then 0.98 at 1500 and 1.05 at 1999, tracking ZOMBIE's curve (1.13 at 2000, 1.71 by 3000) while MATT stays at 0.74–0.78. The gates agree: worst lane drift 0.29 m at 1000, 2.02 m at 1500, 0.55 m at 1999. On ZOMBIE this got worse with more Rung 1 training and was fixed in Rung 2 by training direct turn-rate commands, so stopping at 2000 iterations and moving on is the sensible reading. The metric includes the roll and pitch rates of the gait, so part of the rise is body rocking at speed, not heading error.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>3 · Staying on her feet</h2>
+    <div class="tag">Train/mean_episode_length (1000 = stayed up for the whole 20 s episode)</div>
+    <img src="3_episode_length.png" alt="Episode length: GRANDMA reaches 990 by iteration 170, dips to 800 and 840 at the two speed increases and recovers within about 30 iterations">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>Grandma almost never falls down. When we ask her to run faster she trips for a moment, then she is fine again.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>At the top of the chart the robot never falls. Grandma (orange) got to the top first. The two sharp dips are the moments we asked for faster running: she fell more often for a short while, then learned the new speed.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>990 of 1000 by iteration 170 (MATT about 250, ZOMBIE about 300). The dips at the curriculum steps go to about 800 and 840, deeper than MATT's and similar to ZOMBIE's, and close within about 30 iterations. She ends at 994, with terminations of 0.04 per iteration for pelvis height and near zero for torso tilt. The two falls in the iteration-500 gate (pelvis low after about 1.1 s) are at commanded speeds she had not yet been trained on.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>Notes</h2>
+    <p>Her style terms hold while moving: stoop 0.97 of 1.0, low careful steps 0.29 of 0.30. Relative effort (torque penalty) is −0.60 against MATT's −0.23 and ZOMBIE's −0.50. A first attempt at this run died at iteration 71 when the training queue was killed (23:43); this is the restart at 01:41. The GPU was shared with another project's training until about 02:55.</p>
+  </section>
+
+  <footer>Charts: TensorBoard at localhost:6006, runs <code>g1_v1</code>, <code>r1_v2</code>, <code>z1_v1</code> (the two older runs' event files were copied back from <code>runs_archive</code> for this comparison). Gate data: <code>parity/watch_g1_v1.jsonl</code>, <code>parity/watch/g1_rung1_g1_v1_it*.json</code>.</footer>
+</main>
+</body>
+</html>
