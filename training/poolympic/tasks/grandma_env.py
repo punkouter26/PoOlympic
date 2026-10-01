@@ -200,3 +200,19 @@ def grandma_rung2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     cfg.curriculum = {"command_vel": CurriculumTermCfg(func=vel_mdp.commands_vel, params={
         "command_name": "athlete", "velocity_stages": [dict(env, step=0)]})}
     return cfg
+
+
+def grandma_rung2_cap_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """g2_v4 = the base recipe + lateral-acceleration cap, full envelope from the start (no curriculum). The base run
+    (g2_v1b) samples vx and wz independently: after its last stage most 3.3-3.7 m/s commands came with a 2-2.7 rad/s turn
+    (7-9 m/s² sideways, not executable), and the policy learned "fast command = do not run" (0.24 m/s at every command
+    >= 2.5, it 1500+; 3.33 m/s at it 1000). The final-recipe runs (g2_v2b, g2_v3) had the cap but their extra yaw terms
+    slowed her to ~2 m/s. Here only the cap is added (|wz| <= 3 m/s² / |v|). Warm start: g2_v1b it 1000."""
+    cfg = grandma_rung2_base_env_cfg(play=play)
+    cmd = cfg.commands["athlete"]
+    cmd.max_lateral_accel = 3.0
+    last = RUNG2_STAGES[-1]
+    cmd.ranges.lin_vel_x, cmd.ranges.lin_vel_y, cmd.ranges.ang_vel_z = last["lin_vel_x"], last["lin_vel_y"], last["ang_vel_z"]
+    cfg.curriculum = {"command_vel": CurriculumTermCfg(func=vel_mdp.commands_vel, params={
+        "command_name": "athlete", "velocity_stages": [dict(last, step=0)]})}
+    return cfg

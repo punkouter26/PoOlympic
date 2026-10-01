@@ -260,16 +260,17 @@ if bodies.current().name == "mattbio":
 
 if bodies.current().name == "grandma":
     from .grandma_env import (grandma_rung0_env_cfg, grandma_rung1_env_cfg, grandma_rung2_base_env_cfg,
-                              grandma_rung2_env_cfg)
+                              grandma_rung2_cap_env_cfg, grandma_rung2_env_cfg)
     from .matt_env import matt_ppo_cfg
     from .symmetry import SymmetricRunner
 
     for _tid, _fn, _exp, _its, _runner in (
             ("PoOlympic-Grandma-Rung1-Run", grandma_rung1_env_cfg, "grandma_rung1", 3000, MjlabOnPolicyRunner),
             ("PoOlympic-Grandma-Rung2-Omni-Base", grandma_rung2_base_env_cfg, "grandma_rung2", 2000, MjlabOnPolicyRunner),
+            ("PoOlympic-Grandma-Rung2-Omni-Cap", grandma_rung2_cap_env_cfg, "grandma_rung2", 1200, MjlabOnPolicyRunner),
             ("PoOlympic-Grandma-Rung2-Omni", grandma_rung2_env_cfg, "grandma_rung2", 2000, SymmetricRunner)):
         _rl = matt_ppo_cfg(_exp, max_iterations=_its)
-        if _tid == "PoOlympic-Grandma-Rung2-Omni":
+        if _tid in ("PoOlympic-Grandma-Rung2-Omni", "PoOlympic-Grandma-Rung2-Omni-Cap"):
             # g2_v2b (entropy 0.005): action std 0.51 -> 0.57 and mean reward 112 -> 102 in 400 its, speed at a 2.5 m/s
             # command 2.36 -> 1.25: the entropy bonus out-pulled the task. g2_v3 onwards: 0.001.
             _rl.algorithm.entropy_coef = 0.001

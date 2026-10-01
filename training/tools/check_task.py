@@ -48,7 +48,7 @@ def _grandma(rung: str):
     return make
 
 
-TASKS.update({f"grandma_{r}": _grandma(r) for r in ("rung0", "rung1", "rung2_base", "rung2")})
+TASKS.update({f"grandma_{r}": _grandma(r) for r in ("rung0", "rung1", "rung2_base", "rung2_cap", "rung2")})
 
 
 def check_skill_measures(env, m) -> bool:

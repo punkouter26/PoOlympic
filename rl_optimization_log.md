@@ -760,3 +760,26 @@ One entry per run or decision. Newest at the bottom.
 - **g2_v3** (05:19): same task and warm start (g2_v1b it 1000), `entropy_coef` 0.001 (set in the task's rl cfg),
   `plain_init --max-std 0.3` (new option; start std 0.20-0.30 instead of ~0.5), 2000 its, gates 300 / 600 / 1000 / 1500 /
   1999. One variable changed vs g2_v2b apart from the std cap.
+
+## 2026-10-01 06:00 · g2_v3 stopped at it 659 (speed plateau ~2 m/s) → g2_v4: base recipe + lateral-accel cap
+- **g2_v3** (final recipe, entropy 0.001, start std 0.3): std held at 0.29, mean reward ~130 (g2_v2b: 112 → 102), so the
+  entropy fix worked. But speed still below the start checkpoint and not recovering:
+
+  | command (m/s) | start (g2_v1b it1000) | g2_v2b it400 | g2_v3 it300 | g2_v3 it600 |
+  |---|---|---|---|---|
+  | 1.0 | 1.00 | 0.98 | 0.61 | 0.91 |
+  | 2.0 | 1.87 | 1.20 | 1.57 | 1.57 |
+  | 2.5 | 2.36 | 1.25 | 1.84 | 1.90 |
+  | 3.7 | 3.33 | 1.80 | 2.34 | 1.89 |
+
+  Gates: it 300 1/10, it 600 0/10 (0 falls; yaw 8/10 seeds, turntable + brake 10/10, lin 1-2/10, backward 10 → 0/10 at
+  18.6 m). The z2_v11 recipe's yaw terms (per-tick track_ang 2 + 1, stride-filtered 2, wobble −1) cost her speed.
+- **Rule what-ifs on the existing reports** (no new sims): judging yaw per stride (the zombie ruling) and dropping
+  sprint segments above 2.4-3.0 m/s lifts g2_v1b it 1000 only from 3/10 to 4/10 — her misses are linear-tracking
+  errors on turns / crabs / sprints generally, so relaxed rules alone do not make a pass.
+- **Hypothesis for the base run's cliff:** `-Rung2-Omni-Base` samples vx and wz independently (no lateral-accel cap). In
+  its last stage most 3.3-3.7 m/s commands carry a 2-2.7 rad/s turn = 7-9 m/s² sideways, not executable → "fast
+  command = do not run". MATT's Sym2+ recipes added the cap for this reason.
+- **g2_v4** (05:58): `PoOlympic-Grandma-Rung2-Omni-Cap` = base recipe + `max_lateral_accel` 3.0, full stage-3 envelope
+  from the start, entropy 0.001, start std <= 0.3, plain runner, from g2_v1b it 1000; 1200 its (2.7 s/it), gates 300 /
+  600 / 900 / 1199. Not a test of the hypothesis alone (entropy and std changed too vs the base run).
