@@ -293,6 +293,14 @@ User decisions (2026-09-30): Claude rigs the unrigged scan in Blender (no AccuRi
   - R3 first attempts 2026-09-29 (getup_v1-v5, tasks `PoOlympic-Matt-Getup..5`, `tools/getup_probe.py`): with a fading
     torso assist it learns to sit up and to get onto all fours, not yet to stand. Next: reverse curriculum from
     squat / kneel starts, or a motion prior (R7).
+  - 2026-10-01 `getup_rev_v1` (mattbio, reverse curriculum squat → kneel → sit → lying, 1500 its, 69 min): stands up from
+    the squat within 100 its (first get-up run that stands at all), then 0 % success from kneeling for 1400 its; gate 0/10
+    at every checkpoint. No brain kept. Next: a half-kneel stage between squat and kneel + a per-stage fading assist.
+    Review `parity/tb/getup_rev_v1/review.html`.
+  - 2026-10-01 `crawl_bio_v1` (mattbio crawl, 600 its): solo gate 5/5 at every checkpoint, best it 450 (25.4-26.5 s,
+    lane 0.07 m). 8-athlete heats with full self-collision: 30 m it 450 30/32 finished, median 33.1 s (MATT today: 31/32,
+    26.2 s); trench it 450 29/32, 22.0 s, it 599 31/32, 17.4 s (MATT 29/32, 18.1 s). Provisional mattbio crawl brain = it
+    450; not deployed (the mattbio promotion still needs get-up).
 - [ ] R6 bodies: ~~rig GRANDMA~~ (→ Phase G), clean + rescale ZOMBIE, derive MJCFs, train variants
 - [ ] R7 optional motion-prior polish · R8+ remaining skill events
 - [x] Game layer: betting slip & odds from lane stats, PBP ticker, records, gauntlets (2026-09-29): virtual-coin

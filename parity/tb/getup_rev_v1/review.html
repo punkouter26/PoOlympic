@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Get-up getup_rev_v1 Review</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --card: #ffffff; --text: #1d1d1f; --muted: #5d5d66; --line: #e2e0da;
+    --v7: #7cb342; --v8: #425066; --good: #1f8a4c; --warn: #b8660b; --bad: #c2372b;
+    --t1: #fff4d6; --t2: #e3f3ff; --t3: #eeeaf8; --verdict: #e8f6ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+      --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+      --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+    --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+    --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.8rem; margin: 0 0 4px; }
+  h2 { margin: 0 0 4px; font-size: 1.3rem; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+  .verdict { background: var(--verdict); }
+  .verdict p { margin: 6px 0 0; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 10px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+  .up { color: var(--good); font-weight: 600; } .same { color: var(--muted); font-weight: 600; }
+  .down { color: var(--warn); font-weight: 600; } .fail { color: var(--bad); font-weight: 600; }
+  .tag { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--muted); }
+  img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); margin: 12px 0 16px; background: #fff; }
+  .levels { display: grid; gap: 12px; }
+  .lvl { border-radius: 10px; padding: 12px 16px; }
+  .lvl h3 { margin: 0 0 4px; font-size: .95rem; }
+  .lvl p { margin: 0; }
+  .l1 { background: var(--t1); } .l2 { background: var(--t2); } .l3 { background: var(--t3); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 8px; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+  footer { color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Get-up training review: getup_rev_v1</h1>
+  <p class="sub">2026-10-01 15:52, iteration 1499 · MATT (<code>mattbio</code> body) · 1500 iterations in 69 min ·
+    <span class="dot" style="background:var(--v7)"></span>getup_v4 = previous get-up run (green, 2026-09-29, old MATT body, always started lying down)
+    <span class="dot" style="background:var(--v8)"></span>getup_rev_v1 = this run (dark): starts easy (a deep squat) and is meant to work back to lying down</p>
+
+  <div class="box verdict">
+    <h2>Verdict: it learned to stand up from a squat, and nothing beyond that</h2>
+    <p><strong>In one sentence:</strong> this run is better than every earlier get-up attempt at one thing, rising from a deep squat to standing, but it never got up from kneeling, so it cannot get up from the floor: 0 of 10 at every test.</p>
+    <p><strong>Why it stalled:</strong> the practice plan has four start poses: squat, kneeling on both knees, sitting, lying. It passed the squat within 100 iterations and then spent the remaining 1400 on the kneeling pose with a success rate of zero. Standing up from both knees needs one foot to be brought forward first (a half-kneel), and no step of the plan teaches that.</p>
+    <div class="scroll">
+    <table>
+      <tr><th>Test from lying on the back (10 seeds, CPU)</th><th>it 300</th><th>600</th><th>900</th><th>1200</th><th>1499</th><th>Pass needs</th></tr>
+      <tr><td>Got up at some point</td><td class="fail">0/10</td><td class="fail">0/10</td><td class="fail">0/10</td><td class="fail">0/10</td><td class="fail">0/10</td><td>10/10</td></tr>
+      <tr><td>Standing at the end</td><td class="fail">0</td><td class="fail">0</td><td class="fail">0</td><td class="fail">0</td><td class="fail">0</td><td>10</td></tr>
+      <tr><td>Practice stage reached (0 squat · 1 kneel · 2 sit · 3 lying)</td><td>1</td><td>1</td><td>1</td><td>1</td><td class="same">1</td><td>3</td></tr>
+      <tr><td>Success rate at that stage</td><td>0 %</td><td>0 %</td><td>0 %</td><td>0 %</td><td class="fail">0 %</td><td>60 % to move on</td></tr>
+    </table>
+    </div>
+    <p><strong>Brain:</strong> none kept. <strong>Next recipe:</strong> add a half-kneel stage (one knee down, the other foot planted) between squat and kneel, and give each new stage its own short fading assist instead of one assist that ends at iteration 600 for everything.</p>
+  </div>
+
+  <section class="box">
+    <h2>1 · Training reward</h2>
+    <div class="tag">Train/mean_reward (points per practice episode)</div>
+    <img src="1_reward.png" alt="Mean reward: getup_v4 rises from 20 to about 32 over 640 iterations; getup_rev_v1 drops from 86 to 55 at iteration 60, then climbs from 65 to about 83 by iteration 1499">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The dark line is much higher than the green line. The robot gets more points this time.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>The robot scores more than twice as many points as last time. But most of those points come from the easy starts: it begins in a squat and stands up. The early dip is the moment the practice got harder (kneeling was added) and the points fell.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>getup_rev_v1 ends near 83 against 32 for getup_v4, but the two are not like for like: getup_v4 always started lying down, while 40 % of this run's episodes start from the squat it has already solved. The drop from 86 to about 55 near iteration 60 is the curriculum moving to stage 1. The slow rise afterwards (65 → 83) is the policy collecting more "rise" and "upright" reward from kneeling starts without ever completing them.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>2 · Standing tall</h2>
+    <div class="tag">Episode_Reward/standing_tall (reward for being fully upright at standing height)</div>
+    <img src="2_standing_tall.png" alt="Standing tall reward: getup_v4 is zero throughout; getup_rev_v1 sits at about 2.0 from iteration 80 to the end">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The green line is flat on the floor: last time the robot never stood up. The dark line is up high: this time it does stand up.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>Last time the robot never once ended up standing, so it got zero here. This time it gets about 2 points, because it can stand up when it starts from a squat. The line stays flat instead of climbing, which tells us it is not learning to stand up from the harder starts.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>getup_v4: exactly 0 for all 640 iterations (it reached all fours, never standing). getup_rev_v1: about 2.0 from iteration 80 onwards and flat to the end (1.9–2.15). With the stage mix at 50 % kneel, 40 % squat, 10 % sit, a flat 2.0 is what squat-only successes give; a rising line would have meant kneeling starts beginning to succeed. This is the first get-up run on either body that stands up at all.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>3 · Practice stage</h2>
+    <div class="tag">Curriculum/getup_rev/getup_stage (0 squat · 1 kneel · 2 sit · 3 lying). This run only: getup_v4 had no stages. The axis is zoomed in; the line goes from 0 to 1 and the top of the chart is stage 1.</div>
+    <img src="3_curriculum_stage.png" alt="Curriculum stage: jumps from 0 to 1 before iteration 100 and stays at 1 until iteration 1499">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The line goes up one step right at the start and then never moves again. The robot got stuck on the second lesson.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>Think of four school grades. The robot finished grade one (standing up from a squat) very quickly. Then it stayed in grade two (standing up from its knees) for the whole rest of the run and never passed, so it never even tried grades three and four properly.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>Stage 0 → 1 inside the first 100 iterations (squat success above the 60 % threshold after the 40-iteration minimum). From then on the frontier success rate is 0 (it decays to 1e-36): not one kneeling start ended standing in about 1400 iterations of 8192 environments. The torso assist faded out by iteration 600 and success did not appear before or after. In the kneel pose the feet are 0.48 m behind the body and the centre of mass is 0.44 m ahead of them, so the only way up is through a half-kneel, which is a different, asymmetric movement from anything the squat stage taught.</p></div>
+    </div>
+  </section>
+
+  <footer>Charts: TensorBoard at localhost:6006, runs <code>getup_v4</code> and <code>getup_rev_v1</code>. Gate data: <code>parity/watch_getup_rev_v1.jsonl</code>, <code>parity/watch/getup_getup_rev_v1_it*.json</code>.</footer>
+</main>
+</body>
+</html>

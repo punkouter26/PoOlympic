@@ -940,3 +940,31 @@ One entry per run or decision. Newest at the bottom.
   GRANDMA rebuilt and baked.
 - AGENTS.md rule 5 reworded (user: "fix"): prefer a warm start; from scratch only for a body's first brain or where a
   warm start has been tried and failed (MATT's r1_v1).
+
+## 2026-10-01 15:55 · Training block finished: crawl_bio_v1 good, getup_rev_v1 stuck at the kneel stage
+- **crawl_bio_v1** (mattbio crawl, 600 its, 31 min, 2.5-3.2 s/it with the Unity editor of another project open; viewer shown
+  100 s at the it-150 gate: 2.8 → 6.5 s/it while open). Solo gate (5 seeds, 30 m): it 150 5/5 in 26.0-27.2 s · it 300 5/5
+  25.7-26.8 s · **it 450 5/5 25.4-26.5 s, lane 0.07 m** · it 599 5/5 26.1-29.6 s, lane 0.13 m.
+  8-athlete event heats (4 seeds, crowd contact, mattbio x 8 on `scene_crawl8_mattbio` / `scene_trench8_mattbio`):
+
+  | heats | finished | median time |
+  |---|---|---|
+  | 30 m, MATT `crawl_matt` (deployed) | 31/32 | 26.2 s |
+  | 30 m, mattbio it 450 | 30/32 | 33.1 s |
+  | 30 m, mattbio it 599 | 25/32 | 35.3 s |
+  | trench 16 m, MATT `crawl_matt` | 29/32 | 18.1 s |
+  | trench 16 m, mattbio it 450 | 29/32 | 22.0 s |
+  | trench 16 m, mattbio it 599 | 31/32 | 17.4 s |
+
+  Alone the mattbio crawler is as fast as MATT; in a field of eight it is ~7 s slower over 30 m (arms and trunks now
+  collide between and within athletes). Provisional mattbio crawl brain: it 450. Not deployed.
+- **getup_rev_v1** (mattbio, reverse curriculum, 1500 its, 69 min, Unity editor open from 14:53 on user request):
+  stage 0 (squat) passed inside 100 its, then stage 1 (kneeling on both knees) at 0 % frontier success to the end; the
+  assist faded out at it 600 without a success before or after. Gate (supine start): 0/10 at 300 / 600 / 900 / 1200 /
+  1499. standing_tall ~2.0 (getup_v4: 0), mean reward 83 (getup_v4: 32, not like for like: 40 % of episodes start from
+  the solved squat). The start poses have no self-contact. Kneel pose: feet 0.48 m behind, COM 0.44 m ahead of them —
+  the way up is a half-kneel, which no stage teaches. No brain kept.
+  **Next recipe:** a half-kneel stage between squat and kneel; the assist faded per stage, not once.
+  Review: `parity/tb/getup_rev_v1/review.html`.
+- Queue empty at 15:51. mattbio now has Rung 0, Rung 2, flight and crawl; get-up is the one brain missing for the
+  promotion to MATT.
