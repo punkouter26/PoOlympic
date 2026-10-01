@@ -186,3 +186,203 @@ def matt_getup_rev_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     add_bio_rewards(cfg)
     cfg.scene.num_envs = V5_ENVS
     return cfg
+
+
+# ---- getup_rev_v2 (2026-10-01): pose ladder with interpolated stages + a success-driven assist ---------------------
+# getup_rev_v1 stood up from the squat within 50 its, then sat at 0 % from the kneel for 1400: the next stage was a
+# different posture with no way up the policy already knew, and the one global assist had faded by it 600 without a
+# single success. Here
+#   - the ladder is squat -> tuck -> supine (the event start is on the back) with LADDER_SUB interpolated start poses
+#     between the key poses (joint targets and trunk pitch blended, root placed on the ground): every stage starts a
+#     small step away from one the athlete can already get up from. squat -> tuck keeps the squat's joints and rocks the
+#     body back onto its back (knees to the chest); tuck -> supine stretches out on the floor. Run in reverse that is a
+#     rock-up onto the feet. (First tried squat -> long sit -> supine: its squat/sit blends hang the pelvis 0.4 m in the
+#     air on the heels and drop the athlete onto its back, harder than the stages after them.)
+#   - the upward torso assist belongs to the frontier stage and follows its success rate instead of the clock: no assist
+#     for the first ASSIST_GRACE its of a stage, then it rises while fewer than ADVANCE_AT of the frontier episodes end
+#     standing and falls while more do. The frontier advances only after ASSIST_ZERO_ITS its without assist. Easier
+#     stages are never assisted.
+LADDER_KEYS = ("squat", "tuck", "supine")
+LADDER_POSES = {"squat": POSES["squat"], "tuck": (POSES["squat"][0], -math.pi / 2),   # the squat's joints, on the back
+                "supine": ({}, -math.pi / 2)}                                          # default joint pose, flat on the back
+LADDER_SUB = 3
+LADDER_EPISODE_S = 6.0          # a stage's verdict arrives one episode later: 12.5 its instead of 21
+LADDER_MIN_ITS = 15
+ASSIST_GRACE = 15               # its of a new stage before the assist may rise (one episode + the EMA warm-up)
+ASSIST_GAIN = 0.05              # per it: +0.03 body weights at 0 % success, -0.02 at 100 %
+ASSIST_MAX = 0.6
+ASSIST_ZERO_ITS = 5
+
+
+def ladder_poses() -> list[tuple[np.ndarray, float, np.ndarray]]:
+    """(joint targets in contract order, root height, root quaternion) per ladder stage: stage 0 = the first key pose,
+    then LADDER_SUB blends towards each next key pose (the last of them = that key pose)."""
+    m = mujoco.MjModel.from_xml_path(str(C.SCENE_XML))
+    d = mujoco.MjData(m)
+    ath = C.Athlete.bind(m)
+    names = list(mdp.CONTRACT_ACTUATORS)
+    root_q = ath.root_qposadr
+
+    def key(stage: str) -> tuple[np.ndarray, float]:
+        angles, pitch = LADDER_POSES[stage]
+        q = np.array(mdp.CONTRACT_DEFAULTS, dtype=float)
+        for i, n in enumerate(names):
+            base = n[:-2] if n.endswith(("_l", "_r")) else n
+            if base in angles:
+                q[i] = math.radians(angles[base])
+        return np.clip(q, mdp.CONTRACT_RANGE_LO, mdp.CONTRACT_RANGE_HI), pitch
+
+    def place(q: np.ndarray, pitch: float) -> tuple[np.ndarray, float, np.ndarray]:
+        mujoco.mj_resetDataKeyframe(m, d, m.key("default").id)
+        for i, a in enumerate(ath.actuator_ids):
+            d.qpos[m.jnt_qposadr[m.actuator_trnid[a][0]]] = q[i]
+        quat = np.zeros(4)
+        mujoco.mju_euler2Quat(quat, np.array([0.0, pitch, 0.0]), "XYZ")
+        d.qpos[root_q:root_q + 3] = [0.0, 0.0, 1.0]
+        d.qpos[root_q + 3:root_q + 7] = quat
+        mujoco.mj_kinematics(m, d)
+        low = np.inf
+        for g in range(m.ngeom):
+            b = m.geom_bodyid[g]
+            if b == 0 or m.body(b).name.startswith("cube"):
+                continue
+            R = d.geom_xmat[g].reshape(3, 3)
+            z, s, t = d.geom_xpos[g][2], m.geom_size[g], m.geom_type[g]
+            if t == mujoco.mjtGeom.mjGEOM_SPHERE:
+                low = min(low, z - s[0])
+            elif t == mujoco.mjtGeom.mjGEOM_CAPSULE:
+                low = min(low, z - abs(R[2, 2]) * s[1] - s[0])
+            elif t == mujoco.mjtGeom.mjGEOM_BOX:
+                low = min(low, z - abs(R[2, 0]) * s[0] - abs(R[2, 1]) * s[1] - abs(R[2, 2]) * s[2])
+        return q, 1.0 - low + 0.002, quat
+
+    keys = [key(k) for k in LADDER_KEYS]
+    out = [place(*keys[0])]
+    for (qa, pa), (qb, pb) in zip(keys, keys[1:]):
+        for j in range(1, LADDER_SUB + 1):
+            a = j / LADDER_SUB
+            out.append(place((1 - a) * qa + a * qb, (1 - a) * pa + a * pb))
+    return out
+
+
+def _ladder_state(env) -> dict:
+    st = getattr(env, "_poolympic_getup_ladder", None)
+    if st is None:
+        table = [(torch.as_tensor(q, device=env.device, dtype=torch.float32), float(z), quat) for q, z, quat in ladder_poses()]
+        st = {"level": 0, "ema": 0.0, "since": 0, "last_it": -1, "succ": 0.0, "count": 0.0, "assist": 0.0, "zero_its": 0,
+              "start": torch.zeros(env.num_envs, dtype=torch.long, device=env.device), "table": table,
+              "probs": _ladder_mix(0, len(table), env.device)}
+        env._poolympic_getup_ladder = st
+    return st
+
+
+def _ladder_mix(level: int, n: int, device) -> torch.Tensor:
+    """Frontier 50 % (90 % at stage 0), the next stage 10 % (preview), the easier ones share the rest."""
+    p = torch.zeros(n, device=device)
+    p[level] = 0.5 if level > 0 else 0.9
+    if level + 1 < n:
+        p[level + 1] = 0.1
+    if level > 0:
+        p[:level] = 0.4 / level
+    return p / p.sum()
+
+
+def reset_ladder(env, env_ids, joint_noise: float = 0.05) -> None:
+    """Reset each env into a ladder stage drawn from the curriculum's current mix. The last stage is the event start
+    (mdp.reset_lying, supine: tools/getup_probe.py); the others write their joint pose and a root placed on the ground
+    at a random yaw."""
+    if env_ids is None:
+        env_ids = torch.arange(env.num_envs, device=env.device)
+    if len(env_ids) == 0:
+        return
+    dev = env.device
+    st = _ladder_state(env)
+    stage = torch.multinomial(st["probs"], len(env_ids), replacement=True)
+    st["start"][env_ids] = stage
+    asset = env.scene["robot"]
+    ix = mdp._idx(env)
+    last = len(st["table"]) - 1
+    for k, (q, z, quat) in enumerate(st["table"]):
+        ids = env_ids[stage == k]
+        n = len(ids)
+        if n == 0:
+            continue
+        jp = asset.data.default_joint_pos[ids].clone()
+        if k != last:
+            jp[:, ix.joint_ids] = q
+        jp = jp + (torch.rand_like(jp) * 2 - 1) * joint_noise
+        asset.write_joint_state_to_sim(jp, torch.zeros_like(jp), env_ids=ids)
+        if k == last:
+            mdp.reset_lying(env, ids, prone_fraction=0.0)
+            continue
+        half = (torch.rand(n, device=dev) * 2 - 1) * math.pi / 2          # yaw / 2
+        w1, z1 = torch.cos(half), torch.sin(half)
+        w2, x2, y2, z2 = (float(v) for v in quat)
+        qq = torch.stack([w1 * w2 - z1 * z2, w1 * x2 - z1 * y2, w1 * y2 + z1 * x2, w1 * z2 + z1 * w2], -1)   # yaw * pitch
+        pos = env.scene.env_origins[ids].clone()
+        pos[:, 2] = z
+        asset.write_root_link_pose_to_sim(torch.cat([pos, qq], -1), env_ids=ids)
+        asset.write_root_link_velocity_to_sim(torch.zeros(n, 6, device=dev), env_ids=ids)
+
+
+def ladder_assist(env, env_ids, asset_cfg, body_weight_n: float) -> None:
+    """Reset event, after reset_ladder: a constant upward world force on the torso for the episode, U(0, assist) x body
+    weight, for episodes that start at the frontier stage or beyond; none for the easier stages."""
+    asset = env.scene[asset_cfg.name]
+    if env_ids is None:
+        env_ids = torch.arange(env.num_envs, device=env.device)
+    st = _ladder_state(env)
+    n = len(env_ids)
+    on = (st["start"][env_ids] >= st["level"]).float()
+    fz = torch.rand(n, device=env.device) * st["assist"] * body_weight_n * on
+    nb = len(asset_cfg.body_ids) if isinstance(asset_cfg.body_ids, list) else 1
+    force = torch.zeros(n, nb, 3, device=env.device)
+    force[:, :, 2] = fz[:, None]
+    asset.write_external_wrench_to_sim(force, torch.zeros_like(force), env_ids=env_ids, body_ids=asset_cfg.body_ids)
+    env.extras.setdefault("log", {})["Metrics/getup_assist_max"] = st["assist"]
+
+
+def getup_ladder_curriculum(env, env_ids, steps_per_it: int = 24) -> dict:
+    """getup_rev_curriculum on the ladder, plus the assist controller (once per iteration, with the success EMA)."""
+    st = _ladder_state(env)
+    if env_ids is not None and len(env_ids) > 0:
+        _, qp, _ = mdp._root(env)
+        up = (qp[env_ids, 2] > UP_Z) & (mdp.torso_tilt_rad(env)[env_ids] < math.radians(UP_TILT_DEG))
+        front = st["start"][env_ids] == st["level"]
+        st["succ"] += float((up & front).sum())
+        st["count"] += float(front.sum())
+    it = int(env.common_step_counter) // steps_per_it
+    if it != st["last_it"]:
+        st["last_it"] = it
+        if st["count"] >= 64:
+            st["ema"] = 0.8 * st["ema"] + 0.2 * st["succ"] / st["count"]
+            st["succ"] = st["count"] = 0.0
+        st["since"] += 1
+        if st["since"] > ASSIST_GRACE:
+            st["assist"] = min(ASSIST_MAX, max(0.0, st["assist"] + ASSIST_GAIN * (ADVANCE_AT - st["ema"])))
+        st["zero_its"] = st["zero_its"] + 1 if st["assist"] <= 0.0 else 0
+        if (st["ema"] > ADVANCE_AT and st["since"] >= LADDER_MIN_ITS and st["zero_its"] >= ASSIST_ZERO_ITS
+                and st["level"] + 1 < len(st["table"])):
+            st["level"] += 1
+            st["ema"], st["since"] = 0.0, 0
+            st["probs"] = _ladder_mix(st["level"], len(st["table"]), env.device)
+    return {"getup_stage": torch.tensor(float(st["level"])), "getup_frontier_success": torch.tensor(st["ema"])}
+
+
+def matt_getup_ladder_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    cfg = matt_getup5_env_cfg(play=play)
+    for n in CUBE_NAMES:                                    # no cube drops in get-up: no pool at all
+        cfg.scene.entities.pop(n, None)
+    if not play:
+        cfg.episode_length_s = LADDER_EPISODE_S
+    ev = cfg.events
+    ev.pop("reset_joints", None)
+    ev.pop("getup_assist", None)
+    ev["reset_base"] = EventTermCfg(func=reset_ladder, mode="reset")
+    if not play:                                            # after reset_base: the assist reads the stage it drew
+        ev["ladder_assist"] = EventTermCfg(func=ladder_assist, mode="reset", params={
+            "asset_cfg": SceneEntityCfg("robot", body_names=("torso",)), "body_weight_n": C.BODY.total_mass * 9.81})
+    cfg.curriculum = {"getup_rev": CurriculumTermCfg(func=getup_ladder_curriculum, params={})}
+    add_bio_rewards(cfg)
+    cfg.scene.num_envs = V5_ENVS
+    return cfg
