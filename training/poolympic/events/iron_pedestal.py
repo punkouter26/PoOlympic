@@ -126,7 +126,10 @@ class _Lane:
         self.last = act[0].astype(np.float64)
 
     def advance_phase(self, cmd: np.ndarray) -> float:
-        """contract.advance_phase with this lane's body clock (same arithmetic: MATT lanes are bit-identical)."""
+        """contract.advance_phase with this lane's body clock (same arithmetic: MATT lanes are bit-identical). v4: a march
+        cadence > 0 in the skill block drives the clock whatever the command (event 7)."""
+        if self.skill is not None and self.skill[3] > 0.0:
+            return (self.phase + float(self.skill[3]) * C.DECIMATION * 0.005) % 1.0
         if float(np.linalg.norm(cmd)) < C.PHASE_CMD_THRESHOLD:
             return 0.0
         base, per_mps, yaw_w = self.gait

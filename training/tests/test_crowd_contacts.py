@@ -11,7 +11,7 @@ sys.path.insert(0, str(C.ROOT / "tools"))
 import check_crowd_contacts as cc  # noqa: E402
 
 
-@pytest.mark.parametrize("tag", [f"{s}{l}" for s in cc.EVENT_SCENES for l in cc.LINEUPS])
+@pytest.mark.parametrize("tag", cc.scene_tags())
 def test_every_part_collides_with_every_other_athlete(tag):
     r = cc.check_scene(tag)
     assert r["athletes"] == 8

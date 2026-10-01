@@ -121,7 +121,7 @@ namespace PoOlympic
             }
             if (who != null)
             {
-                _name.text = rows.FirstOrDefault(r => r.runner == who).name + "  " + (Odds.IsZombie(who) ? "ZOMBIE" : "MATT");
+                _name.text = rows.FirstOrDefault(r => r.runner == who).name + "  " + Odds.BodyOf(who);
                 _tag.text = tag;
             }
             Follow(who);

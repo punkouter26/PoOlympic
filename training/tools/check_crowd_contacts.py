@@ -11,7 +11,7 @@ the 7 other players during an event"). For every event scene and lineup:
 
 The geoms are the capsules / spheres / boxes fitted to each body's skinned mesh (build_mjcf.fit_geoms), so a contact here
 is a contact between the athletes' visible bodies. Usage (training/):
-    uv run python tools/check_crowd_contacts.py            # all event scenes: all-MATT + mixed MATT/zombie lineups
+    uv run python tools/check_crowd_contacts.py            # all event scenes: all-MATT + the mixed lineups (zombie, GRANDMA)
     uv run python tools/check_crowd_contacts.py track8     # one scene
 Writes parity/crowd_contacts.json; exit code 1 on any failure.
 """
@@ -30,7 +30,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "assets"
 EVENT_SCENES = ["pedestal8", "shaker8", "crawl8", "slalom8", "turntable8", "track8", "crab8", "trench8"]
-LINEUPS = ["", "_mzmzmzmz"]                     # all-MATT, alternating MATT / zombie
+LINEUPS = ["", "_mzmzmzmz", "_mzgmzgmg"]        # all-MATT, alternating MATT / zombie, MATT / zombie / GRANDMA
 NUDGE = np.array([0.011, 0.007, 0.004])         # m — never place two geom centres exactly on top of each other
 
 
@@ -94,7 +94,8 @@ def check_scene(tag: str) -> dict:
                 if not passes_filter(m, a, w, excl):
                     res["support_fail"].append((m.geom(a).name, m.geom(w).name))
     # self: the athlete's own pairs == the isolated G6 athlete's (by body)
-    iso = mujoco.MjModel.from_xml_path(str(ASSETS / ("scene_meet8_mzmzmzmz.xml" if "mz" in tag else "scene_meet8.xml")))
+    lineup = tag.split("_", 1)[1] if "_" in tag else ""          # same lineup in the isolated G6 scene (meet8)
+    iso = mujoco.MjModel.from_xml_path(str(ASSETS / (f"scene_meet8_{lineup}.xml" if lineup else "scene_meet8.xml")))
     iso_ath, iso_excl = athletes(iso), excluded(iso)
     lanes = {l["prefix"]: l["lane"] for l in json.loads((ASSETS / f"{tag}_layout.json").read_text())["lanes"]}
     res["self_mismatch"] = [p for p in prefixes
@@ -124,8 +125,13 @@ def check_scene(tag: str) -> dict:
     return res
 
 
+def scene_tags(scenes: list[str] | None = None) -> list[str]:
+    """Every composed lineup of the scenes (GRANDMA has no crawl brain: no GRANDMA lineup of the all-fours scenes)."""
+    return [f"{s}{l}" for s in (scenes or EVENT_SCENES) for l in LINEUPS if (ASSETS / f"scene_{s}{l}.xml").exists()]
+
+
 def main(argv: list[str]) -> int:
-    tags = [f"{s}{l}" for s in (argv or EVENT_SCENES) for l in LINEUPS]
+    tags = scene_tags(argv)
     report = []
     for tag in tags:
         r = check_scene(tag)

@@ -5,8 +5,13 @@ lane-isolated), every lane driven like its Unity event (tools/export_critic.py c
 
   stand   r0_v2_it1000 / zombie_rung0     zero command                     (Iron Pedestal)
   rung2   rung2 / zombie_rung2            random envelope commands         (every other standing event)
-  flight  r2f_v3_it100                    3.0-3.8 m/s runs                 (Steeplechase Jog)
+  flight  r2f_v3_it100                    3.0-3.8 m/s runs, 1 command in 4 a standstill   (Steeplechase Jog)
   crawl   crawl_matt / crawl_zombie       prone start, 3 s setup, 1.2 m/s  (30m All Fours, Trench Crawl)
+  stand_g / rung2_g   grandma_rung0 / grandma_rung2: the stand / rung2 drives on the GRANDMA lanes of
+                                          scene_track8_mzgmzgmg.xml (commands capped at her 2.8 m/s like the events)
+
+flight (2026-10-01): the first fit saw running commands only, so w_speed (4.3) and the bias (−17) made a runner standing
+on the start line (command 0) read 0 % confidence in Unity. A quarter of the flight commands are now a standstill.
 
 plus random shoves (0.3-2.4 m/s × √λ every 1.5-3.5 s) so that falls happen. Fall = the event fall rule (pelvis line,
 60° torso tilt, non-foot contact); crawl = a tumble (pelvis below the crawl band after being on all fours). A lane that
@@ -21,7 +26,8 @@ ridge), reported with ROC AUC (and the value-only AUC) and a
 10-bin reliability table. Written to Assets/PoOlympic/Models/confidence_model.json (read by Unity BrainConfidence) and
 parity/confidence/report.json.
 
-Usage: uv run python tools/fit_confidence.py [--seconds 150] [--seeds 8] [--workers 12]
+Usage: uv run python tools/fit_confidence.py [--seconds 150] [--seeds 8] [--workers 12] [--groups flight,stand_g]
+       (--groups: refit only those groups' brains and keep the other entries of the model file)
 """
 
 from __future__ import annotations
@@ -54,7 +60,15 @@ GROUPS = {
     "rung2": {"matt": "rung2", "zombie": "zombie_rung2"},
     "flight": {"matt": "r2f_v3_it100"},
     "crawl": {"matt": "crawl_matt", "zombie": "crawl_zombie"},
+    "stand_g": {"grandma": "grandma_rung0"},
+    "rung2_g": {"grandma": "grandma_rung2"},
 }
+KIND = {"stand_g": "stand", "rung2_g": "rung2"}        # how a group is driven (default: its own name)
+FLIGHT_STAND_P = 0.25                                  # flight: share of commands that are a standstill
+
+
+def scene_tag(group: str) -> str:
+    return "mzgmzgmg" if "grandma" in GROUPS[group] else "mzmzmzmz"
 
 
 def rollout(group: str, seed: int, seconds: float) -> dict[str, list[tuple[float, int]]]:
@@ -62,9 +76,10 @@ def rollout(group: str, seed: int, seconds: float) -> dict[str, list[tuple[float
     from poolympic import contract as C
     from poolympic.evaluate import _envelope_command
     from poolympic.events import all_fours as AF
-    from poolympic.events.iron_pedestal import Traits, body_contract, make_lanes
+    from poolympic.events.iron_pedestal import Traits, body_command, body_contract, make_lanes
 
-    scene, layout_path = A / "scene_track8_mzmzmzmz.xml", A / "track8_mzmzmzmz_layout.json"
+    kind = KIND.get(group, group)
+    scene, layout_path = A / f"scene_track8_{scene_tag(group)}.xml", A / f"track8_{scene_tag(group)}_layout.json"
     m = mujoco.MjModel.from_xml_path(str(scene))
     d = mujoco.MjData(m)
     layout = json.loads(layout_path.read_text())
@@ -72,14 +87,15 @@ def rollout(group: str, seed: int, seconds: float) -> dict[str, list[tuple[float
     rng = np.random.default_rng([seed, 77])
     traits = [Traits.sample(rng) for _ in layout["lanes"]]
     fallback = brains.get("matt") or next(iter(brains.values()))
-    lanes = make_lanes(m, d, layout, seed, traits, fallback, {b: brains.get(b, fallback) for b in ("matt", "zombie")})
+    scene_bodies = sorted({l.get("body", "matt") for l in layout["lanes"]})
+    lanes = make_lanes(m, d, layout, seed, traits, fallback, {b: brains.get(b, fallback) for b in scene_bodies})
     active = [ln.body in brains for ln in lanes]
     critics = {b: ort.InferenceSession(str(BR / f"{n}.critic.onnx"), providers=["CPUExecutionProvider"])
                for b, n in GROUPS[group].items()}
-    defaults = {b: body_contract(b)["default_joint_qpos"] for b in ("matt", "zombie")}
+    defaults = {b: body_contract(b)["default_joint_qpos"] for b in scene_bodies}
     lam = [bodies.BODIES[ln.body].length_scale for ln in lanes]
     torso = [m.body(ln.prefix + "torso").id for ln in lanes]
-    crawl = group == "crawl"
+    crawl = kind == "crawl"
     dt = m.opt.timestep * C.DECIMATION
 
     def reset(i):
@@ -124,19 +140,20 @@ def rollout(group: str, seed: int, seconds: float) -> dict[str, list[tuple[float
                     [AF.VX, 0.0, AF.crawl_steer(d.qpos[r + 3:r + 7], d.qpos[r + 1] - ln.origin[1])])
             else:
                 if t >= cmd_until[i]:
-                    if group == "stand":
+                    if kind == "stand":
                         cmd[i] = np.zeros(3)
-                    elif group == "flight":
-                        cmd[i] = np.array([rng.uniform(3.0, 3.8), 0.0, 0.0])
+                    elif kind == "flight":
+                        cmd[i] = np.zeros(3) if rng.uniform() < FLIGHT_STAND_P else np.array([rng.uniform(3.0, 3.8), 0.0, 0.0])
                     else:
                         cmd[i] = _envelope_command(rng)[1]
                     cmd_until[i] = t + rng.uniform(3.0, 5.0)
                 c = cmd[i].copy()
-                if group == "flight":
+                if kind == "flight" and c[0] > 0.0:
                     c[2] = C.steer_yaw_rate(d.qpos[r + 3:r + 7], d.qpos[r + 1] - ln.origin[1], c[0])
             # the lane's control step, exposing the observation for the critic (= _Lane.control)
-            bc = np.asarray(c, float) if ln.body == "matt" else np.asarray(c, float) * np.array(
-                [math.sqrt(lam[i]), math.sqrt(lam[i]), 1.0 / math.sqrt(lam[i])])
+            bc = (np.asarray(c, float) if ln.body == "matt"
+                  else body_command(np.asarray(c, float), ln.body) if ln.body == "grandma"        # incl. her 2.8 m/s cap
+                  else np.asarray(c, float) * np.array([math.sqrt(lam[i]), math.sqrt(lam[i]), 1.0 / math.sqrt(lam[i])]))
             ln.phase = ln.advance_phase(bc)
             obs = C.build_obs(ln.ath, d.qpos, d.qvel, bc, ln.phase, ln.last)
             if ln.traits.obs_noise > 0:
@@ -219,9 +236,11 @@ def main() -> int:
     ap.add_argument("--seconds", type=float, default=150.0)
     ap.add_argument("--seeds", type=int, default=8)
     ap.add_argument("--workers", type=int, default=12)
+    ap.add_argument("--groups", default="", help="comma list: refit only these groups, keep the model's other brains")
     args = ap.parse_args()
+    groups = [g for g in args.groups.split(",") if g] or list(GROUPS)
     data: dict[str, list[tuple[float, int]]] = {}
-    jobs = [(g, s) for g in GROUPS for s in range(args.seeds)]
+    jobs = [(g, s) for g in groups for s in range(args.seeds)]
     with ProcessPoolExecutor(args.workers) as ex:
         for (g, s), res in zip(jobs, ex.map(rollout, *zip(*jobs), [args.seconds] * len(jobs))):
             for name, rows in res.items():
@@ -252,8 +271,13 @@ def main() -> int:
         print(f"{name:14s} n={len(y):7d} danger={falls:6d} AUC={entry['auc']:.3f} (value only {entry['auc_value_only']:.3f}) "
               f"w=({a[0]:+.4f}, {a[1]:+.4f}, {a[2]:+.4f}) b={b:+.3f} "
               f"calibrated={entry['calibrated']}")
-    MODEL.write_text(json.dumps({"horizon_s": HORIZON_S, "ema_tau_s": EMA_TAU_S, "brains": brains}, indent=1))
     REPORT.parent.mkdir(parents=True, exist_ok=True)
+    if args.groups:                      # partial refit: keep the other brains' entries
+        refit = {e["brain"] for e in brains}
+        brains = sorted([e for e in json.loads(MODEL.read_text())["brains"] if e["brain"] not in refit] + brains,
+                        key=lambda e: e["brain"])
+        report = {**(json.loads(REPORT.read_text()) if REPORT.exists() else {}), **report}
+    MODEL.write_text(json.dumps({"horizon_s": HORIZON_S, "ema_tau_s": EMA_TAU_S, "brains": brains}, indent=1))
     REPORT.write_text(json.dumps(report, indent=1))
     print(f"-> {MODEL}\n-> {REPORT}")
     return 0

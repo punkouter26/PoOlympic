@@ -1,0 +1,26 @@
+{
+ "reference": "squat_rs_v6",
+ "unity_run": "squat_rs_v6",
+ "body": "mattbio",
+ "frames": 250,
+ "fall_time_ref": null,
+ "fall_time_unity": null,
+ "pelvis_height_rms_m": 5.276499833690085e-05,
+ "mean_abs_torque_ref": 19.50890279935443,
+ "mean_abs_torque_unity": 19.509905917651707,
+ "torque_ratio": 1.0000514184886558,
+ "cadence_ref_hz": 1.0,
+ "cadence_unity_hz": 1.0,
+ "qpos_max_abs_drift_1s": 1.9057391218435527e-06,
+ "qpos_max_abs_drift_5s": 0.004839702732807009,
+ "cube_qpos_max_abs_drift_after_fire": 0.6777417689587322,
+ "obs_max_abs_diff": 0.06299548037350178,
+ "action_raw_max_abs_diff": 0.04006314277648926,
+ "checks": {
+  "same_fall_outcome": true,
+  "pelvis_height_rms_lt_3cm": true,
+  "mean_abs_torque_within_10pct": true,
+  "cadence_within_5pct": true
+ },
+ "G5_pass": true
+}

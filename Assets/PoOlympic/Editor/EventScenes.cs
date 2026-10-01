@@ -76,6 +76,10 @@ namespace PoOlympic.Editor
         public const string PedestalRosterLayout = "training/assets/pedestal8_roster_layout.json";
         public const string DefaultZombieRung2Brain = "zombie_rung2.onnx";
         public const string DefaultZombieRung0Brain = "zombie_rung0.onnx";
+        // GRANDMA (Phase G): Rung 0 = g0_v2 it 1499 (G1 10/10); Rung 2 = g2_v5 it 600 (provisional, 4/10 under her 2.8 m/s
+        // bars). No crawl brain: the all-fours scenes (8, 23) hold MATT + zombie only.
+        public const string DefaultGrandmaRung0Brain = "grandma_rung0.onnx";
+        public const string DefaultGrandmaRung2Brain = "grandma_rung2.onnx";
 
         /// <summary>Per-body assets: contract (Models/contract[_body].json), visual (glTF) and lane label letter.</summary>
         public static (string contract, string visual, string letter) BodyAssets(string body) => body switch
@@ -98,7 +102,8 @@ namespace PoOlympic.Editor
 
         public static string BuildIronPedestalHeat(string brainFile) => BuildIronPedestalHeat(brainFile, PedestalHeatSource, PedestalHeatLayout);
 
-        public static string BuildIronPedestalHeat(string brainFile, string source, string layoutPath, string zombieBrain = DefaultZombieRung0Brain)
+        public static string BuildIronPedestalHeat(string brainFile, string source, string layoutPath, string zombieBrain = DefaultZombieRung0Brain,
+                                                   string grandmaBrain = DefaultGrandmaRung0Brain)
         {
             if (EditorApplication.isPlaying) throw new InvalidOperationException("exit Play mode first");
             ParityHarness.SyncArtifacts();
@@ -130,7 +135,7 @@ namespace PoOlympic.Editor
                 if (cube && cubeMat != null) rend.sharedMaterial = cubeMat;
             }
 
-            var brains = new System.Collections.Generic.Dictionary<string, string> { { "matt", brainFile }, { "zombie", zombieBrain } };
+            var brains = new System.Collections.Generic.Dictionary<string, string> { { "matt", brainFile }, { "zombie", zombieBrain }, { "grandma", grandmaBrain } };
             var pool = new GameObject("CubePool").AddComponent<MjCubePool>();
             pool.poolSize = (int)layout["n_cubes"];
             var heat = new GameObject("IronPedestalHeat").AddComponent<IronPedestalHeat>();
@@ -174,7 +179,7 @@ namespace PoOlympic.Editor
             }
             pool.runner = heat.runners[0].runner;
             string version = lineup.Distinct().Count() > 1
-                ? $"v0 · {Path.GetFileNameWithoutExtension(brainFile)} + {Path.GetFileNameWithoutExtension(zombieBrain)}"
+                ? "v0 · " + string.Join(" + ", lineup.Distinct().Select(b => Path.GetFileNameWithoutExtension(brains[b])))
                 : $"v0 · {Path.GetFileNameWithoutExtension(brainFile)} · 8 runners";
             lanes.broadcastCamera = cam.GetComponent<BroadcastCamera>();
 
@@ -187,7 +192,7 @@ namespace PoOlympic.Editor
             bc.offset = new Vector3(4.6f, 2.4f, -6.4f);      // front-left end of the beam: the row recedes in a 9:16 frame
             AddBroadcast(heat, "IRON PEDESTAL", "Event 1 · last one standing", 1, version, cam, BroadcastDirector.Kind.Arena, Vector3.right);
             EditorSceneManager.SaveScene(scene, IronPedestalHeatScene);
-            return $"{IronPedestalHeatScene}: {heat.runners.Count} athletes ({string.Join(",", lineup)}), brains {string.Join(" / ", brains.Values)}";
+            return $"{IronPedestalHeatScene}: {heat.runners.Count} athletes ({string.Join(",", lineup.Distinct())} in every lane), brains {string.Join(" / ", brains.Values)}";
         }
 
         public const string TrackSource = "training/assets/scene_track8_roster.xml";
@@ -240,7 +245,8 @@ namespace PoOlympic.Editor
             bool crawl = mode == TrackRaceEvent.Mode.AllFours;
             bool steeple = mode == TrackRaceEvent.Mode.Steeplechase;
             var brains = crawl ? new System.Collections.Generic.Dictionary<string, string> { { "matt", CrawlMattBrain }, { "zombie", CrawlZombieBrain } }
-                       : steeple ? new System.Collections.Generic.Dictionary<string, string> { { "matt", FlightMattBrain }, { "zombie", DefaultZombieRung2Brain } }
+                       : steeple ? new System.Collections.Generic.Dictionary<string, string> { { "matt", FlightMattBrain }, { "zombie", DefaultZombieRung2Brain },
+                                                                                               { "grandma", DefaultGrandmaRung2Brain } }
                        : null;
             if (crawl) brainFile = CrawlMattBrain;
             if (steeple) brainFile = FlightMattBrain;
@@ -360,6 +366,8 @@ namespace PoOlympic.Editor
         public const string SquatSource = "training/assets/scene_squat8_mattbio.xml";
         public const string SquatLayout = "training/assets/squat8_mattbio_layout.json";
         // Event 3: the Rung S brain (contract v4 pelvis-height command), trained on the mattbio body -> all-mattbio scene
+        // Per-event stance brains (user decision 2026-10-01). Event 3 keeps rs_v6 it 3299: in CPU heats of the event (12 reps
+        // to 45 cm, feet may slide 20 cm) it has 1-4 finishers per heat; rs_v8 it 1199 (G1 squat drill also 10/10) has none.
         public const string SquatBrain = "rs_v6_it3299.onnx";   // squat 10/10, worst depth error 1.5 cm
 
         /// <summary>Event 3: 8 mattbio athletes on the venue's 2 x 4 station grid (3 m x 4 m apart, scene_squat8_mattbio.xml),
@@ -383,6 +391,36 @@ namespace PoOlympic.Editor
                          BroadcastDirector.Kind.Arena, Vector3.right);
             EditorSceneManager.SaveScene(meet.Scene, SquatScene);
             return $"{SquatScene}: {ev.squatters.Count} athletes, {ev.reps} reps, brain {brainFile}";
+        }
+
+        public const string MarchScene = "Assets/PoOlympic/Scenes/Event_CadenceMarch.unity";
+        // Event 7: Rung S brain rs_v8 it 1199 (G1 march drill 9/10, drift 6-17 cm) on the all-mattbio scene of venue 7
+        // (tools/compose_mixed.py march8: the 2 x 4 station grid + the metronome tower at its centre as a MuJoCo box; the
+        // stadium draws the tower).
+        public const string MarchSource = "training/assets/scene_march8_mattbio.xml";
+        public const string MarchLayout = "training/assets/march8_mattbio_layout.json";
+        public const string MarchBrain = "rs_v8_it1199.onnx";
+
+        /// <summary>Event 7: 8 mattbio athletes on the venue's 2 x 4 station grid, CadenceMarchEvent + HUD.</summary>
+        [MenuItem("PoOlympic/Events/Build Event 7 — Cadence March")]
+        public static string BuildCadenceMarch() => BuildCadenceMarch(MarchBrain);
+
+        public static string BuildCadenceMarch(string brainFile)
+        {
+            var meet = BuildMeetScene(MarchSource, MarchLayout, 7, AthleteLane, 0f, brainFile,
+                                      new System.Collections.Generic.Dictionary<string, string> { { "mattbio", brainFile } });
+            var ev = new GameObject("CadenceMarchEvent").AddComponent<CadenceMarchEvent>();
+            foreach (var (k, r) in meet.Lanes) ev.marchers.Add(new CadenceMarchEvent.Marcher { runner = r, name = $"S{k + 1}" });
+            meet.Pool.runner = ev.marchers[0].runner;
+
+            var bc = meet.Camera.GetComponent<BroadcastCamera>();
+            bc.target = meet.FocusPelvis;
+            bc.focusOffset = new Vector3(-4.5f, 0f, -2f);    // grid centre (station S4 is the origin; rows at y = 0 / -4 m)
+            bc.offset = new Vector3(8.5f, 4.0f, -5.0f);      // front three-quarter: the athletes face +x
+            AddBroadcast(ev, "CADENCE MARCH", "Event 7", 7, $"v0 · {Path.GetFileNameWithoutExtension(brainFile)}", meet.Camera,
+                         BroadcastDirector.Kind.Arena, Vector3.right);
+            EditorSceneManager.SaveScene(meet.Scene, MarchScene);
+            return $"{MarchScene}: {ev.marchers.Count} athletes, {ev.stages} stages {ev.hzStart}-{ev.Cadence(ev.stages - 1)} Hz, brain {brainFile}";
         }
 
         public const string CrabScene = "Assets/PoOlympic/Scenes/Event_CrabShuffle.unity";
@@ -509,12 +547,15 @@ namespace PoOlympic.Editor
             return hud;
         }
 
-        /// <summary>HUD lane label: the zombie's lanes read Z&lt;n&gt; (roster prefix Z&lt;k&gt;_), MATT keeps the event's own label.</summary>
-        static string LaneLabel(string label, PolicyRunner r) => r.athletePrefix.StartsWith("Z") ? "Z" + label.Substring(1) : label;
+        /// <summary>HUD lane label: the zombie's lanes read Z&lt;n&gt;, GRANDMA's G&lt;n&gt; (roster prefixes Z&lt;k&gt;_ / G&lt;k&gt;_),
+        /// MATT keeps the event's own label.</summary>
+        static string LaneLabel(string label, PolicyRunner r) =>
+            r.athletePrefix.StartsWith("Z") || r.athletePrefix.StartsWith("G") ? r.athletePrefix.Substring(0, 1) + label.Substring(1) : label;
 
         static string BrainsLabel(string brainFile) =>
             $"v0 · {Path.GetFileNameWithoutExtension(brainFile)} + " +
-            Path.GetFileNameWithoutExtension(brainFile == CrawlMattBrain ? CrawlZombieBrain : DefaultZombieRung2Brain);
+            (brainFile == CrawlMattBrain ? Path.GetFileNameWithoutExtension(CrawlZombieBrain)
+                : $"{Path.GetFileNameWithoutExtension(DefaultZombieRung2Brain)} + {Path.GetFileNameWithoutExtension(DefaultGrandmaRung2Brain)}");
 
         public sealed class MeetScene
         {
@@ -563,7 +604,8 @@ namespace PoOlympic.Editor
                 if (cube && cubeMat != null) rend.sharedMaterial = cubeMat;
             }
             // per-lane body (layout "body", tools/compose_mixed.py; default matt): its contract, brain and visual
-            bodyBrains ??= new System.Collections.Generic.Dictionary<string, string> { { "matt", brainFile }, { "zombie", DefaultZombieRung2Brain } };
+            bodyBrains ??= new System.Collections.Generic.Dictionary<string, string> { { "matt", brainFile }, { "zombie", DefaultZombieRung2Brain },
+                                                                                       { "grandma", DefaultGrandmaRung2Brain } };
             string BrainOf(string body) => bodyBrains.TryGetValue(body, out var b) ? b : brainFile;
             meet.Pool = new GameObject("CubePool").AddComponent<MjCubePool>();
             meet.Pool.poolSize = (int)layout["n_cubes"];
@@ -617,6 +659,7 @@ namespace PoOlympic.Editor
             { 1, IronPedestalHeatScene },   // official 8-runner heat (solo practice: Event_IronPedestal.unity)
             { 3, SquatScene },
             { 5, GauntletScene },
+            { 7, MarchScene },
             { 8, AllFoursScene },
             { 9, "Assets/PoOlympic/Scenes/Event_InvertedSprint.unity" },
             { 10, CrabScene },
@@ -748,12 +791,28 @@ namespace PoOlympic.Editor
                 {
                     number = num, name = (string)e["name"], rules = (string)e["rules"],
                     brain = num == 1 ? "rung0" : (string)e["brain"],
-                    scene = Path.GetFileNameWithoutExtension(path), lineup = null,
+                    scene = Path.GetFileNameWithoutExtension(path), lineup = null, bodies = SceneBodies(path),
                 });
             }
             EditorSceneManager.SaveScene(scene, MainMenuScene);
             int n = SetBuildScenes();
             return $"{MainMenuScene}: {menu.events.Count} events, 8 lanes (roster: {string.Join(", ", MeetLineup.Roster)}); build scenes {n}";
+        }
+
+        /// <summary>Roster athletes (MeetLineup names) a built event scene holds, from its LaneLineup; a scene of
+        /// another body only (Events 3 / 7: mattbio = MATT's body with the stance brain) plays as MATT.</summary>
+        static string[] SceneBodies(string scenePath)
+        {
+            var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
+            try
+            {
+                var lanes = scene.GetRootGameObjects().Select(g => g.GetComponent<LaneLineup>()).FirstOrDefault(l => l != null);
+                if (lanes == null) return new string[0];
+                var held = lanes.entries.Select(e => e.body.ToUpperInvariant()).Distinct().ToArray();
+                var roster = MeetLineup.Roster.Where(a => held.Contains(a)).ToArray();
+                return roster.Length > 0 ? roster : new[] { MeetLineup.Roster[0] };
+            }
+            finally { EditorSceneManager.CloseScene(scene, true); }
         }
 
         static Material IronPedestalMaterial()

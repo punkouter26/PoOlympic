@@ -1,10 +1,11 @@
 {
- "note": "PoOlympic betting odds (training/tools/fit_odds.py): rating = w . [zombie, strength-1, latency, noise]; P(win) = softmax(rating); Plackett-Luce fit on CPU heats, mixed MATT/zombie lineups",
+ "note": "PoOlympic betting odds (training/tools/fit_odds.py): rating = w . [zombie, strength-1, latency, noise, grandma]; P(win) = softmax(rating); Plackett-Luce fit on CPU heats, mixed MATT / zombie / GRANDMA lineups",
  "features": [
   "zombie",
   "strength",
   "latency",
-  "noise"
+  "noise",
+  "grandma"
  ],
  "margin": 0.1,
  "events": [
@@ -12,28 +13,30 @@
    "number": 1,
    "name": "The Iron Pedestal",
    "weights": [
-    -0.5193,
-    0.9117,
-    -0.0568,
-    0.1906
+    -0.5553,
+    0.3239,
+    -0.121,
+    0.2028,
+    -0.2503
    ],
-   "heats": 40,
-   "favourite_wins": 0.25,
-   "winner_loglik": -1.8893064767890249,
+   "heats": 80,
+   "favourite_wins": 0.225,
+   "winner_loglik": -1.912263268651552,
    "uniform_loglik": -2.0794415416798357
   },
   {
    "number": 5,
    "name": "The Gust Gauntlet",
    "weights": [
-    2.8481,
-    0.8362,
-    -0.4078,
-    -0.1141
+    2.4958,
+    0.5877,
+    -0.2995,
+    -0.1395,
+    0.0651
    ],
-   "heats": 40,
-   "favourite_wins": 0.375,
-   "winner_loglik": -1.35883652541189,
+   "heats": 80,
+   "favourite_wins": 0.4,
+   "winner_loglik": -1.3350038198357057,
    "uniform_loglik": -2.0794415416798357
   },
   {
@@ -43,7 +46,8 @@
     -2.8489,
     3.8234,
     -0.0458,
-    -0.1341
+    -0.1341,
+    0.0
    ],
    "heats": 40,
    "favourite_wins": 0.75,
@@ -54,98 +58,105 @@
    "number": 9,
    "name": "The Inverted Sprint",
    "weights": [
-    -10.7138,
-    -0.2873,
-    2.2139,
-    -1.7164
+    -7.8815,
+    -0.2788,
+    1.6219,
+    -1.1021,
+    -14.9025
    ],
-   "heats": 60,
-   "favourite_wins": 0.8333333333333334,
-   "winner_loglik": -0.4242430234424957,
+   "heats": 100,
+   "favourite_wins": 0.86,
+   "winner_loglik": -0.41073479474157026,
    "uniform_loglik": -2.0794415416798357
   },
   {
    "number": 10,
    "name": "Crab Shuffle Relay",
    "weights": [
-    -5.4425,
-    -0.4577,
-    0.4003,
-    -0.339
+    -4.6348,
+    0.1393,
+    0.1712,
+    -0.314,
+    -8.5039
    ],
-   "heats": 60,
-   "favourite_wins": 0.38333333333333336,
-   "winner_loglik": -1.4008450956447454,
+   "heats": 100,
+   "favourite_wins": 0.36,
+   "winner_loglik": -1.2616462520704128,
    "uniform_loglik": -2.0794415416798357
   },
   {
    "number": 11,
    "name": "Slalom Sprint",
    "weights": [
-    -1.2293,
-    0.5391,
-    0.0565,
-    -0.126
+    -1.3143,
+    0.1783,
+    0.0496,
+    -0.1157,
+    -1.7343
    ],
-   "heats": 40,
-   "favourite_wins": 0.425,
-   "winner_loglik": -1.6110507113109311,
+   "heats": 80,
+   "favourite_wins": 0.3375,
+   "winner_loglik": -1.5738048378750336,
    "uniform_loglik": -2.0794415416798357
   },
   {
    "number": 12,
    "name": "The 360 Turntable",
    "weights": [
-    1.4975,
-    -0.6108,
-    -0.1944,
-    -0.7142
+    0.757,
+    -0.6403,
+    -0.1861,
+    -0.2881,
+    0.6324
    ],
-   "heats": 40,
-   "favourite_wins": 0.375,
-   "winner_loglik": -1.5139520795387904,
+   "heats": 80,
+   "favourite_wins": 0.35,
+   "winner_loglik": -1.7479400096244238,
    "uniform_loglik": -2.0794415416798357
   },
   {
    "number": 13,
    "name": "Steeplechase Jog",
    "weights": [
-    -5.204,
-    0.941,
-    -0.1829,
-    -0.4407
+    -7.6267,
+    1.4724,
+    -0.1712,
+    -0.366,
+    -3.7113
    ],
-   "heats": 60,
-   "favourite_wins": 0.11666666666666667,
-   "winner_loglik": -1.4946018975163369,
+   "heats": 100,
+   "favourite_wins": 0.16,
+   "winner_loglik": -1.3965161035543725,
    "uniform_loglik": -2.0794415416798357
   },
   {
    "number": 19,
    "name": "Terminal Velocity Sprint",
    "weights": [
-    -5.7802,
-    -0.0076,
-    -0.6294,
-    0.8958
+    -5.1155,
+    1.2306,
+    -0.5943,
+    1.0081,
+    -9.5172
    ],
-   "heats": 40,
-   "favourite_wins": 0.475,
-   "winner_loglik": -1.0768511793165148,
+   "heats": 80,
+   "favourite_wins": 0.6,
+   "winner_loglik": -0.9426345111172486,
    "uniform_loglik": -2.0794415416798357
   },
   {
    "number": 22,
    "name": "Emergency Brake",
    "weights": [
-    0.222,
-    0.3067,
-    -0.0208,
-    -0.3426
+    0.225,
+    0.2269,
+    -0.0289,
+    -0.1456,
+    0.1964
    ],
-   "heats": 60,
-   "favourite_wins": 0.08333333333333333,
-   "winner_loglik": -2.094379432968378,
+   "heats": 100,
+   "favourite_wins": 0.13,
+   "winner_loglik": -2.1035305470916335,
    "uniform_loglik": -2.0794415416798357
   },
   {
@@ -155,7 +166,8 @@
     1.8268,
     4.3181,
     -0.989,
-    -0.0456
+    -0.0456,
+    0.0
    ],
    "heats": 60,
    "favourite_wins": 0.35,

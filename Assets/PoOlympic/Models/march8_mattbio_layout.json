@@ -1,0 +1,147 @@
+{
+ "n_lanes": 8,
+ "lane_width": 1.22,
+ "n_cubes": 16,
+ "lanes": [
+  {
+   "lane": 0,
+   "prefix": "L0_",
+   "body": "mattbio",
+   "origin": [
+    -9.0,
+    0.0,
+    0.0
+   ],
+   "cubes": [
+    0,
+    1
+   ]
+  },
+  {
+   "lane": 1,
+   "prefix": "L1_",
+   "body": "mattbio",
+   "origin": [
+    -6.0,
+    0.0,
+    0.0
+   ],
+   "cubes": [
+    2,
+    3
+   ]
+  },
+  {
+   "lane": 2,
+   "prefix": "L2_",
+   "body": "mattbio",
+   "origin": [
+    -3.0,
+    0.0,
+    0.0
+   ],
+   "cubes": [
+    4,
+    5
+   ]
+  },
+  {
+   "lane": 3,
+   "prefix": "L3_",
+   "body": "mattbio",
+   "origin": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cubes": [
+    6,
+    7
+   ]
+  },
+  {
+   "lane": 4,
+   "prefix": "L4_",
+   "body": "mattbio",
+   "origin": [
+    -9.0,
+    -4.0,
+    0.0
+   ],
+   "cubes": [
+    8,
+    9
+   ]
+  },
+  {
+   "lane": 5,
+   "prefix": "L5_",
+   "body": "mattbio",
+   "origin": [
+    -6.0,
+    -4.0,
+    0.0
+   ],
+   "cubes": [
+    10,
+    11
+   ]
+  },
+  {
+   "lane": 6,
+   "prefix": "L6_",
+   "body": "mattbio",
+   "origin": [
+    -3.0,
+    -4.0,
+    0.0
+   ],
+   "cubes": [
+    12,
+    13
+   ]
+  },
+  {
+   "lane": 7,
+   "prefix": "L7_",
+   "body": "mattbio",
+   "origin": [
+    0.0,
+    -4.0,
+    0.0
+   ],
+   "cubes": [
+    14,
+    15
+   ]
+  }
+ ],
+ "pedestal_h": 0.0,
+ "crowd": true,
+ "lineup": [
+  "mattbio",
+  "mattbio",
+  "mattbio",
+  "mattbio",
+  "mattbio",
+  "mattbio",
+  "mattbio",
+  "mattbio"
+ ],
+ "note": "lane k: names prefixed L<k>_, athlete body per lane (assets/<body>.xml), pelvis shifted by origin",
+ "props": [
+  {
+   "name": "metronome",
+   "pos": [
+    -4.5,
+    -2.0,
+    2.5
+   ],
+   "size": [
+    0.2,
+    0.2,
+    2.5
+   ]
+  }
+ ]
+}

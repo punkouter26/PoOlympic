@@ -202,14 +202,13 @@ namespace PoOlympic
             return b;
         }
 
-        static bool Zombie(PolicyRunner r) => r != null && Odds.IsZombie(r);
-
         static void Chip(Label chip, PolicyRunner r)
         {
-            bool z = Zombie(r);
-            chip.text = z ? "Z" : "M";
-            chip.EnableInClassList("bh-chip-zombie", z);
-            chip.EnableInClassList("bh-chip-matt", !z);
+            string body = r != null ? Odds.BodyOf(r) : "MATT";
+            chip.text = body.Substring(0, 1);
+            chip.EnableInClassList("bh-chip-zombie", body == "ZOMBIE");
+            chip.EnableInClassList("bh-chip-grandma", body == "GRANDMA");
+            chip.EnableInClassList("bh-chip-matt", body == "MATT");
         }
 
         void LateUpdate()
@@ -434,7 +433,7 @@ namespace PoOlympic
         AthleteTelemetry Telemetry(PolicyRunner r) =>
             r == null ? null : tension != null ? tension.TelemetryOf(r) : r.GetComponent<AthleteTelemetry>();
 
-        static string Body(PolicyRunner r) => r == null ? "" : Odds.IsZombie(r) ? "ZOMBIE" : "MATT";
+        static string Body(PolicyRunner r) => Odds.BodyOf(r);
 
         /// <summary>One line: this heat's winning mark against the world record (new record → WR badge + pulse).</summary>
         void WorldRecords(IBroadcastBoard b, (int place, string name, string result, bool bad, PolicyRunner runner) winner)

@@ -65,7 +65,8 @@ namespace PoOlympic.Tests
         {
             var json = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/PoOlympic/Models/confidence_model.json");
             Assert.IsNotNull(json, "run training/tools/fit_confidence.py");
-            foreach (var brain in new[] { "r0_v2_it1000", "rung2", "r2f_v3_it100", "zombie_rung0", "zombie_rung2", "crawl_matt", "crawl_zombie" })
+            foreach (var brain in new[] { "r0_v2_it1000", "rung2", "r2f_v3_it100", "zombie_rung0", "zombie_rung2", "crawl_matt", "crawl_zombie",
+                                         "grandma_rung0", "grandma_rung2" })
             {
                 var e = BrainConfidence.Find(json, brain);
                 Assert.IsNotNull(e, $"{brain}: no calibrated confidence entry");

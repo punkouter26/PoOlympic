@@ -59,6 +59,7 @@
     color: rgb(255, 255, 255);
 }
 .menu-chip--zombie { background-color: rgb(92, 170, 70); color: rgb(12, 24, 8); }
+.menu-chip--grandma { background-color: rgb(206, 96, 160); color: rgb(255, 255, 255); }
 
 /* ---------- lanes: 4 × 2, tap = next athlete ---------- */
 .slots { flex-direction: row; flex-wrap: wrap; justify-content: space-between; flex-shrink: 0; }
@@ -80,6 +81,8 @@
 }
 .slot:hover { background-color: var(--po-card); }
 .slot--zombie { border-left-color: rgb(92, 170, 70); }
+.slot--grandma { border-left-color: rgb(206, 96, 160); }
+.slot--sub { opacity: 0.55; }
 .slot--fixed { opacity: 0.7; }
 .slot-lane { font-size: var(--po-text); color: var(--po-muted); }
 .slot-athlete { -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); font-size: 30px; white-space: nowrap; }

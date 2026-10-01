@@ -35,7 +35,7 @@ namespace PoOlympic
     /// <summary>
     /// Betting odds from athlete traits (tasks.md D4). Per event a Plackett-Luce rating fitted on CPU heats
     /// (training/tools/fit_odds.py → Models/odds_model.json):
-    ///   rating = w · [zombie, strength − 1, latency substeps, obs noise],  P(win) = softmax(rating)
+    ///   rating = w · [zombie, strength − 1, latency substeps, obs noise, grandma],  P(win) = softmax(rating)
     /// P is shrunk 10 % towards uniform; decimal odds = (1 − margin) / P, clamped to [1.01, 50].
     /// </summary>
     public static class Odds
@@ -45,10 +45,25 @@ namespace PoOlympic
 
         public static Model Parse(TextAsset json) => json == null ? null : JsonUtility.FromJson<Model>(json.text);
 
-        public static bool IsZombie(PolicyRunner r) => r.athletePrefix.StartsWith("Z") || (r.contractJson != null && r.contractJson.name.Contains("zombie"));
+        /// <summary>Roster body of a runner — "MATT", "ZOMBIE" or "GRANDMA" (MeetLineup.Roster) — from its roster prefix
+        /// (Z&lt;k&gt;_ / G&lt;k&gt;_) or its contract asset (contract_&lt;body&gt;.json; mattbio is MATT).</summary>
+        public static string BodyOf(PolicyRunner r)
+        {
+            if (r == null) return "";
+            string contract = r.contractJson != null ? r.contractJson.name : "";
+            if (r.athletePrefix.StartsWith("Z") || contract.Contains("zombie")) return "ZOMBIE";
+            if (r.athletePrefix.StartsWith("G") || contract.Contains("grandma")) return "GRANDMA";
+            return "MATT";
+        }
 
-        public static float Rating(float[] w, PolicyRunner r) =>
-            w[0] * (IsZombie(r) ? 1f : 0f) + w[1] * (r.strength - 1f) + w[2] * r.latencySubsteps + w[3] * r.obsNoise;
+        public static bool IsZombie(PolicyRunner r) => BodyOf(r) == "ZOMBIE";
+
+        public static float Rating(float[] w, PolicyRunner r)
+        {
+            string body = BodyOf(r);
+            return w[0] * (body == "ZOMBIE" ? 1f : 0f) + w[1] * (r.strength - 1f) + w[2] * r.latencySubsteps + w[3] * r.obsNoise
+                   + (w.Length > 4 && body == "GRANDMA" ? w[4] : 0f);
+        }
 
         /// <summary>Win probability per runner (same order); uniform when the event has no fitted weights.</summary>
         public static float[] WinProbabilities(Model model, int eventNumber, IReadOnlyList<PolicyRunner> runners)

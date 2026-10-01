@@ -32,6 +32,20 @@
    ]
   },
   {
+   "lane": 0,
+   "prefix": "G0_",
+   "body": "grandma",
+   "origin": [
+    -1.285879139104721e-16,
+    -2.1,
+    0.0
+   ],
+   "cubes": [
+    0,
+    1
+   ]
+  },
+  {
    "lane": 1,
    "prefix": "L1_",
    "body": "matt",
@@ -49,6 +63,20 @@
    "lane": 1,
    "prefix": "Z1_",
    "body": "zombie",
+   "origin": [
+    -8.572527594031472e-17,
+    -1.4,
+    0.0
+   ],
+   "cubes": [
+    2,
+    3
+   ]
+  },
+  {
+   "lane": 1,
+   "prefix": "G1_",
+   "body": "grandma",
    "origin": [
     -8.572527594031472e-17,
     -1.4,
@@ -88,6 +116,20 @@
    ]
   },
   {
+   "lane": 2,
+   "prefix": "G2_",
+   "body": "grandma",
+   "origin": [
+    -4.2862637970157366e-17,
+    -0.7000000000000001,
+    0.0
+   ],
+   "cubes": [
+    4,
+    5
+   ]
+  },
+  {
    "lane": 3,
    "prefix": "L3_",
    "body": "matt",
@@ -105,6 +147,20 @@
    "lane": 3,
    "prefix": "Z3_",
    "body": "zombie",
+   "origin": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cubes": [
+    6,
+    7
+   ]
+  },
+  {
+   "lane": 3,
+   "prefix": "G3_",
+   "body": "grandma",
    "origin": [
     0.0,
     0.0,
@@ -144,6 +200,20 @@
    ]
   },
   {
+   "lane": 4,
+   "prefix": "G4_",
+   "body": "grandma",
+   "origin": [
+    4.286263797015736e-17,
+    0.7,
+    0.0
+   ],
+   "cubes": [
+    8,
+    9
+   ]
+  },
+  {
    "lane": 5,
    "prefix": "L5_",
    "body": "matt",
@@ -161,6 +231,20 @@
    "lane": 5,
    "prefix": "Z5_",
    "body": "zombie",
+   "origin": [
+    8.572527594031472e-17,
+    1.4,
+    0.0
+   ],
+   "cubes": [
+    10,
+    11
+   ]
+  },
+  {
+   "lane": 5,
+   "prefix": "G5_",
+   "body": "grandma",
    "origin": [
     8.572527594031472e-17,
     1.4,
@@ -200,6 +284,20 @@
    ]
   },
   {
+   "lane": 6,
+   "prefix": "G6_",
+   "body": "grandma",
+   "origin": [
+    1.285879139104721e-16,
+    2.1,
+    0.0
+   ],
+   "cubes": [
+    12,
+    13
+   ]
+  },
+  {
    "lane": 7,
    "prefix": "L7_",
    "body": "matt",
@@ -226,6 +324,20 @@
     14,
     15
    ]
+  },
+  {
+   "lane": 7,
+   "prefix": "G7_",
+   "body": "grandma",
+   "origin": [
+    1.7145055188062946e-16,
+    2.8000000000000003,
+    0.0
+   ],
+   "cubes": [
+    14,
+    15
+   ]
   }
  ],
  "pedestal_h": 0.5,
@@ -233,35 +345,43 @@
  "lineup": [
   [
    "matt",
-   "zombie"
+   "zombie",
+   "grandma"
   ],
   [
    "matt",
-   "zombie"
+   "zombie",
+   "grandma"
   ],
   [
    "matt",
-   "zombie"
+   "zombie",
+   "grandma"
   ],
   [
    "matt",
-   "zombie"
+   "zombie",
+   "grandma"
   ],
   [
    "matt",
-   "zombie"
+   "zombie",
+   "grandma"
   ],
   [
    "matt",
-   "zombie"
+   "zombie",
+   "grandma"
   ],
   [
    "matt",
-   "zombie"
+   "zombie",
+   "grandma"
   ],
   [
    "matt",
-   "zombie"
+   "zombie",
+   "grandma"
   ]
  ],
  "note": "lane k: names prefixed L<k>_, athlete body per lane (assets/<body>.xml), pelvis shifted by origin",

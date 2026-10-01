@@ -1,0 +1,26 @@
+{
+ "reference": "march_rs_v8",
+ "unity_run": "march_rs_v8",
+ "body": "mattbio",
+ "frames": 250,
+ "fall_time_ref": null,
+ "fall_time_unity": null,
+ "pelvis_height_rms_m": 1.0038743334686647e-07,
+ "mean_abs_torque_ref": 18.695100946767166,
+ "mean_abs_torque_unity": 18.695099546758712,
+ "torque_ratio": 0.9999999251136189,
+ "cadence_ref_hz": 1.5086206896551724,
+ "cadence_unity_hz": 1.5086206896551724,
+ "qpos_max_abs_drift_1s": 2.040905935703219e-06,
+ "qpos_max_abs_drift_5s": 1.2459012635440692e-05,
+ "cube_qpos_max_abs_drift_after_fire": 0.005395571892415907,
+ "obs_max_abs_diff": 5.322694778442383e-05,
+ "action_raw_max_abs_diff": 5.8710575103759766e-05,
+ "checks": {
+  "same_fall_outcome": true,
+  "pelvis_height_rms_lt_3cm": true,
+  "mean_abs_torque_within_10pct": true,
+  "cadence_within_5pct": true
+ },
+ "G5_pass": true
+}

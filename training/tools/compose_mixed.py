@@ -8,7 +8,7 @@ Usage:  uv run python tools/compose_mixed.py pedestal8 matt,zombie,matt,zombie,m
         uv run python tools/compose_mixed.py --verify          (all-MATT pedestal8 == scene_pedestal8.xml)
         uv run python tools/compose_mixed.py track8 roster     (roster scene: MATT L<k>_ + zombie Z<k>_ in every lane)
         uv run python tools/compose_mixed.py --roster-all      (roster scenes for every event scene)
-Roster scenes back the Unity menu: every lane holds every roster body (same lane collision bits, shared pedestal / props /
+Roster scenes back the Unity menu: every lane holds every roster body of that scene (same lane collision bits, shared pedestal / props /
 cubes); Unity's LaneLineup switches off the bodies not picked before MuJoCo compiles, leaving compose(scene, lineup) up to
 name prefixes (checked by --verify).
 Output: assets/scene_<scene>_<tag>.xml + <scene>_<tag>_layout.json   (tag = lineup, e.g. "mz" for alternating)
@@ -30,18 +30,32 @@ sys.path.insert(0, str(ROOT / "tools"))
 import build_mjcf as B  # noqa: E402  (MATT profile: only the scene helpers / constants are used here)
 
 ASSETS = ROOT / "assets"
-ROSTER = ["matt", "zombie"]      # = Unity MeetLineup.Roster (lower case)
+ROSTER = ["matt", "zombie", "grandma"]      # = Unity MeetLineup.Roster (lower case)
+CRAWL_ROSTER = ["matt", "zombie"]           # all-fours events: GRANDMA has no crawl brain yet (Unity: MATT runs for her)
+
+
+def march_props() -> list[dict]:
+    """7 Cadence March: the stadium metronome tower at the centre of the 2 x 4 station grid (build_venues.py: a 0.4 x 0.4 x
+    5 m steel box; its arm at 5.3 m is out of reach) as a MuJoCo box in the athlete frame of reference lane 3 — 2 m from
+    every station row, so only a falling or wandering athlete can meet it, and then it is solid."""
+    ev = json.loads(B.VENUES_JSON.read_text())["events"]["07"]
+    c = np.mean([l["pos"] for l in ev["lanes"]], axis=0)
+    return [{"name": "metronome", "pos": B.venue_to_athlete(7, 3, [c[0], c[1], 2.5]), "size": [0.2, 0.2, 2.5]}]
+
+
 SCENES = {  # scene -> the build_mjcf.compose_meet arguments of that event scene (callables: read from the venues)
     "meet8": dict(),                                  # G6 testbed (Testbed_Rung1): 1.22 m lanes, no venue, lane isolation
     "pedestal8": dict(event=1, pedestal_h=B.PEDESTAL_H, beam=lambda: B.venue_box(1, "beam"), crowd=True),
     "track8": dict(event=22, park_offset=(0.0, -30.0, 0.0), crowd=True),
-    "crawl8": dict(event=8, park_offset=(0.0, -30.0, 0.0), crowd=True),
+    "crawl8": dict(event=8, park_offset=(0.0, -30.0, 0.0), crowd=True, roster=CRAWL_ROSTER),
     "turntable8": dict(event=12, crowd=True),
-    "squat8": dict(event=3, park_offset=(0.0, -30.0, 0.0), crowd=True),   # Event 3 runs all-mattbio (Rung S brain)
+    "squat8": dict(event=3, park_offset=(0.0, -30.0, 0.0), crowd=True, roster=[]),   # Event 3 runs all-mattbio (Rung S brain): no roster scene
+    # Event 7 runs all-mattbio like Event 3; composed here only (no build_mjcf scene_march8.xml, no roster scene)
+    "march8": dict(event=7, park_offset=(0.0, -30.0, 0.0), props=march_props, crowd=True, roster=[]),
     "crab8": dict(event=10, yaw=90.0, park_offset=(0.0, -30.0, 0.0), props=B.crab_rails, crowd=True),
     "shaker8": dict(event=5, park_offset=(0.0, -30.0, 0.0), shaker=B.shaker_floor, crowd=True),
     "slalom8": dict(event=11, park_offset=(0.0, -30.0, 0.0), props=B.slalom_poles, crowd=True),
-    "trench8": dict(event=23, park_offset=(0.0, -30.0, 0.0), props=B.trench_props, crowd=True),
+    "trench8": dict(event=23, park_offset=(0.0, -30.0, 0.0), props=B.trench_props, crowd=True, roster=CRAWL_ROSTER),
 }
 
 
@@ -65,8 +79,14 @@ def body_parts(body: str):
     return pelvis, acts, excl, qdef
 
 
+def roster_of(scene: str) -> list[str]:
+    """Bodies every lane of the scene's roster scene holds (the bodies that have a brain for its event)."""
+    return list(SCENES[scene].get("roster", ROSTER))
+
+
 def athlete_prefix(lane: int, body: str, roster: bool) -> str:
-    """L<k>_ for MATT and for any body in a one-body-per-lane scene; <B><k>_ (Z<k>_ …) for the other roster bodies."""
+    """L<k>_ for MATT and for any body in a one-body-per-lane scene; <B><k>_ (Z<k>_, G<k>_ …) for the other roster
+    bodies."""
     return B.lane_prefix(lane) if not roster or body == "matt" else f"{body[0].upper()}{lane}_"
 
 
@@ -164,6 +184,8 @@ def verify() -> int:
     from poolympic.fingerprint import canonical_bytes, fingerprint
     ok_all = True
     for scene in SCENES:
+        if not (ASSETS / f"scene_{scene}.xml").exists():      # composed-only scene (march8)
+            continue
         xml, _ = compose(scene, ["matt"] * 8)
         a = mujoco.MjModel.from_xml_string(xml)
         b = mujoco.MjModel.from_xml_path(str(ASSETS / f"scene_{scene}.xml"))
@@ -184,9 +206,9 @@ def verify_roster() -> int:
     from poolympic.fingerprint import canonical_bytes, fingerprint
     ok_all = True
     for scene in SCENES:
-        xml, _ = compose(scene, [list(ROSTER)] * 8)
+        xml, _ = compose(scene, [roster_of(scene)] * 8)
         r = mujoco.MjModel.from_xml_string(xml)
-        for body in ROSTER:
+        for body in roster_of(scene):
             m = mujoco.MjModel.from_xml_string(compose(scene, [[body]] * 8)[0])   # same prefixes, one body per lane
             same = all(canonical_bytes(fingerprint(r, athlete_prefix(k, body, True), f"cube{2 * k}"))
                        == canonical_bytes(fingerprint(m, athlete_prefix(k, body, True), f"cube{2 * k}")) for k in range(8))
@@ -199,9 +221,9 @@ def main(argv: list[str]) -> int:
     if argv and argv[0] == "--verify":
         return verify() | verify_roster()
     if argv and argv[0] == "--roster-all":
-        return max(main([sc, "roster"]) for sc in SCENES)
+        return max(main([sc, "roster"]) for sc in SCENES if roster_of(sc))
     scene = argv[0]
-    lineup = [list(ROSTER)] * 8 if argv[1] == "roster" else argv[1].split(",")
+    lineup = [roster_of(scene)] * 8 if argv[1] == "roster" else argv[1].split(",")
     assert len(lineup) == 8, "8 lanes"
     xml, layout = compose(scene, lineup)
     tag = tag_of(lineup)

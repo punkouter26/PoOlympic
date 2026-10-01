@@ -34,6 +34,9 @@ namespace PoOlympic
             public string brain;
             public string scene;   // scene name in Build Settings
             public string[] lineup; // athlete per lane in the built scene (MATT / ZOMBIE); scenes are built per lineup
+            [Tooltip("Roster athletes the event scene holds (empty = the whole roster). An athlete without a brain for " +
+                     "the event sits out: LaneLineup runs the first of these in that lane.")]
+            public string[] bodies;
         }
 
         public List<MenuEvent> events = new();
@@ -224,11 +227,18 @@ namespace PoOlympic
 
         static Label Chip(string athlete)
         {
-            bool z = athlete == "ZOMBIE";
-            var chip = MakeLabel(z ? "Z" : athlete.Substring(0, 1), "menu-chip");
-            chip.EnableInClassList("menu-chip--zombie", z);
+            var chip = MakeLabel(athlete.Substring(0, 1), "menu-chip");
+            chip.EnableInClassList("menu-chip--zombie", athlete == "ZOMBIE");
+            chip.EnableInClassList("menu-chip--grandma", athlete == "GRANDMA");
             return chip;
         }
+
+        /// <summary>The selected event's scene holds this athlete (roster scenes: every body with a brain for the event).</summary>
+        bool InEvent(string athlete) =>
+            _selected?.bodies == null || _selected.bodies.Length == 0 || Array.IndexOf(_selected.bodies, athlete) >= 0;
+
+        /// <summary>Who runs in the event for a picked athlete without a brain for it (LaneLineup's stand-in).</summary>
+        string StandIn => _selected?.bodies != null && _selected.bodies.Length > 0 ? _selected.bodies[0] : MeetLineup.Roster[0];
 
         /// <summary>The selected event's scene fixes the lineup (athlete taps are ignored). Unity serialises a null
         /// array as an empty one, so "any lineup" (roster scenes) arrives here as lineup = [] — only a full 8-lane
@@ -258,6 +268,8 @@ namespace PoOlympic
                 var (tile, name) = _slots[k];
                 name.text = _lineup[k] ?? "empty";
                 tile.EnableInClassList("slot--zombie", _lineup[k] == "ZOMBIE");
+                tile.EnableInClassList("slot--grandma", _lineup[k] == "GRANDMA");
+                tile.EnableInClassList("slot--sub", _lineup[k] != null && !InEvent(_lineup[k]));   // sits this event out
                 tile.EnableInClassList("slot--fixed", LineupFixed);
             }
             UpdateStatus();
@@ -360,9 +372,16 @@ namespace PoOlympic
                 : !loadable ? $"{_selected.scene} is not in Build Settings"
                 : _gauntletMode ? (_gauntlet.Count == 0 ? "Tap events to build the gauntlet"
                     : $"Gauntlet {string.Join(" → ", _gauntlet.Select(e => e.number.ToString("00")))} · 10-8-6-5-4-3-2-1")
-                : $"{string.Join(" · ", _lineup.GroupBy(a => a).Select(g => $"{g.Count()}× {g.Key}"))}" + (LineupFixed ? " (event lineup)" : "");
+                : $"{string.Join(" · ", _lineup.GroupBy(a => a).Select(g => $"{g.Count()}× {g.Key}"))}" + (LineupFixed ? " (event lineup)" : "") + SitOutNote();
             _last.text = (Gauntlet.LastResult.Length > 0 ? "Last gauntlet: " + Gauntlet.LastResult.Replace("\n", " · ") : "") +
                          (DemoSeason.SeriesPlayed > 0 ? (Gauntlet.LastResult.Length > 0 ? "\n" : "") + "Demo " + DemoSeason.Summary() : "");
+        }
+
+        /// <summary>" · GRANDMA → MATT here" when picked athletes have no brain for the selected event.</summary>
+        string SitOutNote()
+        {
+            var sitting = _lineup.Where(a => a != null && !InEvent(a)).Distinct().ToArray();
+            return sitting.Length == 0 ? "" : $" · {string.Join(", ", sitting)} → {StandIn} here";
         }
 
         static Label MakeLabel(string text, string cls)

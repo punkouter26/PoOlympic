@@ -1,9 +1,11 @@
 """Betting layer — odds from athlete traits (tasks.md D4 "odds from traits").
 
-Runs CPU heats of every playable event with the mixed MATT/zombie lineup (assets/scene_*_mzmzmzmz.xml, brains as in
-Unity) and random traits, then fits one Plackett-Luce rating model per event:
+Runs CPU heats of every playable event with the mixed lineups (assets/scene_*_mzmzmzmz.xml MATT / zombie, seeds 5000+;
+scene_*_mzgmzgmg.xml MATT / zombie / GRANDMA, seeds 7000+; brains as in Unity) and random traits, then fits one
+Plackett-Luce rating model per event:
 
     rating_i = w_zombie * [body is zombie] + w_strength * (strength - 1) + w_latency * latency_substeps + w_noise * obs_noise
+               + w_grandma * [body is grandma]
     P(i wins) = exp(rating_i) / sum_j exp(rating_j)            (Unity: PoOlympic.Odds)
 
 fitted on the full finishing order (ties broken by lane), ridge-regularised. The model file is read by Unity:
@@ -30,9 +32,10 @@ BR = ROOT.parent / "parity" / "brains"
 A = ROOT / "assets"
 OUT_DIR = ROOT.parent / "parity" / "odds"
 MODEL = ROOT.parent / "Assets" / "PoOlympic" / "Models" / "odds_model.json"
-FEATURES = ["zombie", "strength", "latency", "noise"]
+FEATURES = ["zombie", "strength", "latency", "noise", "grandma"]   # Unity Odds.Rating reads them in this order
 RIDGE = 0.5
-R2 = {"matt": BR / "rung2.onnx", "zombie": BR / "zombie_rung2.onnx"}
+R2 = {"matt": BR / "rung2.onnx", "zombie": BR / "zombie_rung2.onnx", "grandma": BR / "grandma_rung2.onnx"}
+LINEUPS = {"mzmzmzmz": 5000, "mzgmzgmg": 7000}     # scene tag -> first seed (GRANDMA: no crawl brain, so not in 8 / 23)
 
 # event -> (name, runner kind, scene tag)
 EVENTS = {
@@ -50,12 +53,16 @@ EVENTS = {
 }
 
 
+def lineup_of(seed: int) -> str:
+    return max((t for t, s0 in LINEUPS.items() if seed >= s0), key=lambda t: LINEUPS[t])
+
+
 def run_one(event: int, seed: int) -> dict:
     from poolympic.events import all_fours, crab, gauntlet, iron_pedestal, slalom, track, turntable
     _, kind, tag = EVENTS[event]
-    scene, layout = A / f"scene_{tag}_mzmzmzmz.xml", A / f"{tag}_mzmzmzmz_layout.json"
+    scene, layout = A / f"scene_{tag}_{lineup_of(seed)}.xml", A / f"{tag}_{lineup_of(seed)}_layout.json"
     if kind == "pedestal":
-        brains = {"matt": BR / "r0_v2_it1000.onnx", "zombie": BR / "zombie_rung0.onnx"}
+        brains = {"matt": BR / "r0_v2_it1000.onnx", "zombie": BR / "zombie_rung0.onnx", "grandma": BR / "grandma_rung0.onnx"}
         res = iron_pedestal.run_heat(brains["matt"], seed, scene=scene, layout_path=layout, brains=brains)
     elif kind in ("all_fours", "trench"):
         res = all_fours.run_race({"matt": BR / "crawl_matt.onnx", "zombie": BR / "crawl_zombie.onnx"}, seed, scene=scene,
@@ -74,7 +81,8 @@ def run_one(event: int, seed: int) -> dict:
 
 
 def features(lane: dict) -> np.ndarray:
-    return np.array([1.0 if lane["body"] == "zombie" else 0.0, lane["strength"] - 1.0, float(lane["latency"]), lane["noise"]])
+    return np.array([1.0 if lane["body"] == "zombie" else 0.0, lane["strength"] - 1.0, float(lane["latency"]), lane["noise"],
+                     1.0 if lane["body"] == "grandma" else 0.0])
 
 
 def fit(heats: list[dict]) -> tuple[np.ndarray, dict]:
@@ -125,7 +133,8 @@ def main() -> int:
         done = set()
         if raw.exists():
             done = {(h["event"], h["seed"]) for h in map(json.loads, raw.read_text().splitlines())}
-        jobs = [(e, 5000 + i) for e in events for i in range(a.heats) if (e, 5000 + i) not in done]
+        jobs = [(e, s0 + i) for e in events for tag, s0 in LINEUPS.items() for i in range(a.heats)
+                if (e, s0 + i) not in done and (A / f"scene_{EVENTS[e][2]}_{tag}.xml").exists()]
         print(f"{len(jobs)} heats to run on {a.workers} workers", flush=True)
         with ProcessPoolExecutor(a.workers) as pool, raw.open("a") as f:
             futs = {pool.submit(run_one, e, s): (e, s) for e, s in jobs}
@@ -136,7 +145,7 @@ def main() -> int:
                     print(f"  {i}/{len(jobs)}", flush=True)
     heats = [json.loads(x) for x in raw.read_text().splitlines()]
     model = {"note": "PoOlympic betting odds (training/tools/fit_odds.py): rating = w . [zombie, strength-1, latency, "
-                     "noise]; P(win) = softmax(rating); Plackett-Luce fit on CPU heats, mixed MATT/zombie lineups",
+                     "noise, grandma]; P(win) = softmax(rating); Plackett-Luce fit on CPU heats, mixed MATT / zombie / GRANDMA lineups",
              "features": FEATURES, "margin": 0.10, "events": []}
     for e in sorted({h["event"] for h in heats}):
         w, diag = fit([h for h in heats if h["event"] == e])
