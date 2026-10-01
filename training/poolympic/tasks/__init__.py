@@ -268,8 +268,12 @@ if bodies.current().name == "grandma":
             ("PoOlympic-Grandma-Rung1-Run", grandma_rung1_env_cfg, "grandma_rung1", 3000, MjlabOnPolicyRunner),
             ("PoOlympic-Grandma-Rung2-Omni-Base", grandma_rung2_base_env_cfg, "grandma_rung2", 2000, MjlabOnPolicyRunner),
             ("PoOlympic-Grandma-Rung2-Omni", grandma_rung2_env_cfg, "grandma_rung2", 2000, SymmetricRunner)):
-        register_mjlab_task(task_id=_tid, env_cfg=_fn(), play_env_cfg=_fn(play=True),
-                            rl_cfg=matt_ppo_cfg(_exp, max_iterations=_its), runner_cls=_runner)
+        _rl = matt_ppo_cfg(_exp, max_iterations=_its)
+        if _tid == "PoOlympic-Grandma-Rung2-Omni":
+            # g2_v2b (entropy 0.005): action std 0.51 -> 0.57 and mean reward 112 -> 102 in 400 its, speed at a 2.5 m/s
+            # command 2.36 -> 1.25: the entropy bonus out-pulled the task. g2_v3 onwards: 0.001.
+            _rl.algorithm.entropy_coef = 0.001
+        register_mjlab_task(task_id=_tid, env_cfg=_fn(), play_env_cfg=_fn(play=True), rl_cfg=_rl, runner_cls=_runner)
 
     register_mjlab_task(
         task_id="PoOlympic-Grandma-Rung0-Stand",

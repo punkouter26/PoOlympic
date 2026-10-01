@@ -748,3 +748,15 @@ One entry per run or decision. Newest at the bottom.
   z2_v11 recipe: lin 3 + 1.5 with std 0.5, stride-filtered yaw, cap 3, wobble penalty, symmetric runner) from **g2_v1b
   it 1000**, 2000 its, 3.2 s/it, gates every 400. If the sprint collapses again under the full envelope: lower her vx top.
 - Review: `parity/tb/g2_v1b/review.html`.
+
+## 2026-10-01 05:20 · g2_v2b stopped at it 443 (entropy pulling the policy apart) → g2_v3 with entropy 0.001
+- **g2_v2b it 400 gate:** 0/10, 0 falls · yaw tracking **10/10 seeds** (base it 1000: 4), turntable 10/10 (2.6-2.8 s),
+  brake 10/10 · tracking_lin 1/10, backward 0/10 (19.2 m in the time allowed). Speed probe: 2.0 → 1.20, 2.5 → 1.25,
+  3.7 → 1.80 m/s (start checkpoint: 1.87 / 2.36 / 3.33). A slide, not the base run's cliff.
+- **Not a cheaper optimum:** mean reward 111.7 → 102.1 (it 40 → 410), action std 0.51 → 0.57, entropy loss 15.1 → 18.0,
+  pelvis_low terminations up, track_lin −0.26, track_lin_coarse −0.15, track_yaw_filt +0.13, yaw_wobble unchanged
+  (−0.32 → −0.34). The entropy bonus (0.005) raises the action noise; noisy fast running falls, the mean policy slows.
+  Rung S hit the same thing at rs_v3 (0.005 → 0.0025).
+- **g2_v3** (05:19): same task and warm start (g2_v1b it 1000), `entropy_coef` 0.001 (set in the task's rl cfg),
+  `plain_init --max-std 0.3` (new option; start std 0.20-0.30 instead of ~0.5), 2000 its, gates 300 / 600 / 1000 / 1500 /
+  1999. One variable changed vs g2_v2b apart from the std cap.
