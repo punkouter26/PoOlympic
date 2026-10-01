@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rung S rs_v7 Review</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --card: #ffffff; --text: #1d1d1f; --muted: #5d5d66; --line: #e2e0da;
+    --v6: #12b5cb; --v7: #f9ab00; --good: #1f8a4c; --warn: #b8660b; --bad: #c2372b;
+    --t1: #fff4d6; --t2: #e3f3ff; --t3: #eeeaf8; --verdict: #e8f6ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+      --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+      --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+    --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+    --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.8rem; margin: 0 0 4px; }
+  h2 { margin: 0 0 4px; font-size: 1.3rem; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+  .verdict { background: var(--verdict); }
+  .verdict p { margin: 6px 0 0; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 10px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+  .up { color: var(--good); font-weight: 600; } .same { color: var(--muted); font-weight: 600; }
+  .down { color: var(--warn); font-weight: 600; } .fail { color: var(--bad); font-weight: 600; }
+  .tag { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--muted); }
+  img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); margin: 12px 0 16px; background: #fff; }
+  .levels { display: grid; gap: 12px; }
+  .lvl { border-radius: 10px; padding: 12px 16px; }
+  .lvl h3 { margin: 0 0 4px; font-size: .95rem; }
+  .lvl p { margin: 0; }
+  .l1 { background: var(--t1); } .l2 { background: var(--t2); } .l3 { background: var(--t3); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 8px; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+  footer { color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Rung S training review: rs_v7</h1>
+  <p class="sub">2026-10-01 09:05, iteration 1499 · MATT (<code>mattbio</code> body) · 1500 iterations in 95 min (GPU shared with another project) ·
+    <span class="dot" style="background:var(--v6)"></span>rs_v6 = previous run (iterations 2300 → 3299 on the chart)
+    <span class="dot" style="background:var(--v7)"></span>rs_v7 = this run (starts from rs_v6's last checkpoint; its counter restarts at 0)</p>
+
+  <div class="box verdict">
+    <h2>Verdict: marching is fixed (9 of 10); flamingo, reach and walking are not</h2>
+    <p><strong>In one sentence:</strong> rewarding the athlete for staying on its spot turned the march from 4 of 10 into 9 of 10, with full knee lift and 6–14 cm of drift instead of up to 90 cm, and squats stay perfect; standing on one leg still fails every trial, reaching did not move, and walking and turning stay at 6 of 10.</p>
+    <p><strong>What changed in rs_v7:</strong> (1) a reward for staying where the command started, in every stance skill, (2) a reward for the height of the foot that should be lifted in the flamingo, whether or not it still touches the ground.</p>
+    <div class="scroll">
+    <table>
+      <tr><th>Test (10 seeds, CPU)</th><th>rs_v6 3299 (start)</th><th>rs_v7 400</th><th>800</th><th>1200</th><th>1499</th><th>Pass needs</th></tr>
+      <tr><td>E3 Squat</td><td>10/10</td><td>10/10</td><td>10/10</td><td>10/10</td><td class="up">10/10 (worst 1.4 cm)</td><td>&lt; 5 cm</td></tr>
+      <tr><td>E7 March</td><td>4/10</td><td class="up">8/10</td><td class="up">9/10</td><td class="fail">1/10</td><td class="up">9/10</td><td>lift ≥ 75 %, rhythm ±5 %, drift &lt; 0.30 m</td></tr>
+      <tr><td>E7 March, drift from the spot</td><td>0.17–0.90 m</td><td>0.21–0.33</td><td>0.11–0.23</td><td class="fail">0.14–0.47</td><td class="up">0.06–0.14 m</td><td>&lt; 0.30 m</td></tr>
+      <tr><td>E7 March, knee lift vs called</td><td>83–97 %</td><td>89–100 %</td><td>88–99 %</td><td>98–105 %</td><td class="up">99–109 %</td><td>≥ 75 %</td></tr>
+      <tr><td>E6 Flamingo (10 different trials)</td><td>0/10</td><td>0/10</td><td>0/10</td><td>0/10</td><td class="fail">0/10 (160+ touches, 25 cm slip)</td><td>0 touches, slip &lt; 10 cm</td></tr>
+      <tr><td>E2 Torso aim</td><td>5/10</td><td>4/10</td><td>6/10</td><td>5/10</td><td class="same">5/10</td><td>error &lt; 0.15 rad, feet &lt; 5 cm</td></tr>
+      <tr><td>E4 Reach, worst error (median)</td><td>0.25 m</td><td>0.23</td><td>0.27</td><td>0.23</td><td class="same">0.26 m (0/10)</td><td>&lt; 0.08 m</td></tr>
+      <tr><td>Rung 2 walking / turning (G1)</td><td>6/10</td><td>5/10</td><td>6/10</td><td>7/10</td><td class="same">6/10</td><td>10/10; 0 falls in every test</td></tr>
+    </table>
+    </div>
+    <p><strong>Brains to use:</strong> rs_v7 iteration 1499 for Event 3 (squat) and Event 7 (march). rs_v6 iteration 2550 is still the only brain that passes the flamingo (10/10). rs_v5c iteration 2300 is still the best for torso aim (8/10). The one march miss at 1499 is rhythm measured 6 % fast against a 5 % tolerance.</p>
+  </div>
+
+  <section class="box">
+    <h2>1 · March knee lift</h2>
+    <div class="tag">Episode_Reward/skill_march_lift (swing-knee height as a fraction of the called lift; same term in both runs)</div>
+    <img src="1_march_lift.png" alt="March lift reward: rs_v6 climbs from 0.055 to 0.084 over iterations 2300-3299; rs_v7 starts at 0.087 and rises slowly to about 0.10 by iteration 1499">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The robot marches with high knees. The yellow line is higher than the blue line, so it got even better.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This score is high when the marching knee goes as high as it was told. The yellow try starts where the blue try ended and climbs a little more. The big change is not on this chart: the robot now stays on its spot while it marches, instead of walking away.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>rs_v7 goes from 0.087 to about 0.097–0.10 (smoothed), a smaller gain than rs_v6's 0.055 → 0.084, because lift was already 83–97 % of the call. The new <code>skill_spot</code> term sits at 0.43–0.45 of 1.5 for the whole run without trending, yet the drill drift falls from 0.17–0.90 m to 0.06–0.14 m at 1499. The path was not monotonic: 0.21–0.33 m at 400, 0.11–0.23 at 800, back up to 0.14–0.47 at 1200 (1 of 10) as the lift overshot, then down again. A checkpoint between gates could be worse than either neighbour, so the gate result, not the curve, picks the brain.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>2 · Flamingo</h2>
+    <div class="tag">Episode_Reward/skill_flamingo (lifted foot off the ground and 10 cm up, standing foot planted and still)</div>
+    <img src="2_flamingo.png" alt="Flamingo reward: rs_v6 noisy around 0.07 drifting down; rs_v7 noisy around 0.065 with no trend">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The robot still cannot stand on one leg. The line does not go up.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This score is high when one foot stays in the air and the other foot stands still. Both lines are flat and jumpy. We gave the robot extra points for lifting its foot, but it still puts the foot down again and again and hops sideways.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>Flat at about 0.064–0.068 through rs_v7 (rs_v6: 0.077 → 0.068). The new <code>skill_flamingo_lift</code> term stays at 0.17 of 1.5 and the slip penalty at −0.05, neither moving. In the drill all ten trials fail at every gate: 120–135 touch ticks and 11–20 cm slip at 400–1200, 160+ ticks and 25 cm at 1499. The skill existed at rs_v6 iteration 2550 (10/10, 0 touches) and was lost while march was learned; rs_v7 started from the checkpoint that had already lost it and did not recover it. A flamingo-capable shared brain has to start from 2550 or be trained without the trade-off.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>3 · Turning accuracy is still eroding</h2>
+    <div class="tag">Episode_Reward/track_ang (how closely the commanded turn rate is followed; paid in every mode)</div>
+    <img src="3_track_ang.png" alt="Turn tracking reward: rs_v6 falls from 0.98 to 0.83; rs_v7 falls from 0.83 to 0.75 by iteration 500, holds, then slides to 0.70">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The robot keeps getting a little worse at turning. The lines go down.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This score is high when the robot turns exactly as fast as it is told. It went down during the blue try and it keeps going down in the yellow try. The robot is getting better at its new tricks and slowly worse at walking and turning.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>0.98 → 0.83 over rs_v6 and 0.83 → 0.71 over rs_v7; the Rung 2 gate sits at 5–7 of 10 with no falls. The policy's action noise rises through both runs (std 0.44 → 0.50 → 0.54) even with the entropy coefficient at 0.0025. GRANDMA's Rung 2 runs tonight showed the same pattern, and there lowering the coefficient to 0.001 with a capped starting std stopped the noise growth and the reward decline. That makes entropy-driven noise the leading suspect for this erosion; it has not been tested on this task. rs_v8 will test it: same task, coefficient 0.001, starting std capped at 0.3.</p></div>
+    </div>
+  </section>
+
+  <footer>Charts: TensorBoard at localhost:6006, runs <code>rs_v6</code> and <code>rs_v7</code> (<code>training/tools/tb_shots.py</code>). Gate data: <code>parity/watch_rs_v7.jsonl</code>, <code>parity/watch/g1_rungS_rs_v7_it*.json</code>. The flamingo drill was changed before this run so that its ten seeds differ.</footer>
+</main>
+</body>
+</html>

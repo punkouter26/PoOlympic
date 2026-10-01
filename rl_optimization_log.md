@@ -817,3 +817,28 @@ One entry per run or decision. Newest at the bottom.
   stride like the zombie; (2) precision work on the recipe either way.
 - Review of the four attempts: `parity/tb/g2_v5/review.html`.
 - Queue: **rs_v7** started 07:28 (4.5 s/it at the start), then r0bio_v1, r2fbio_v1, crawl_bio_v1, getup_rev_v1.
+
+## 2026-10-01 09:05 · rs_v7 finished: march 9/10 (spot-keeping works); flamingo still 0/10 → rs_v8 queued (entropy)
+- **rs_v7** (rs_v6 it3299 + `skill_spot` + `skill_flamingo_lift`, 1500 its, 95 min; 4.7 s/it at the start with another
+  project's 8192-env run on the GPU, 2.8 s/it at the end). Gates (G1 S per drill · Rung 2; 0 falls everywhere; flamingo
+  drill now 10 different trials):
+
+  | it | squat | flamingo | march | torso | reach | Rung 2 | march drift (m) | march lift / called |
+  |---|---|---|---|---|---|---|---|---|
+  | rs_v6 3299 (start) | 10 | 0 | 4 | 5 | 0 | 6/10 | 0.17-0.90 | 0.83-0.97 |
+  | 400 | 10 | 0 | 8 | 4 | 0 | 5/10 | 0.21-0.33 | 0.89-1.00 |
+  | 800 | 10 | 0 | 9 | 6 | 0 | 6/10 | 0.11-0.23 | 0.88-0.99 |
+  | 1200 | 10 | 0 | 1 | 5 | 0 | 7/10 | 0.14-0.47 | 0.98-1.05 |
+  | **1499** | 10 | 0 | **9** | 5 | 0 | 6/10 | **0.06-0.14** | 0.99-1.09 |
+
+- March: the spot term fixed the drift; the one miss at 1499 is cadence +6 % (bar ±5 %; cadence is counted from knee
+  peaks). Not monotonic (1/10 at it 1200 as the lift overshot). Squat worst error 1.4 cm.
+- Flamingo: 120-166 touch ticks, 11-26 cm slip at every gate; `skill_flamingo_lift` flat at 0.17 of 1.5. Starting from
+  a checkpoint that had lost the skill did not recover it. Reach flat (median 0.23-0.27 m). Torso 4-6/10.
+- track_ang 0.83 → 0.71; action std 0.50 → 0.54 at entropy 0.0025 (rs_v6: 0.44 → 0.50). Same noise growth as GRANDMA's
+  g2_v2b, where entropy 0.001 + capped std stopped it → suspect for the locomotion erosion (untested here).
+- **Brains:** rs_v7 it 1499 → Events 3 + 7. rs_v6 it 2550 → Event 6 (if per-event brains are accepted). rs_v5c it 2300
+  best torso (8/10). Review: `parity/tb/rs_v7/review.html`.
+- **rs_v8** queued after r0bio_v1: `-RungS-Stance-v8` = rs_v7's env, entropy 0.001, `plain_init --max-std 0.3`, from
+  rs_v7 it 1499, 1200 its, gates 300 / 600 / 900 / 1199. One question: does lower action noise stop the erosion (and
+  does flamingo come back)?

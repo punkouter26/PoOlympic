@@ -250,12 +250,17 @@ if bodies.current().name == "mattbio":
             ("PoOlympic-MattBio-RungS-Stance", matt_stance_env_cfg, "mattbio_stance", 1000, SymmetricRunner),
             ("PoOlympic-MattBio-RungS-Stance-v6", matt_stance_v6_env_cfg, "mattbio_stance", 1000, SymmetricRunner),
             ("PoOlympic-MattBio-RungS-Stance-v7", matt_stance_v7_env_cfg, "mattbio_stance", 1500, SymmetricRunner),
+            ("PoOlympic-MattBio-RungS-Stance-v8", matt_stance_v7_env_cfg, "mattbio_stance", 1200, SymmetricRunner),
             ("PoOlympic-MattBio-Rung2-Flight", matt_rung2_flight_v5_env_cfg, "mattbio_rung2", 400, SymmetricRunner),
             ("PoOlympic-MattBio-Getup-Rev", matt_getup_rev_env_cfg, "mattbio_getup", 1500, MjlabOnPolicyRunner),
             ("PoOlympic-MattBio-Crawl", matt_crawl_v5_env_cfg, "mattbio_crawl", 600, MjlabOnPolicyRunner)):
         rl = matt_ppo_v5_cfg(exp, max_iterations=its)
         if task_id.endswith("Stance-v7"):
             rl.algorithm.entropy_coef = 0.0025   # rs_v3-v6 passed this on the CLI; the queue has no train-args field
+        if task_id.endswith("Stance-v8"):
+            # rs_v8 = rs_v7's env, entropy 0.0025 -> 0.001 (+ plain_init --max-std 0.3): the action std rose 0.44 -> 0.54
+            # over rs_v6 + rs_v7 while track_ang fell 0.98 -> 0.71; on GRANDMA's Rung 2 this change stopped both.
+            rl.algorithm.entropy_coef = 0.001
         register_mjlab_task(task_id=task_id, env_cfg=fn(), play_env_cfg=fn(play=True), rl_cfg=rl, runner_cls=runner)
 
 if bodies.current().name == "grandma":
