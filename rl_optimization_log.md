@@ -581,3 +581,28 @@ One entry per run or decision. Newest at the bottom.
   measured: 2.9 s/it vs 3.7-4.1 s/it on Auto fans (~30-40 % faster).
 - **Unity:** `Testbed_Stance.unity` (StanceTestbed.Build / Configure, StanceSkillDemo) plays rs_v5 brains on mattbio:
   squat and torso aim visible, reach short of the target.
+
+## 2026-09-30 20:27 · rs_v6 — locomotion share, swing-leg march progress, flamingo slip penalty (MATT, mattbio body)
+- **Change** (task `PoOlympic-MattBio-RungS-Stance-v6`, `stance_env.matt_stance_v6_env_cfg`): from rs_v5c **it2300**
+  (best so far), 1000 its (→ 3299), entropy 0.0025, 8192 envs. (1) mode_probs locomotion 0.20 → 0.35 (skills 0.13 each):
+  Rung 2 G1 eroded 9 → 5-8/10 in rs_v5c. (2) `skill_leg_progress_v6`: march progress on the swing leg only, while its
+  profile is > 30 % up (rs_v5 averaged both legs, err0 floored at 0.1 rad → standing still earned march progress near
+  the profile's zero crossings). (3) `skill_flamingo_slip` −2 × stance-foot xy speed (capped 1 m/s) in flamingo mode
+  (skill_flamingo's slip factor only scales a reward that is ~0 while the lifted foot is down). Reach unchanged.
+- Launch: WMI could not start the Store `pwsh` (ReturnValue 9 / silent exit) and `-File` does not group single-quoted
+  args → `detached_run.ps1` header documents powershell.exe + double quotes; LoadRun/Checkpoint now optional (scratch runs).
+- Archived rs_v5b / rs_v5c intermediate checkpoints (kept the gated ones + all TensorBoard logs) to runs_archive.
+- **it2550 gate:** G1 S squat **10/10**, **flamingo 10/10 (first ever; rs_v5c 0/10)**, torso 5, march 0, reach 0 ·
+  Rung 2 4/10 (0 falls).
+- Side check: `rs_v5_it2300.onnx` on the plain MATT body (not mattbio) passes the squat drill 5/5 (worst err 1.3-2.4 cm,
+  same as mattbio) → Event 3 can run in the MATT event scenes before the mattbio promotion.
+
+## 2026-09-30 21:00 · GRANDMA body (Phase G) — rig, MJCF, Rung 0 task
+- Source scan has no skin → `SourceArt/Grandma/rig_grandma.py` (Blender 5.2 via MCP): weld UV-seam islands, landmark
+  skeleton (22 Mixamo bones, symmetric), bone-heat weights, legs straightened + baked as rest, 1.600 m.
+- `bodies.BODIES["grandma"]`: 65 kg, λ = 0.871, strength 0.6, self-collision, stance abdomen 10° / hip 14° / knee 24° /
+  ankle 10° / hip_abd 3°. Joint torque caps (× 0.425 of MATT's): knee / hip 119 Nm, ankle 93, abdomen 85, shoulder 34,
+  elbow 30 Nm. MJCF 65.000 kg, root z 0.678 m, fall line 0.390 m (0.55 × 0.678 / 0.955).
+- `grandma_env.grandma_rung0_env_cfg`: MATT Rung 0 + zombie-style Froude scaling; style: `stoop` (torso pitch 10°,
+  σ 10°, w 1) replaces upright, `steady_stance` (feet 0.26 m apart, w 0.5). C1 PASS.
+- **g0_v1** chained after rs_v6 (`runs/chain_g0_v1.ps1`): from scratch, 1500 its, watch_gate rung 0 at 500/1000/1499.

@@ -273,7 +273,10 @@ def fit_box(verts, x_lo, x_hi, sole_z, height):
 def fit_geoms(skin: Skin) -> dict[str, list[dict]]:
     J = skin.joint_pos
     g: dict[str, list[dict]] = {}
-    g["pelvis"] = [fit_trunk_capsule(skin.of(["Hips"]), J["Hips"][2] - 0.08 * L, J["Spine"][2] + 0.02 * L)]
+    # GRANDMA's automatic (bone heat) weights give the hip / buttock skin to the thighs, so her Hips-only skin is
+    # narrower than deep (zero-length capsule): her pelvis is fitted to all skin in the hip slab
+    pelvis_v = skin.verts if BODY.family == "grandma" else skin.of(["Hips"])
+    g["pelvis"] = [fit_trunk_capsule(pelvis_v, J["Hips"][2] - 0.08 * L, J["Spine"][2] + 0.02 * L)]
     g["torso"] = [fit_trunk_capsule(skin.of(["Spine", "Spine1"]))]
     g["chest"] = [fit_trunk_capsule(skin.of(["Spine2"]), J["Spine2"][2], J["LeftArm"][2] - 0.03 * L)]
     neck = fit_limb_capsule(J["Neck"], J["Head"], skin.of(["Neck"]), pct=60, shrink=0.0)
@@ -848,6 +851,11 @@ def main() -> int:
                                          model="turntable8", crowd=True)
     (ASSETS / "scene_turntable8.xml").write_text(header + turn_xml + "\n")
     (ASSETS / "turntable8_layout.json").write_text(json.dumps(turn_layout, indent=1) + "\n")
+    # 3 Deep Squat Endurance: 2 x 4 station grid (3 m x 4 m apart, no contact), flat floor, Rung S brain
+    squat_xml, squat_layout = compose_meet(skin, geoms, inertials, qdef, origins=venue_lane_origins(3, reference_lane=3),
+                                           model="squat8", park_offset=(0.0, -30.0, 0.0), crowd=True)
+    (ASSETS / "scene_squat8.xml").write_text(header + squat_xml + "\n")
+    (ASSETS / "squat8_layout.json").write_text(json.dumps(squat_layout, indent=1) + "\n")
     # 10 Crab Shuffle: athletes turned to face the event's left (they side-step to their right = down the course);
     # lanes are then 1.22 m apart along x, the steel rails on the lane lines are real (shin-height) obstacles
     crab_xml, crab_layout = compose_meet(skin, geoms, inertials, qdef, origins=venue_lane_origins(10, 3, 90.0),

@@ -41,6 +41,14 @@ def _zombie(rung: str):
 TASKS.update({f"zombie_{r}": _zombie(r) for r in ("rung0", "rung1", "rung2", "rung2_base", "rung2_sym3")})
 
 
+def _grandma_rung0():   # needs POOLYMPIC_BODY=grandma
+    from poolympic.tasks import grandma_env
+    return grandma_env.grandma_rung0_env_cfg()
+
+
+TASKS["grandma_rung0"] = _grandma_rung0
+
+
 def check_skill_measures(env, m) -> bool:
     """Rung S: the torch skill measurements (tasks/skill_mdp.py) == the numpy ones (poolympic/skills.py) on the same
     states — training rewards and G1 drills measure the same thing."""

@@ -241,18 +241,31 @@ if bodies.current().name == "mattbio":
     from .matt_env import matt_ppo_v5_cfg, matt_rung0_v5_env_cfg, matt_rung2_flight_v5_env_cfg, matt_rung2_v5_env_cfg
     from .getup_env import matt_getup_rev_env_cfg
     from .crawl_env import matt_crawl_v5_env_cfg
-    from .stance_env import matt_stance_env_cfg
+    from .stance_env import matt_stance_env_cfg, matt_stance_v6_env_cfg
     from .symmetry import SymmetricRunner
 
     for task_id, fn, exp, its, runner in (
             ("PoOlympic-MattBio-Rung0-Stand", matt_rung0_v5_env_cfg, "mattbio_rung0", 400, MjlabOnPolicyRunner),
             ("PoOlympic-MattBio-Rung2-Omni", matt_rung2_v5_env_cfg, "mattbio_rung2", 800, SymmetricRunner),
             ("PoOlympic-MattBio-RungS-Stance", matt_stance_env_cfg, "mattbio_stance", 1000, SymmetricRunner),
+            ("PoOlympic-MattBio-RungS-Stance-v6", matt_stance_v6_env_cfg, "mattbio_stance", 1000, SymmetricRunner),
             ("PoOlympic-MattBio-Rung2-Flight", matt_rung2_flight_v5_env_cfg, "mattbio_rung2", 400, SymmetricRunner),
             ("PoOlympic-MattBio-Getup-Rev", matt_getup_rev_env_cfg, "mattbio_getup", 1500, MjlabOnPolicyRunner),
             ("PoOlympic-MattBio-Crawl", matt_crawl_v5_env_cfg, "mattbio_crawl", 600, MjlabOnPolicyRunner)):
         register_mjlab_task(task_id=task_id, env_cfg=fn(), play_env_cfg=fn(play=True),
                             rl_cfg=matt_ppo_v5_cfg(exp, max_iterations=its), runner_cls=runner)
+
+if bodies.current().name == "grandma":
+    from .grandma_env import grandma_rung0_env_cfg
+    from .matt_env import matt_ppo_cfg
+
+    register_mjlab_task(
+        task_id="PoOlympic-Grandma-Rung0-Stand",
+        env_cfg=grandma_rung0_env_cfg(),
+        play_env_cfg=grandma_rung0_env_cfg(play=True),
+        rl_cfg=matt_ppo_cfg("grandma_rung0", max_iterations=1500),
+        runner_cls=MjlabOnPolicyRunner,
+    )
 
 if bodies.current().name == "zombie":
     from .matt_env import matt_ppo_cfg

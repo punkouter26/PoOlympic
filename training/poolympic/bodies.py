@@ -71,6 +71,7 @@ class Body:
 MATT_MASS = 80.0
 MATT_HEIGHT = 1.837          # body mesh height (skeleton_matt.json height_body_mesh_m)
 ZOMBIE_HEIGHT = 1.135        # SourceArt/Zombie/convert_report.json
+GRANDMA_HEIGHT = 1.600       # SourceArt/Grandma/rig_report.json
 
 BODIES = {
     "matt": Body("matt", ROOT.parent / "SourceArt" / "test_MATT_Avaturn.glb", 52, (1.80, 1.90), MATT_MASS, 1.0),
@@ -81,6 +82,13 @@ BODIES = {
         # flexion swings the level arm forward), elbows a little bent
         joint_defaults={"abdomen_flex": 15.0, "hip_flex": 20.0, "hip_abd": 5.0, "knee": 35.0, "ankle_dorsi": 15.0,
                         "shoulder_elev": -10.0, "shoulder_flex": 75.0, "elbow": 20.0}),
+    # GRANDMA (user decisions 2026-09-30: Claude rigs the unrigged scan — SourceArt/Grandma/rig_grandma.py —, 1.60 m,
+    # "frail but steady"): stocky 1.60 m woman, 65 kg; 60 % of the size-scaled torque (knee extension cap ≈ 119 Nm);
+    # full self-collision; slightly stooped soft-kneed stance (flat feet: shin lean = knee − hip = ankle = 10°).
+    "grandma": Body(
+        "grandma", ROOT.parent / "SourceArt" / "Grandma" / "grandma.glb", 22, (1.57, 1.63), 65.0,
+        GRANDMA_HEIGHT / MATT_HEIGHT, strength=0.6, self_collision=True,
+        joint_defaults={"abdomen_flex": 10.0, "hip_flex": 14.0, "hip_abd": 3.0, "knee": 24.0, "ankle_dorsi": 10.0}),
 }
 
 

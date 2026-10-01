@@ -1,0 +1,617 @@
+{
+ "body": "grandma",
+ "contract_version": 3,
+ "mujoco_version": "3.11.0",
+ "timestep": 0.005,
+ "decimation": 4,
+ "control_hz": 50.0,
+ "action_scale": 0.25,
+ "joint_vel_scale": 0.05,
+ "gait_hz_base": 0.8572047596694736,
+ "gait_hz_per_mps": 0.229625,
+ "gait_hz_yaw_weight": 1.2,
+ "phase_cmd_threshold": 0.1,
+ "obs_noise": [
+  {
+   "term": "base_lin_vel_heading",
+   "offset": 0,
+   "size": 3,
+   "amplitude": 0.1
+  },
+  {
+   "term": "base_ang_vel_local",
+   "offset": 3,
+   "size": 3,
+   "amplitude": 0.2
+  },
+  {
+   "term": "projected_gravity",
+   "offset": 6,
+   "size": 3,
+   "amplitude": 0.05
+  },
+  {
+   "term": "base_height",
+   "offset": 9,
+   "size": 1,
+   "amplitude": 0.02
+  },
+  {
+   "term": "joint_pos_rel",
+   "offset": 15,
+   "size": 23,
+   "amplitude": 0.01
+  },
+  {
+   "term": "joint_vel_scaled",
+   "offset": 38,
+   "size": 23,
+   "amplitude": 0.05
+  }
+ ],
+ "trait_ranges": {
+  "strength": [
+   0.85,
+   1.15
+  ],
+  "latency_substeps": [
+   0,
+   4
+  ],
+  "obs_noise": [
+   0.0,
+   1.0
+  ]
+ },
+ "steering": {
+  "heading_gain": 2.0,
+  "lane_gain": 0.3,
+  "wz_limit": 0.5,
+  "law": "wz = clip(heading_gain * wrap(atan(-lane_gain * lane_offset_y * dir) - yaw), +-wz_limit); dir = -1 if vx_cmd < 0 else 1"
+ },
+ "obs_dim": 84,
+ "num_actions": 23,
+ "obs_layout": {
+  "base_lin_vel_heading": {
+   "offset": 0,
+   "size": 3
+  },
+  "base_ang_vel_local": {
+   "offset": 3,
+   "size": 3
+  },
+  "projected_gravity": {
+   "offset": 6,
+   "size": 3
+  },
+  "base_height": {
+   "offset": 9,
+   "size": 1
+  },
+  "command": {
+   "offset": 10,
+   "size": 3
+  },
+  "gait_phase_sincos": {
+   "offset": 13,
+   "size": 2
+  },
+  "joint_pos_rel": {
+   "offset": 15,
+   "size": 23
+  },
+  "joint_vel_scaled": {
+   "offset": 38,
+   "size": 23
+  },
+  "last_action": {
+   "offset": 61,
+   "size": 23
+  }
+ },
+ "root_joint": "root",
+ "actuators": [
+  {
+   "name": "abdomen_flex",
+   "joint": "abdomen_flex",
+   "default_rad": 0.1745329,
+   "range_lo_rad": -0.5235987755982988,
+   "range_hi_rad": 1.0471975511965976
+  },
+  {
+   "name": "abdomen_lat",
+   "joint": "abdomen_lat",
+   "default_rad": 0.0,
+   "range_lo_rad": -0.6108652381980153,
+   "range_hi_rad": 0.6108652381980153
+  },
+  {
+   "name": "abdomen_twist",
+   "joint": "abdomen_twist",
+   "default_rad": 0.0,
+   "range_lo_rad": -0.7853981633974483,
+   "range_hi_rad": 0.7853981633974483
+  },
+  {
+   "name": "shoulder_elev_l",
+   "joint": "shoulder_elev_l",
+   "default_rad": -1.396263,
+   "range_lo_rad": -1.6580627893946132,
+   "range_hi_rad": 1.3962634015954636
+  },
+  {
+   "name": "shoulder_flex_l",
+   "joint": "shoulder_flex_l",
+   "default_rad": 0.0,
+   "range_lo_rad": -1.0471975511965976,
+   "range_hi_rad": 2.9670597283903604
+  },
+  {
+   "name": "shoulder_twist_l",
+   "joint": "shoulder_twist_l",
+   "default_rad": 0.0,
+   "range_lo_rad": -1.3962634015954636,
+   "range_hi_rad": 1.3962634015954636
+  },
+  {
+   "name": "elbow_l",
+   "joint": "elbow_l",
+   "default_rad": 0.2617994,
+   "range_lo_rad": 0.0,
+   "range_hi_rad": 2.530727415391778
+  },
+  {
+   "name": "shoulder_elev_r",
+   "joint": "shoulder_elev_r",
+   "default_rad": -1.396263,
+   "range_lo_rad": -1.6580627893946132,
+   "range_hi_rad": 1.3962634015954636
+  },
+  {
+   "name": "shoulder_flex_r",
+   "joint": "shoulder_flex_r",
+   "default_rad": 0.0,
+   "range_lo_rad": -1.0471975511965976,
+   "range_hi_rad": 2.9670597283903604
+  },
+  {
+   "name": "shoulder_twist_r",
+   "joint": "shoulder_twist_r",
+   "default_rad": 0.0,
+   "range_lo_rad": -1.3962634015954636,
+   "range_hi_rad": 1.3962634015954636
+  },
+  {
+   "name": "elbow_r",
+   "joint": "elbow_r",
+   "default_rad": 0.2617994,
+   "range_lo_rad": 0.0,
+   "range_hi_rad": 2.530727415391778
+  },
+  {
+   "name": "hip_flex_l",
+   "joint": "hip_flex_l",
+   "default_rad": 0.2443461,
+   "range_lo_rad": -0.5235987755982988,
+   "range_hi_rad": 2.0943951023931953
+  },
+  {
+   "name": "hip_abd_l",
+   "joint": "hip_abd_l",
+   "default_rad": 0.05235988,
+   "range_lo_rad": -0.5235987755982988,
+   "range_hi_rad": 0.7853981633974483
+  },
+  {
+   "name": "hip_rot_l",
+   "joint": "hip_rot_l",
+   "default_rad": 0.0,
+   "range_lo_rad": -0.6981317007977318,
+   "range_hi_rad": 0.6981317007977318
+  },
+  {
+   "name": "knee_l",
+   "joint": "knee_l",
+   "default_rad": 0.418879,
+   "range_lo_rad": 0.0,
+   "range_hi_rad": 2.6179938779914944
+  },
+  {
+   "name": "ankle_dorsi_l",
+   "joint": "ankle_dorsi_l",
+   "default_rad": 0.1745329,
+   "range_lo_rad": -0.8726646259971648,
+   "range_hi_rad": 0.4363323129985824
+  },
+  {
+   "name": "ankle_inv_l",
+   "joint": "ankle_inv_l",
+   "default_rad": 0.0,
+   "range_lo_rad": -0.3490658503988659,
+   "range_hi_rad": 0.5235987755982988
+  },
+  {
+   "name": "hip_flex_r",
+   "joint": "hip_flex_r",
+   "default_rad": 0.2443461,
+   "range_lo_rad": -0.5235987755982988,
+   "range_hi_rad": 2.0943951023931953
+  },
+  {
+   "name": "hip_abd_r",
+   "joint": "hip_abd_r",
+   "default_rad": 0.05235988,
+   "range_lo_rad": -0.5235987755982988,
+   "range_hi_rad": 0.7853981633974483
+  },
+  {
+   "name": "hip_rot_r",
+   "joint": "hip_rot_r",
+   "default_rad": 0.0,
+   "range_lo_rad": -0.6981317007977318,
+   "range_hi_rad": 0.6981317007977318
+  },
+  {
+   "name": "knee_r",
+   "joint": "knee_r",
+   "default_rad": 0.418879,
+   "range_lo_rad": 0.0,
+   "range_hi_rad": 2.6179938779914944
+  },
+  {
+   "name": "ankle_dorsi_r",
+   "joint": "ankle_dorsi_r",
+   "default_rad": 0.1745329,
+   "range_lo_rad": -0.8726646259971648,
+   "range_hi_rad": 0.4363323129985824
+  },
+  {
+   "name": "ankle_inv_r",
+   "joint": "ankle_inv_r",
+   "default_rad": 0.0,
+   "range_lo_rad": -0.3490658503988659,
+   "range_hi_rad": 0.5235987755982988
+  }
+ ],
+ "default_qpos_scene": [
+  0.0,
+  0.0,
+  0.6777347,
+  1.0,
+  0.0,
+  0.0,
+  0.0,
+  0.1745329,
+  0.0,
+  0.0,
+  -1.396263,
+  0.0,
+  0.0,
+  0.2617994,
+  -1.396263,
+  0.0,
+  0.0,
+  0.2617994,
+  0.2443461,
+  0.05235988,
+  0.0,
+  0.418879,
+  0.1745329,
+  0.0,
+  0.0,
+  0.2443461,
+  0.05235988,
+  0.0,
+  0.418879,
+  0.1745329,
+  0.0,
+  0.0,
+  50.0,
+  0.0,
+  0.1,
+  1.0,
+  0.0,
+  0.0,
+  0.0,
+  52.0,
+  0.0,
+  0.1,
+  1.0,
+  0.0,
+  0.0,
+  0.0,
+  54.0,
+  0.0,
+  0.1,
+  1.0,
+  0.0,
+  0.0,
+  0.0,
+  56.0,
+  0.0,
+  0.1,
+  1.0,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "default_joint_qpos": [
+  {
+   "joint": "root",
+   "qpos": [
+    0.0,
+    0.0,
+    0.6777347,
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "joint": "abdomen_flex",
+   "qpos": [
+    0.1745329
+   ]
+  },
+  {
+   "joint": "abdomen_lat",
+   "qpos": [
+    0.0
+   ]
+  },
+  {
+   "joint": "abdomen_twist",
+   "qpos": [
+    0.0
+   ]
+  },
+  {
+   "joint": "shoulder_elev_l",
+   "qpos": [
+    -1.396263
+   ]
+  },
+  {
+   "joint": "shoulder_flex_l",
+   "qpos": [
+    0.0
+   ]
+  },
+  {
+   "joint": "shoulder_twist_l",
+   "qpos": [
+    0.0
+   ]
+  },
+  {
+   "joint": "elbow_l",
+   "qpos": [
+    0.2617994
+   ]
+  },
+  {
+   "joint": "shoulder_elev_r",
+   "qpos": [
+    -1.396263
+   ]
+  },
+  {
+   "joint": "shoulder_flex_r",
+   "qpos": [
+    0.0
+   ]
+  },
+  {
+   "joint": "shoulder_twist_r",
+   "qpos": [
+    0.0
+   ]
+  },
+  {
+   "joint": "elbow_r",
+   "qpos": [
+    0.2617994
+   ]
+  },
+  {
+   "joint": "hip_flex_l",
+   "qpos": [
+    0.2443461
+   ]
+  },
+  {
+   "joint": "hip_abd_l",
+   "qpos": [
+    0.05235988
+   ]
+  },
+  {
+   "joint": "hip_rot_l",
+   "qpos": [
+    0.0
+   ]
+  },
+  {
+   "joint": "knee_l",
+   "qpos": [
+    0.418879
+   ]
+  },
+  {
+   "joint": "ankle_dorsi_l",
+   "qpos": [
+    0.1745329
+   ]
+  },
+  {
+   "joint": "ankle_inv_l",
+   "qpos": [
+    0.0
+   ]
+  },
+  {
+   "joint": "toe_l",
+   "qpos": [
+    0.0
+   ]
+  },
+  {
+   "joint": "hip_flex_r",
+   "qpos": [
+    0.2443461
+   ]
+  },
+  {
+   "joint": "hip_abd_r",
+   "qpos": [
+    0.05235988
+   ]
+  },
+  {
+   "joint": "hip_rot_r",
+   "qpos": [
+    0.0
+   ]
+  },
+  {
+   "joint": "knee_r",
+   "qpos": [
+    0.418879
+   ]
+  },
+  {
+   "joint": "ankle_dorsi_r",
+   "qpos": [
+    0.1745329
+   ]
+  },
+  {
+   "joint": "ankle_inv_r",
+   "qpos": [
+    0.0
+   ]
+  },
+  {
+   "joint": "toe_r",
+   "qpos": [
+    0.0
+   ]
+  },
+  {
+   "joint": "cube0_free",
+   "qpos": [
+    50.0,
+    0.0,
+    0.1,
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "joint": "cube1_free",
+   "qpos": [
+    52.0,
+    0.0,
+    0.1,
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "joint": "cube2_free",
+   "qpos": [
+    54.0,
+    0.0,
+    0.1,
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "joint": "cube3_free",
+   "qpos": [
+    56.0,
+    0.0,
+    0.1,
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  }
+ ],
+ "tick_order": [
+  "read_state",
+  "advance_phase",
+  "build_obs",
+  "infer",
+  "write_ctrl",
+  "apply_disturbance",
+  "mj_step x4"
+ ],
+ "frames": {
+  "root_lin_vel": "world (free joint qvel[0:3]) rotated by -yaw into heading frame",
+  "root_ang_vel": "pelvis local (free joint qvel[3:6])",
+  "projected_gravity": "R_pelvis^T @ (0,0,-1)"
+ },
+ "fingerprint_sha256": "3a31bbfca078ceca32272fcbae5a7d65df1b04c24d7a73b823a3675908471dfa",
+ "skill_block": {
+  "version": 4,
+  "offset": 84,
+  "size": 11,
+  "obs_dim": 95,
+  "layout": {
+   "pelvis_height": {
+    "offset": 84,
+    "size": 1
+   },
+   "lift_foot": {
+    "offset": 85,
+    "size": 2
+   },
+   "march": {
+    "offset": 87,
+    "size": 2
+   },
+   "torso_aim": {
+    "offset": 89,
+    "size": 2
+   },
+   "hand_target": {
+    "offset": 91,
+    "size": 4
+   }
+  },
+  "ranges": {
+   "pelvis_height": [
+    -0.39194338595536204,
+    0.0
+   ],
+   "march_hz": [
+    0.8572047596694736,
+    2.143011899173684
+   ],
+   "knee_lift": [
+    0.08709853021230268,
+    0.3048448557430593
+   ],
+   "torso_yaw": [
+    -1.0471975511965976,
+    1.0471975511965976
+   ],
+   "torso_pitch": [
+    -0.3490658503988659,
+    0.6981317007977318
+   ],
+   "hand_reach": 0.65323897659227
+  },
+  "phase_clock": "march cadence > 0: phase += cadence * decimation * timestep (mod 1), whatever the command"
+ }
+}

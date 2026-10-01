@@ -5,6 +5,11 @@ the session ending (rs_v1, rs_v4 and rs_v5 all died with their sessions). Launch
   Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{ CurrentDirectory = '<repo>\training';
       CommandLine = 'pwsh -NoProfile -WindowStyle Hidden -File tools\detached_run.ps1 -Body mattbio -Task <id> ...' }
 
+WMI's PATH may not resolve 'pwsh' (Store install -> ReturnValue 9 or a silent exit): use the full
+C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy Bypass, and put -TrainArgs / -WatchArgs in
+DOUBLE quotes (-File does not group single-quoted words). Wrap in 'cmd /c ... > runs\<Name>_launcher.log 2>&1' to see
+launcher errors (rs_v6, 2026-09-30).
+
 Logs: runs/<Name>.log (training), runs/<Name>_watch.log (watcher). Stop: kill the python processes (preflight.ps1 lists them).
 #>
 param(
@@ -12,8 +17,8 @@ param(
     [Parameter(Mandatory)] [string] $Task,
     [Parameter(Mandatory)] [string] $Name,          # run name (dir suffix)
     [Parameter(Mandatory)] [string] $Experiment,    # e.g. mattbio_stance
-    [Parameter(Mandatory)] [string] $LoadRun,       # dir under runs/<Experiment>
-    [Parameter(Mandatory)] [string] $Checkpoint,    # e.g. model_1050.pt
+    [string] $LoadRun = '',                         # dir under runs/<Experiment>; empty = train from scratch
+    [string] $Checkpoint = '',                      # e.g. model_1050.pt
     [Parameter(Mandatory)] [int] $Iterations,
     [string] $TrainArgs = '',                       # extra train flags, e.g. '--agent.algorithm.entropy-coef 0.0025'
     [string] $WatchPrefix = '',                     # parity/watch_<prefix>.jsonl
@@ -25,8 +30,8 @@ $env:POOLYMPIC_BODY = $Body
 $uv = (Get-Command uv -ErrorAction SilentlyContinue).Source
 if (-not $uv) { $uv = "$env:LOCALAPPDATA\Microsoft\WinGet\Links\uv.exe" }
 
-$trainArgv = @('run', 'train', $Task, '--log-root', 'runs', '--agent.resume', 'True', '--agent.load-run', $LoadRun,
-    '--agent.load-checkpoint', $Checkpoint, '--agent.run-name', $Name, '--agent.max-iterations', "$Iterations") +
+$resume = if ($LoadRun) { @('--agent.resume', 'True', '--agent.load-run', $LoadRun, '--agent.load-checkpoint', $Checkpoint) } else { @() }
+$trainArgv = @('run', 'train', $Task, '--log-root', 'runs') + $resume + @('--agent.run-name', $Name, '--agent.max-iterations', "$Iterations") +
     ($TrainArgs -split '\s+' | Where-Object { $_ })
 $train = Start-Process $uv -ArgumentList $trainArgv -NoNewWindow -PassThru `
     -RedirectStandardOutput "runs\$Name.log" -RedirectStandardError "runs\$Name.err.log"

@@ -355,6 +355,38 @@ def skill_leg_progress(env, command_name: str = "athlete") -> torch.Tensor:
     return torch.clamp(1.0 - err / err0, 0.0, 1.0) * on
 
 
+def skill_leg_progress_v6(env, command_name: str = "athlete") -> torch.Tensor:
+    """rs_v6: skill_leg_progress, but in march mode only the swing leg counts, and only while its profile is up
+    (> 30 % of the lift). rs_v5 averaged both legs with err0 floored at 0.1 rad, so near the profile's zero crossings
+    the target ≈ the default pose and standing still earned most of the march progress."""
+    from .mdp import _idx
+    term = _term(env, command_name)
+    tgt, on = leg_pose_target(env, command_name)
+    lg = _leg_guide(env)
+    q = _idx(env).entity.data.joint_pos[:, _idx(env).joint_ids][:, lg.ix]
+    err = torch.sqrt(((q - tgt) ** 2).mean(-1))
+    err0 = torch.sqrt(((lg.q0 - tgt) ** 2).mean(-1)).clamp(min=0.1)
+    both = torch.clamp(1.0 - err / err0, 0.0, 1.0)
+    # per leg (cols 0-2 left, 3-5 right)
+    e_leg = torch.sqrt(((q - tgt) ** 2).view(-1, 2, 3).mean(-1))                            # [N, 2]
+    e0_leg = torch.sqrt(((lg.q0 - tgt) ** 2).view(-1, 2, 3).mean(-1)).clamp(min=0.1)
+    lift = term.skill[:, 4:5].clamp(min=1e-3)
+    swing = (march_profile(term.phase, term.skill[:, 4]) > 0.3 * lift).float()
+    swing_prog = (torch.clamp(1.0 - e_leg / e0_leg, 0.0, 1.0) * swing).sum(-1)
+    march = term.mode == MODE["march"]
+    return torch.where(march, swing_prog, both) * on
+
+
+def skill_flamingo_slip(env, command_name: str = "athlete") -> torch.Tensor:
+    """rs_v6 penalty: stance-foot xy speed (m/s, capped at 1) in flamingo mode. skill_flamingo's slip factor only
+    scales a reward that is already ~0 while the lifted foot touches down, so sliding / hopping cost nothing then."""
+    s = _sidx(env)
+    term = _term(env, command_name)
+    v = torch.linalg.norm(s.ent.data.body_link_lin_vel_w[:, [s.b["foot_l"], s.b["foot_r"]], :2], dim=-1)
+    slip = (v * (1 - term.skill[:, 1:3])).sum(-1).clamp(max=1.0)
+    return slip * (term.mode == MODE["flamingo"])
+
+
 def skill_leg_pose(env, std: float, command_name: str = "athlete") -> torch.Tensor:
     """Precision on the same target: exp(−mean((q − q*)²) / std²)."""
     from .mdp import _idx

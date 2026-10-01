@@ -162,7 +162,7 @@ Skill gaps: events marked **S** need behaviours the current contract cannot comm
 | **Phase 1 — Stability & Balance** |
 | 1 | The Iron Pedestal | 8 runners on 1 m × 1 m pedestals; last to keep equilibrium without stepping off wins | CentreStage | pedestal (per lane in the meet) | R0 | **playable**: 8-runner last-standing heat (D4) + solo practice scene |
 | 2 | Torso Archer | feet planted, track fast overhead flight targets with the upper body; angular accuracy, zero foot slip | CentreStage | flying target (mocap-free kinematic body) | **S** upper-body target cmd | Rung S ready to train (G1 drill `E2_*`) |
-| 3 | Deep Squat Endurance | rhythmic squat reps; lowest torso drop + balance retention | CentreStage | — | **S** pelvis-height cmd | Rung S ready to train (G1 drill `E3_*`) |
+| 3 | Deep Squat Endurance | rhythmic squat reps; lowest torso drop + balance retention | CentreStage | — | **S** pelvis-height cmd | **CPU playable** (2026-09-30): `scene_squat8.xml` (venue 2 x 4 grid), `events/squat.py` — 12 metronome reps, 0.25 → 0.45 m deep, tempo 4.5 → 2.2 s; 10 pts/rep for depth accuracy; FELL / STEPPED (foot slid > 0.20 m) = out. Rung S squat 10/10 on the plain MATT body too. Heats 42 s, exits 30-40 s. Unity `DeepSquatEvent`: todo |
 | 4 | Precision Javelin Reach | single-arm extension to dynamic targets at max reach, stance anchored | CentreStage | target marker | **S** hand-target cmd | Rung S ready to train (G1 drill `E4_*`) |
 | 5 | The Gust Gauntlet | lateral wind bursts + floor shakers; scored on recovery time back to centre | CentreStage | shaker platform (spring-mounted, x/y slide joints) | R2 + homing steering | **playable** (10 rounds of escalating lateral bursts, floor jolt every 2nd round; rank by total recovery time, fall / stepped off = out, `Event_GustGauntlet.unity`) |
 | **Phase 2 — Fundamental Track & Gait** |
@@ -238,6 +238,25 @@ apply: TensorBoard + MuJoCo viewer for every run, close Unity during 30 min+ run
   solo athlete) · **G6 8/8** (`make_g6.py mixed g6mixed`: Rung 2 commands in MATT units, zombie lanes × √λ exactly as
   `PolicyRunner.BodyCommand`; 1 s drift ≤ 4e-6, height RMS ≤ 4e-4 m, same outcomes). Lineups: roster scenes (backlog).
 
+## Phase G — GRANDMA: third athlete body (added 2026-09-30)
+
+User decisions (2026-09-30): Claude rigs the unrigged scan in Blender (no AccuRig / Mixamo), **1.60 m**, personality
+**"frail but steady"**; start with the easiest rung (Rung 0). Body profile `bodies.BODIES["grandma"]`: 65 kg (stocky),
+λ = 0.871, strength 0.6 of the size-scaled torque, full self-collision, slightly stooped soft-kneed stance.
+
+- [x] **G1 Rig** — `SourceArt/Grandma/rig_grandma.py` (run in Blender): `test_GRANDMA_riggedTenCent.glb` has no skin
+  (mesh + texture only) → weld the 451 UV-seam islands (6236 duplicate verts, else bone heat fails), symmetric 22-bone
+  Mixamo skeleton from mesh cross-sections, automatic weights (0 unweighted verts), legs straightened (knee 19.4°)
+  and baked as rest, two-pass scale → 1.600 m, soles on z = 0 → `SourceArt/Grandma/grandma.glb` + `rig_report.json`.
+- [x] **G2 Body pipeline** — extract_skeleton (22 joints, mirror 0 mm, A4 PASS), build_mjcf (pelvis fitted to all
+  hip-slab skin: bone heat gives the buttocks to the thighs), `grandma.xml` / `scene_grandma.xml` (65.0 kg, root z
+  0.678 m), fingerprint, `contract_grandma.json`; test_model 13/13 with POOLYMPIC_BODY=grandma.
+- [ ] **G3 Rung 0** — `tasks/grandma_env.py` (MATT's Rung 0 recipe, Froude-scaled like the zombie; stoop 10° +
+  steady stance style rewards), task `PoOlympic-Grandma-Rung0-Stand` (C1 PASS). Run g0_v1 (from scratch, 1500 its,
+  gates 0 at 500 / 1000 / 1499) chained after rs_v6. *Accept: G1 rung0 10/10.*
+- [ ] **G4 Unity** — visual binding + Testbed_Grandma (G0 / G2-G5), roster card, mixed lineups.
+- [ ] **G5 Rung 2 grandma** — short careful steps, size-scaled envelope.
+
 ## Backlog (later rungs & platforms)
 
   - **Menu lineups (roster scenes):** `compose_mixed.py <scene> roster` puts MATT (L<k>_) + zombie (Z<k>_) in every lane of every event scene (verify: every roster athlete == its one-body composition, 18/18); `LaneLineup` keeps the menu's pick per lane before MuJoCo compiles (bodies, actuators, excludes off), events drop the others, camera/pool follow. Zombie commands = MATT's × √λ (speeds) / ÷ √λ (yaw), `PolicyRunner.BodyCommand`; gauntlet gusts × √λ; shaker is the lane's (L<k>_shaker). All 9 events rebuilt; mixed 30m Dash + Gust Gauntlet played clean.
@@ -253,7 +272,7 @@ apply: TensorBoard + MuJoCo viewer for every run, close Unity during 30 min+ run
   - R3 first attempts 2026-09-29 (getup_v1-v5, tasks `PoOlympic-Matt-Getup..5`, `tools/getup_probe.py`): with a fading
     torso assist it learns to sit up and to get onto all fours, not yet to stand. Next: reverse curriculum from
     squat / kneel starts, or a motion prior (R7).
-- [ ] R6 bodies: rig GRANDMA (AccuRig/Mixamo/Blender), clean + rescale ZOMBIE, derive MJCFs, train variants
+- [ ] R6 bodies: ~~rig GRANDMA~~ (→ Phase G), clean + rescale ZOMBIE, derive MJCFs, train variants
 - [ ] R7 optional motion-prior polish · R8+ remaining skill events
 - [x] Game layer: betting slip & odds from lane stats, PBP ticker, records, gauntlets (2026-09-29): virtual-coin
   `Wallet` (100 start, 10-coin stake, top-up when broke), betting slip before every heat (12 s window; **off by default since 2026-09-29, user: "just play"** — `BroadcastHud.offerBets`, odds column still shown), `Records` (best

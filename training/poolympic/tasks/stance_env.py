@@ -72,3 +72,15 @@ def matt_stance_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     add_bio_rewards(cfg)
     fast_sim(cfg)
     return cfg
+
+
+def matt_stance_v6_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """rs_v6 (from rs_v5c it2300). rs_v5c: squat 10/10 from it1800, torso 5-8/10, march 1/10, flamingo / reach 0/10,
+    Rung 2 G1 eroding 9 -> 5-8/10 with only 20 % locomotion envs. Changes: locomotion share 0.20 -> 0.35 (skills 0.13
+    each), march leg progress on the swing leg only, flamingo stance-slip penalty. Reach unchanged (needs a new idea)."""
+    cfg = matt_stance_env_cfg(play=play)
+    cfg.commands["athlete"].mode_probs = (0.35, 0.13, 0.13, 0.13, 0.13, 0.13)
+    r = cfg.rewards
+    r["skill_leg_progress"] = RewardTermCfg(func=S.skill_leg_progress_v6, weight=r["skill_leg_progress"].weight)
+    r["skill_flamingo_slip"] = RewardTermCfg(func=S.skill_flamingo_slip, weight=-2.0)
+    return cfg

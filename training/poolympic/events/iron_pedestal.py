@@ -88,6 +88,7 @@ class _Lane:
         self.support = {m.geom("ground").id} | {m.geom(n).id for n in (prefix + "pedestal", prefix + "shaker", "pedestal", "shaker")
                                                if n in names}
         self.phase = 0.0
+        self.skill: np.ndarray | None = None   # contract v4 skill block (Rung S brains, event 3); None = v3 obs
         self.last = np.zeros(C.NUM_ACTIONS)
         self.ctrl_now = self.ath.default_pos.copy()
         self.ctrl_prev = self.ath.default_pos.copy()
@@ -116,9 +117,10 @@ class _Lane:
         """cmd in MATT units: scaled to this lane's body like Unity PolicyRunner.BodyCommand (identity for MATT)."""
         cmd = np.zeros(3) if cmd is None else body_command(np.asarray(cmd, float), self.body)
         self.phase = self.advance_phase(cmd)
-        obs = C.build_obs(self.ath, d.qpos, d.qvel, cmd, self.phase, self.last)
-        if self.traits.obs_noise > 0:
-            obs = (obs + self.rng.uniform(-1, 1, C.OBS_DIM) * self.noise).astype(np.float32)
+        obs = C.build_obs(self.ath, d.qpos, d.qvel, cmd, self.phase, self.last, self.skill)
+        if self.traits.obs_noise > 0:     # the skill block is a command: no noise (as in training)
+            obs = obs.copy()
+            obs[:C.OBS_DIM] = (obs[:C.OBS_DIM] + self.rng.uniform(-1, 1, C.OBS_DIM) * self.noise).astype(np.float32)
         ctrl, act = sess.run(None, {"obs": obs[None]})
         self.ctrl_prev, self.ctrl_now = self.ctrl_now, ctrl[0].astype(np.float64)
         self.last = act[0].astype(np.float64)
