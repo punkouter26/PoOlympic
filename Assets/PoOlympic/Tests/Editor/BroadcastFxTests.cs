@@ -97,7 +97,6 @@ namespace PoOlympic.Tests
                     {
                         Assert.IsNotNull(r.GetComponent<AthleteTelemetry>(), $"{path}: {r.name} telemetry");
                         Assert.IsNotNull(r.critic, $"{path}: {r.name} critic");
-                        Assert.IsNotNull(r.GetComponentInChildren<BalanceOverlay>(true), $"{path}: {r.name} overlay");
                     }
                     Assert.IsEmpty(Object.FindObjectsByType<Collider>(FindObjectsInactive.Include), $"{path}: PhysX collider");
                     Assert.IsEmpty(Object.FindObjectsByType<Rigidbody>(FindObjectsInactive.Include), $"{path}: PhysX rigidbody");

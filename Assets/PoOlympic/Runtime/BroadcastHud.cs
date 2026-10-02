@@ -24,7 +24,9 @@ namespace PoOlympic
     ///   bottom dock  story strip: the athlete the camera is on (BroadcastDirector.Subject: leader / in trouble / winner)
     ///                with speed · power · confidence, refreshed once a second (feature 7)
     ///                HudAnchors bottom bar: BL debug · play-by-play ticker (Commentary), which gives way to the primary
-    ///                action at the result (New heat, or Next event in a gauntlet) · BR version
+    ///                action at the result (Results, or Next event in a gauntlet) · BR version
+    ///   match card   single event (no gauntlet): one heat, the medal ceremony, then all 8 places + record + heat bests
+    ///                over the game; OK goes back to the main menu (user, 2026-10-01)
     ///   betting slip (optional, offerBets; off by default) each new heat waits in Ready (IBroadcastBoard.HoldStart)
     ///                until a bet is placed / skipped, or betWindowSeconds pass; stake Wallet.Stake coins, paid at the odds
     /// Rules (UI/Tokens.uss): no text under 28 px at 1080 wide, 104 px primary buttons; HudLayoutAudit + the EditMode
@@ -92,7 +94,14 @@ namespace PoOlympic
         int _heatSeen = -1, _settledHeat = -1;
         float _heldFor;
         bool _slipOpen;
+        VisualElement _match;                  // single event: the match card after the ceremony (OK → main menu)
+        bool _matchOver;                       // single event: its one heat has been played
+        PodiumCeremony _podium;
         const float DesignWidth = 1080f;
+
+        /// <summary>This scene's one heat is done: a gauntlet stage (waits for Next event) or a single event (waits
+        /// for the medal ceremony, then the match card). The board is held in Ready meanwhile.</summary>
+        bool HeatPlayed => _matchOver || (Gauntlet.Active && Gauntlet.CurrentHeatPlayed);
 
         void OnEnable() => Build();
 
@@ -155,6 +164,10 @@ namespace PoOlympic
             _slipTimer = AddLabel(slipBar, "bh-slip-timer", "");
             _slip.style.display = DisplayStyle.None;
 
+            _match = Add(_frame, "bh-overlay", "bh-match");
+            _match.style.display = DisplayStyle.None;
+            _matchOver = false;
+
             if (tension != null) { tension.NearFall -= OnNearFall; tension.NearFall += OnNearFall; tension.Save -= OnSave; tension.Save += OnSave; }
         }
 
@@ -168,14 +181,23 @@ namespace PoOlympic
 
         void Restart()
         {
+            _matchOver = false;
+            _match.style.display = DisplayStyle.None;
             CloseSlip();
             B?.Restart();
         }
 
         void PrimaryAction()
         {
-            if (Gauntlet.Active && Gauntlet.CurrentHeatPlayed) Gauntlet.Next();
+            if (_matchOver) _match.style.display = DisplayStyle.Flex;      // "Results": skip the ceremony
+            else if (Gauntlet.Active && Gauntlet.CurrentHeatPlayed) Gauntlet.Next();
             else Restart();
+        }
+
+        void LeaveMatch()
+        {
+            if (MeetLineup.MenuAvailable) MeetLineup.ReturnToMenu();
+            else Restart();                                                // a scene played without the menu: next heat
         }
 
         static VisualElement Add(VisualElement parent, params string[] classes)
@@ -226,17 +248,22 @@ namespace PoOlympic
             if (b == null || _frame == null) return;
             if (b.Heat != _heatSeen) NewHeat(b);
             var rows = b.Rows.ToList();
-            bool stageDone = Gauntlet.Active && Gauntlet.CurrentHeatPlayed && _frozen != null;   // wait for Next event
+            bool stageDone = HeatPlayed && _frozen != null;   // wait for Next event / the match card
             if (stageDone) rows = _frozen;
             else if (b.BoardState == BoardPhase.Ready) RefreshOdds(rows);
             HandleBetting(b, rows);
-            _pbp.Update(b, Time.unscaledTime);
+            // the held board already shows the next heat (0.0 s, round 0): the clock, ticker and story keep the played one
+            bool held = stageDone && b.BoardState != BoardPhase.Result;
+            if (!held) _pbp.Update(b, Time.unscaledTime);
 
             bool result = stageDone || b.BoardState == BoardPhase.Result;
-            _anchors.Sub.text = (DemoMode.Active ? $"DEMO · tap to exit · {DemoMode.Theme}\n" : "") +   // theme may be cut
-                                $"{subtitle.Replace("Event ", "E")} · {b.SubtitleExtra}";
-            _clock.text = b.ClockLine;
-            _info.text = b.InfoLine;
+            if (!held)
+            {
+                _anchors.Sub.text = (DemoMode.Active ? $"DEMO · tap to exit · {DemoMode.Theme}\n" : "") +   // theme may be cut
+                                    $"{subtitle.Replace("Event ", "E")} · {b.SubtitleExtra}";
+                _clock.text = b.ClockLine;
+                _info.text = b.InfoLine;
+            }
             // winner banner only for a moment: the result now lives in the standings, the game stays visible
             _banner.text = _slipOpen || (result && Time.unscaledTime - _resultSince > winnerBannerSeconds) ? "" : b.Banner;
             _ticker.text = string.Join("\n", _pbp.Lines.AsEnumerable().Reverse().Take(2));
@@ -245,10 +272,14 @@ namespace PoOlympic
             if (b.BoardState == BoardPhase.Result && _settledHeat != b.Heat) Settle(b, rows);
             _resultBox.style.display = result && _settledHeat == b.Heat ? DisplayStyle.Flex : DisplayStyle.None;
             DrawRows(rows, result);
-            UpdateStory(b, rows);
+            if (!held) UpdateStory(b, rows);
 
-            _primary.style.display = result ? DisplayStyle.Flex : DisplayStyle.None;
-            _primary.text = stageDone ? (Gauntlet.IsLast ? "Final standings" : "Next event") : "New heat";
+            // single event: the match card comes up once the result phase and the medal ceremony are over
+            if (_matchOver && held && (_podium == null || !_podium.Busy)) _match.style.display = DisplayStyle.Flex;
+            bool card = _match.resolvedStyle.display == DisplayStyle.Flex;
+
+            _primary.style.display = result && !card ? DisplayStyle.Flex : DisplayStyle.None;   // the card has its own OK
+            _primary.text = _matchOver ? "Results" : stageDone ? (Gauntlet.IsLast ? "Final standings" : "Next event") : "New heat";
             _primary.SetEnabled(!DemoMode.Active);           // demo: any tap exits, the countdown advances
             if (DemoMode.Active && stageDone)
             {
@@ -268,7 +299,7 @@ namespace PoOlympic
             _heldFor = 0;
             _oddsBy.Clear();
             _resultBox.Clear();
-            if (Gauntlet.Active && Gauntlet.CurrentHeatPlayed) { b.HoldStart = true; return; }   // one heat per gauntlet stage
+            if (HeatPlayed) { b.HoldStart = true; return; }   // one heat per gauntlet stage / single event
             if (offerBets && !DemoMode.Active) { b.HoldStart = true; _slipOpen = true; _slip.style.display = DisplayStyle.Flex; _slipBuilt = false; }
         }
 
@@ -323,7 +354,7 @@ namespace PoOlympic
             _slipOpen = false;
             if (_slip != null) _slip.style.display = DisplayStyle.None;
             var b = B;
-            if (b != null && !(Gauntlet.Active && Gauntlet.CurrentHeatPlayed)) b.HoldStart = false;
+            if (b != null && !HeatPlayed) b.HoldStart = false;
         }
 
         static string Short(PolicyRunner r, List<(int place, string name, string result, bool bad, PolicyRunner runner)> rows) =>
@@ -408,7 +439,7 @@ namespace PoOlympic
             _resultBox.Clear();
             var winner = rows.FirstOrDefault(r => r.place == 1);
             if (eventNumber > 0) WorldRecords(b, winner);
-            HeatBests(rows);
+            HeatBests(rows, _resultBox);
             if (_bet != null)
             {
                 bool won = rows.Any(r => r.runner == _bet && r.place == 1);
@@ -428,6 +459,40 @@ namespace PoOlympic
                     string.Join(" · ", Gauntlet.Table().Take(4).Select(t => $"{t.lane} {t.points}")));
                 if (DemoMode.Active && DemoSeason.Summary().Length > 0) AddLabel(_resultBox, "bh-card-line", DemoSeason.Summary());
             }
+            else if (!Gauntlet.Active)
+            {
+                _matchOver = true;
+                _frozen = rows;
+                BuildMatch(b, rows);
+            }
+            // held from now, not from the restart: PodiumCeremony and the director read it the frame the board restarts
+            if (HeatPlayed) b.HoldStart = true;
+            _podium = FindAnyObjectByType<PodiumCeremony>();
+        }
+
+        /// <summary>Single event: the match card — all places with their marks, the world record, the heat bests;
+        /// OK goes back to the main menu.</summary>
+        void BuildMatch(IBroadcastBoard b, List<(int place, string name, string result, bool bad, PolicyRunner runner)> rows)
+        {
+            _match.Clear();
+            AddLabel(_match, "bh-overlay-title", title);
+            AddLabel(_match, "bh-overlay-sub", $"{subtitle} · heat {b.Heat + 1} · final result");
+            string[] medal = { "gold", "silver", "bronze" };
+            foreach (var r in rows)
+            {
+                var row = Add(_match, "bh-row");
+                AddLabel(row, "bh-c-place", r.place > 0 ? r.place.ToString() : "–");
+                Chip(AddLabel(row, "bh-c-chip", ""), r.runner);
+                AddLabel(row, "bh-c-name", r.name);
+                AddLabel(row, "bh-c-result", r.result);
+                if (r.place >= 1 && r.place <= 3) row.AddToClassList("bh-row-" + medal[r.place - 1]);
+                row.EnableInClassList("bh-row-bad", r.bad);
+            }
+            if (eventNumber > 0 && Records.TryGet(eventNumber, out _, out var record))
+                AddLabel(_match, _recordHolder != null ? "bh-card-good" : "bh-card-line",
+                         (_recordHolder != null ? "NEW WORLD RECORD · " : "World record · ") + record);
+            HeatBests(rows, _match);
+            Button(_match, "OK", LeaveMatch, "bh-btn-small").AddToClassList("bh-btn-primary");
         }
 
         AthleteTelemetry Telemetry(PolicyRunner r) =>
@@ -462,11 +527,11 @@ namespace PoOlympic
         }
 
         /// <summary>The heat's physical bests from telemetry (fastest, most powerful, closest call) as compact badges.</summary>
-        void HeatBests(List<(int place, string name, string result, bool bad, PolicyRunner runner)> rows)
+        void HeatBests(List<(int place, string name, string result, bool bad, PolicyRunner runner)> rows, VisualElement into)
         {
             var tel = rows.Select(r => (r.name, r.bad, t: Telemetry(r.runner))).Where(x => x.t != null && x.t.Ready).ToList();
             if (tel.Count == 0) return;
-            var box = Add(_resultBox, "bh-bests");
+            var box = Add(into, "bh-bests");
             void Best(string caption, string value) { var c = Add(box, "bh-best"); AddLabel(c, "bh-best-cap", caption); AddLabel(c, "bh-best-val", value); }
             var fast = tel.OrderByDescending(x => x.t.PeakSpeedMps).First();
             bool race = tension == null || tension.kind == BroadcastDirector.Kind.Race;       // stationary events: a speed is a fall

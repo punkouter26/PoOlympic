@@ -20,7 +20,7 @@ namespace PoOlympic.Editor
     ///   BroadcastFX/ImpactFx          pooled dust / slam / shockwave particle systems, VFX Graph sparks (+ Shuriken
     ///                                 fallback), impulse source, hit-stop
     ///   BroadcastFX/ArenaAudio        crowd bed + tension layer + stingers + UI + 3D voice pool, clips from Audio/
-    ///   per athlete                   AthleteTelemetry, the brain's critic (&lt;brain&gt;.critic.onnx), BalanceOverlay
+    ///   per athlete                   AthleteTelemetry, the brain's critic (&lt;brain&gt;.critic.onnx)
     /// Idempotent: re-running replaces the previous layer. Called by EventScenes.AddBroadcast for new builds and by the
     /// menu for the existing event scenes. Everything is render / audio only — no Collider / Rigidbody (PhysXGuard).
     /// </summary>
@@ -199,9 +199,8 @@ namespace PoOlympic.Editor
             audio.goBong = Clip("Ui/bong_001.ogg");
             audio.countTick = Clip("Ui/click_002.ogg");
 
-            // per athlete: telemetry, critic, balance overlay
+            // per athlete: telemetry, critic
             var conf = AssetDatabase.LoadAssetAtPath<TextAsset>(ConfidenceModel);
-            var overlayMat = AssetDatabase.LoadAssetAtPath<Material>(FxFolder + "/FxOverlay.mat");
             foreach (var r in runners)
             {
                 var tel = r.GetComponent<AthleteTelemetry>() ?? r.gameObject.AddComponent<AthleteTelemetry>();
@@ -212,15 +211,6 @@ namespace PoOlympic.Editor
                     var criticPath = Path.ChangeExtension(brainPath, null) + ".critic.onnx";
                     r.critic = AssetDatabase.LoadAssetAtPath<ModelAsset>(criticPath);
                 }
-                foreach (var old in r.GetComponentsInChildren<BalanceOverlay>(true)) UnityEngine.Object.DestroyImmediate(old.gameObject);
-                var ov = new GameObject("BalanceOverlay");
-                ov.transform.SetParent(r.transform, false);
-                var o = ov.AddComponent<BalanceOverlay>();
-                o.telemetry = tel;
-                o.showAlways = director.kind == BroadcastDirector.Kind.Arena;
-                o.hull = Line(ov, "SupportPolygon", overlayMat, 0.035f, true);
-                o.ring = Line(ov, "ComRing", overlayMat, 0.03f, true);
-                o.plumb = Line(ov, "PlumbLine", overlayMat, 0.02f, false);
                 EditorUtility.SetDirty(r);
             }
 
@@ -271,24 +261,6 @@ namespace PoOlympic.Editor
                 .Where(p => Path.GetDirectoryName(p).Replace('\\', '/') == $"{AudioFolder}/{folder}" && Path.GetFileName(p).StartsWith(prefix))
                 .OrderBy(p => p).Select(AssetDatabase.LoadAssetAtPath<AudioClip>).ToArray();
 
-        static LineRenderer Line(GameObject parent, string name, Material mat, float width, bool flat)
-        {
-            var go = Child(parent, name);
-            if (flat) go.transform.rotation = Quaternion.Euler(90f, 0f, 0f);      // TransformZ alignment → lies on the ground
-            var l = go.AddComponent<LineRenderer>();
-            l.sharedMaterial = mat;
-            l.useWorldSpace = true;
-            l.widthMultiplier = width;
-            l.alignment = flat ? LineAlignment.TransformZ : LineAlignment.View;
-            l.numCornerVertices = 2;
-            l.numCapVertices = 2;
-            l.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            l.receiveShadows = false;
-            l.positionCount = 0;
-            l.enabled = false;
-            return l;
-        }
-
         // ------------------------------------------------------------------------------------------------ assets
         /// <summary>Textures, materials, effect prefabs and audio import settings (created once, kept if present).</summary>
         public static void EnsureAssets()
@@ -304,7 +276,6 @@ namespace PoOlympic.Editor
             var dust = ParticleMaterial("FxDust", dot, false);
             var shock = ParticleMaterial("FxShock", ring, true);
             var spark = ParticleMaterial("FxSpark", dot, true);
-            ParticleMaterial("FxOverlay", null, false);
             AudioImport();
 
             MakePrefab("FootDust", go =>

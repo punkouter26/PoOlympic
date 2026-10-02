@@ -200,14 +200,15 @@ namespace PoOlympic.Tests
         [TestCaseSource(nameof(Phones))]
         public void Hud_OneViewport_EveryPhase(string phone, int w, int h, Rect safe)
         {
+            Gauntlet.Abandon();                                     // a single event (a Play session stopped mid-gauntlet leaves the static set)
             var (hud, doc, board) = MakeHud(w, h, safe);
             var bounds = SafeInPanel(doc);
             float Gap() => hud.Hole.worldBound.height / hud.Frame.worldBound.height;
 
             foreach (var (phase, expanded, minGap) in new[]
                      {
-                         (BoardPhase.Ready, false, 0.6f), (BoardPhase.Live, false, 0.6f), (BoardPhase.Result, false, 0.55f),
-                         (BoardPhase.Live, true, 0.5f), (BoardPhase.Result, true, 0.45f),
+                         (BoardPhase.Ready, false, 0.6f), (BoardPhase.Live, false, 0.6f), (BoardPhase.Live, true, 0.5f),
+                         (BoardPhase.Result, false, 0.55f), (BoardPhase.Result, true, 0.45f),
                      })
             {
                 board.BoardState = phase;
@@ -226,6 +227,18 @@ namespace PoOlympic.Tests
             var primary = hud.Anchors.BottomCentre.Q<Button>(className: "bh-btn-primary");
             Assert.IsTrue(HudLayoutAudit.Shown(primary), "no primary action at the result");
             Assert.GreaterOrEqual(primary.resolvedStyle.height, 103.5f);
+
+            // single event: one heat only — the board's restart is held and the match card comes up (OK → main menu)
+            var match = hud.Frame.Q(className: "bh-match");
+            Assert.IsFalse(HudLayoutAudit.Shown(match), "match card before the result phase is over");
+            board.Heat++;
+            board.BoardState = BoardPhase.Ready;
+            Settle(hud, doc);
+            Assert.IsTrue(board.HoldStart, "the heat after a single event's heat is not held");
+            Assert.IsTrue(HudLayoutAudit.Shown(match), "no match card after a single event's heat");
+            Assert.AreEqual(8, match.Query(className: "bh-row").ToList().Count, "match card places");
+            Assert.GreaterOrEqual(match.Q<Button>().resolvedStyle.height, 103.5f, "match card OK button under 104");
+            AssertClean($"{phone} HUD match card", HudLayoutAudit.Check(hud.Frame, bounds, 28f));
 
             Call(hud.Anchors, "ToggleSheet");
             Settle(hud, doc);

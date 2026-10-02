@@ -310,7 +310,8 @@ namespace PoOlympic
                     break;
                 }
                 default:
-                    want = Shot.Establishing;
+                    // a held start after the heat (gauntlet stage / single event done): the ceremony keeps the podium
+                    want = podium != null && ceremony != null && ceremony.ShowPodium ? Shot.Podium : Shot.Establishing;
                     _orbit = 0;
                     break;
             }

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Match card UI</title>
+<style>
+  :root { --bg: #0c1220; --panel: #151d31; --ink: #eef1f7; --muted: #a3aec4; --accent: #ffd84a; --new: #ff5a4a; --good: #78e68c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 1280px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { color: var(--accent); font-size: 26px; margin: 0 0 4px; }
+  h2 { font-size: 20px; margin: 40px 0 8px; }
+  p, li { color: var(--muted); }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  @media (max-width: 720px) { .pair { grid-template-columns: 1fr; } }
+  figure { margin: 0; background: var(--panel); border-radius: 10px; padding: 12px; }
+  figcaption { margin: 0 0 8px; font-weight: 600; }
+  figcaption.before { color: var(--muted); }
+  figcaption.after { color: var(--good); }
+  .shot { position: relative; line-height: 0; }
+  .shot img { width: 100%; height: auto; display: block; border-radius: 6px; }
+  .mk { position: absolute; border: 3px solid var(--new); border-radius: 6px; box-shadow: 0 0 0 1px rgba(0,0,0,.6); }
+  .mk.old { border-style: dashed; border-color: #ff9a5a; }
+  .mk b { position: absolute; top: -13px; left: -13px; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 13px;
+          background: var(--new); color: #fff; font: 700 14px/26px "Segoe UI", sans-serif; text-align: center; }
+  .mk.old b { background: #ff9a5a; color: #1a1206; }
+  ul { padding-left: 22px; }
+  li { margin: 4px 0; }
+  .tag { display: inline-block; min-width: 22px; padding: 0 5px; border-radius: 11px; background: var(--new); color: #fff; font-weight: 700; text-align: center; font-size: 13px; }
+  .tag.old { background: #ff9a5a; color: #1a1206; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Balance lines removed and the single-event match card: before vs after</h1>
+  <p>1 Oct 2026, Event 1 The Iron Pedestal in the editor at 1440 × 3088. Red boxes mark what changed; dashed orange
+     boxes mark the old state.</p>
+
+  <h2>1. The green balance lines are gone</h2>
+  <div class="pair">
+    <figure>
+      <figcaption class="before">Before: lines under every athlete</figcaption>
+      <div class="shot">
+        <img src="match_card/overlay_before.png" alt="Iron Pedestal before: green outlines, rings and vertical lines at the athletes' feet">
+        <div class="mk old" style="left:42%;top:47%;width:58%;height:20%"><b>A</b></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption class="after">After: no lines</figcaption>
+      <div class="shot">
+        <img src="match_card/overlay_after.png" alt="Iron Pedestal after: the athletes' feet on the beam with no overlay lines">
+        <div class="mk" style="left:13%;top:74%;width:85%;height:12%"><b>1</b></div>
+      </div>
+    </figure>
+  </div>
+  <ul>
+    <li><span class="tag old">A</span> Each athlete had a coloured outline around the feet, a ring under the centre of
+        mass and a vertical line up to the body (green, amber or red by balance).</li>
+    <li><span class="tag">1</span> The effect is removed from all 14 event scenes, for every athlete. The HUD's
+        confidence column and the "IN TROUBLE" tag still show who is close to falling.</li>
+  </ul>
+
+  <h2>2. A single event now ends: heat, medal ceremony, match card, main menu</h2>
+  <p>Before, an event started from the main menu ran heat after heat (the ticker in the old capture reads
+     "Heat 2 — athletes to their marks") and the ceremony was cut off when the next heat began. There is no "before"
+     capture of the card: it is a new screen.</p>
+  <div class="pair">
+    <figure>
+      <figcaption class="after">After, step 1: the medal ceremony plays to the end</figcaption>
+      <div class="shot">
+        <img src="match_card/podium_after.png" alt="Medal ceremony: the winner on the gold step under confetti, the result in the standings">
+        <div class="mk" style="left:0.5%;top:21.5%;width:99%;height:69%"><b>2</b></div>
+        <div class="mk" style="left:69.5%;top:94.5%;width:25%;height:5.2%"><b>3</b></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption class="after">After, step 2: the match card</figcaption>
+      <div class="shot">
+        <img src="match_card/card_after.png" alt="Match card over the podium: all 8 places, the world record, the heat best and an OK button">
+        <div class="mk" style="left:4%;top:24%;width:92%;height:34.5%"><b>4</b></div>
+        <div class="mk" style="left:7.5%;top:51.6%;width:85%;height:5.2%"><b>5</b></div>
+        <div class="mk" style="left:60%;top:3.4%;width:27.5%;height:4.4%"><b>6</b></div>
+      </div>
+    </figure>
+  </div>
+  <ul>
+    <li><span class="tag">2</span> The camera stays on the podium for the whole ceremony (about 8 s after the result).
+        The next heat is held at the start, so nothing restarts behind it.</li>
+    <li><span class="tag">3</span> The button under the game reads "Results" during the ceremony: it skips straight to
+        the card. Before, it read "New heat".</li>
+    <li><span class="tag">4</span> The match card: event, heat number, all 8 places with their marks (gold, silver and
+        bronze rows), the world record, and the heat bests.</li>
+    <li><span class="tag">5</span> OK goes back to the main menu.</li>
+    <li><span class="tag">6</span> The clock, the standings and the ticker keep the finished heat while the card is
+        up.</li>
+  </ul>
+  <p>Gauntlets and demo mode keep their own flow (Next event / the countdown); their ceremony now also runs to the
+     end while the stage waits.</p>
+</main>
+</body>
+</html>

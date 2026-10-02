@@ -326,6 +326,12 @@ User decisions (2026-09-30): Claude rigs the unrigged scan in Blender (no AccuRi
   - Found by the watchdog: Gust Gauntlet threw on every shake round in Unity (`mj_name2id("shaker_x")` misses the plug-in
     name `shaker_x_255` → per-lane `L5_shaker_x` fallback) and All Fours read `xmat[-1]` for the torso tilt (same cause).
     Fixed with `ModelFingerprint.Id` (suffix-tolerant lookup).
+- [x] **Single event ends** (2026-10-01, user): an event played from the menu (no gauntlet) is one heat → the medal
+  ceremony runs to its end (the HUD holds the next start from the result on; `PodiumCeremony` / `BroadcastDirector` keep
+  the podium while held, gauntlet stages too) → match card over the game (all 8 places, world record, heat bests) → OK →
+  main menu. The primary button reads "Results" (skips the ceremony). Heats no longer loop in a single event (menu sheet
+  › New heat still restarts). Verified in Play (Iron Pedestal, 0 errors); `Hud_OneViewport_EveryPhase` checks the card
+  at 4 phone sizes. Before/after: `parity/ui/match_card_before_after.html`.
 - [x] **Calm camera** (2026-09-30, user: "fast movements hurt my eyes"): `BroadcastDirector` "Calm camera" fields,
   applied at runtime (no scene rebuild; tune in the Inspector): 2.5 s ease-in/out blends between nearby cameras (≤ 15 m,
   ≤ 45°), cuts between far ones (a 2.5 s blend to the podium flew the camera at 75 m/s) landing on a camera at rest;
@@ -349,7 +355,9 @@ User decisions (2026-09-30): Claude rigs the unrigged scan in Blender (no AccuRi
     the athlete in trouble (5 s cooldown); phase changes hard-cut; scenes without the rig keep the old framing
   - **3** `ImpactFx`: pooled foot dust / slam dust + shockwave (Shuriken), VFX Graph sparks at cube hits (Shuriken
     fallback without compute), Cinemachine impulse shake, 70 ms hit-stop (timeScale 0; physics just pauses)
-  - **6** `BalanceOverlay`: support polygon + CoM ring + plumb line (green / amber / red); stationary events all athletes,
+  - **6** ~~`BalanceOverlay`~~ **removed 2026-10-01 (user: "remove that green line effect")**: class, `FxOverlay.mat`
+    and the 272 overlay objects in the 14 event scenes deleted; `AthleteTelemetry` balance data stays (TensionMeter).
+    Was: support polygon + CoM ring + plumb line (green / amber / red); stationary events all athletes,
     races only the hot athlete
   - **7** HUD: CONF column (sparkline + %), stats card (PrimeTween pop) for the hot athlete / leader, telemetry
     commentary (top speed, "is wobbling", "What a save"), result card heat bests

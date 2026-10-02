@@ -34,6 +34,8 @@ namespace PoOlympic
 
         /// <summary>BroadcastDirector: show the podium shot now.</summary>
         public bool ShowPodium => _state == State.Ceremony;
+        /// <summary>BroadcastHud: the ceremony is still to come or inside its `hold` (the match card waits for it).</summary>
+        public bool Busy => _state == State.Waiting || (_state == State.Ceremony && _clock < hold);
 
         enum State { Idle, Waiting, Ceremony, Done }
         State _state;
@@ -65,7 +67,9 @@ namespace PoOlympic
         {
             var b = B;
             if (b == null) return;
-            if (b.BoardState != BoardPhase.Result)
+            // the ceremony outlives the result phase while the next heat is held (gauntlet stage / single event done)
+            bool held = b.BoardState == BoardPhase.Ready && b.HoldStart && _state != State.Idle;
+            if (b.BoardState != BoardPhase.Result && !held)
             {
                 if (_state != State.Idle) Clear();
                 return;
@@ -80,7 +84,7 @@ namespace PoOlympic
                     for (int i = 0; i < flags.Length; i++)
                         if (flags[i] != null && flagTops[i] != null)
                             flags[i].position = Vector3.Lerp(_flagLow[i], flagTops[i].position, u * (i == 0 ? 1f : 0.93f));
-                    if (_clock >= hold) _state = State.Done;
+                    if (_clock >= hold && !held) _state = State.Done;      // held: the podium stays on screen
                     break;
             }
         }
