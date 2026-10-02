@@ -220,6 +220,7 @@ namespace PoOlympic.Editor
 
             // showcase: crowd director, stadium screens, medal ceremony, mixer + PA + crowd sectors, perf overlay
             StadiumShowcase.InstallBroadcast(hud, director, root, tension, audio, rig);
+            StadiumLook.AthleteFill(scene);           // after InstallBroadcast: it creates the podium statues
         }
 
         static GameObject Child(GameObject parent, string name)

@@ -235,3 +235,37 @@ def grandma_rung2_cap28_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     cfg.curriculum = {"command_vel": CurriculumTermCfg(func=vel_mdp.commands_vel, params={
         "command_name": "athlete", "velocity_stages": [dict(env, step=0)]})}
     return cfg
+
+
+def grandma_rung2_sharp_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """g2_v6 = precision fine-tune of g2_v5 (it 1199: 5/10 under her 2.8 m/s envelope, 0 falls, yaw passes on every
+    seed; every miss is `tracking_lin` — sprints 0.21-0.37 and crab steps 0.20-0.34 m/s RMS vs the 0.187 bar, 6-8 %
+    slow above 2.3 m/s). MATT's two margin fixes on her scale: track_lin std 0.5 -> 0.3 × √λ (r2_v7: a 0.2 m/s
+    shortfall costs ~40 % of the term instead of 15 %) and 30 % of command resamples from her sprint band (r2_v8;
+    vx 1.9-2.8 m/s, |wz| <= 0.64 rad/s). On the zombie neither helped (z2_v13 / v14), but its recipe was the final
+    yaw-heavy one; hers is the base recipe, like MATT's."""
+    cfg = grandma_rung2_cap28_env_cfg(play=play)
+    cfg.rewards["track_lin"] = RewardTermCfg(func=vel_mdp.track_linear_velocity, weight=2.0,
+                                             params={"command_name": "athlete", "std": 0.3 * SS})
+    cmd = cfg.commands["athlete"]
+    cmd.sprint_fraction = 0.3
+    cmd.sprint_vx = (2.0 * SS, GRANDMA_VX_TOP * SS)
+    cmd.sprint_wz = 0.6 * WS
+    return cfg
+
+
+def grandma_rung2_bands_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """g2_v7 (from g2_v6 it 300). The segments over the 0.187 m/s bar are the same ones at g2_v5 it 1199 and g2_v6 it
+    300 / 600: walking backwards at 1.1-1.2 m/s (0.22-0.38), side-steps to her RIGHT at 0.77-0.88 m/s (0.24-0.36; none
+    to the left) and forward runs with a RIGHT turn (2.0 / 2.6 m/s, wz -0.35). g2_v6's forward sprint band improved only
+    the forward runs and by it 600 the backward drill began to fail (2 seeds). So: (1) the symmetric runner (mirror
+    loss + mirrored samples, as MATT's and the zombie's final recipes; the cap28 line was trained with the plain one),
+    (2) command bands on each failing part: forward 20 %, backward 15 % (vx -1.40 to -0.75 m/s), side-step 20 %
+    (|vy| 0.37-1.03 m/s, 10 % past the G1 edge as MATT's envelope is)."""
+    cfg = grandma_rung2_sharp_env_cfg(play=play)
+    cmd = cfg.commands["athlete"]
+    cmd.sprint_fraction = 0.0
+    cmd.bands = ((0.20, (2.0 * SS, GRANDMA_VX_TOP * SS), (0.0, 0.0), 0.6 * WS),
+                 (0.15, (-1.5 * SS, -0.8 * SS), (0.0, 0.0), 0.5 * WS),
+                 (0.20, (-0.5 * SS, 0.5 * SS), (0.4 * SS, 1.1 * SS), 0.0))
+    return cfg

@@ -205,6 +205,7 @@ namespace PoOlympic.Editor
         public const string AllFoursScene = "Assets/PoOlympic/Scenes/Event_30mAllFours.unity";
         public const string CrawlMattBrain = "crawl_matt.onnx";
         public const string CrawlZombieBrain = "crawl_zombie.onnx";
+        public const string CrawlGrandmaBrain = "crawl_grandma.onnx";
         // Event 13 (Steeplechase Jog): MATT's flight brain (tasks PoOlympic-Matt-Rung2-Flight, r2f_v3 it100); the zombie
         // keeps its Rung 2 brain
         public const string SteepleScene = "Assets/PoOlympic/Scenes/Event_SteeplechaseJog.unity";
@@ -244,7 +245,8 @@ namespace PoOlympic.Editor
             bool reversed = mode == TrackRaceEvent.Mode.Inverted;
             bool crawl = mode == TrackRaceEvent.Mode.AllFours;
             bool steeple = mode == TrackRaceEvent.Mode.Steeplechase;
-            var brains = crawl ? new System.Collections.Generic.Dictionary<string, string> { { "matt", CrawlMattBrain }, { "zombie", CrawlZombieBrain } }
+            var brains = crawl ? new System.Collections.Generic.Dictionary<string, string> { { "matt", CrawlMattBrain }, { "zombie", CrawlZombieBrain },
+                                                                                             { "grandma", CrawlGrandmaBrain } }
                        : steeple ? new System.Collections.Generic.Dictionary<string, string> { { "matt", FlightMattBrain }, { "zombie", DefaultZombieRung2Brain },
                                                                                                { "grandma", DefaultGrandmaRung2Brain } }
                        : null;
@@ -584,7 +586,7 @@ namespace PoOlympic.Editor
 
         static string BrainsLabel(string brainFile) =>
             $"v0 · {Path.GetFileNameWithoutExtension(brainFile)} + " +
-            (brainFile == CrawlMattBrain ? Path.GetFileNameWithoutExtension(CrawlZombieBrain)
+            (brainFile == CrawlMattBrain ? $"{Path.GetFileNameWithoutExtension(CrawlZombieBrain)} + {Path.GetFileNameWithoutExtension(CrawlGrandmaBrain)}"
                 : $"{Path.GetFileNameWithoutExtension(DefaultZombieRung2Brain)} + {Path.GetFileNameWithoutExtension(DefaultGrandmaRung2Brain)}");
 
         public sealed class MeetScene

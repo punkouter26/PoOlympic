@@ -163,6 +163,9 @@ class AthleteSkillCommand(AthleteCommand):
         arm = torch.where(torch.rand(n, device=dev) < 0.5, -1.0, 1.0)
         az, el = U(*REACH_AZ), U(*REACH_EL)
         rad = U(*REACH_FRAC) * r["hand_reach"]
+        far = getattr(self.cfg, "reach_far_fraction", 0.0)
+        if far:  # rs_reach_v2: extra mass on targets past the straight arm (0.61 m), which need the trunk
+            rad = torch.where(torch.rand(n, device=dev) < far, U(0.80, REACH_FRAC[1]) * r["hand_reach"], rad)
         dirn = torch.stack([torch.cos(el) * torch.cos(az), -arm * torch.cos(el) * torch.sin(az), torch.sin(el)], -1)
         target = self._shoulder[(arm > 0).long()] + dirn * rad[:, None]
         sk[:, 7:10] = torch.where(is_["reach"][:, None], target, 0.0)
@@ -176,6 +179,7 @@ class AthleteSkillCommand(AthleteCommand):
 class AthleteSkillCommandCfg(AthleteCommandCfg):
     # locomotion, squat, flamingo, march, torso, reach (approved: 20 % locomotion, the rest shared by the skills)
     mode_probs: tuple[float, ...] = (0.20, 0.16, 0.16, 0.16, 0.16, 0.16)
+    reach_far_fraction: float = 0.0     # share of reach commands drawn from 80-95 % of the reach radius
 
     def build(self, env):
         return AthleteSkillCommand(self, env)
@@ -513,10 +517,14 @@ def posture_skill_idle(env, std: float = 0.5, command_name: str = "athlete") -> 
     return val * (term.mode != MODE["locomotion"])
 
 
-def upright_unless_aiming(env, std: float, command_name: str = "athlete") -> torch.Tensor:
-    """torso_upright except while aiming the torso or squatting (both lean the trunk on purpose)."""
+def upright_unless_aiming(env, std: float, command_name: str = "athlete", also: tuple = ()) -> torch.Tensor:
+    """torso_upright except while aiming the torso or squatting (both lean the trunk on purpose); `also` = more modes
+    that may lean (rs_reach: "reach" — targets beyond the straight arm's 0.61 m need the trunk)."""
     m = _term(env, command_name).mode
-    return torso_upright(env, std) * ((m != MODE["torso"]) & (m != MODE["squat"]))
+    free = (m == MODE["torso"]) | (m == MODE["squat"])
+    for name in also:
+        free = free | (m == MODE[name])
+    return torso_upright(env, std) * ~free
 
 
 def pelvis_below_skill(env, minimum_height: float, squat_margin: float = 0.10, command_name: str = "athlete") -> torch.Tensor:

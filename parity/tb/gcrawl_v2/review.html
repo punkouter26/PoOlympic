@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GRANDMA crawl gcrawl_v2 Review</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --card: #ffffff; --text: #1d1d1f; --muted: #5d5d66; --line: #e2e0da;
+    --v1: #12b5cb; --v2: #e52592; --good: #1f8a4c; --warn: #b8660b; --bad: #c2372b;
+    --t1: #fff4d6; --t2: #e3f3ff; --t3: #eeeaf8; --verdict: #e8f6ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+      --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+      --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+    --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+    --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.8rem; margin: 0 0 4px; }
+  h2 { margin: 0 0 4px; font-size: 1.3rem; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+  .verdict { background: var(--verdict); }
+  .verdict p { margin: 6px 0 0; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 10px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+  .up { color: var(--good); font-weight: 600; } .fail { color: var(--bad); font-weight: 600; }
+  .tag { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--muted); }
+  img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); margin: 12px 0 16px; background: #fff; }
+  .levels { display: grid; gap: 12px; }
+  .lvl { border-radius: 10px; padding: 12px 16px; }
+  .lvl h3 { margin: 0 0 4px; font-size: .95rem; }
+  .lvl p { margin: 0; }
+  .l1 { background: var(--t1); } .l2 { background: var(--t2); } .l3 { background: var(--t3); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 8px; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+  footer { color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>GRANDMA crawl training review: gcrawl_v2</h1>
+  <p class="sub">2026-10-02 00:03, iteration 1199 · GRANDMA body · 1200 iterations in 39 min ·
+    <span class="dot" style="background:var(--v1)"></span>gcrawl_v1 = the first attempt, stopped after 13 min (cyan)
+    <span class="dot" style="background:var(--v2)"></span>gcrawl_v2 = this run (pink)</p>
+
+  <div class="box verdict">
+    <h2>Verdict: GRANDMA crawls 30 m on hands and knees</h2>
+    <p><strong>In one sentence:</strong> this is her first crawl brain: from lying face down she gets onto hands and knees and crawls 30 m in 29.3 to 29.9 s, 5 of 5 tests, staying within 0.18 m of her lane.</p>
+    <p><strong>Why the first attempt failed and this one worked:</strong> the first run lay flat on the floor with her hands down and never moved. Her arms are weak (about 30 Nm at the shoulder and elbow) and cannot push her body off the floor, and the crawl height it was asked for was MATT's, which is too high for her short thighs. This run starts most practice episodes part of the way up, or already on hands and knees, and asks for her own hands-and-knees height (0.32 m).</p>
+    <div class="scroll">
+    <table>
+      <tr><th>Test: 30 m from lying face down (CPU, 5 seeds)</th><th>it 300</th><th>600</th><th>900</th><th>1199</th><th>first attempt, it 300</th></tr>
+      <tr><td>Finished in 60 s</td><td class="fail">0/5</td><td class="fail">0/5</td><td class="fail">0/5</td><td class="up">5/5</td><td class="fail">0/5</td></tr>
+      <tr><td>Distance or time</td><td>0 m</td><td>0.1 m</td><td>22.8 m</td><td>29.3-29.9 s</td><td>0 m</td></tr>
+      <tr><td>Time on all fours</td><td class="fail">0 %</td><td class="up">100 %</td><td class="up">100 %</td><td class="up">100 %</td><td class="fail">0 %</td></tr>
+      <tr><td>Hands on the ground (share of the time, both hands averaged)</td><td>100 %</td><td>100 %</td><td>78 %</td><td>55 %</td><td>100 %</td></tr>
+      <tr><td>Tumbles</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+      <tr><td>Distance from the lane line</td><td>0.07 m</td><td>0.15 m</td><td>0.44 m</td><td>0.18 m</td><td>0.01 m</td></tr>
+    </table>
+    </div>
+    <p><strong>For scale:</strong> MATT crawls the 30 m in 25.7 to 26.7 s and the zombie in about 31.7 s.</p>
+    <p><strong>Brain:</strong> provisional crawl brain = <code>gcrawl_v2_it1199.onnx</code>. Not in the game yet: the two all-fours event scenes are built with MATT and the zombie only. She was still getting faster when the run ended, so a follow-up run continues from this brain.</p>
+  </div>
+
+  <section class="box">
+    <h2>1 · Moving forward</h2>
+    <div class="tag">Episode_Reward/progress (points for forward speed while on all fours; 3 is the most possible)</div>
+    <img src="1_progress.png" alt="Progress reward: the cyan first attempt stays at 0 until it stops at iteration 420; the pink run creeps from 0 to 0.35 by iteration 600, dips, then climbs steeply from iteration 750 to 1.74 at iteration 1199">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The blue line stays flat on the ground. The pink line goes up and up. Grandma learned to crawl.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This line goes up when she moves forward. In the first try (blue) she never moved at all. In this try (pink) she barely moved for a long time, then around iteration 750 she worked out how to move her hands and knees in turn, and the line shot up. It was still climbing when practice ended.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>gcrawl_v1 stays at 0.003 of 3: a static prone pose. In gcrawl_v2 the term rises slowly to 0.35 by iteration 600, drops to 0.25 when the speed curriculum widens the commanded range to 1.4 m/s, then takes off at iteration ~750 and reaches 1.74 at the end without levelling. The term is gated on pelvis height, so it only pays for motion on all fours, not for sliding on the belly.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>2 · Getting off the floor</h2>
+    <div class="tag">Episode_Reward/crawl_up (points for pelvis height up to the crawl height; 1.5 is the most possible)</div>
+    <img src="2_height.png" alt="Crawl-up reward: the cyan first attempt levels off near 0.65-0.7; the pink run jumps to 0.85 in 50 iterations and rises steadily to 1.35 at iteration 1199">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>Blue stays low: tummy on the floor. Pink goes high: she is up on her hands and knees.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This line shows how high her hips are. The first try (blue) got stuck low because she could not push herself up. This try (pink) is higher from the start, because many practice rounds begin with her already partly up, and it keeps rising as she learns to get up from lying down too.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>The two runs are not on the same scale: v1's target height is 0.435 m, v2's is 0.32 m, so v1's 0.65 means a pelvis at about 0.19 m (lying) and v2's 1.35 means about 0.29 m (90 % of her hands-and-knees height). The step at iteration ~290 matches the test results: all fours 0 % at the iteration 300 test, 100 % at 600. The upward assist on the torso faded to zero at iteration 600 and the curve kept rising.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>3 · Total score</h2>
+    <div class="tag">Train/mean_reward (all reward terms added up per episode)</div>
+    <img src="3_mean_reward.png" alt="Mean reward: the cyan first attempt flattens at 104; the pink run rises to 136 at iteration 600, drops to 118 at 650, then climbs to 172 at iteration 1199">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>Pink is higher than blue, and still going up at the end.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This is her total score per round. The first try got stuck at about 100. This try passed that early, dipped once when she was suddenly asked to crawl faster than she could, and then kept climbing to 172.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>v1 plateaus at 104 from iteration 180 (posture and hands-down terms only). v2's drop at iteration 600 (136 to 118) is the speed curriculum stage, which doubles the top commanded speed and lowers the tracking terms until the gait catches up. The slope at the end is about +6 per 100 iterations, so the run was stopped by its iteration budget, not by convergence.</p></div>
+    </div>
+  </section>
+
+  <footer>Charts: TensorBoard at localhost:6006, runs <code>gcrawl_v1</code> and <code>gcrawl_v2</code>. Gate data: <code>parity/watch_gcrawl_v1.jsonl</code>, <code>parity/watch_gcrawl_v2.jsonl</code>, <code>parity/watch/crawl_gcrawl_v2_it*.json</code>.</footer>
+</main>
+</body>
+</html>

@@ -62,8 +62,9 @@ GROUPS = {
     "crawl": {"matt": "crawl_matt", "zombie": "crawl_zombie"},
     "stand_g": {"grandma": "grandma_rung0"},
     "rung2_g": {"grandma": "grandma_rung2"},
+    "crawl_g": {"grandma": "crawl_grandma"},
 }
-KIND = {"stand_g": "stand", "rung2_g": "rung2"}        # how a group is driven (default: its own name)
+KIND = {"stand_g": "stand", "rung2_g": "rung2", "crawl_g": "crawl"}        # how a group is driven (default: its own name)
 FLIGHT_STAND_P = 0.25                                  # flight: share of commands that are a standstill
 
 

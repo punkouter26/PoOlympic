@@ -163,7 +163,7 @@ Skill gaps: events marked **S** need behaviours the current contract cannot comm
 | 1 | The Iron Pedestal | 8 runners on 1 m × 1 m pedestals; last to keep equilibrium without stepping off wins | CentreStage | pedestal (per lane in the meet) | R0 | **playable**: 8-runner last-standing heat (D4) + solo practice scene |
 | 2 | Torso Archer | feet planted, track fast overhead flight targets with the upper body; angular accuracy, zero foot slip | CentreStage | flying target (mocap-free kinematic body) | **S** upper-body target cmd | Rung S ready to train (G1 drill `E2_*`). 2026-10-01: the torso drill's misses at rs_v8 it 1199 (3 seeds, 0.18-0.21 rad) are aims the spine cannot reach — the command allows yaw ±60° but `abdomen_twist` stops at ±45° (reachable at low pitch only to ~53°); every reachable aim passes. Open (user): narrow the yaw range to about ±50° |
 | 3 | Deep Squat Endurance | rhythmic squat reps; lowest torso drop + balance retention | CentreStage | — | **S** pelvis-height cmd (`rs_v6_it3299.onnx`) | **playable** (2026-09-30): 8 athletes on the 2 x 4 station grid, all-mattbio scene (`scene_squat8_mattbio.xml`: the brain's training body; Unity refuses a brain on a foreign fingerprint). 12 metronome reps, 25 → 45 cm deep, tempo 4.5 → 2.2 s; 10 pts/rep for depth accuracy, +10 for finishing in balance; FELL (fall line lowered by the rep's depth for the whole rep) / STEPPED (foot slid > 20 cm) = out. `events/squat.py` ≡ `DeepSquatEvent`, `Event_DeepSquat.unity`, in the hub + main menu (12 playable). CPU heats 42 s, 1-4 finishers; Unity play-through: S5 wins 101.0 pts (`parity/e3/`). **Parity 2026-10-01:** G0 squat8_mattbio 8/8 lanes 0 mismatches; reference `squat_rs_v6` (pelvis −0.30 m, shove + cube) G2 1.8e-15 · G3 4.8e-6 · G4 6.6e-7 @ 1 s · **G5 PASS** in Testbed_Stance (1 s drift 1.9e-6, torque ratio 1.00005). Brain stays rs_v6 it 3299 (per-event brains, user 2026-10-01): rs_v8 it 1199 has 0 finishers in CPU heats of the event (everyone STEPPED by 20-37 s) |
-| 4 | Precision Javelin Reach | single-arm extension to dynamic targets at max reach, stance anchored | CentreStage | target marker | **S** hand-target cmd | Rung S ready to train (G1 drill `E4_*`) |
+| 4 | Precision Javelin Reach | single-arm extension to dynamic targets at max reach, stance anchored | CentreStage | target marker | **S** hand-target cmd | 2026-10-02: reach brain `rs_reach_v1_it1199.onnx` (mattbio): 22 of 24 single targets inside the 0.08 m bar, drill `E4_reach` 1/10 — every miss is a target past the straight arm (0.61 m; commanded to 0.71 m). Open (user): shorten `hand_reach` to about 0.80 × 0.75 m, or keep it and train the trunk lean |
 | 5 | The Gust Gauntlet | lateral wind bursts + floor shakers; scored on recovery time back to centre | CentreStage | shaker platform (spring-mounted, x/y slide joints) | R2 + homing steering | **playable** (10 rounds of escalating lateral bursts, floor jolt every 2nd round; rank by total recovery time, fall / stepped off = out, `Event_GustGauntlet.unity`) |
 | **Phase 2 — Fundamental Track & Gait** |
 | 6 | The Flamingo Classic | one foot raised; time until touchdown | CentreStage | — | **S** single-leg stance cmd (`rs_v6_it2550.onnx`) | **playable** (2026-10-01): 8 mattbio athletes on the 2 x 4 station grid, brain `rs_v6_it2550.onnx` (flamingo drill 10/10; per-event brains, user 2026-10-01). At GO everyone lifts the same foot (seeded per heat), 2 s to get it up; then a gust every 2 s, 0.04 m/s + 0.012 per round, own seeded direction. Out = TOUCHDOWN (lifted foot on the ground) / HOPPED (stance foot > 30 cm from its spot) / FELL; mark = time on one leg, the heat runs until the last one is down. `events/flamingo.py` ≡ `FlamingoEvent`, `scene_flamingo8_mattbio.xml` (venue 6 grid, no props), `Event_FlamingoClassic.unity`, in the hub + main menu (14 playable). CPU heats (10 seeds): winner 22.8-38.5 s (mean 31), median exit 14-17 s; about one athlete per heat (high latency / noise) taps the foot down within 2.3-5 s; nobody falls. Unity: S3 wins 38.1 s (`parity/e6/`). Parity: G0 flamingo8_mattbio 8/8; `flamingo_rs_v6` (left foot up, shove + cube) G2 1.8e-15 · G3 4.3e-6 · G4 4.1e-7 @ 1 s · **G5 PASS** (1 s drift 1.6e-6, 5 s 2.7 cm after the cube hit, torque ratio 1.0004). Before / after: `parity/ui/flamingo_before_after.html`. Open: odds not fitted for events 3 / 6 / 7 (uniform); the stance brains have no calibrated confidence |
@@ -191,7 +191,7 @@ Skill gaps: events marked **S** need behaviours the current contract cannot comm
 | 25 | The Bench Relay | approach a bench, stable seated rest, explode back into a sprint | Skills | bench | R8 sit/stand | todo |
 | **Phase 6 — The Extreme Decathlon** |
 | 26 | Stepping Stones | narrow elevated pads, zero room for error; miss-step = drop out | Terrain | elevated stepping pads | R4 + foot-placement targets (**S**) | todo |
-| 27 | The Resurrection Dash | start flat on the back; fastest to rise and sprint 5 m | Mats | — | R3 get-up (`getup_rev_v2e_it600.onnx`, mattbio) | get-up brain ready (2026-10-01: 30/30 from supine, up in 0.98 s); event rules, the hand-over to the sprint brain and the Unity scene todo |
+| 27 | The Resurrection Dash | start flat on the back; fastest to rise and sprint 5 m | Mats | — | R3 get-up (`getup_rev_v2e_it600.onnx`, mattbio) | get-up brain ready (2026-10-01: 30/30 from supine, up in 0.98 s); 2026-10-02: GRANDMA gets up too (`ggetup_roll_v4_it599.onnx`, both ways; too fast face down), the zombie does not yet; event rules, the hand-over to the sprint brain and the Unity scene todo |
 | 28 | Floor Acrobatic Sprint | flip / cartwheel across a gymnastics mat | Mats | mat (soft contact) | R8 acrobatics (**M**) | todo |
 | 29 | Striker Shootout | intercept a rolling ball mid-stride and kick past a target | Skills (goal) | ball (free sphere, pooled) | R8 kick (+ ball obs) | todo |
 | 30 | The Grand Parkour Vault | approach, wall vault, drop landing, hurdle sprint | Terrain | wall, drop, hurdles | R8 parkour (**M**) | todo |
@@ -260,7 +260,7 @@ User decisions (2026-09-30): Claude rigs the unrigged scan in Blender (no AccuRi
   testbeds), `Testbed_Grandma.unity`: 16 bones bound at 0.00 mm · **G0 0 mismatches** · **G2** ≤ 4.4e-16 · **G3** ≤ 1.9e-6 ·
   **G4** (1 s) ≤ 1.1e-6 on `grandma_rung0` / `grandma_rung2` / `grandma_rung2_walk` · **G5** grandma_rung0 closed loop: drift
   7.1e-7 @ 5 s, torque ratio 1.0000002. **Roster:** `compose_mixed.ROSTER` = matt, zombie, grandma (prefix `G<k>_`; the
-  all-fours scenes keep matt + zombie: she has no crawl brain, the menu shows "GRANDMA → MATT here"); roster verify 35/35,
+  all-fours scenes kept matt + zombie until her crawl brain of 2026-10-02, see G6); roster verify 35/35,
   crowd-contact audit PASS on the MATT / zombie / GRANDMA lineups (16,184/16,184 part pairs per scene); the nine standing
   event scenes rebuilt + baked (24 athletes per scene, 8 active). Menu: third roster card, pink G chip, lane cycle
   MATT → ZOMBIE → GRANDMA; HUD rows `G<lane>`. Odds refitted with a GRANDMA weight (40 heats per event with her), critics
@@ -277,6 +277,33 @@ User decisions (2026-09-30): Claude rigs the unrigged scan in Blender (no AccuRi
   of 10 (0 falls; yaw passes on every seed; all remaining misses are `tracking_lin`: sprints 0.21-0.37 and crab steps
   0.20-0.34 vs the 0.187 bar). The deployed brain stays it 600 (faster: 2.8 → 2.66 m/s vs 2.38 at it 1199). Open:
   precision training. Reviews `parity/tb/g1_v1`, `g2_v1b`, `g2_v5`. *Accept: G1 rung 2 10/10.*
+  - 2026-10-02 night: g2_v6 (sharper speed kernel + forward sprint band) 5 → 4/10, stopped; **g2_v7** (SymmetricRunner +
+    command bands on forward runs, backward walking and side-steps; `-Cap28-Bands`) **6/10 at every gate**, side-steps
+    all pass, left / right matched; **g2_v8** (continuation) 7 / 5 / 7 / **8 of 10** at it 300 / 600 / 900 / 1199. 0 falls throughout.
+    Left over: backward 1.2 m/s commands (she walks 1.05), 2.57 m/s (2.49), and speed-ups of ~1.9 m/s inside the 1.75 s
+    settle rule (1.5 m/s², not body-scaled) = limits of the 60 %-strength body; easing her bars is a user decision.
+    **Event heats** (`tools/compare_brain_events.py`): the new line is better in Slalom, Crab, Inverted Sprint, Gust
+    Gauntlet (g2_v8 it 1199: 12 of 18 lanes still in at the end, today 1), level in Turntable, Steeplechase, Terminal
+    Velocity and the Brake; it 1199 falls 4 times in 18 Slalom lanes like today's brain, it 900 never → `g2_v8_it1199.onnx` recommended as the new
+    `grandma_rung2.onnx`. Reviews `parity/tb/g2_v7`, `parity/tb/g2_v8`, log 2026-10-02.
+  - **Deployed 2026-10-02:** `grandma_rung2.onnx` = g2_v8 it 1199 (the old one stays as `g2_v5_it600.onnx`); critic +
+    confidence refitted (AUC 0.68), parity references re-recorded (Unity G2 2.2e-16 · G3 8.3e-7 · G4 7.9e-8), odds
+    refitted on 40 fresh heats per event with her (Events 5, 9, 10, 11, 12, 13, 19, 22).
+- [x] **G6 Crawl** (2026-10-02) — `PoOlympic-Grandma-Crawl2` / `-Crawl3`: 30 m from face down **5/5 in 27.1-27.9 s**, lane
+  0.10 m (`gcrawl_v3_it600.onnx`; MATT 25.7-26.7 s, zombie 31.7 s). The first run lay flat: her arms (34 / 30 Nm) cannot
+  press her up and MATT's crawl height × λ is a bear crawl for her; fixed by starting 60 % of episodes between lying
+  and hands-and-knees and using her own hands-and-knees height (0.32 m). Review `parity/tb/gcrawl_v2`. **Deployed 2026-10-02** as
+  `crawl_grandma.onnx` (+ critic, confidence AUC 0.70): `compose_mixed` crawl8 / trench8 hold the full roster (verify
+  37/37, crowd-contact audit 24/24 scenes PASS), Events 8 and 23 rebuilt + baked with her, odds refitted on 40
+  MATT / zombie / GRANDMA heats each. CPU crowd heats (3 seeds): 30 m — her lane 8 27.5-27.7 s (2nd behind MATT's
+  25.7-26.0), lanes 3 / 6 31.4-37.6 s; trench — lane 8 wins in 14.9-15.1 s, lanes 3 / 6 21-37 s, and one heat where
+  both of them and the MATT in lane 4 stopped at ~6 m (cause not looked into). Trench odds are near chance (winner
+  log-likelihood −2.31 vs −2.08 uniform).
+- [x] **G7 Get-up** (2026-10-02) — `PoOlympic-Grandma-Getup` (the v2e ladder on her body) + `-Getup-Roll` / `-Roll2` (roll
+  ladder for face-down starts): `ggetup_roll_v4_it599.onnx` **supine 30/30 (0.74-0.78 s), face down 30/30 (0.48-0.88 s)**,
+  0 falls after. Face down she moves fast: 5.3 % of physics steps above
+  her joint-speed bar (allowance 5 %), peak 35 rad/s in a shoulder — a slower version is needed before an event uses it.
+  Not deployed (Event 27 is not built).
 
 ## Backlog (later rungs & platforms)
 
@@ -308,6 +335,14 @@ User decisions (2026-09-30): Claude rigs the unrigged scan in Blender (no AccuRi
     0.71 s (it 1499); joint speeds within the 18 rad/s bar. Provisional brain `getup_rev_v2e_it600.onnx`, not deployed.
     Open: prone starts untrained; Event 27 scene + hand-over to the Rung 2 sprint; mattbio → MATT promotion (user).
     Review `parity/tb/getup_rev_v2e/review.html`.
+  - **2026-10-02 night block** (log 2026-10-01 23:10 → 2026-10-02): **mattbio gets up from face down too** —
+    `getup_prone_v1_it250.onnx`: supine 30/30 (0.70 s), face down 30/30 (1.17 s), joint speeds 0.3-0.6 % over the bar.
+    **GRANDMA** crawl + get-up both ways: Phase G6 / G7. **Zombie get-up: open** — two runs at 0 % from the seated
+    stage (the 0.8 body-weight assist lifts the 22 kg body off the ground; its 10 Nm arms cannot push it up); idea not
+    run: a front ladder (squat → hands down → all fours → face down). **Event 4 reach:** `rs_reach_v1_it1199.onnx` puts
+    22 of 24 single targets inside 8 cm (8 before) but the 6-target drill is 1/10: targets past the straight arm's
+    0.61 m (commanded up to 0.71 m) need a lean it does not learn; shorten `hand_reach` or train the lean (user).
+    Review `parity/tb/rs_reach_v1`.
 - [ ] R6 bodies: ~~rig GRANDMA~~ (→ Phase G), clean + rescale ZOMBIE, derive MJCFs, train variants
 - [ ] R7 optional motion-prior polish · R8+ remaining skill events
 - [x] Game layer: betting slip & odds from lane stats, PBP ticker, records, gauntlets (2026-09-29): virtual-coin
@@ -332,6 +367,13 @@ User decisions (2026-09-30): Claude rigs the unrigged scan in Blender (no AccuRi
   main menu. The primary button reads "Results" (skips the ceremony). Heats no longer loop in a single event (menu sheet
   › New heat still restarts). Verified in Play (Iron Pedestal, 0 errors); `Hud_OneViewport_EveryPhase` checks the card
   at 4 phone sizes. Before/after: `parity/ui/match_card_before_after.html`.
+- [x] **Brighter athletes** (2026-10-02, user: "creatures too dark"): the key light is near-vertical and the baked
+  probes over the track are dim (mean 0.13; a third under 0.05), so everything facing the camera was black.
+  `StadiumLook.AthleteFill`: scene root `AthleteFill` with two shadow-free directional lights (30° up, yaw 120° / 300°,
+  0.9 / 0.6) on URP rendering layer 1, which only the athletes' skinned meshes and the podium statues carry — the
+  stadium is not lit by them, no rebake. In all 14 event scenes (tunable in the scene; kept on re-install), called
+  from `BroadcastFx.Install`; checked by `EventScenesCarryTheBroadcastFxLayer`. Before/after:
+  `parity/ui/athlete_light_before_after.html`. Open: phone frame rate with the two extra lights.
 - [x] **Calm camera** (2026-09-30, user: "fast movements hurt my eyes"): `BroadcastDirector` "Calm camera" fields,
   applied at runtime (no scene rebuild; tune in the Inspector): 2.5 s ease-in/out blends between nearby cameras (≤ 15 m,
   ≤ 45°), cuts between far ones (a 2.5 s blend to the podium flew the camera at 75 m/s) landing on a camera at rest;

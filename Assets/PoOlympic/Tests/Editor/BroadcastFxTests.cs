@@ -66,7 +66,7 @@ namespace PoOlympic.Tests
             var json = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/PoOlympic/Models/confidence_model.json");
             Assert.IsNotNull(json, "run training/tools/fit_confidence.py");
             foreach (var brain in new[] { "r0_v2_it1000", "rung2", "r2f_v3_it100", "zombie_rung0", "zombie_rung2", "crawl_matt", "crawl_zombie",
-                                         "grandma_rung0", "grandma_rung2" })
+                                         "grandma_rung0", "grandma_rung2", "crawl_grandma" })
             {
                 var e = BrainConfidence.Find(json, brain);
                 Assert.IsNotNull(e, $"{brain}: no calibrated confidence entry");
@@ -98,6 +98,13 @@ namespace PoOlympic.Tests
                         Assert.IsNotNull(r.GetComponent<AthleteTelemetry>(), $"{path}: {r.name} telemetry");
                         Assert.IsNotNull(r.critic, $"{path}: {r.name} critic");
                     }
+                    // athlete fill lights: on the athletes' rendering layer only, and every athlete mesh carries it
+                    var fill = GameObject.Find("AthleteFill");
+                    Assert.IsNotNull(fill, $"{path}: AthleteFill rig");
+                    foreach (var l in fill.GetComponentsInChildren<Light>())
+                        Assert.AreEqual((int)Editor.StadiumLook.AthleteLayer, l.renderingLayerMask, $"{path}: {l.name} must not light the stadium");
+                    foreach (var r in Object.FindObjectsByType<SkinnedMeshRenderer>(FindObjectsInactive.Include))
+                        Assert.AreNotEqual(0u, r.renderingLayerMask & Editor.StadiumLook.AthleteLayer, $"{path}: {r.name} not on the athlete light layer");
                     Assert.IsEmpty(Object.FindObjectsByType<Collider>(FindObjectsInactive.Include), $"{path}: PhysX collider");
                     Assert.IsEmpty(Object.FindObjectsByType<Rigidbody>(FindObjectsInactive.Include), $"{path}: PhysX rigidbody");
                 }

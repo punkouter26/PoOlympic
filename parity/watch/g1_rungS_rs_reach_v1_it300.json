@@ -1,0 +1,395 @@
+{
+ "onnx": "C:\\Users\\punko\\Downloads\\PoOlympic\\parity\\brains\\rs_reach_v1_it300.onnx",
+ "seeds": 10,
+ "passed_seeds": 0,
+ "per_drill": {
+  "E3_squat": 10,
+  "E6_flamingo": 0,
+  "E7_march": 7,
+  "E2_torso": 7,
+  "E4_reach": 0
+ },
+ "PASS": false,
+ "episodes": [
+  {
+   "seed": 1000,
+   "drills": {
+    "E3_squat": {
+     "pass": true,
+     "fall": null,
+     "worst_err_m": 0.011
+    },
+    "E6_flamingo": {
+     "pass": false,
+     "fall": null,
+     "touch_ticks": 101,
+     "stance_slip_m": 0.2172
+    },
+    "E7_march": {
+     "pass": false,
+     "fall": null,
+     "cadence_cmd_hz": 1.309,
+     "cadence_hz": 1.372,
+     "lift_cmd_m": 0.287,
+     "mean_peak_m": 0.287,
+     "drift_m": 0.375
+    },
+    "E2_torso": {
+     "pass": true,
+     "fall": null,
+     "worst_err_rad": 0.1422,
+     "feet_slip_m": 0.0405
+    },
+    "E4_reach": {
+     "pass": false,
+     "fall": null,
+     "worst_err_m": 0.1704,
+     "feet_slip_m": 0.0206
+    }
+   },
+   "passed": false
+  },
+  {
+   "seed": 1001,
+   "drills": {
+    "E3_squat": {
+     "pass": true,
+     "fall": null,
+     "worst_err_m": 0.0113
+    },
+    "E6_flamingo": {
+     "pass": false,
+     "fall": null,
+     "touch_ticks": 98,
+     "stance_slip_m": 0.2154
+    },
+    "E7_march": {
+     "pass": true,
+     "fall": null,
+     "cadence_cmd_hz": 1.071,
+     "cadence_hz": 1.122,
+     "lift_cmd_m": 0.251,
+     "mean_peak_m": 0.269,
+     "drift_m": 0.283
+    },
+    "E2_torso": {
+     "pass": false,
+     "fall": null,
+     "worst_err_rad": 0.2092,
+     "feet_slip_m": 0.0527
+    },
+    "E4_reach": {
+     "pass": false,
+     "fall": null,
+     "worst_err_m": 0.3153,
+     "feet_slip_m": 0.0066
+    }
+   },
+   "passed": false
+  },
+  {
+   "seed": 1002,
+   "drills": {
+    "E3_squat": {
+     "pass": true,
+     "fall": null,
+     "worst_err_m": 0.014
+    },
+    "E6_flamingo": {
+     "pass": false,
+     "fall": null,
+     "touch_ticks": 101,
+     "stance_slip_m": 0.2156
+    },
+    "E7_march": {
+     "pass": false,
+     "fall": null,
+     "cadence_cmd_hz": 1.133,
+     "cadence_hz": 1.122,
+     "lift_cmd_m": 0.261,
+     "mean_peak_m": 0.274,
+     "drift_m": 0.317
+    },
+    "E2_torso": {
+     "pass": true,
+     "fall": null,
+     "worst_err_rad": 0.0514,
+     "feet_slip_m": 0.0163
+    },
+    "E4_reach": {
+     "pass": false,
+     "fall": null,
+     "worst_err_m": 0.25,
+     "feet_slip_m": 0.0119
+    }
+   },
+   "passed": false
+  },
+  {
+   "seed": 1003,
+   "drills": {
+    "E3_squat": {
+     "pass": true,
+     "fall": null,
+     "worst_err_m": 0.0089
+    },
+    "E6_flamingo": {
+     "pass": false,
+     "fall": null,
+     "touch_ticks": 95,
+     "stance_slip_m": 0.2153
+    },
+    "E7_march": {
+     "pass": true,
+     "fall": null,
+     "cadence_cmd_hz": 1.357,
+     "cadence_hz": 1.372,
+     "lift_cmd_m": 0.273,
+     "mean_peak_m": 0.267,
+     "drift_m": 0.269
+    },
+    "E2_torso": {
+     "pass": false,
+     "fall": null,
+     "worst_err_rad": 0.202,
+     "feet_slip_m": 0.0093
+    },
+    "E4_reach": {
+     "pass": false,
+     "fall": null,
+     "worst_err_m": 0.1892,
+     "feet_slip_m": 0.0007
+    }
+   },
+   "passed": false
+  },
+  {
+   "seed": 1004,
+   "drills": {
+    "E3_squat": {
+     "pass": true,
+     "fall": null,
+     "worst_err_m": 0.005
+    },
+    "E6_flamingo": {
+     "pass": false,
+     "fall": null,
+     "touch_ticks": 101,
+     "stance_slip_m": 0.2171
+    },
+    "E7_march": {
+     "pass": true,
+     "fall": null,
+     "cadence_cmd_hz": 1.484,
+     "cadence_hz": 1.496,
+     "lift_cmd_m": 0.173,
+     "mean_peak_m": 0.165,
+     "drift_m": 0.167
+    },
+    "E2_torso": {
+     "pass": true,
+     "fall": null,
+     "worst_err_rad": 0.1127,
+     "feet_slip_m": 0.0195
+    },
+    "E4_reach": {
+     "pass": false,
+     "fall": null,
+     "worst_err_m": 0.2119,
+     "feet_slip_m": 0.0039
+    }
+   },
+   "passed": false
+  },
+  {
+   "seed": 1005,
+   "drills": {
+    "E3_squat": {
+     "pass": true,
+     "fall": null,
+     "worst_err_m": 0.0186
+    },
+    "E6_flamingo": {
+     "pass": false,
+     "fall": null,
+     "touch_ticks": 109,
+     "stance_slip_m": 0.213
+    },
+    "E7_march": {
+     "pass": true,
+     "fall": null,
+     "cadence_cmd_hz": 1.072,
+     "cadence_hz": 1.122,
+     "lift_cmd_m": 0.229,
+     "mean_peak_m": 0.25,
+     "drift_m": 0.198
+    },
+    "E2_torso": {
+     "pass": true,
+     "fall": null,
+     "worst_err_rad": 0.0354,
+     "feet_slip_m": 0.0417
+    },
+    "E4_reach": {
+     "pass": false,
+     "fall": null,
+     "worst_err_m": 0.1976,
+     "feet_slip_m": 0.0068
+    }
+   },
+   "passed": false
+  },
+  {
+   "seed": 1006,
+   "drills": {
+    "E3_squat": {
+     "pass": true,
+     "fall": null,
+     "worst_err_m": 0.011
+    },
+    "E6_flamingo": {
+     "pass": false,
+     "fall": null,
+     "touch_ticks": 105,
+     "stance_slip_m": 0.2171
+    },
+    "E7_march": {
+     "pass": false,
+     "fall": null,
+     "cadence_cmd_hz": 1.294,
+     "cadence_hz": 1.372,
+     "lift_cmd_m": 0.183,
+     "mean_peak_m": 0.187,
+     "drift_m": 0.054
+    },
+    "E2_torso": {
+     "pass": true,
+     "fall": null,
+     "worst_err_rad": 0.1135,
+     "feet_slip_m": 0.0223
+    },
+    "E4_reach": {
+     "pass": false,
+     "fall": null,
+     "worst_err_m": 0.2599,
+     "feet_slip_m": 0.0087
+    }
+   },
+   "passed": false
+  },
+  {
+   "seed": 1007,
+   "drills": {
+    "E3_squat": {
+     "pass": true,
+     "fall": null,
+     "worst_err_m": 0.0157
+    },
+    "E6_flamingo": {
+     "pass": false,
+     "fall": null,
+     "touch_ticks": 101,
+     "stance_slip_m": 0.2172
+    },
+    "E7_march": {
+     "pass": true,
+     "fall": null,
+     "cadence_cmd_hz": 1.342,
+     "cadence_hz": 1.372,
+     "lift_cmd_m": 0.239,
+     "mean_peak_m": 0.236,
+     "drift_m": 0.159
+    },
+    "E2_torso": {
+     "pass": false,
+     "fall": null,
+     "worst_err_rad": 0.1609,
+     "feet_slip_m": 0.0404
+    },
+    "E4_reach": {
+     "pass": false,
+     "fall": null,
+     "worst_err_m": 0.1487,
+     "feet_slip_m": 0.0277
+    }
+   },
+   "passed": false
+  },
+  {
+   "seed": 1008,
+   "drills": {
+    "E3_squat": {
+     "pass": true,
+     "fall": null,
+     "worst_err_m": 0.0157
+    },
+    "E6_flamingo": {
+     "pass": false,
+     "fall": null,
+     "touch_ticks": 101,
+     "stance_slip_m": 0.2201
+    },
+    "E7_march": {
+     "pass": true,
+     "fall": null,
+     "cadence_cmd_hz": 1.351,
+     "cadence_hz": 1.372,
+     "lift_cmd_m": 0.26,
+     "mean_peak_m": 0.257,
+     "drift_m": 0.218
+    },
+    "E2_torso": {
+     "pass": true,
+     "fall": null,
+     "worst_err_rad": 0.0533,
+     "feet_slip_m": 0.0357
+    },
+    "E4_reach": {
+     "pass": false,
+     "fall": null,
+     "worst_err_m": 0.1383,
+     "feet_slip_m": 0.0065
+    }
+   },
+   "passed": false
+  },
+  {
+   "seed": 1009,
+   "drills": {
+    "E3_squat": {
+     "pass": true,
+     "fall": null,
+     "worst_err_m": 0.0068
+    },
+    "E6_flamingo": {
+     "pass": false,
+     "fall": null,
+     "touch_ticks": 103,
+     "stance_slip_m": 0.2269
+    },
+    "E7_march": {
+     "pass": true,
+     "fall": null,
+     "cadence_cmd_hz": 1.025,
+     "cadence_hz": 0.998,
+     "lift_cmd_m": 0.24,
+     "mean_peak_m": 0.263,
+     "drift_m": 0.249
+    },
+    "E2_torso": {
+     "pass": true,
+     "fall": null,
+     "worst_err_rad": 0.0261,
+     "feet_slip_m": 0.0116
+    },
+    "E4_reach": {
+     "pass": false,
+     "fall": null,
+     "worst_err_m": 0.0813,
+     "feet_slip_m": 0.0054
+    }
+   },
+   "passed": false
+  }
+ ]
+}

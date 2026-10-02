@@ -167,6 +167,42 @@ namespace PoOlympic.Editor
             return n;
         }
 
+        public const uint AthleteLayer = 1u << 1;               // URP rendering layer 1: the athlete fill lights
+
+        /// <summary>
+        /// Athlete fill (user 2026-10-02: "creatures too dark"): the key light is near-vertical and the baked probes on
+        /// the track are dim (mean 0.13, a third under 0.05), so faces and fronts came out black. Two shadow-free
+        /// directional lights from opposite sides, on rendering layer 1, which only the athletes (skinned meshes + the
+        /// podium statues) carry: the stadium is not lit by them, nothing to rebake. The rig (scene root AthleteFill) is
+        /// created once and kept, so it can be tuned in the scene.
+        /// </summary>
+        public static int AthleteFill(UnityEngine.SceneManagement.Scene scene)
+        {
+            if (!scene.GetRootGameObjects().Any(g => g.name == "AthleteFill"))
+            {
+                var rig = new GameObject("AthleteFill");
+                UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(rig, scene);
+                foreach (var (yaw, intensity) in new[] { (120f, 0.9f), (300f, 0.6f) })
+                {
+                    var l = new GameObject($"Fill_{yaw:0}").AddComponent<Light>();
+                    l.transform.SetParent(rig.transform, false);
+                    l.transform.rotation = Quaternion.Euler(30f, yaw, 0f);
+                    l.type = LightType.Directional;
+                    l.intensity = intensity;
+                    l.color = new Color(1f, 0.97f, 0.93f);
+                    l.shadows = LightShadows.None;
+                    l.lightmapBakeType = LightmapBakeType.Realtime;
+                    l.renderingLayerMask = (int)AthleteLayer;
+                    l.GetUniversalAdditionalLightData().renderingLayers = AthleteLayer;
+                }
+            }
+            var athletes = scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<SkinnedMeshRenderer>(true)).Cast<Renderer>()
+                .Concat(scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<PodiumCeremony>(true))
+                    .SelectMany(p => p.statueSlots).SelectMany(s => s.GetComponentsInChildren<MeshRenderer>(true))).ToArray();
+            foreach (var r in athletes) { r.renderingLayerMask |= AthleteLayer; EditorUtility.SetDirty(r); }
+            return athletes.Length;
+        }
+
         /// <summary>Re-light every built scene that holds a placed stadium (indoor arena), without rebuilding it.</summary>
         [MenuItem("PoOlympic/Stadium/Apply indoor arena lighting to all scenes")]
         public static string RelightAllScenes()

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MATT reach rs_reach_v1 Review</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --card: #ffffff; --text: #1d1d1f; --muted: #5d5d66; --line: #e2e0da;
+    --v1: #f9ab00; --v2: #425066; --good: #1f8a4c; --warn: #b8660b; --bad: #c2372b;
+    --t1: #fff4d6; --t2: #e3f3ff; --t3: #eeeaf8; --verdict: #e8f6ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+      --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+      --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+    --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+    --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.8rem; margin: 0 0 4px; }
+  h2 { margin: 0 0 4px; font-size: 1.3rem; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+  .verdict { background: var(--verdict); }
+  .verdict p { margin: 6px 0 0; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 10px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+  .up { color: var(--good); font-weight: 600; } .fail { color: var(--bad); font-weight: 600; }
+  .tag { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--muted); }
+  img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); margin: 12px 0 16px; background: #fff; }
+  .levels { display: grid; gap: 12px; }
+  .lvl { border-radius: 10px; padding: 12px 16px; }
+  .lvl h3 { margin: 0 0 4px; font-size: .95rem; }
+  .lvl p { margin: 0; }
+  .l1 { background: var(--t1); } .l2 { background: var(--t2); } .l3 { background: var(--t3); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 8px; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+  footer { color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>MATT arm-reach training review: rs_reach_v1</h1>
+  <p class="sub">2026-10-02 04:04, iteration 1199 · MATT (<code>mattbio</code> body) · 1200 iterations in 67 min ·
+    <span class="dot" style="background:var(--v1)"></span>rs_v8 = the stance brain it started from (orange, the flat lower line) and rs_reach_v1 = this run (orange, the rising line: TensorBoard gave both the same colour)
+    <span class="dot" style="background:var(--v2)"></span>rs_reach_v2 = a second try, stopped after 18 min (dark)</p>
+
+  <div class="box verdict">
+    <h2>Verdict: reaches most targets, but not six in a row</h2>
+    <p><strong>In one sentence:</strong> the hand now lands within 8 cm of 22 of 24 single targets (8 of 24 before the run), but the test for Event 4 needs six targets in a row and passed on only 1 of 10 tries.</p>
+    <p><strong>What is left:</strong> targets further away than the straight arm can reach (61 cm from the shoulder; targets go out to 71 cm). Those need the body to lean, and it does not lean: the hand ends 10 to 30 cm short, low and towards the arm's own side. Almost every six-target chain contains one such target.</p>
+    <div class="scroll">
+    <table>
+      <tr><th>Test (CPU)</th><th>before (rs_v8)</th><th>it 300</th><th>600</th><th>900</th><th>1199</th><th>second try, it 300</th></tr>
+      <tr><td>Single targets inside 8 cm (of 24)</td><td>8</td><td>16</td><td>21</td><td class="up">22</td><td>not run</td><td>not run</td></tr>
+      <tr><td>Median error, single targets</td><td>9.5 cm</td><td>4.7 cm</td><td>4.1 cm</td><td class="up">3.1 cm</td><td>not run</td><td>not run</td></tr>
+      <tr><td>Six in a row (the Event 4 test), of 10</td><td class="fail">0</td><td class="fail">0</td><td class="fail">1</td><td class="fail">1</td><td class="fail">1</td><td class="fail">0</td></tr>
+      <tr><td>Worst target in each chain</td><td>not measured</td><td>8-32 cm</td><td>7-29 cm</td><td>6-30 cm</td><td>7-29 cm</td><td>8-27 cm</td></tr>
+      <tr><td>Other skills: squat / torso aim / march / one leg (of 10)</td><td>10 / 7 / 9 / 0</td><td>10 / 7 / 7 / 0</td><td>10 / 7 / 5 / 0</td><td>10 / 7 / 3 / 0</td><td>10 / 7 / 5 / 0</td><td>10 / 7 / 5 / 0</td></tr>
+    </table>
+    </div>
+    <p><strong>What was changed for this run:</strong> half of the practice commands are reaches (13 % before), an extra reward step between "near" and "on target", and no penalty for leaning the trunk while reaching.</p>
+    <p><strong>The second try</strong> (dark line) drew half of its reaches from the far zone. After 300 iterations the far targets had moved 1 to 2 cm, so it was stopped: at that pace they would not get inside the bar in one night.</p>
+    <p><strong>Brain:</strong> <code>rs_reach_v1_it1199.onnx</code> is the best reach brain so far; Event 4 is not built and this brain does not pass its test. Open question for the user: shorten the commanded reach (it asks for 10 cm more than the arm has), or keep it and train the lean.</p>
+  </div>
+
+  <section class="box">
+    <h2>1 · Near the target</h2>
+    <div class="tag">Episode_Reward/skill_reach (points for the hand within about 10 cm of the target; averaged over all practice, so it also rises with the share of reach commands)</div>
+    <img src="1_reach.png" alt="Reach reward: rs_v8 flat at 0.05; rs_reach_v1 jumps to 0.25 and climbs to 0.40 at iteration 1199; rs_reach_v2 sits at 0.35 from iteration 50 to 326">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The low line is the old robot. The high line is the new one. The new one touches the target much more often.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This line goes up when the hand gets close to the target. The old brain (low orange line) hardly scored. The new run (upper orange line) scored five times more straight away, mostly because it practised reaching much more often, and then kept improving slowly. The dark line is the second try: it starts a little lower because its targets were harder.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>The first jump (0.05 to 0.25 in 50 iterations) is mostly the command mix: reach went from 13 % to 50 % of commands, a factor of 3.8. The learning is the climb after it, 0.25 to 0.40, which matches the CPU probe (median error 9.5 to 3.1 cm). rs_reach_v2 starts from v1's final brain but reads 0.35: half of its targets are in the 80-95 % zone where v1 is weakest, and it is flat over its 326 iterations.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>2 · On the target</h2>
+    <div class="tag">Episode_Reward/skill_reach_fine (points for the hand within about 3 cm)</div>
+    <img src="2_reach_fine.png" alt="Fine reach reward: rs_v8 flat at 0.003; rs_reach_v1 rises almost linearly to 0.076; rs_reach_v2 flat at 0.06">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>This line is for touching the target exactly. It keeps going up. The robot is getting more exact.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This one only pays when the hand is almost exactly on the target. It rose in a straight line for the whole run and had not flattened at the end, so the brain was still getting more precise on the targets it can reach.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>Near-linear growth to 0.076 with no plateau: precision on reachable targets is still improving at iteration 1199. The drill, though, is decided by the worst target of six, and those are the far ones, where this term pays nothing (errors of 10-30 cm against a 3 cm kernel). More of the same training would raise this curve without changing the drill result.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>3 · Total score</h2>
+    <div class="tag">Train/mean_reward (all reward terms added up per episode)</div>
+    <img src="3_mean_reward.png" alt="Mean reward: rs_v8 around 165-170; rs_reach_v1 rises from 172 to about 185; rs_reach_v2 around 180">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The new line is above the old line.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This is the total score for everything the robot practises. The new run scores higher than the old brain, but part of that is simply because it now spends half its time on reaching, which it has become good at.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>Totals are not comparable across the runs (different command mixes and one extra reward term). Within rs_reach_v1 the rise from 172 to 185 comes with the action noise steady at 0.22 and no falls in any gate; the march drill varies between 3 and 7 of 10 across checkpoints, which is the price of giving that skill 6 % of the commands.</p></div>
+    </div>
+  </section>
+
+  <footer>Charts: TensorBoard at localhost:6006, runs <code>rs_v8</code>, <code>rs_reach_v1</code>, <code>rs_reach_v2</code>. Gate data: <code>parity/watch_rs_reach_v1.jsonl</code>, <code>parity/watch/g1_rungS_rs_reach_v1_it*.json</code>. Single-target numbers: a 24-target CPU probe with the drill's own target sampler.</footer>
+</main>
+</body>
+</html>

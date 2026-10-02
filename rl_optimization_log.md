@@ -1026,3 +1026,239 @@ One entry per run or decision. Newest at the bottom.
   13 min. `tools/keep_awake.ps1` (ES_SYSTEM_REQUIRED while a queue / train process exists) is now started with the queue.
 - Housekeeping: getup_v4 and the stopped v2 / v2b / v2c / v2d runs moved to `runs_archive/2026-10-01/`; Unity closed
   17:10-21:12; viewer shown after the run (final brain). Review: `parity/tb/getup_rev_v2e/review.html`.
+
+## 2026-10-01 23:10 · Night block (user: "8 hours to train, find things to train"); Unity closed
+- **Chosen from tasks.md** (what is open and trainable without a user decision): GRANDMA crawl (events 8 / 23 run MATT in
+  her lanes), GRANDMA Rung 2 precision (5/10), get-up from face down on mattbio (v2e: supine only), first get-up brains
+  for GRANDMA and the zombie (Event 27). Not chosen: zombie sprint precision (z2_v12-v14 already tried the known levers),
+  stance skills on the other bodies (contract v4 for them first), terrain / jumps (new props and commands = design).
+- **New tasks:** `PoOlympic-Grandma-Crawl` / `-Crawl2` (`crawl_env.py`), `-Grandma-Rung2-Omni-Cap28-Sharp`
+  (`grandma_env.py`: track_lin std 0.28 + 30 % sprint-band commands), `-MattBio-Getup-Prone`, `-Grandma-Getup`,
+  `-Zombie-Getup` (`getup_env.py`: `prone_fraction` on the last ladder stage; `body_getup_ladder_env_cfg` = the v2e
+  ladder on another body, "standing" scaled by its standing pelvis height K = 0.71 GRANDMA / 0.59 zombie, from the
+  squat). `getup_probe.py --prone` + body scaling, gate `getup_prone` in `watch_gate.py`. All five pass a 2-iteration
+  smoke run at 64 envs.
+- **gcrawl_v1** (zombie's final crawl recipe on GRANDMA, from her Rung 0 brain, 1.5-1.9 s/it): **stopped at it ~370.**
+  Reward flat at 100 from it 180: lies face down with her hands on the floor (crawl_up 0.65 / 1.5 = pelvis at 0.19 m,
+  hands 0.87, progress 0.003 / 3); gate it 300: 0 m, all fours 0 %, hands 100 %. Her arms cannot press her up: shoulder
+  34 Nm, elbow 30 Nm (60 % strength, 65 kg; a push-up needs ~50 Nm per arm). And the crawl height was wrong for her: FK
+  puts her hands-and-knees pelvis at 0.32 m (hands and knees touch together at trunk pitch 74°), not MATT's 0.5 m × λ
+  = 0.435 m, which is a bear crawl with her short thighs.
+- **gcrawl_v2** (23:24): + `reset_crawl_mix` (60 % of episodes start in one of four poses between lying and
+  hands-and-knees, placed on the ground; 40 % lying as before), crawl height 0.32 m. Same warm start (Rung 0).
+- Queue after it: g2_v6 → getup_prone_v1 → ggetup_v1 → zgetup_v1. TensorBoard :6006 (running since 14:10; no obsolete
+  runs in `training/runs`). `keep_awake.ps1` running.
+
+## 2026-10-02 00:00 · Audit (user: "/ai PLAN and then TRAIN" on the MuJoCo stack) + gcrawl_v2 crawls
+- **gcrawl_v2:** gate it 300 0 m (all fours 0 %) · it 600 0.1 m but **all fours 100 % from the face-down start** · it 900
+  **22.8 m in 60 s**, all fours 100 %, hands 78 %, lane 0.44 m, 0 tumbles. The pose-continuum starts and the 0.32 m crawl
+  height fixed what v1 could not do; the forward-progress reward took off at it ~750 (0.27 → 1.26 of 3 by it 930).
+- **Observations / actions (all bodies, contract v3):** 84 obs (heading-frame velocity 3, angular velocity 3, gravity 3,
+  pelvis height 1, command 3, gait phase 2, joint positions 23, joint velocities 23, last action 23), 23 joint position
+  targets (default + 0.25·a, clipped to the joint range), 50 Hz control on a 200 Hz simulation. No action masking
+  (continuous control); the critic sees the actor's observations without noise. All PPO; no SAC / self-play in the stack.
+- **Mass distribution (every body):** trunk + head 50.4 %, arms 9.9 %, thighs 28.3 %, shanks 8.6 %, feet 2.7 % = de Leva.
+- **Joint ranges:** the same human ranges on every body (knee 0-150°, elbow 0-145°, hip flexion −30-120°, ankle −50-25°,
+  trunk twist ±45°).
+- **PD drives** (damping ratio on the joint's own inertia at the default pose): trunk flex / lateral 0.33-0.41 at 1.2 Hz
+  (soft, under-damped), hips 0.5-0.63, shoulders 0.6, knees 1.0-1.3, ankles 3.5-5 unloaded (the foot alone; loaded by the
+  body they are not over-damped). No passive joint damping. Unchanged: every brain and the Unity parity gates depend on it.
+- **Torque caps:** mattbio has direction-specific human caps (knee 280 / 150, hip 280 / 200, ankle 220 plantar / 60 dorsi,
+  hip rotation 80, ankle inversion 45 / 60 Nm). **The zombie and GRANDMA still have one symmetric cap per joint group:**
+  GRANDMA's hip rotation (119 Nm), ankle dorsiflexion (93) and ankle inversion (93) are stronger than the strong
+  adult male's, at "60 % strength". Her arms: shoulder 34, elbow 30 Nm. Fixing the caps changes her body (every GRANDMA
+  brain retrains, Unity fingerprints change): user decision, not done.
+- **Hardware:** 4096 envs: 1.8-1.9 s/it (≈ 52k steps/s), GPU 55-60 % busy, 4.4 of 12 GB, 88 °C at 52-68 W = thermally
+  limited (fans on Auto; Cooler Boost measured +30-40 %). 8192 envs + 8 mini-batches (recipe v5, validated on mattbio
+  only) would add ~35 % samples/s; not applied to the queued GRANDMA / zombie runs (untested on their contact buffers).
+  Control rate and solver settings are contract-fixed (Unity parity).
+- **Manifest.** P0 (queued, PPO fine-tunes): GRANDMA crawl (30 m from face down, 5/5), GRANDMA Rung 2 precision (G1
+  10/10, now 5/10), mattbio get-up from face down (10/10 both ways). P1: first get-up brains for GRANDMA and the zombie
+  (ladder from the squat, ~65 min each). P2 (not tonight): zombie sprint precision (three failed attempts, needs a new
+  idea), Event 4 reach (0/10 in every stance run: diagnose first), stance skills on the other bodies (contract v4 for
+  them), terrain / jump rungs (props + commands to design), GRANDMA / zombie direction-specific torque caps (user).
+- **gcrawl_v2 finished 00:03 (1200 its, 39 min): gate it 1199 = 30 m in 29.3-29.9 s, 5/5**, all fours 100 %, hands 55 %,
+  0 tumbles, lane 0.16-0.20 m (MATT 25.7-26.7 s, zombie 31.7 s). Provisional brain `gcrawl_v2_it1199.onnx`, not deployed
+  (the all-fours scenes hold MATT + zombie only). Progress 1.74 / 3 and mean reward +6 per 100 its at the end →
+  **gcrawl_v3** queued last (`-Crawl3`: no assist, full speed range from the start, from it 1199, 800 its). Review:
+  `parity/tb/gcrawl_v2/review.html`.
+- **g2_v6** started 00:03 (1.6-1.9 s/it).
+
+## 2026-10-02 00:26 · g2_v6 stopped at it ~700 → g2_v7 (bands + symmetric runner)
+- **g2_v6** (cap28 + track_lin std 0.28 + 30 % forward sprint band, from g2_v5 it 1199): it 300 **5/10**, it 600 4/10, 0
+  falls. Forward sprint segments over the bar 7 → 4 → 5 of 19; crab 3 → 3 → 2 of 12; at it 600 the backward drill failed
+  on 2 seeds for the first time (the sprint band took mass from backward commands).
+- **What the misses are** (same segments at g2_v5 it 1199 and g2_v6 it 300 / 600): backwards at 1.08-1.23 m/s (RMS
+  0.22-0.38 vs 0.187), side-steps to her right at 0.77-0.88 m/s (0.24-0.36; none to her left), forward 2.0 / 2.6 m/s
+  with a right turn of 0.35-0.38 rad/s. One-sided: the cap28 line was trained with the plain runner.
+- **g2_v7** (00:26, `-Cap28-Bands`, from g2_v6 it 300): SymmetricRunner + command bands (`AthleteCommandCfg.bands`):
+  forward 2.0-3.0 × √λ 20 %, backward 0.8-1.5 × √λ 15 %, side-step |vy| 0.4-1.1 × √λ 20 %; std 0.28 kernel kept. 1200
+  its, gates every 300.
+
+## 2026-10-02 01:30 · g2_v7 finished: G1 6/10 at every gate; better in the events → candidate for `grandma_rung2.onnx`
+- **g2_v7** (bands + SymmetricRunner, from g2_v6 it 300, 1200 its, 45 min at 2.1-3.1 s/it): G1 rung 2 **6/10** at it 300 /
+  600 / 900 / 1199, 0 falls (g2_v5 it 1199: 5/10). Side-steps: 3 of 12 over the bar → 0 from it 900; the left / right
+  difference is gone (symmetry loss 0.36 → 0.055). Left over at it 1199 (4 seeds): backward 1.19-1.23 m/s commands
+  (0.19-0.23; she walks 1.05 m/s), 2.57 m/s (0.22; she runs 2.49) and two accelerations of ~1.9 m/s that must settle
+  within 1.75 s (0.28-0.33; steady state at the same command 0.10).
+- **CPU probe, one command for 10 s** (`g2_v7_it1199` vs the deployed g2_v5 it 600): side-step 0.88 m/s RMS 0.11 vs 0.32
+  · backward 1.23 command 1.05 vs 0.87 m/s · 2.03 m/s RMS 0.10 vs 0.18 (ripple sd 0.08 vs 0.13) · 2.8 command 2.65 vs
+  2.71 m/s · time to 90 % of 2.03 m/s 2.4 s vs 1.8 s. Steadier, better backwards and sideways, slower off the mark.
+- **Event heats** (`tools/compare_brain_events.py`, new: 6 CPU heats per event on the MATT / zombie / GRANDMA lineup, her
+  3 lanes; deployed → g2_v7 it 1199): Gust Gauntlet mean place 5.6 → 4.6 (still in at the end 1 → 5 of 18) · Inverted
+  Sprint 21.1 → 17.9 s (place 7 → 5) · Crab 28.9 → 22.2 s (7 → 5) · Slalom 30.6 → 24.3 (6.1 → 2.9; falls 4 → 1) ·
+  Turntable 6.92 → 7.41 (4.7 → 5.6) · Steeplechase 17.5 → 18.3 s · Terminal Velocity peak 2.77 → 2.73 m/s · Emergency
+  Brake DQ 3 → 2. Better in five events, slightly worse in three. it 300 sits between the two.
+- **Not deployed** (Unity closed; a swap needs the critic export, confidence fit, odds refit and new parity references):
+  `g2_v7_it1199.onnx` is the recommended `grandma_rung2.onnx`. The remaining G1 misses are acceleration (the 1.5 m/s²
+  settle rule is not body-scaled) and backward top speed: bars for a 60 %-strength body = user decision.
+- **getup_prone_v1** started 01:11.
+
+## 2026-10-02 01:30 · getup_prone_v1: get-up from face down solved at it 250 (stopped there)
+- **getup_prone_v1** (mattbio, v2e recipe with the last ladder stage 50 % face down, from v2e it 1499, 8192 envs,
+  2.1-2.3 s/it): frontier success 0.50 at it 25 (all supine), assist rose to 0.29 by it 100, success 0.99 with the
+  assist back at 0 by it 132. **Gate it 250: supine 10/10 (0.68-0.72 s), face down 10/10 (1.14-1.18 s); 30 seeds each:
+  30/30 and 30/30, 0 falls after.** Stopped at it ~270 (the remaining 730 its would only make it faster; v2e it 1499
+  is already quicker than a person). Provisional brain `getup_prone_v1_it250.onnx`; joint speeds not re-measured.
+- **ggetup_v1** started 01:30 (GRANDMA, ladder from the squat, 4096 envs, 2000 its).
+
+## 2026-10-02 01:55 · ggetup_v1: GRANDMA gets up from her back (stopped at it ~1050); reach diagnosis → rs_reach_v1 queued
+- **ggetup_v1** (the v2e ladder on her body from the squat, from her Rung 0 brain, 4096 envs, 1.2-1.5 s/it): squat
+  passed at it ~140, stage 1 at ~210, stage 2 (seated, leaning back) from it 212 to ~740 with the assist at its 0.8 cap
+  (success 0.09 → 0.31 → 0.89), stages 3-6 by it 800; frontier success 0.999 without assist from it 900. Action std
+  0.50 → 0.89 (it 700) → 0.36 (it 1000). **Gate it 500 0/10 · it 1000 10/10; 30 seeds 30/30, up in 0.84-0.88 s, 0 falls
+  after.** Face down 0/10 (untrained) → `ggetup_prone_v1` queued (`-Grandma-Getup-Prone`, from it 1000). Provisional
+  brain `ggetup_v1_it1000.onnx`. 0.86 s is fast for the "frail" body; joint speeds not measured.
+- **Event 4 reach, diagnosed on CPU** (rs_v8 it 1199, 24 single targets, `K.sample_reach_target`): the hand ends a median
+  0.095 m from the target at 2 s (same at 4 s), 8 of 24 inside the 0.08 m bar — the drill needs 6 in a row, hence 0/10
+  in every run. Error vs target distance r = 0.65: targets at 0.67-0.71 m from the shoulder end 0.10-0.16 m short,
+  elevations above 40° end 0.09-0.17 m low. FK: the straight arm reaches 0.611 m (commanded up to 0.712 m); 92 % of
+  the targets are within 0.08 m of the arm-only workspace, the rest need a trunk lean, which the uprightness reward
+  charged for (12° = 0.28 per step).
+- **rs_reach_v1** queued last (`-MattBio-RungS-Reach`: rs_v7's env, 50 % reach commands, extra std 0.06 kernel,
+  uprightness off while reaching, entropy 0.001, from rs_v8 it 1199, 1200 its, gate S).
+- **zgetup_v1** started 01:54.
+
+## 2026-10-02 02:20 · zgetup_v1 stopped at it ~1040 (hangs tucked from the assist) → zgetup_v2
+- **zgetup_v1** (the ladder on the zombie from the squat, from its Rung 0 brain, 1.4-1.5 s/it): stages 0 and 1 passed by
+  it 200; stage 2 (seated, leaning back) 0.0000 success from it 212 to 1040 with the assist at its 0.8 cap; gates it 500
+  and 1000: 0/10. GRANDMA had passed the same stage by it 740 (0.09-0.31 success on the way).
+- **CPU rollouts of the it 1000 brain from stage 2** (`ladder_probe.py`, scratch): no assist: tips over backwards in 1 s
+  and lies with folded legs. Assist 0.6-0.8 body weights: the 22 kg body hangs from the torso force — pelvis 0.26-0.31 m
+  (standing 0.56), feet 0.12-0.16 m off the ground, trunk tilted 51-60°, knees held at 107-112° by an action of +5.
+  `legs_folded_when_low` pays (1 − z / standing height) × fold: half its weight at that height, and opening the knees
+  loses it before the feet reach the ground. A local optimum made by the assist and the reward together; the heavier
+  bodies did not levitate.
+- **zgetup_v2** (queued after gcrawl_v3; `-Zombie-Getup2`): the folded-legs reward fades to 0 at half the standing
+  pelvis height (0.28 m), from zgetup_v1 it 200 with stage 2 as the frontier, 1500 its.
+- **gcrawl_v3** started 02:19.
+
+## 2026-10-02 02:45 · gcrawl_v3 finished: 27.1-28.6 s, 5/5 at every gate
+- **gcrawl_v3** (continuation of gcrawl_v2 it 1199 without assist, full speed range; 800 its, 23 min): gates it 200 /
+  400 / 600 / 799: 27.8-28.6 s (lane 0.01 m) · 27.3-28.0 (0.08) · **27.1-27.9 (0.10)** · 27.5-28.3 (0.07), 5/5 each
+  (v2 it 1199: 29.3-29.9 s, lane 0.18 m). Levelled off: provisional GRANDMA crawl brain = `gcrawl_v3_it600.onnx`
+  (MATT 25.7-26.7 s, zombie 31.7 s). Not deployed.
+- Review of g2_v7 (45 min run): `parity/tb/g2_v7/review.html`. **g2_v8** queued last (same recipe from g2_v7 it 1199).
+- **zgetup_v2** started 02:42.
+
+## 2026-10-02 03:00 · zgetup_v2 stopped at it ~545: the zombie does not get up from sitting; rs_reach_v1 started
+- **zgetup_v2** (folded-legs reward fading to 0 at half height, from zgetup_v1 it 200): stage 2 success 0.0000 for 540
+  its at the 0.8 assist cap; gate it 500 0/10. It no longer hangs tucked: the it 500 brain, without assist, ends propped
+  on both forearms, one thigh and one foot, twisted sideways (abdomen twist 42°, hip rotation 41°), pelvis 0.17 m, head
+  0.36 m, and stays there. With 0.4-0.8 body weights of assist it reaches pelvis 0.23-0.32 m, trunk tilted 53-62°, feet
+  0.10-0.17 m up, static. It is trying MATT's route (sit up on an arm), which needs an arm push: its shoulder / elbow
+  caps are 10 / 8 Nm for a 13 kg trunk, and its abdomen 24 Nm against ~25 Nm of trunk weight about the hips.
+- **Zombie get-up: open.** Not a tuning problem of this ladder. Idea not run: a front ladder (squat → hands down → all
+  fours → face down), which uses the legs it already crawls with, then a roll from the back as a later step.
+- Checked and dropped: a mattbio crawl continuation. crawl_bio_v1 solo is already 25.4-26.5 s at it 450 (MATT 25.7-26.7);
+  the 33.1 s is the 8-athlete heat with full self-collision, which a solo fine-tune and the solo gate do not address.
+- **rs_reach_v1** started 02:57.
+
+## 2026-10-02 04:05 · rs_reach_v1 finished: single reaches inside the bar, the 6-target drill still 1/10 → rs_reach_v2
+- **rs_reach_v1** (rs_v7's env, 50 % reach commands, std 0.06 kernel, uprightness off while reaching, entropy 0.001, from
+  rs_v8 it 1199; 1200 its, 67 min at 3.3 s/it with the symmetric runner). 24 single targets (CPU, `reach_probe.py`):
+  median error 0.095 m (start) → 0.047 (it 300) → 0.041 (600) → 0.031 (900); inside the 0.08 m bar 8 → 16 → 21 → 22
+  of 24. **Drill E4 (6 chained targets, worst one counts): 0 / 1 / 1 / 1 of 10** at it 300 / 600 / 900 / 1199; worst
+  error per seed 0.066-0.29 m at the end (0.08-0.32 at it 300). Other drills on this brain: squat 10, torso 7, march
+  3-7, flamingo 0.
+- **What the drill misses are** (`reach_chain.py`, scratch): not the chaining (the shoulder is within 0.05 m of neutral
+  when each target is drawn; most targets in a chain end 0.02-0.05 m off) but the targets past the straight arm
+  (0.60-0.72 m from the shoulder): the hand ends 0.09-0.22 m low and 0.09-0.18 m short towards the arm's own side with
+  the trunk tilted 1-5°. 30 % of targets are that far, so 88 % of 6-target chains contain one.
+- **rs_reach_v2** queued (`-RungS-Reach2`, `AthleteSkillCommandCfg.reach_far_fraction` 0.5: half of the reach commands
+  from 80-95 % of the reach radius), from rs_reach_v1 it 1199, 1200 its.
+- Open (user, contract): `hand_reach` 0.75 m × 0.95 = 0.71 m is 0.10 m past the straight arm's 0.61 m, as the torso yaw
+  range is past the spine's.
+- **ggetup_prone_v1** started 04:04.
+
+## 2026-10-02 05:00 · GRANDMA face down: prone-fraction recipe fails, roll ladder works (6/10 so far)
+- **ggetup_prone_v1** (MATT's recipe: last stage 50 % face down, from ggetup_v1 it 1000, 500 its): frontier success
+  0.51 → 0.64 = the supine half, assist 0.69-0.78 throughout; gates it 200 / 400 / 499: supine 10/10, **face down 0/10**.
+  Her arms cannot press her up (the gcrawl_v1 finding again).
+- **ggetup_roll_v1** (`-Grandma-Getup-Roll`, new: `roll_stages` 60° / 120° / 180° after the supine stage =
+  `_reset_rolled`, lying rolled about the long axis either way; from ggetup_v1 it 1000, 800 its): the 60° stage passed
+  in 20 its without assist; the 120° stage 0.15 → 0.48 by it 620 with the assist at 0.8, then flat while the action std
+  rose 0.44 → 0.93 (entropy 0.005). Gates: supine 10/10, face down 0/10 at it 200-799.
+- **ggetup_roll_v2** (`-Getup-Roll2`: frontier starts at the 120° stage, entropy 0.001, start std capped at 0.5; from
+  roll_v1 it 799, 1000 its, 24 min): std 0.50 → 0.40; 120° stage success ~0.62 with the assist falling 0.49 → 0.28
+  (the controller holds success at 60 %). No gate ran during the run (gate iterations 250 / 750 do not exist with a
+  save interval of 100: the watcher waited for them; it was stopped). By hand, it 999: **supine 10/10 (0.78 s), face
+  down 6/10 (0.62-0.70 s), 0 falls after.**
+- **ggetup_roll_v3** queued after rs_reach_v2 (same task from roll_v2 it 999, 800 its); g2_v8 cut to 800 its to fit
+  the block. **rs_reach_v2** started 05:00.
+
+## 2026-10-02 05:55 · GRANDMA gets up from face down (roll ladder); rs_reach_v2 stopped
+- **rs_reach_v2** (half of the reaches from 80-95 % of the radius, from rs_reach_v1 it 1199): stopped at it ~320. Gate it
+  300: drill 0/10, worst error per seed 0.085-0.27 m (v1 it 1199: 0.066-0.29). ~0.01-0.02 m per 300 its on the far
+  targets: not reachable tonight. Event 4 reach stays open; the far targets need a lean the brain does not learn, or a
+  shorter `hand_reach` (user).
+- **ggetup_roll_v3** (same task from roll_v2 it 999, 800 its): 120° stage passed without assist at it ~390; face-down
+  stage success ~0.62 with the assist falling 0.62 → 0.19 by it 799. Gates face down 6 / 6 / 6 / 7 of 10, supine 10/10.
+- **ggetup_roll_v4** (from roll_v3 it 799, 600 its; re-passed the 120° stage in 60 its): assist 0 from it 200, face-down
+  stage success 0.67 → 0.92 by it 440. **Gates it 200 and 400: supine 10/10, face down 10/10. 30 seeds on it 400: supine
+  30/30 (0.74-0.80 s), face down 30/30 (0.50-1.16 s, mean 0.69), 0 falls after.**
+- **Joint speeds during the get-up** (`getup_speed.py`, scratch; share of physics steps with a joint above the body's
+  bar, G1 allows 5 %): MATT `getup_prone_v1_it250` 0.6 % supine / 0.3 % face down (peak 22 rad/s) · GRANDMA
+  `ggetup_v1_it1000` 0.6 % supine · GRANDMA `ggetup_roll_v4_it400` 0.3 % supine, **5.2 % face down (peak 34 rad/s, a
+  shoulder during the roll)** — at the allowance; half a second from face down to standing is not "frail".
+- Provisional GRANDMA get-up brain (both ways): `ggetup_roll_v4_it400.onnx` (it 599 to be checked). Not deployed.
+- **g2_v8** started 05:54 (the last run of the block).
+
+## 2026-10-02 06:45 · End of the night block: g2_v8 8/10; summary
+- **g2_v8** (continuation of g2_v7 it 1199, same recipe, 1200 its, 48 min): G1 rung 2 **7 / 5 / 7 / 8 of 10** at it 300 /
+  600 / 900 / 1199, 0 falls; segments over the bar 4 / 6 / 4 / **2** of 50 (g2_v5 it 1199: 10). Left at it 1199:
+  backward 1.19 m/s (0.203) and the speed-up to 2.03 m/s (0.253). track_lin 0.90 → 0.99, mean reward 116 → 119
+  (g2_v7: 103 → 116): diminishing returns.
+- **Event heats** (6 per event, her 3 lanes; deployed g2_v5 it 600 → g2_v8 it 900 / it 1199): Gust Gauntlet still in at
+  the end 1 → 1 / **12** of 18 · Inverted Sprint 21.1 → 17.5 / 17.5 s · Crab 28.9 → 21.5 / 21.2 s · Slalom 30.6 (4 falls)
+  → 24.5 (0 falls) / 25.6 (4 falls) · Turntable 6.92 → 7.18 / 7.08 · Steeplechase 17.5 → 17.6 / 17.6 s · Terminal
+  Velocity 2.77 → 2.75 / 2.75 m/s · Brake DQ 3 → 3 / 3. **Recommended `grandma_rung2.onnx`: `g2_v8_it1199.onnx`**
+  (it 900 if Slalom falls weigh more than Gauntlet survival). Not deployed. Review `parity/tb/g2_v8/review.html`.
+- `ggetup_roll_v4_it599.onnx`, 30 seeds: supine 30/30 (0.74-0.78 s), face down 30/30 (0.48-0.88 s); joint speeds 0.0 %
+  / 5.3 % over the bar.
+- **Block summary (23:10 → 06:42, 7.5 h of GPU, 17 runs started, 9 run to the end, 8 stopped by hand at a gate):**
+  new provisional brains — GRANDMA crawl `gcrawl_v3_it600`, GRANDMA walking `g2_v8_it1199` (G1 5 → 8/10), GRANDMA
+  get-up both ways `ggetup_roll_v4_it599`, mattbio get-up both ways `getup_prone_v1_it250`, mattbio reach
+  `rs_reach_v1_it1199` (single targets yes, drill no). Open: zombie get-up (2 runs, 0 %), Event 4 drill (far targets),
+  GRANDMA's last two G1 misses (strength / bars). Nothing deployed to Unity; no body or contract changed.
+
+## 2026-10-02 10:15 · Night-block brains deployed; play-through
+- **GRANDMA walking** `grandma_rung2.onnx` = g2_v8 it 1199 (old brain kept as `g2_v5_it600.onnx`): critic + confidence
+  (AUC 0.68), parity references re-recorded, Unity G2 2.2e-16 / G3 8.3e-7 / G4 7.9e-8, odds refitted (40 fresh heats
+  per event with her, Events 5, 9, 10, 11, 12, 13, 19, 22).
+- **GRANDMA crawl** `crawl_grandma.onnx` = gcrawl_v3 it 600 (+ critic, confidence AUC 0.70): `compose_mixed` crawl8 /
+  trench8 on the full roster (verify 37/37, crowd-contact audit 24/24 scenes), Events 8 and 23 rebuilt + baked, menu
+  rebuilt (she is no longer replaced by MATT there), odds on 40 MATT / zombie / GRANDMA heats each. Trench odds stay
+  near chance (winner log-likelihood −2.31 vs −2.08 uniform).
+- **Not deployed (no event uses them yet):** GRANDMA get-up `ggetup_roll_v4_it599`, mattbio get-up
+  `getup_prone_v1_it250`, mattbio reach `rs_reach_v1_it1199`.
+- Unity EditMode `PoOlympic.Tests` 81/81 after the rebuild.
+- **Play-through in Unity** (10 single events from the menu, lineup M Z G M Z G M Z, each: heat → podium → match card →
+  OK → menu, 10/10): 30 m All Fours G3 2nd in 29.98 s (MATT 26.04), G6 6th 33.02; Trench Crawl G6 5th 31.4 s, G3 7th
+  45.1 s (zombies 17.0-17.1, MATT 16.7); Crab 21.1 / 21.2 s (4th / 5th, ahead of the zombies' 25.5-26.2; old brain
+  28.9 s); Inverted Sprint 17.1 / 17.7 s (4th / 5th; old 21.1); Slalom G3 **wins** 23.40 (G6 4th); Gust Gauntlet both
+  still in at the end (4th / 5th; second run one fell at 38.7 s); Turntable 3rd / 6th; Steeplechase 17.2 / 18.3 s;
+  Terminal Velocity 2.76 / 2.74 m/s (last, by design: 2.8 m/s cap); Emergency Brake G6 **wins** (3 cm short), G3 DQ
+  (crossed the line).
+- Seen, not new: MATT lanes 4 / 7 DNF in the 30 m crawl with tumbles (2 of 3 MATTs; the heat then runs to the 60 s
+  limit) — crawl DNFs were there before GRANDMA joined (2026-10-01 tour: Z4 4 tumbles, L5 58 s).

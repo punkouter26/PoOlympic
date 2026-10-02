@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GRANDMA walking g2_v8 Review</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --card: #ffffff; --text: #1d1d1f; --muted: #5d5d66; --line: #e2e0da;
+    --v1: #9334e6; --v2: #f9ab00; --good: #1f8a4c; --warn: #b8660b; --bad: #c2372b;
+    --t1: #fff4d6; --t2: #e3f3ff; --t3: #eeeaf8; --verdict: #e8f6ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+      --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+      --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+    --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+    --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.8rem; margin: 0 0 4px; }
+  h2 { margin: 0 0 4px; font-size: 1.3rem; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+  .verdict { background: var(--verdict); }
+  .verdict p { margin: 6px 0 0; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 10px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+  .up { color: var(--good); font-weight: 600; } .fail { color: var(--bad); font-weight: 600; }
+  .tag { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--muted); }
+  img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); margin: 12px 0 16px; background: #fff; }
+  .levels { display: grid; gap: 12px; }
+  .lvl { border-radius: 10px; padding: 12px 16px; }
+  .lvl h3 { margin: 0 0 4px; font-size: .95rem; }
+  .lvl p { margin: 0; }
+  .l1 { background: var(--t1); } .l2 { background: var(--t2); } .l3 { background: var(--t3); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 8px; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+  footer { color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>GRANDMA walking training review: g2_v8</h1>
+  <p class="sub">2026-10-02 06:42, iteration 1199 · GRANDMA body · 1200 iterations in 48 min ·
+    <span class="dot" style="background:var(--v1)"></span>g2_v7 = the run before it, same recipe (purple)
+    <span class="dot" style="background:var(--v2)"></span>g2_v8 = this run, continued from g2_v7's last brain (yellow)</p>
+
+  <div class="box verdict">
+    <h2>Verdict: her best walking brain so far, 8 of 10 on the gate</h2>
+    <p><strong>In one sentence:</strong> continuing the same training lifted the gate score from 6 to 8 of 10 with no falls, and in event heats the final brain beats her current one in five events and matches it in the other three.</p>
+    <div class="scroll">
+    <table>
+      <tr><th>Gate (10 seeds, CPU)</th><th>current brain line (g2_v5 it 1199)</th><th>g2_v7 it 1199</th><th>g2_v8 it 300</th><th>600</th><th>900</th><th>1199</th></tr>
+      <tr><td>Seeds passed</td><td>5/10</td><td>6/10</td><td class="up">7/10</td><td>5/10</td><td class="up">7/10</td><td class="up">8/10</td></tr>
+      <tr><td>Falls</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+      <tr><td>Segments over the speed-error bar (of 50)</td><td>10</td><td>5</td><td>4</td><td>6</td><td>4</td><td class="up">2</td></tr>
+    </table>
+    </div>
+    <div class="scroll">
+    <table>
+      <tr><th>Event heats, her 3 lanes, 6 heats each</th><th>Current brain</th><th>g2_v7 it 1199</th><th>g2_v8 it 900</th><th>g2_v8 it 1199</th></tr>
+      <tr><td>Gust Gauntlet: still standing at the end (of 18)</td><td>1</td><td>5</td><td>1</td><td class="up">12</td></tr>
+      <tr><td>Inverted Sprint: time</td><td>21.1 s</td><td>17.9 s</td><td>17.5 s</td><td class="up">17.5 s</td></tr>
+      <tr><td>Crab Shuffle: time</td><td>28.9 s</td><td>22.2 s</td><td>21.5 s</td><td class="up">21.2 s</td></tr>
+      <tr><td>Slalom Sprint: score, falls (of 18)</td><td>30.6, 4 falls</td><td>24.3, 1 fall</td><td class="up">24.5, 0 falls</td><td>25.6, 4 falls</td></tr>
+      <tr><td>360 Turntable: score (lower is better)</td><td>6.92</td><td>7.41</td><td>7.18</td><td>7.08</td></tr>
+      <tr><td>Steeplechase: ground time</td><td>17.5 s</td><td>18.3 s</td><td>17.6 s</td><td>17.6 s</td></tr>
+      <tr><td>Terminal Velocity: peak speed</td><td>2.77 m/s</td><td>2.73</td><td>2.75</td><td>2.75</td></tr>
+      <tr><td>Emergency Brake: disqualified (of 18)</td><td>3</td><td>2</td><td>3</td><td>3</td></tr>
+    </table>
+    </div>
+    <p><strong>Which checkpoint:</strong> iteration 1199 has the best gate score and by far the best Gust Gauntlet (12 of 18 still standing, against 1), but falls 4 times in the Slalom, as her current brain does. Iteration 900 never falls in the Slalom and is otherwise close, but is no better than today in the Gauntlet. Recommended: <code>g2_v8_it1199.onnx</code>; <code>g2_v8_it900.onnx</code> if Slalom falls matter more than Gauntlet survival.</p>
+    <p><strong>What still misses the gate</strong> (2 segments): walking backwards at 1.19 m/s and one speed-up to 2.03 m/s that has to settle within 1.75 s.</p>
+    <p><strong>Not swapped into the game yet:</strong> a new brain needs its confidence model, betting odds and parity references redone, and Unity was closed for training.</p>
+  </div>
+
+  <section class="box">
+    <h2>1 · Speed tracking</h2>
+    <div class="tag">Episode_Reward/track_lin (points for moving at the commanded speed; 2 is the most possible)</div>
+    <img src="1_track_lin.png" alt="Speed tracking reward: purple g2_v7 rises from 0.72 to 0.90; yellow g2_v8 starts at 0.90, holds, and ends at 0.97-0.99">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>Yellow starts where purple stopped and ends a little higher.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This line shows how well she matches the speed she is asked for. The yellow run picked up exactly where the purple one ended, stayed level for a long while, then crept up again in the last 300 iterations.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>g2_v8 holds 0.88-0.92 until iteration ~800 and reaches 0.97-0.99 at the end. The gain per iteration is about a third of g2_v7's, so the recipe is close to what it can give; the gate improvement (6 to 8) comes from segments that sat just above the 0.187 m/s bar moving just below it, which is also why the score moved 7, 5, 7, 8 between checkpoints.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>2 · Speed error</h2>
+    <div class="tag">Metrics/athlete/error_vel_xy (how far her speed is from the commanded one during practice; lower is better)</div>
+    <img src="2_speed_error.png" alt="Speed error: purple g2_v7 falls from 1.12 to about 1.04; yellow g2_v8 runs lower throughout, from 1.06 to about 0.98">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>Lower is better. The yellow line is under the purple line.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This is the mistake in her speed. Both lines wiggle a lot, but yellow is lower than purple the whole way, so she is making smaller mistakes than in the run before.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>The metric includes the seconds after every command change, so its level (about 1.0) says little; the trend does. g2_v7 goes 1.12 to 1.04, g2_v8 1.06 to 0.98 with heavy iteration-to-iteration scatter. The mirror loss fell further (0.033 to 0.022) and the action noise stayed at 0.21.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>3 · Total score</h2>
+    <div class="tag">Train/mean_reward (all reward terms added up per episode; same recipe in both runs, so the lines are comparable)</div>
+    <img src="3_mean_reward.png" alt="Mean reward: purple g2_v7 rises from 103 to 116; yellow g2_v8 runs from 116 to 119">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>Purple climbs. Yellow starts at the top of purple and climbs a little more.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This is her total score. The first run did most of the climbing. The second run added a small amount on top and was nearly flat by the end, so most of what this kind of practice can teach her has been learned.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>116 to 119 over 1200 iterations, against 103 to 116 in g2_v7: diminishing returns. A third continuation is unlikely to pay; the two remaining gate misses are a backward speed she does not reach in steady state (1.05 m/s of 1.19) and an acceleration, which point at the body's strength or at her bars rather than at more iterations.</p></div>
+    </div>
+  </section>
+
+  <footer>Charts: TensorBoard at localhost:6006, runs <code>g2_v7</code> and <code>g2_v8</code>. Gate data: <code>parity/watch_g2_v8.jsonl</code>, <code>parity/watch/g1_rung2_g2_v8_it*.json</code>; event heats: <code>parity/watch/events_grandma_g2_v8.json</code>. The earlier run's review: <code>parity/tb/g2_v7/review.html</code>.</footer>
+</main>
+</body>
+</html>

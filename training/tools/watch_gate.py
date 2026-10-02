@@ -45,11 +45,11 @@ def main() -> int:
         onnx = PARITY / "brains" / f"{name}.onnx"
         rec = {"it": it, "brain": onnx.name, "export": exp.strip().splitlines()[-1] if exp.strip() else ""}
         for g in a.gates.split(","):
-            if g == "getup":                             # R3: tools/getup_probe.py (supine start, 10 s)
+            if g in ("getup", "getup_prone"):            # R3: tools/getup_probe.py (supine / face-down start, 10 s)
                 txt = run([str(ROOT / "tools" / "getup_probe.py"), str(onnx), "--seeds", str(a.seeds),
-                           "--out", str(PARITY / "watch" / f"getup_{name}.json")])
+                           "--out", str(PARITY / "watch" / f"{g}_{name}.json")] + (["--prone"] if g == "getup_prone" else []))
                 m = re.search(r"up (\d+)/(\d+).*?up at end (\d+)/", txt)
-                rec["getup"] = f"up {m.group(1)}/{m.group(2)}, at end {m.group(3)}" if m else "ERROR " + txt[-300:]
+                rec[g] = f"up {m.group(1)}/{m.group(2)}, at end {m.group(3)}" if m else "ERROR " + txt[-300:]
                 continue
             if g == "crawl":                             # Event 8: tools/crawl_probe.py (prone start, 30 m at 1.2 m/s)
                 txt = run([str(ROOT / "tools" / "crawl_probe.py"), str(onnx), "--seeds", "5",

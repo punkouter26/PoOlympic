@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Athlete lighting</title>
+<style>
+  :root { --bg: #0c1220; --panel: #151d31; --ink: #eef1f7; --muted: #a3aec4; --accent: #ffd84a; --new: #ff5a4a; --good: #78e68c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 1280px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { color: var(--accent); font-size: 26px; margin: 0 0 4px; }
+  h2 { font-size: 20px; margin: 40px 0 8px; }
+  p, li { color: var(--muted); }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  @media (max-width: 720px) { .pair { grid-template-columns: 1fr; } }
+  figure { margin: 0; background: var(--panel); border-radius: 10px; padding: 12px; }
+  figcaption { margin: 0 0 8px; font-weight: 600; }
+  figcaption.before { color: var(--muted); }
+  figcaption.after { color: var(--good); }
+  .shot { position: relative; line-height: 0; }
+  .shot img { width: 100%; height: auto; display: block; border-radius: 6px; }
+  .mk { position: absolute; border: 3px solid var(--new); border-radius: 6px; box-shadow: 0 0 0 1px rgba(0,0,0,.6); }
+  .mk.old { border-style: dashed; border-color: #ff9a5a; }
+  .mk b { position: absolute; top: -13px; left: -13px; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 13px;
+          background: var(--new); color: #fff; font: 700 14px/26px "Segoe UI", sans-serif; text-align: center; }
+  .mk.old b { background: #ff9a5a; color: #1a1206; }
+  ul { padding-left: 22px; }
+  li { margin: 4px 0; }
+  .tag { display: inline-block; min-width: 22px; padding: 0 5px; border-radius: 11px; background: var(--new); color: #fff; font-weight: 700; text-align: center; font-size: 13px; }
+  .tag.old { background: #ff9a5a; color: #1a1206; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Brighter athletes: before vs after</h1>
+  <p>2 Oct 2026, Event 5 The Gust Gauntlet, winner shot, in the editor at 1440 × 3088. Both pictures are the same
+     frozen frame with the new lights switched off and on. Red boxes mark what changed; dashed orange boxes mark the
+     old state.</p>
+
+  <div class="pair">
+    <figure>
+      <figcaption class="before">Before: the athletes are close to black</figcaption>
+      <div class="shot">
+        <img src="athlete_light/gust_off.jpg" alt="Winner shot before: MATT, the zombie and GRANDMA are dark silhouettes on a bright yellow platform">
+        <div class="mk old" style="left:28%;top:46%;width:68%;height:50%"><b>A</b></div>
+        <div class="mk old" style="left:1%;top:8%;width:98%;height:36%"><b>B</b></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption class="after">After: faces, uniforms and skin are readable</figcaption>
+      <div class="shot">
+        <img src="athlete_light/gust_on.jpg" alt="Winner shot after: the same athletes lit from the front and the side, the platform and the stands unchanged">
+        <div class="mk" style="left:28%;top:46%;width:68%;height:50%"><b>1</b></div>
+        <div class="mk" style="left:1%;top:8%;width:98%;height:36%"><b>2</b></div>
+      </div>
+    </figure>
+  </div>
+  <ul>
+    <li><span class="tag old">A</span> The only direct light on the athletes was the key light, which points almost
+        straight down, so heads and shoulders were lit and everything facing the camera was dark. The baked light
+        around the track is dim too (a third of the measuring points are close to black).</li>
+    <li><span class="tag">1</span> Two soft lights without shadows now shine on the athletes from opposite sides, at
+        30° above the horizon (strength 0.9 and 0.6). They are in every one of the 14 event scenes as the object
+        <b>AthleteFill</b>, so they can be tuned by hand in the scene.</li>
+    <li><span class="tag old">B</span> <span class="tag">2</span> The stadium, the crowd, the track and the platform
+        are unchanged: the new lights are set to light only the athletes and the podium statues. Nothing had to be
+        rebaked.</li>
+  </ul>
+  <p>Not yet measured: the frame rate on the phone with the two extra lights.</p>
+</main>
+</body>
+</html>

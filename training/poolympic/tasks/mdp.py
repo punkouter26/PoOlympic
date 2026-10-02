@@ -162,6 +162,28 @@ class AthleteCommand(UniformVelocityCommand):
             self.vel_command_b[env_ids] = torch.where(pick[:, None], sprint, cur)
             if hasattr(self, "is_standing_env"):
                 self.is_standing_env[env_ids] = self.is_standing_env[env_ids] & ~pick
+        cfrac = getattr(self.cfg, "crab_fraction", 0.0)
+        if cfrac:  # g2_v7: extra mass on side-stepping (the G1 crab segments: small vx, |vy| up to the envelope edge, no turn)
+            n = len(env_ids)
+            pick = torch.rand(n, device=self.device) < cfrac
+            side = torch.where(torch.rand(n, device=self.device) < 0.5, -1.0, 1.0)
+            crab = torch.stack([torch.empty(n, device=self.device).uniform_(*self.cfg.crab_vx),
+                                side * torch.empty(n, device=self.device).uniform_(*self.cfg.crab_vy),
+                                torch.zeros(n, device=self.device)], -1)
+            self.vel_command_b[env_ids] = torch.where(pick[:, None], crab, self.vel_command_b[env_ids])
+            if hasattr(self, "is_standing_env"):
+                self.is_standing_env[env_ids] = self.is_standing_env[env_ids] & ~pick
+        for frac, vx, vy_abs, wz_max in getattr(self.cfg, "bands", ()):
+            # g2_v7: extra mass on named parts of the envelope (fraction, vx range, |vy| range either side, |wz| max);
+            # drawn in order, a later band overrides an earlier one
+            n = len(env_ids)
+            pick = torch.rand(n, device=self.device) < frac
+            u = lambda lo, hi: torch.empty(n, device=self.device).uniform_(lo, hi)
+            side = torch.where(torch.rand(n, device=self.device) < 0.5, -1.0, 1.0)
+            band = torch.stack([u(*vx), side * u(*vy_abs), u(-wz_max, wz_max)], -1)
+            self.vel_command_b[env_ids] = torch.where(pick[:, None], band, self.vel_command_b[env_ids])
+            if hasattr(self, "is_standing_env"):
+                self.is_standing_env[env_ids] = self.is_standing_env[env_ids] & ~pick
         a_max = getattr(self.cfg, "max_lateral_accel", None)
         if a_max:  # |wz| <= a_max / |v|: no physically impossible sprint-and-spin commands (r2_v6)
             v = torch.linalg.norm(self.vel_command_b[env_ids, :2], dim=-1).clamp(min=1e-3)
@@ -175,6 +197,10 @@ class AthleteCommandCfg(UniformVelocityCommandCfg):
     sprint_fraction: float = 0.0            # share of resamples drawn from the sprint band below
     sprint_vx: tuple[float, float] = (2.5, 4.0)
     sprint_wz: float = 0.6
+    crab_fraction: float = 0.0              # share of resamples drawn from the side-step band below (after the sprint draw)
+    crab_vx: tuple[float, float] = (-0.5, 0.5)
+    crab_vy: tuple[float, float] = (0.4, 1.1)   # |vy|, either side
+    bands: tuple = ()                       # ((fraction, (vx lo, hi), (|vy| lo, hi), |wz| max), ...) after the draws above
 
     def build(self, env):
         return AthleteCommand(self, env)

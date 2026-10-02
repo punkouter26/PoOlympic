@@ -27,7 +27,7 @@ from mjlab.managers.scene_entity_config import SceneEntityCfg
 
 from .. import contract as C
 from . import mdp
-from .matt_env import CUBE_NAMES, V5_ENVS, add_bio_rewards, matt_getup5_env_cfg
+from .matt_env import CUBE_NAMES, DEFAULT_ROOT_Z, V5_ENVS, add_bio_rewards, matt_getup5_env_cfg
 
 STAGES = ("squat", "kneel", "sit", "lying")
 # joint angles in degrees (both sides), on top of the default pose; root pitch (+ = trunk forward), pelvis on the ground
@@ -36,14 +36,24 @@ POSES = {
     "kneel": ({"hip_flex": 0, "knee": 100, "ankle_dorsi": -45}, 0.0),
     "sit": ({"hip_flex": 90, "knee": 15, "ankle_dorsi": 0, "abdomen_flex": 10}, 0.0),
 }
-UP_Z, UP_TILT_DEG = 0.85, 20.0
+def _body_root_z() -> float:
+    """The process body's standing pelvis height (MATT family: matt_env.DEFAULT_ROOT_Z, so K = 1 exactly)."""
+    if C.BODY.family == "matt":
+        return DEFAULT_ROOT_Z
+    return float(mujoco.MjModel.from_xml_path(str(C.SCENE_XML)).key("default").qpos[2])
+
+
+ROOT_Z = _body_root_z()
+K = ROOT_Z / DEFAULT_ROOT_Z            # height scale of "standing" for other bodies (their stance is crouched)
+LAM = C.BODY.length_scale
+UP_Z, UP_TILT_DEG = 0.85 * K, 20.0
 ADVANCE_AT = 0.6
 MIN_ITS_PER_STAGE = 40
 
 
-def _pose_table() -> dict:
+def _pose_table(poses: dict | None = None) -> dict:
     """Per stage: joint targets in contract order + the root height that puts the lowest geom 2 mm above the ground
-    (CPU FK of the active body's scene, once)."""
+    (CPU FK of the active body's scene, once). poses: {name: (joint angles in deg, root pitch)}, default POSES."""
     m = mujoco.MjModel.from_xml_path(str(C.SCENE_XML))
     d = mujoco.MjData(m)
     ath = C.Athlete.bind(m)
@@ -52,7 +62,7 @@ def _pose_table() -> dict:
     root_q = ath.root_qposadr
     robot_geoms = [g for g in range(m.ngeom) if m.body(m.geom_bodyid[g]).name not in ("world",)
                    and not m.body(m.geom_bodyid[g]).name.startswith("cube")]
-    for stage, (angles, pitch) in POSES.items():
+    for stage, (angles, pitch) in (POSES if poses is None else poses).items():
         q = np.array(mdp.CONTRACT_DEFAULTS, dtype=float)
         for i, n in enumerate(names):
             base = n[:-2] if n.endswith(("_l", "_r")) else n
@@ -206,7 +216,7 @@ LADDER_KEYS = ("squat", "tuck", "supine")
 LADDER_POSES = {"squat": POSES["squat"], "tuck": (POSES["squat"][0], -math.pi / 2),   # the squat's joints, on the back
                 "supine": ({}, -math.pi / 2)}                                          # default joint pose, flat on the back
 LADDER_SUB = 3
-LADDER_EPISODE_S = 6.0          # a stage's verdict arrives one episode later: 12.5 its instead of 21
+LADDER_EPISODE_S = 6.0        # a stage's verdict arrives one episode later: 12.5 its instead of 21
 LADDER_MIN_ITS = 15
 ASSIST_GRACE = 15               # its of a new stage before the assist may rise (one episode + the EMA warm-up)
 ASSIST_GAIN = 0.05              # per it: +0.03 body weights at 0 % success, -0.02 at 100 %
@@ -270,6 +280,10 @@ def _ladder_state(env, start_level: int = 0) -> dict:
     st = getattr(env, "_poolympic_getup_ladder", None)
     if st is None:
         table = [(torch.as_tensor(q, device=env.device, dtype=torch.float32), float(z), quat) for q, z, quat in ladder_poses()]
+        # roll stages after the supine one (reset_base params, read here so every caller builds the same table):
+        # lying rolled about the body's long axis by the given degrees, 180 = face down
+        for deg in env.cfg.events["reset_base"].params.get("roll_stages", ()):
+            table.append((None, math.radians(deg), None))
         st = {"level": start_level, "ema": 0.0, "since": 0, "last_it": -1, "succ": 0.0, "count": 0.0, "assist": 0.0, "zero_its": 0,
               "start": torch.zeros(env.num_envs, dtype=torch.long, device=env.device), "table": table,
               "probs": _ladder_mix(start_level, len(table), env.device)}
@@ -288,10 +302,34 @@ def _ladder_mix(level: int, n: int, device) -> torch.Tensor:
     return p / p.sum()
 
 
-def reset_ladder(env, env_ids, joint_noise: float = 0.05, start_level: int = 0) -> None:
-    """Reset each env into a ladder stage drawn from the curriculum's current mix. The last stage is the event start
-    (mdp.reset_lying, supine: tools/getup_probe.py); the others write their joint pose and a root placed on the ground
-    at a random yaw."""
+def _reset_rolled(env, ids, theta: float) -> None:
+    """Lying, rolled about the body's long axis by theta (0 = on the back, pi = face down) either way, ± 0.2 rad of
+    roll and pitch jitter, any yaw, dropped from the lying height; zero velocity."""
+    from mjlab.utils.lab_api.math import quat_mul
+    n, dev = len(ids), env.device
+    asset = env.scene["robot"]
+
+    def q_axis(axis: int, ang: torch.Tensor) -> torch.Tensor:
+        q = torch.zeros(n, 4, device=dev)
+        q[:, 0], q[:, 1 + axis] = torch.cos(ang / 2), torch.sin(ang / 2)
+        return q
+
+    u = lambda lo, hi: lo + (hi - lo) * torch.rand(n, device=dev)
+    side = torch.where(torch.rand(n, device=dev) < 0.5, -1.0, 1.0)
+    q = quat_mul(q_axis(2, u(-math.pi, math.pi)),
+                 quat_mul(q_axis(0, side * (theta + u(-0.2, 0.2))), q_axis(1, -math.pi / 2 + u(-0.2, 0.2))))
+    pos = env.scene.env_origins[ids].clone()
+    pos[:, 2] = u(0.2 * LAM, 0.25 * LAM)
+    asset.write_root_link_pose_to_sim(torch.cat([pos, q], -1), env_ids=ids)
+    asset.write_root_link_velocity_to_sim(torch.zeros(n, 6, device=dev), env_ids=ids)
+
+
+def reset_ladder(env, env_ids, joint_noise: float = 0.05, start_level: int = 0, prone_fraction: float = 0.0,
+                 roll_stages: tuple = ()) -> None:
+    """Reset each env into a ladder stage drawn from the curriculum's current mix. The supine stage is the event start
+    (mdp.reset_lying: tools/getup_probe.py; face down with probability prone_fraction); roll stages (roll_stages,
+    degrees, read by _ladder_state) come after it; the others write their joint pose and a root placed on the ground at
+    a random yaw."""
     if env_ids is None:
         env_ids = torch.arange(env.num_envs, device=env.device)
     if len(env_ids) == 0:
@@ -302,19 +340,22 @@ def reset_ladder(env, env_ids, joint_noise: float = 0.05, start_level: int = 0) 
     st["start"][env_ids] = stage
     asset = env.scene["robot"]
     ix = mdp._idx(env)
-    last = len(st["table"]) - 1
+    last = 2 * LADDER_SUB                                   # the supine stage (the last pose of the ladder itself)
     for k, (q, z, quat) in enumerate(st["table"]):
         ids = env_ids[stage == k]
         n = len(ids)
         if n == 0:
             continue
         jp = asset.data.default_joint_pos[ids].clone()
-        if k != last:
+        if k < last:
             jp[:, ix.joint_ids] = q
         jp = jp + (torch.rand_like(jp) * 2 - 1) * joint_noise
         asset.write_joint_state_to_sim(jp, torch.zeros_like(jp), env_ids=ids)
         if k == last:
-            mdp.reset_lying(env, ids, prone_fraction=0.0)
+            mdp.reset_lying(env, ids, prone_fraction=prone_fraction, z=(0.2 * LAM, 0.25 * LAM))
+            continue
+        if k > last:
+            _reset_rolled(env, ids, z)                      # roll stage: z holds the roll angle
             continue
         half = (torch.rand(n, device=dev) * 2 - 1) * math.pi / 2          # yaw / 2
         w1, z1 = torch.cos(half), torch.sin(half)
@@ -484,4 +525,97 @@ def matt_getup_ladder_e_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     cfg.events["reset_base"].params["start_level"] = level
     if play:
         cfg.episode_length_s = LADDER_EPISODE_S
+    return cfg
+
+
+def _start_level(cfg: ManagerBasedRlEnvCfg, level: int) -> None:
+    """The frontier a run starts at: whichever term builds the ladder state first must see the same value."""
+    cfg.curriculum["getup_rev"].params["start_level"] = level
+    cfg.events["reset_base"].params["start_level"] = level
+    cfg.rewards["legs_folded"].params["start_level"] = level
+
+
+def matt_getup_prone_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """getup_prone_v1 (mattbio, from getup_rev_v2e it 1499: 30/30 from supine, prone starts untrained). v2e's recipe
+    with the last ladder stage lying face down half the time; the run starts with that stage as its frontier, so the
+    success-driven assist comes back for the lying starts until both ways up work without it."""
+    cfg = matt_getup_ladder_e_env_cfg(play=play)
+    cfg.events["reset_base"].params["prone_fraction"] = 0.5
+    _start_level(cfg, 2 * LADDER_SUB)
+    return cfg
+
+
+def body_getup_ladder_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """The get-up ladder (v2e recipe) on the process body when it is not MATT (zombie, GRANDMA; POOLYMPIC_BODY): entity
+    swapped, "standing" heights scaled by the body's standing pelvis height (K), lengths by λ, the joint-speed bar and the
+    torque penalty as in zombie_env. A body's first get-up brain: the ladder starts at the squat (stage 0); warm start =
+    the body's Rung 0 brain (it already stands, which is the end of every stage)."""
+    b = C.BODY
+    if b.name == "grandma":
+        from .grandma_env import grandma_entity_cfg as entity
+    elif b.name == "zombie":
+        from .zombie_env import zombie_entity_cfg as entity
+    else:
+        raise RuntimeError("body_getup_ladder_env_cfg is for the zombie / GRANDMA processes (MATT: matt_getup_ladder_e_env_cfg)")
+    cfg = matt_getup_ladder_e_env_cfg(play=play)
+    cfg.scene.entities["robot"] = entity()
+    rw = cfg.rewards
+    rw["rise"].params["target"] = ROOT_Z
+    rw["standing_tall"].params["min_height"] = UP_Z
+    rw["upright"].params["target"] = ROOT_Z
+    rw["legs_folded"].params["target"] = ROOT_Z
+    rw["height"].params.update({"target": ROOT_Z, "std": 0.1 * K})
+    rw["feet_under"].params.update({"std": 0.5 * LAM, "max_height": 0.08 * LAM, "height_std": 0.10 * LAM})
+    rw["joint_vel_limit"].params["limit"] = 18.0 / b.time_scale
+    rw["torques"].weight = rw["torques"].weight / b.torque_scale ** 2
+    _start_level(cfg, 2 * LADDER_SUB if play else 0)
+    cfg.sim.nconmax, cfg.sim.njmax = 160, 800          # full self-collision, lying: more contacts
+    cfg.scene.num_envs = 4096
+    cfg.viewer.distance = 3.5 * LAM
+    return cfg
+
+
+def zombie_getup2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """zgetup_v2 (from zgetup_v1 it 200, which passes stages 0 and 1). zgetup_v1 sat at 0 % on stage 2 (seated, leaning
+    back) for 830 its with the assist at its 0.8 cap. CPU rollouts of its it 1000 brain: without assist it tips over
+    backwards and lies with folded legs; with 0.6-0.8 body weights of assist the 22 kg body HANGS from the torso force —
+    pelvis 0.26-0.31 m, feet 0.12 m off the ground, trunk tilted 52°, knees held at 112° by an action of +5 — because
+    legs_folded_when_low still pays half its weight at that height, and opening the knees loses it before the feet
+    touch anything. Here the folded-legs reward fades to 0 at half the standing pelvis height (0.28 m) instead of at
+    the full height, so hanging tucked earns nothing and standing up from the hang is uphill all the way."""
+    cfg = body_getup_ladder_env_cfg(play=play)
+    cfg.rewards["legs_folded"].params["target"] = 0.5 * ROOT_Z
+    if not play:
+        _start_level(cfg, 2)
+    return cfg
+
+
+def body_getup_roll_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """Face-down starts as a ROLL ladder, for a body whose arms cannot press it up (GRANDMA: ggetup_prone_v1 held the
+    supine half at ~55 % with the assist rising to its cap and never got up face down). Three stages after the supine
+    one: lying rolled 60°, 120° and 180° (face down) about the body's long axis, either way. Each is a small roll from
+    one it already gets up from; rolled all the way back it is the supine start. The frontier starts at the 60° stage."""
+    cfg = body_getup_ladder_env_cfg(play=play)
+    rolls = (60.0, 120.0, 180.0)
+    cfg.events["reset_base"].params["roll_stages"] = rolls
+    _start_level(cfg, 2 * LADDER_SUB + (len(rolls) if play else 1))
+    return cfg
+
+
+def body_getup_roll2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """Continuation of a roll-ladder run that passed the 60° stage: the frontier starts at the 120° stage (a restart
+    puts the ladder state back to its start level)."""
+    cfg = body_getup_roll_env_cfg(play=play)
+    if not play:
+        _start_level(cfg, 2 * LADDER_SUB + 2)
+    return cfg
+
+
+def body_getup_prone_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """Face-down starts for a body that already gets up from its back (= matt_getup_prone_env_cfg on the zombie /
+    GRANDMA): the last ladder stage lies face down half the time and is the frontier from the first iteration. Warm
+    start: the body's supine get-up brain."""
+    cfg = body_getup_ladder_env_cfg(play=play)
+    cfg.events["reset_base"].params["prone_fraction"] = 0.5
+    _start_level(cfg, 2 * LADDER_SUB)
     return cfg

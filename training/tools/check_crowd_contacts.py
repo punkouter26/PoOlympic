@@ -126,7 +126,7 @@ def check_scene(tag: str) -> dict:
 
 
 def scene_tags(scenes: list[str] | None = None) -> list[str]:
-    """Every composed lineup of the scenes (GRANDMA has no crawl brain: no GRANDMA lineup of the all-fours scenes)."""
+    """Every composed lineup of the scenes."""
     return [f"{s}{l}" for s in (scenes or EVENT_SCENES) for l in LINEUPS if (ASSETS / f"scene_{s}{l}.xml").exists()]
 
 

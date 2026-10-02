@@ -96,3 +96,29 @@ def matt_stance_v7_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     r["skill_spot"] = RewardTermCfg(func=S.skill_spot, weight=w / 2, params={"std": 0.15})
     r["skill_flamingo_lift"] = RewardTermCfg(func=S.skill_flamingo_lift, weight=w / 2, params={"clearance": 0.10})
     return cfg
+
+
+def matt_stance_reach_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """rs_reach_v1 — an Event 4 brain (per-event stance brains, user 2026-10-01), from rs_v8 it 1199. The reach drill
+    was 0/10 in every run, but the skill is mostly there: on 24 single targets (CPU, 2026-10-02) the hand ends a median
+    0.095 m from the target, 8 of 24 inside the 0.08 m bar; the drill needs 6 of 6. The error grows with the target's
+    distance (r = 0.65): targets past the straight arm's 0.61 m reach fall 0.10-0.16 m short and high ones 0.09-0.17 m
+    low. FK: 92 % of the targets are reachable by the arm alone, all of them with a trunk lean of a few degrees.
+    Changes: half of the commands are reaches (13 % before), a kernel between the 0.10 and 0.03 m ones (std 0.06), and
+    the uprightness reward is off while reaching (a 12 deg lean cost 0.28 per step)."""
+    cfg = matt_stance_v7_env_cfg(play=play)
+    cfg.commands["athlete"].mode_probs = (0.20, 0.06, 0.06, 0.06, 0.12, 0.50)
+    r = cfg.rewards
+    r["skill_reach_mid"] = RewardTermCfg(func=S.skill_reach, weight=SKILL_REWARD_WEIGHT / 2, params={"std": 0.06})
+    r["upright"].params["also"] = ("reach",)
+    return cfg
+
+
+def matt_stance_reach2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """rs_reach_v2 (from rs_reach_v1 it 1199). v1 brought single targets to 22 of 24 inside the bar (median 0.031 m at it
+    900) but the drill stayed at 1/10: 88 % of its 6-target chains hold a target past the straight arm's 0.61 m, and
+    those end 0.10-0.30 m off (hand low and short towards the arm's side, trunk tilt 1-5 deg: it does not lean).
+    Uniform sampling puts 30 % of reaches there; here half of them are drawn from 80-95 % of the reach radius."""
+    cfg = matt_stance_reach_env_cfg(play=play)
+    cfg.commands["athlete"].reach_far_fraction = 0.5
+    return cfg

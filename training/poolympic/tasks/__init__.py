@@ -239,12 +239,15 @@ if bodies.current().name == "mattbio":
     # STAGED (not trained; needs the user's OK — DESIGN §2 body change): MATT with full self-collision + bio torque caps
     # (bodies.BIO_TORQUE_CAPS). Same contract, so every MATT checkpoint warm-starts directly. POOLYMPIC_BODY=mattbio.
     from .matt_env import matt_ppo_v5_cfg, matt_rung0_v5_env_cfg, matt_rung2_flight_v5_env_cfg, matt_rung2_v5_env_cfg
-    from .getup_env import matt_getup_ladder_b_env_cfg, matt_getup_ladder_c_env_cfg, matt_getup_ladder_d_env_cfg, matt_getup_ladder_e_env_cfg, matt_getup_ladder_env_cfg, matt_getup_rev_env_cfg
+    from .getup_env import (matt_getup_ladder_b_env_cfg, matt_getup_ladder_c_env_cfg, matt_getup_ladder_d_env_cfg,
+                            matt_getup_ladder_e_env_cfg, matt_getup_ladder_env_cfg, matt_getup_prone_env_cfg, matt_getup_rev_env_cfg)
     from .crawl_env import matt_crawl_v5_env_cfg
-    from .stance_env import matt_stance_env_cfg, matt_stance_v6_env_cfg, matt_stance_v7_env_cfg
+    from .stance_env import matt_stance_env_cfg, matt_stance_reach2_env_cfg, matt_stance_reach_env_cfg, matt_stance_v6_env_cfg, matt_stance_v7_env_cfg
     from .symmetry import SymmetricRunner
 
     for task_id, fn, exp, its, runner in (
+            ("PoOlympic-MattBio-RungS-Reach", matt_stance_reach_env_cfg, "mattbio_stance", 1200, SymmetricRunner),
+            ("PoOlympic-MattBio-RungS-Reach2", matt_stance_reach2_env_cfg, "mattbio_stance", 1200, SymmetricRunner),
             ("PoOlympic-MattBio-Rung0-Stand", matt_rung0_v5_env_cfg, "mattbio_rung0", 400, MjlabOnPolicyRunner),
             ("PoOlympic-MattBio-Rung2-Omni", matt_rung2_v5_env_cfg, "mattbio_rung2", 800, SymmetricRunner),
             ("PoOlympic-MattBio-RungS-Stance", matt_stance_env_cfg, "mattbio_stance", 1000, SymmetricRunner),
@@ -258,19 +261,26 @@ if bodies.current().name == "mattbio":
             ("PoOlympic-MattBio-Getup-Ladder-c", matt_getup_ladder_c_env_cfg, "mattbio_getup", 1500, MjlabOnPolicyRunner),
             ("PoOlympic-MattBio-Getup-Ladder-d", matt_getup_ladder_d_env_cfg, "mattbio_getup", 1500, MjlabOnPolicyRunner),
             ("PoOlympic-MattBio-Getup-Ladder-e", matt_getup_ladder_e_env_cfg, "mattbio_getup", 1500, MjlabOnPolicyRunner),
+            ("PoOlympic-MattBio-Getup-Prone", matt_getup_prone_env_cfg, "mattbio_getup", 1000, MjlabOnPolicyRunner),
             ("PoOlympic-MattBio-Crawl", matt_crawl_v5_env_cfg, "mattbio_crawl", 600, MjlabOnPolicyRunner)):
         rl = matt_ppo_v5_cfg(exp, max_iterations=its)
         if task_id.endswith("Stance-v7"):
             rl.algorithm.entropy_coef = 0.0025   # rs_v3-v6 passed this on the CLI; the queue has no train-args field
-        if task_id.endswith("Stance-v8"):
+        if task_id.endswith("Stance-v8") or task_id.endswith(("RungS-Reach", "RungS-Reach2")):
             # rs_v8 = rs_v7's env, entropy 0.0025 -> 0.001 (+ plain_init --max-std 0.3): the action std rose 0.44 -> 0.54
             # over rs_v6 + rs_v7 while track_ang fell 0.98 -> 0.71; on GRANDMA's Rung 2 this change stopped both.
             rl.algorithm.entropy_coef = 0.001
         register_mjlab_task(task_id=task_id, env_cfg=fn(), play_env_cfg=fn(play=True), rl_cfg=rl, runner_cls=runner)
 
+def _low_entropy(rl, coef: float = 0.001):
+    rl.algorithm.entropy_coef = coef
+    return rl
+
+
 if bodies.current().name == "grandma":
     from .grandma_env import (grandma_rung0_env_cfg, grandma_rung1_env_cfg, grandma_rung2_base_env_cfg,
-                              grandma_rung2_cap28_env_cfg, grandma_rung2_cap_env_cfg, grandma_rung2_env_cfg)
+                              grandma_rung2_cap28_env_cfg, grandma_rung2_cap_env_cfg, grandma_rung2_env_cfg,
+                              grandma_rung2_bands_env_cfg, grandma_rung2_sharp_env_cfg)
     from .matt_env import matt_ppo_cfg
     from .symmetry import SymmetricRunner
 
@@ -279,13 +289,80 @@ if bodies.current().name == "grandma":
             ("PoOlympic-Grandma-Rung2-Omni-Base", grandma_rung2_base_env_cfg, "grandma_rung2", 2000, MjlabOnPolicyRunner),
             ("PoOlympic-Grandma-Rung2-Omni-Cap", grandma_rung2_cap_env_cfg, "grandma_rung2", 1200, MjlabOnPolicyRunner),
             ("PoOlympic-Grandma-Rung2-Omni-Cap28", grandma_rung2_cap28_env_cfg, "grandma_rung2", 1200, MjlabOnPolicyRunner),
+            ("PoOlympic-Grandma-Rung2-Omni-Cap28-Sharp", grandma_rung2_sharp_env_cfg, "grandma_rung2", 1200, MjlabOnPolicyRunner),
+            ("PoOlympic-Grandma-Rung2-Omni-Cap28-Bands", grandma_rung2_bands_env_cfg, "grandma_rung2", 1200, SymmetricRunner),
             ("PoOlympic-Grandma-Rung2-Omni", grandma_rung2_env_cfg, "grandma_rung2", 2000, SymmetricRunner)):
         _rl = matt_ppo_cfg(_exp, max_iterations=_its)
-        if _tid in ("PoOlympic-Grandma-Rung2-Omni", "PoOlympic-Grandma-Rung2-Omni-Cap", "PoOlympic-Grandma-Rung2-Omni-Cap28"):
+        if _tid in ("PoOlympic-Grandma-Rung2-Omni", "PoOlympic-Grandma-Rung2-Omni-Cap", "PoOlympic-Grandma-Rung2-Omni-Cap28",
+                    "PoOlympic-Grandma-Rung2-Omni-Cap28-Sharp", "PoOlympic-Grandma-Rung2-Omni-Cap28-Bands"):
             # g2_v2b (entropy 0.005): action std 0.51 -> 0.57 and mean reward 112 -> 102 in 400 its, speed at a 2.5 m/s
             # command 2.36 -> 1.25: the entropy bonus out-pulled the task. g2_v3 onwards: 0.001.
             _rl.algorithm.entropy_coef = 0.001
         register_mjlab_task(task_id=_tid, env_cfg=_fn(), play_env_cfg=_fn(play=True), rl_cfg=_rl, runner_cls=_runner)
+
+    from .crawl_env import grandma_crawl2_env_cfg, grandma_crawl3_env_cfg, grandma_crawl_env_cfg
+    from .getup_env import body_getup_ladder_env_cfg, body_getup_prone_env_cfg
+
+    from .getup_env import body_getup_roll_env_cfg
+
+    register_mjlab_task(
+        task_id="PoOlympic-Grandma-Getup-Roll",
+        env_cfg=body_getup_roll_env_cfg(),
+        play_env_cfg=body_getup_roll_env_cfg(play=True),
+        rl_cfg=matt_ppo_cfg("grandma_getup", max_iterations=800),
+        runner_cls=MjlabOnPolicyRunner,
+    )
+
+    from .getup_env import body_getup_roll2_env_cfg
+
+    register_mjlab_task(
+        task_id="PoOlympic-Grandma-Getup-Roll2",
+        env_cfg=body_getup_roll2_env_cfg(),
+        play_env_cfg=body_getup_roll2_env_cfg(play=True),
+        # entropy 0.005 -> 0.001: ggetup_roll_v1's action std rose 0.44 -> 0.93 in 620 its while the 120 deg stage sat at 45-48 %
+        rl_cfg=_low_entropy(matt_ppo_cfg("grandma_getup", max_iterations=1000)),
+        runner_cls=MjlabOnPolicyRunner,
+    )
+
+    register_mjlab_task(
+        task_id="PoOlympic-Grandma-Getup-Prone",
+        env_cfg=body_getup_prone_env_cfg(),
+        play_env_cfg=body_getup_prone_env_cfg(play=True),
+        rl_cfg=matt_ppo_cfg("grandma_getup", max_iterations=600),
+        runner_cls=MjlabOnPolicyRunner,
+    )
+
+    register_mjlab_task(
+        task_id="PoOlympic-Grandma-Crawl3",
+        env_cfg=grandma_crawl3_env_cfg(),
+        play_env_cfg=grandma_crawl3_env_cfg(play=True),
+        rl_cfg=matt_ppo_cfg("grandma_crawl", max_iterations=1000),
+        runner_cls=MjlabOnPolicyRunner,
+    )
+
+    register_mjlab_task(
+        task_id="PoOlympic-Grandma-Crawl2",
+        env_cfg=grandma_crawl2_env_cfg(),
+        play_env_cfg=grandma_crawl2_env_cfg(play=True),
+        rl_cfg=matt_ppo_cfg("grandma_crawl", max_iterations=1500),
+        runner_cls=MjlabOnPolicyRunner,
+    )
+
+    register_mjlab_task(
+        task_id="PoOlympic-Grandma-Crawl",
+        env_cfg=grandma_crawl_env_cfg(),
+        play_env_cfg=grandma_crawl_env_cfg(play=True),
+        rl_cfg=matt_ppo_cfg("grandma_crawl", max_iterations=1500),
+        runner_cls=MjlabOnPolicyRunner,
+    )
+
+    register_mjlab_task(
+        task_id="PoOlympic-Grandma-Getup",
+        env_cfg=body_getup_ladder_env_cfg(),
+        play_env_cfg=body_getup_ladder_env_cfg(play=True),
+        rl_cfg=matt_ppo_cfg("grandma_getup", max_iterations=2000),
+        runner_cls=MjlabOnPolicyRunner,
+    )
 
     register_mjlab_task(
         task_id="PoOlympic-Grandma-Rung0-Stand",
@@ -409,6 +486,33 @@ if bodies.current().name == "zombie":
     )
 
     from .crawl_env import zombie_crawl2_env_cfg, zombie_crawl3_env_cfg, zombie_crawl4_env_cfg, zombie_crawl5_env_cfg, zombie_crawl_env_cfg
+    from .getup_env import body_getup_ladder_env_cfg, body_getup_prone_env_cfg
+
+    from .getup_env import zombie_getup2_env_cfg
+
+    register_mjlab_task(
+        task_id="PoOlympic-Zombie-Getup2",
+        env_cfg=zombie_getup2_env_cfg(),
+        play_env_cfg=zombie_getup2_env_cfg(play=True),
+        rl_cfg=matt_ppo_cfg("zombie_getup", max_iterations=1500),
+        runner_cls=MjlabOnPolicyRunner,
+    )
+
+    register_mjlab_task(
+        task_id="PoOlympic-Zombie-Getup-Prone",
+        env_cfg=body_getup_prone_env_cfg(),
+        play_env_cfg=body_getup_prone_env_cfg(play=True),
+        rl_cfg=matt_ppo_cfg("zombie_getup", max_iterations=600),
+        runner_cls=MjlabOnPolicyRunner,
+    )
+
+    register_mjlab_task(
+        task_id="PoOlympic-Zombie-Getup",
+        env_cfg=body_getup_ladder_env_cfg(),
+        play_env_cfg=body_getup_ladder_env_cfg(play=True),
+        rl_cfg=matt_ppo_cfg("zombie_getup", max_iterations=2000),
+        runner_cls=MjlabOnPolicyRunner,
+    )
 
     register_mjlab_task(
         task_id="PoOlympic-Zombie-Crawl5",

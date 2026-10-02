@@ -31,7 +31,6 @@ import build_mjcf as B  # noqa: E402  (MATT profile: only the scene helpers / co
 
 ASSETS = ROOT / "assets"
 ROSTER = ["matt", "zombie", "grandma"]      # = Unity MeetLineup.Roster (lower case)
-CRAWL_ROSTER = ["matt", "zombie"]           # all-fours events: GRANDMA has no crawl brain yet (Unity: MATT runs for her)
 
 
 def march_props() -> list[dict]:
@@ -47,7 +46,7 @@ SCENES = {  # scene -> the build_mjcf.compose_meet arguments of that event scene
     "meet8": dict(),                                  # G6 testbed (Testbed_Rung1): 1.22 m lanes, no venue, lane isolation
     "pedestal8": dict(event=1, pedestal_h=B.PEDESTAL_H, beam=lambda: B.venue_box(1, "beam"), crowd=True),
     "track8": dict(event=22, park_offset=(0.0, -30.0, 0.0), crowd=True),
-    "crawl8": dict(event=8, park_offset=(0.0, -30.0, 0.0), crowd=True, roster=CRAWL_ROSTER),
+    "crawl8": dict(event=8, park_offset=(0.0, -30.0, 0.0), crowd=True),     # GRANDMA crawls too since 2026-10-02 (crawl_grandma.onnx)
     "turntable8": dict(event=12, crowd=True),
     "squat8": dict(event=3, park_offset=(0.0, -30.0, 0.0), crowd=True, roster=[]),   # Event 3 runs all-mattbio (Rung S brain): no roster scene
     # Events 6 and 7 run all-mattbio like Event 3; composed here only (no build_mjcf scene, no roster scene)
@@ -56,7 +55,7 @@ SCENES = {  # scene -> the build_mjcf.compose_meet arguments of that event scene
     "crab8": dict(event=10, yaw=90.0, park_offset=(0.0, -30.0, 0.0), props=B.crab_rails, crowd=True),
     "shaker8": dict(event=5, park_offset=(0.0, -30.0, 0.0), shaker=B.shaker_floor, crowd=True),
     "slalom8": dict(event=11, park_offset=(0.0, -30.0, 0.0), props=B.slalom_poles, crowd=True),
-    "trench8": dict(event=23, park_offset=(0.0, -30.0, 0.0), props=B.trench_props, crowd=True, roster=CRAWL_ROSTER),
+    "trench8": dict(event=23, park_offset=(0.0, -30.0, 0.0), props=B.trench_props, crowd=True),
 }
 
 

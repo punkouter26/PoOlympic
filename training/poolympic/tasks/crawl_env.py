@@ -171,6 +171,137 @@ def zombie_crawl5_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     return cfg
 
 
+def grandma_crawl_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """GRANDMA crawl (POOLYMPIC_BODY=grandma, 2026-10-01: she had no crawl brain, events 8 and 23 ran MATT in her
+    lanes). The zombie's final recipe (zcrawl_v3 = crawl5: heading-frame speed terms, progress gated on all fours,
+    climb-to-crawl-height, turn tracking x3 + linear turn error) on her body, Froude-scaled. Warm start: her own
+    Rung 0 brain, as on the zombie (another body's crawl actions are offsets from that body's default pose)."""
+    from .grandma_env import grandma_entity_cfg  # noqa: F401  (grandma process only)
+    g = bodies.BODIES["grandma"]
+    lam, ss, ws = g.length_scale, g.speed_scale, 1.0 / g.time_scale
+    cfg = M.matt_getup3_env_cfg(play=play)
+    cfg.scene.entities["robot"] = grandma_entity_cfg()
+    cfg.events["reset_base"].params["z"] = (0.2 * lam, 0.25 * lam)
+    if "getup_assist" in cfg.events:
+        cfg.events["getup_assist"].params.update({"max_fraction": 0.4, "decay_steps": 600 * 24,
+                                                  "body_weight_n": g.total_mass * 9.81})
+    cfg = _crawl3(_crawl2(_crawl(cfg, lam, ss, ws), ss), ss, ws)
+    rw = cfg.rewards
+    rw["joint_vel_limit"].params["limit"] = 18.0 * ws
+    rw["torques"].weight = rw["torques"].weight / g.torque_scale ** 2
+    target = CRAWL_PELVIS_Z * lam
+    rw["progress"] = RewardTermCfg(func=mdp.crawl_progress_gated, weight=3.0, params={"target_z": target})
+    rw["crawl_up"] = RewardTermCfg(func=mdp.height_progress, weight=1.5, params={"target": target})
+    rw["hands_down"].weight = 1.0
+    rw["track_yaw"].weight = 3.0
+    rw["yaw_l1"] = RewardTermCfg(func=mdp.yaw_rate_world_l1, weight=-0.5)
+    cfg.sim.nconmax, cfg.sim.njmax = 160, 800          # full self-collision: more contacts
+    cfg.scene.num_envs = 4096                          # the queue passes no CLI overrides
+    cfg.viewer.distance = 3.5 * lam
+    return cfg
+
+
+# ---- gcrawl_v2 (2026-10-01): reverse curriculum for a body too weak to push up from prone -----------------------------
+# gcrawl_v1 lay flat from it ~180 on (gate it 300: 0 m, all fours 0 %, hands 100 %): GRANDMA's arms (shoulder 34 Nm, elbow
+# 30 Nm at 60 % strength, 65 kg) cannot press her off the floor, and nothing else got her knees under her. Her all-fours
+# pose from FK on her body: hands and knees touch together at a trunk pitch of 74°, pelvis 0.32 m up — not MATT's
+# 0.5 m × λ = 0.435 m, which is a bear crawl (knees off the ground) for her short thighs.
+GRANDMA_FOURS = ({"shoulder_elev": 0, "shoulder_flex": 100, "elbow": 5, "hip_flex": 85, "knee": 110, "ankle_dorsi": -30,
+                  "abdomen_flex": 0}, 74.0)
+GRANDMA_CRAWL_Z = 0.32
+FOURS_BLENDS = (0.25, 0.5, 0.75, 1.0)      # start poses between lying face down (0) and on hands and knees (1)
+
+
+def _fours_table() -> list:
+    """(joint targets, root height on the ground, root quaternion) per blend, on the process body (CPU FK, once)."""
+    import math
+
+    from .getup_env import _pose_table
+    angles, pitch = GRANDMA_FOURS
+    default = {(n[:-2] if n.endswith(("_l", "_r")) else n): math.degrees(v)
+               for n, v in zip(mdp.CONTRACT_ACTUATORS, mdp.CONTRACT_DEFAULTS)}
+    poses = {a: ({k: (1 - a) * default[k] + a * v for k, v in angles.items()}, math.radians((1 - a) * 90.0 + a * pitch))
+             for a in FOURS_BLENDS}
+    return list(_pose_table(poses).values())
+
+
+def reset_crawl_mix(env, env_ids, fours_fraction: float = 0.6, prone_fraction: float = 0.7,
+                    z: tuple[float, float] = (0.2, 0.25), joint_noise: float = 0.05) -> None:
+    """Crawl reset with a pose continuum: with probability fours_fraction the episode starts in one of the FOURS_BLENDS
+    poses (from a quarter of the way up to on hands and knees, placed on the ground, random yaw), else lying as before
+    (mdp.reset_lying, the event start). All fours is then visited from the first iteration, and every start is a small
+    step from one the athlete already crawls from."""
+    import math
+
+    import torch
+    if env_ids is None:
+        env_ids = torch.arange(env.num_envs, device=env.device)
+    n = len(env_ids)
+    if n == 0:
+        return
+    dev = env.device
+    table = getattr(env, "_poolympic_crawl_fours", None)
+    if table is None:
+        table = env._poolympic_crawl_fours = [(torch.as_tensor(q, device=dev, dtype=torch.float32), float(h), quat)
+                                              for q, h, quat in _fours_table()]
+    asset = env.scene["robot"]
+    ix = mdp._idx(env)
+    stage = torch.where(torch.rand(n, device=dev) < fours_fraction, torch.randint(0, len(table), (n,), device=dev),
+                        torch.full((n,), -1, device=dev))
+    for k in range(-1, len(table)):
+        ids = env_ids[stage == k]
+        m = len(ids)
+        if m == 0:
+            continue
+        jp = asset.data.default_joint_pos[ids].clone()
+        if k >= 0:
+            jp[:, ix.joint_ids] = table[k][0]
+        jp = jp + (torch.rand_like(jp) * 2 - 1) * joint_noise
+        asset.write_joint_state_to_sim(jp, torch.zeros_like(jp), env_ids=ids)
+        if k < 0:
+            mdp.reset_lying(env, ids, prone_fraction=prone_fraction, z=z)
+            continue
+        _, h, quat = table[k]
+        half = (torch.rand(m, device=dev) * 2 - 1) * math.pi / 2          # yaw / 2
+        w1, z1 = torch.cos(half), torch.sin(half)
+        w2, x2, y2, z2 = (float(v) for v in quat)
+        qq = torch.stack([w1 * w2 - z1 * z2, w1 * x2 - z1 * y2, w1 * y2 + z1 * x2, w1 * z2 + z1 * w2], -1)   # yaw * pitch
+        pos = env.scene.env_origins[ids].clone()
+        pos[:, 2] = h
+        asset.write_root_link_pose_to_sim(torch.cat([pos, qq], -1), env_ids=ids)
+        asset.write_root_link_velocity_to_sim(torch.zeros(m, 6, device=dev), env_ids=ids)
+
+
+def grandma_crawl2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """gcrawl_v2 = gcrawl_v1's recipe + (1) 60 % of the episodes start between lying and hands-and-knees
+    (reset_crawl_mix), (2) the crawl height is her hands-and-knees height, 0.32 m (was 0.435 m). Warm start: her Rung 0
+    brain again (v1 learned to lie still)."""
+    lam = bodies.BODIES["grandma"].length_scale
+    cfg = grandma_crawl_env_cfg(play=play)
+    cfg.events.pop("reset_joints", None)
+    cfg.events["reset_base"] = EventTermCfg(func=reset_crawl_mix, mode="reset", params={"z": (0.2 * lam, 0.25 * lam)})
+    rw = cfg.rewards
+    rw["crawl_height"].params["target"] = GRANDMA_CRAWL_Z
+    rw["progress"].params["target_z"] = GRANDMA_CRAWL_Z
+    rw["crawl_up"].params["target"] = GRANDMA_CRAWL_Z
+    return cfg
+
+
+def grandma_crawl3_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """gcrawl_v3 = continuation of gcrawl_v2 (it 1199: 30 m in 29.3-29.9 s, 5/5; progress 1.74 / 3 and still rising at
+    +6 mean reward per 100 its when the run ended). Same recipe without what a restart would bring back: no torso assist
+    (it had faded to 0 by it 600) and the full speed range from the first iteration (no curriculum stage)."""
+    from mjlab.managers.curriculum_manager import CurriculumTermCfg
+    ss = bodies.BODIES["grandma"].speed_scale
+    cfg = grandma_crawl2_env_cfg(play=play)
+    cfg.events.pop("getup_assist", None)
+    full = (CRAWL_VX[0] * ss, CRAWL_VX[1] * ss)
+    cfg.commands["athlete"].ranges.lin_vel_x = full
+    cfg.curriculum = {"command_vel": CurriculumTermCfg(func=vel_mdp.commands_vel, params={
+        "command_name": "athlete", "velocity_stages": [{"step": 0, "lin_vel_x": full}]})}
+    return cfg
+
+
 def matt_crawl_v5_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     """Recipe v5 crawl for the self-colliding bio body (mattbio): crawl_matt.onnx still crawls on it (5/5) but slower
     (29.7-43.9 s vs 25.7-26.7 s) and curves 13.4 m off its lane (0.12 m on the old body) — arms and legs now collide on

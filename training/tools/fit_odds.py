@@ -35,7 +35,7 @@ MODEL = ROOT.parent / "Assets" / "PoOlympic" / "Models" / "odds_model.json"
 FEATURES = ["zombie", "strength", "latency", "noise", "grandma"]   # Unity Odds.Rating reads them in this order
 RIDGE = 0.5
 R2 = {"matt": BR / "rung2.onnx", "zombie": BR / "zombie_rung2.onnx", "grandma": BR / "grandma_rung2.onnx"}
-LINEUPS = {"mzmzmzmz": 5000, "mzgmzgmg": 7000}     # scene tag -> first seed (GRANDMA: no crawl brain, so not in 8 / 23)
+LINEUPS = {"mzmzmzmz": 5000, "mzgmzgmg": 7000}     # scene tag -> first seed (GRANDMA crawls in 8 / 23 since 2026-10-02)
 
 # event -> (name, runner kind, scene tag)
 EVENTS = {
@@ -65,7 +65,8 @@ def run_one(event: int, seed: int) -> dict:
         brains = {"matt": BR / "r0_v2_it1000.onnx", "zombie": BR / "zombie_rung0.onnx", "grandma": BR / "grandma_rung0.onnx"}
         res = iron_pedestal.run_heat(brains["matt"], seed, scene=scene, layout_path=layout, brains=brains)
     elif kind in ("all_fours", "trench"):
-        res = all_fours.run_race({"matt": BR / "crawl_matt.onnx", "zombie": BR / "crawl_zombie.onnx"}, seed, scene=scene,
+        res = all_fours.run_race({"matt": BR / "crawl_matt.onnx", "zombie": BR / "crawl_zombie.onnx",
+                                  "grandma": BR / "crawl_grandma.onnx"}, seed, scene=scene,
                                  layout_path=layout, distance=all_fours.TRENCH_DISTANCE if kind == "trench" else None)
     elif kind.startswith("track:"):
         mode = kind.split(":")[1]
