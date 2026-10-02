@@ -993,3 +993,36 @@ One entry per run or decision. Newest at the bottom.
   ContractV4 4/4, CrowdContact on Event_FlamingoClassic PASS and on Event_InvertedSprint PASS in 98.5 s (the morning's
   timeout case). The other crowd-contact scenes were not re-run today.
 - Before / after page: `parity/ui/flamingo_before_after.html`.
+
+## 2026-10-01 21:15 · Get-up solved on mattbio: getup_rev_v2e, 10/10 from supine at it 600-1499 (30/30 on 30 seeds)
+- **Recipe (tasks/getup_env.py, tasks `PoOlympic-MattBio-Getup-Ladder` .. `-e`):** a pose ladder squat -> tuck (the
+  squat's joints, rocked back onto the back) -> supine with 3 interpolated start poses per leg (7 stages, root placed on
+  the ground; CPU check: no ground or self penetration at any stage), 6 s episodes, and an upward torso assist that
+  follows the frontier's success rate (no assist for 15 its, then +0.03 BW / it at 0 % success, -0.02 at 100 %, cap 0.8;
+  frontier episodes only; the frontier advances after 5 its at zero assist). A first ladder squat -> long sit -> supine
+  was dropped before training: its blends hang the pelvis 0.4 m up on the heels and drop the athlete onto its back.
+- **v2** (from getup_rev_v1 it 50): stages 0 and 1 passed unassisted by it 75 (assist rose to 0.30, fell back to 0);
+  stage 2 (seated, leaning back) 0 % for 150 its with the assist at its 0.6 cap. Stopped at it 230.
+  CPU rollout: within 0.2 s it throws the knees open (knee action -1.6, target 0 deg), uses the kick to sit bolt upright
+  (tilt 1-5 deg, pelvis 0.16 m) and stays, at any assist.
+- **v2b** (+ `feet_under_pelvis` std 0.3 w 3, assist cap 0.8): 0 %, stopped at it 100. **v2c** (std 0.5, w 4): 0 % for
+  270 its, stopped at 300. **v2d** (upright kernel paid in proportion to height; `tuck_when_low`, a kernel on the squat
+  leg angles): 0 %, tuck reward 0.036 = the first frames only, stopped at 150. Cause: zero action = the standing pose
+  and holding 125 deg of knee flexion needs an action of +7.3, so every sampled action opens the knees, and a kernel
+  reward is flat once they are open: no gradient.
+- **v2e** (`legs_folded_when_low`: linear in hip / knee angle between the standing and squat poses, clamp -0.5..1, w 3;
+  frontier starts at stage 2; init v2c it 50 with action std floor 0.5; 1500 its, 72 min, 2.2-3.6 s/it): folded reward
+  rose from it 0, stage 2 success 1 % at it 140, 8 % at 300, 56 % at 420, 95 % with zero assist at it 489; stages 3-6
+  in 15 its each; frontier = the event start from it 535 at 99 %. standing_tall 4.45 / 5 at the end.
+- **Gate (tools/getup_probe.py, supine, CPU):** it 300 0/10 · it 600 / 900 / 1200 / 1499 **10/10**, up at the end
+  10/10. 30 seeds: 30/30 at all four, 0 falls after getting up; mean time to up 0.98 / 0.76 / 0.72 / 0.71 s.
+  Motion: knees up, sit up with one arm on the ground (8-14 ticks of arm contact), squat, stand. Fastest joint 19-21
+  rad/s (ankle inversion), 0.2-0.3 % of substeps above 18 rad/s (bar 5 %); knees at the 280 Nm cap, hips 200-249 Nm.
+- **Brain:** provisional get-up brain = `getup_rev_v2e_it600.onnx` (0.98 s, stands with the arms down; it 1499 is up in
+  0.71 s, faster than a trained human, and ends with one arm held out). Not deployed. mattbio now has every brain MATT
+  has (Rung 0, Rung 2, flight, crawl, stance, get-up). Open: prone starts were not trained (prone_fraction 0);
+  Event 27 needs its scene and the hand-over get-up -> Rung 2 sprint; the promotion of mattbio to MATT is a user call.
+- **Lost time:** Windows Modern Standby (5 min idle on AC) froze v2 for 53 min (17:16-18:09) and the v2b smoke run for
+  13 min. `tools/keep_awake.ps1` (ES_SYSTEM_REQUIRED while a queue / train process exists) is now started with the queue.
+- Housekeeping: getup_v4 and the stopped v2 / v2b / v2c / v2d runs moved to `runs_archive/2026-10-01/`; Unity closed
+  17:10-21:12; viewer shown after the run (final brain). Review: `parity/tb/getup_rev_v2e/review.html`.

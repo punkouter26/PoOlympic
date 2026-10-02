@@ -191,7 +191,7 @@ Skill gaps: events marked **S** need behaviours the current contract cannot comm
 | 25 | The Bench Relay | approach a bench, stable seated rest, explode back into a sprint | Skills | bench | R8 sit/stand | todo |
 | **Phase 6 — The Extreme Decathlon** |
 | 26 | Stepping Stones | narrow elevated pads, zero room for error; miss-step = drop out | Terrain | elevated stepping pads | R4 + foot-placement targets (**S**) | todo |
-| 27 | The Resurrection Dash | start flat on the back; fastest to rise and sprint 5 m | Mats | — | R3 get-up | todo |
+| 27 | The Resurrection Dash | start flat on the back; fastest to rise and sprint 5 m | Mats | — | R3 get-up (`getup_rev_v2e_it600.onnx`, mattbio) | get-up brain ready (2026-10-01: 30/30 from supine, up in 0.98 s); event rules, the hand-over to the sprint brain and the Unity scene todo |
 | 28 | Floor Acrobatic Sprint | flip / cartwheel across a gymnastics mat | Mats | mat (soft contact) | R8 acrobatics (**M**) | todo |
 | 29 | Striker Shootout | intercept a rolling ball mid-stride and kick past a target | Skills (goal) | ball (free sphere, pooled) | R8 kick (+ ball obs) | todo |
 | 30 | The Grand Parkour Vault | approach, wall vault, drop landing, hurdle sprint | Terrain | wall, drop, hurdles | R8 parkour (**M**) | todo |
@@ -301,6 +301,13 @@ User decisions (2026-09-30): Claude rigs the unrigged scan in Blender (no AccuRi
     lane 0.07 m). 8-athlete heats with full self-collision: 30 m it 450 30/32 finished, median 33.1 s (MATT today: 31/32,
     26.2 s); trench it 450 29/32, 22.0 s, it 599 31/32, 17.4 s (MATT 29/32, 18.1 s). Provisional mattbio crawl brain = it
     450; not deployed (the mattbio promotion still needs get-up).
+  - **2026-10-01 `getup_rev_v2e`: get-up from supine solved on mattbio** — pose ladder squat → tuck → supine (7
+    interpolated start poses), assist driven by the frontier's success rate, and a linear reward for keeping the legs
+    folded while the pelvis is low (four stopped variants v2-v2d first: the athlete kicked its knees open and sat).
+    Gate 10/10 at it 600 / 900 / 1200 / 1499, 30/30 on 30 seeds, 0 falls after; time to standing 0.98 s (it 600) to
+    0.71 s (it 1499); joint speeds within the 18 rad/s bar. Provisional brain `getup_rev_v2e_it600.onnx`, not deployed.
+    Open: prone starts untrained; Event 27 scene + hand-over to the Rung 2 sprint; mattbio → MATT promotion (user).
+    Review `parity/tb/getup_rev_v2e/review.html`.
 - [ ] R6 bodies: ~~rig GRANDMA~~ (→ Phase G), clean + rescale ZOMBIE, derive MJCFs, train variants
 - [ ] R7 optional motion-prior polish · R8+ remaining skill events
 - [x] Game layer: betting slip & odds from lane stats, PBP ticker, records, gauntlets (2026-09-29): virtual-coin

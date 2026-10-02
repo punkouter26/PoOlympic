@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Get-up getup_rev_v2e Review</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --card: #ffffff; --text: #1d1d1f; --muted: #5d5d66; --line: #e2e0da;
+    --v1: #e8710a; --v2: #425066; --good: #1f8a4c; --warn: #b8660b; --bad: #c2372b;
+    --t1: #fff4d6; --t2: #e3f3ff; --t3: #eeeaf8; --verdict: #e8f6ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+      --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+      --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+    --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+    --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.8rem; margin: 0 0 4px; }
+  h2 { margin: 0 0 4px; font-size: 1.3rem; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+  .verdict { background: var(--verdict); }
+  .verdict p { margin: 6px 0 0; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 10px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+  .up { color: var(--good); font-weight: 600; } .same { color: var(--muted); font-weight: 600; }
+  .down { color: var(--warn); font-weight: 600; } .fail { color: var(--bad); font-weight: 600; }
+  .tag { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--muted); }
+  img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); margin: 12px 0 16px; background: #fff; }
+  .levels { display: grid; gap: 12px; }
+  .lvl { border-radius: 10px; padding: 12px 16px; }
+  .lvl h3 { margin: 0 0 4px; font-size: .95rem; }
+  .lvl p { margin: 0; }
+  .l1 { background: var(--t1); } .l2 { background: var(--t2); } .l3 { background: var(--t3); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 8px; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+  footer { color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Get-up training review: getup_rev_v2e</h1>
+  <p class="sub">2026-10-01 21:09, iteration 1499 · MATT (<code>mattbio</code> body) · 1500 iterations in 72 min ·
+    <span class="dot" style="background:var(--v1)"></span>getup_rev_v1 = the previous get-up run (orange, this afternoon)
+    <span class="dot" style="background:var(--v2)"></span>getup_rev_v2e = this run (dark)</p>
+
+  <div class="box verdict">
+    <h2>Verdict: it gets up from flat on its back, every time</h2>
+    <p><strong>In one sentence:</strong> this is the first brain that stands up from lying on its back: 10 of 10 at every test from iteration 600 on, 30 of 30 on a larger test, and it never falls over afterwards.</p>
+    <p><strong>Why it worked this time:</strong> the earlier runs sat down and stayed sitting. From a seated start the athlete kicked its knees open and sat bolt upright, because an upright body scored points and nothing scored for getting the feet under the body. This run pays for keeping the legs folded while the body is low, and pays for an upright body only once it is off the floor. With that, the seated start went from 0 % to 95 % success, and the remaining starts (further back, flat on the back, legs stretched out) fell within 50 iterations.</p>
+    <div class="scroll">
+    <table>
+      <tr><th>Test from lying on the back (CPU)</th><th>it 300</th><th>600</th><th>900</th><th>1200</th><th>1499</th><th>previous run</th></tr>
+      <tr><td>Got up, 10 seeds</td><td class="fail">0/10</td><td class="up">10/10</td><td class="up">10/10</td><td class="up">10/10</td><td class="up">10/10</td><td class="fail">0/10 at every test</td></tr>
+      <tr><td>Got up, 30 seeds</td><td>not run</td><td class="up">30/30</td><td class="up">30/30</td><td class="up">30/30</td><td class="up">30/30</td><td>not run</td></tr>
+      <tr><td>Time to standing (30 seeds, mean)</td><td>never</td><td>0.98 s</td><td>0.76 s</td><td>0.72 s</td><td>0.71 s</td><td>never</td></tr>
+      <tr><td>Fell after getting up</td><td>n/a</td><td>0</td><td>0</td><td>0</td><td>0</td><td>n/a</td></tr>
+      <tr><td>Practice stage reached (0 to 6)</td><td>2</td><td class="up">6</td><td class="up">6</td><td class="up">6</td><td class="up">6</td><td>1 of 3</td></tr>
+    </table>
+    </div>
+    <p><strong>How it moves:</strong> knees up, sit up with one arm pushing off the floor, feet under the body, squat, stand. Joint speeds stay inside the 18 rad/s human limit (0.2 % of physics steps above it, 5 % allowed). The knees push at their full 280 Nm limit.</p>
+    <p><strong>Two things to know:</strong> (1) the later brains are very fast. 0.7 s from lying to standing is quicker than a trained human (about 1 to 1.5 s); the iteration 600 brain takes 0.98 s and stands with its arms down, the iteration 1499 brain ends with one arm held out in front. (2) It was trained and tested alone on flat ground from lying on the back only, not face down.</p>
+    <p><strong>Brain:</strong> provisional get-up brain = <code>getup_rev_v2e_it600.onnx</code> (the most human-paced one that passes). Not used in any event yet: Event 27 still needs its scene and the hand-over from getting up to sprinting.</p>
+  </div>
+
+  <section class="box">
+    <h2>What it looks like</h2>
+    <div class="tag">Iteration 600 brain, one frame every 0.16 s, from lying on the back (top row) to standing (bottom row)</div>
+    <img src="4_film_it600.png" alt="Fourteen frames: the figure lies on its back, pulls its knees up, sits up pushing with an arm, gets its feet under it, squats and stands; the bottom row shows it standing still">
+    <div class="tag">Iteration 1499 brain, same frames: up by the sixth frame, then holds one arm out in front</div>
+    <img src="4_film_it1499.png" alt="Fourteen frames: the figure gets up faster and then stands with one arm raised forward">
+  </section>
+
+  <section class="box">
+    <h2>1 · Standing tall</h2>
+    <div class="tag">Episode_Reward/standing_tall (points for being fully upright at standing height; 5 is the most possible)</div>
+    <img src="1_standing_tall.png" alt="Standing tall reward: the orange previous run spikes to 4.2 at iteration 50 then sits at 2.0 to the end; the dark run sits at 2.0 until iteration 300, climbs to 4.1 by iteration 480 and levels off at 4.45">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The orange line stays low. The dark line climbs up high and stays there. The robot learned to stand up.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This line shows how much of the time the robot is standing. Last time (orange) it stood up only from the easy start, so the line stayed at 2. This time (dark) the line sat at 2 for a while, then shot up between iterations 300 and 500. That is the moment the robot worked out how to stand up from sitting, and soon after from lying down.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>Both runs sit at about 2.0 while only the easy 40 % of episodes (squat starts) end standing. getup_rev_v1's early spike to 4.2 is the squat-only phase before its curriculum moved on. In v2e the frontier (seated) episodes begin to succeed at iteration 300 and the line reaches 4.1 by 480, dips slightly as four harder stages arrive within 50 iterations, and settles at 4.45 of 5. The missing 0.55 is the 0.7 s it takes to get up out of each 6 s episode, so there is little left to gain.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>2 · Practice stage</h2>
+    <div class="tag">Curriculum/getup_rev/getup_stage. The two runs use different ladders: orange 0 squat · 1 kneel · 2 sit · 3 lying; dark 0 squat · 1 to 3 rocked further back onto the back with the knees tucked · 4 to 6 legs stretched out · 6 = flat on the back, the event start. The dark run starts at stage 2 because its starting brain already passed stages 0 and 1.</div>
+    <img src="2_practice_stage.png" alt="Curriculum stage: the orange run goes from 0 to 1 by iteration 50 and stays at 1; the dark run stays at 2 until iteration 489, then steps to 3, 4, 5 and 6 by iteration 535 and stays at 6">
+    <img src="5_start_poses.png" alt="The seven start poses of this run's ladder, from a squat on the left to flat on the back on the right; the bottom row shows where each ends up if the athlete does nothing">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The orange line stops on the first step. The dark line climbs all the steps to the top.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>Each step is a harder starting position, like school grades. Last time the robot got stuck in grade 1. This time it was stuck in grade 2 (starting seated) for a long while, then passed it, and then raced through grades 3, 4, 5 and 6 in a few minutes, because they all use the same trick it had just learned.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>v1 stalled at its kneel stage with 0 % success for 1400 iterations. v2e's ladder interpolates the start pose between key poses (squat → on the back with knees tucked → supine), so each stage starts a small step from the last. Stage 2 took 489 iterations; stages 3 to 6 took 15 each, the minimum the curriculum allows, since each new stage is seen as a 10 % preview before it becomes the frontier. From iteration 535 the frontier is the event start and its success rate is 99 %.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>3 · Lift assist</h2>
+    <div class="tag">Metrics/getup_assist_max (upward helping force on the torso, as a fraction of body weight; 0 = no help)</div>
+    <img src="3_lift_assist.png" alt="Assist: the orange run fades linearly from 0.4 to 0 by iteration 600; the dark run rises to 0.8 by iteration 45, holds there until iteration 430, then drops to 0 by iteration 489 and stays at 0">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>At first something helps lift the robot. Later the line goes down to zero: the robot gets up all by itself.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>The assist is like a parent holding a child under the arms. Last time (orange) the help faded on a timer whether the robot was ready or not. This time (dark) the help grows when the robot keeps failing and shrinks when it succeeds. It needed a lot of help for a long time, then learned the move and the help dropped to nothing within 60 iterations. All the tests are done with no help.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>v1's assist decayed linearly to 0 by iteration 600 without a single kneel success before or after. v2e's assist is a controller on the frontier success rate (+0.03 body weights per iteration at 0 % success, −0.02 at 100 %, capped at 0.8) and applies only to frontier episodes. It saturated at 0.8 for about 390 iterations while the leg-folding behaviour was being learned (the assist alone did not produce successes in the three variants before this one), then fell to 0 between iterations 430 and 489 as success passed 60 %. The frontier advances only after five iterations at zero assist, so every stage was passed unassisted.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>The four variants before this one (same evening)</h2>
+    <div class="scroll">
+    <table>
+      <tr><th>Run</th><th>Change</th><th>Result on the seated stage</th></tr>
+      <tr><td>v2</td><td>New ladder (squat → tuck → supine, interpolated), assist that follows success, 6 s episodes</td><td class="fail">0 % for 150 iterations; stopped at 230</td></tr>
+      <tr><td>v2b</td><td>+ reward for feet under the pelvis (narrow), assist cap 0.6 → 0.8</td><td class="fail">0 %; stopped at 100</td></tr>
+      <tr><td>v2c</td><td>feet-under reward widened</td><td class="fail">0 % for 270 iterations; stopped at 300</td></tr>
+      <tr><td>v2d</td><td>upright reward paid by height; folded-legs reward (bell-shaped)</td><td class="fail">0 %; reward flat once the knees open; stopped at 150</td></tr>
+      <tr><td>v2e</td><td>folded-legs reward made linear, so it has a slope at every knee angle</td><td class="up">95 % unassisted at iteration 489</td></tr>
+    </table>
+    </div>
+    <p>The laptop also went into standby twice early in the evening (53 and 13 minutes), which froze training; <code>training/tools/keep_awake.ps1</code> now holds it awake while the queue runs.</p>
+  </section>
+
+  <footer>Charts: TensorBoard at localhost:6006, runs <code>getup_rev_v1</code> and <code>getup_rev_v2e</code>. Gate data: <code>parity/watch_getup_rev_v2e.jsonl</code>, <code>parity/watch/getup_getup_rev_v2e_it*.json</code> (10 seeds), <code>parity/watch/getup30_getup_rev_v2e_it*.json</code> (30 seeds).</footer>
+</main>
+</body>
+</html>

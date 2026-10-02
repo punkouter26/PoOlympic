@@ -477,7 +477,11 @@ def matt_getup_ladder_e_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     from .matt_env import DEFAULT_ROOT_Z
     cfg = matt_getup_ladder_d_env_cfg(play=play)
     cfg.rewards.pop("tuck_low")
+    level = 2 * LADDER_SUB if play else 2                  # play (viewer): the event start, mixed with the easier stages
     cfg.rewards["legs_folded"] = RewardTermCfg(func=legs_folded_when_low, weight=3.0,
-                                               params={"target": DEFAULT_ROOT_Z, "start_level": 2})
-    cfg.curriculum["getup_rev"].params["start_level"] = 2
+                                               params={"target": DEFAULT_ROOT_Z, "start_level": level})
+    cfg.curriculum["getup_rev"].params["start_level"] = level
+    cfg.events["reset_base"].params["start_level"] = level
+    if play:
+        cfg.episode_length_s = LADDER_EPISODE_S
     return cfg
