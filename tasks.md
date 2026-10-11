@@ -353,6 +353,13 @@ short legs (hip joints at 0.44 of her height).
   roster card, orange K chip, tighter card text). Played in the editor: Terminal Velocity (K8 third, 3.6 m/s), Iron
   Pedestal, 30m All Fours (K8 29.28 s, K1 29.40 s), Slalom; no errors besides one "Unknown error … LightingData.asset" per
   scene, present since the fresh clone. Before / after: `parity/ui/kim_menu_before_after.html`.
+- **2026-10-11 midday (goal check: 30-seed margins + MATT's extra skills):** k0_v2 (`-Rung0-Tight`: stay-near-the-start
+  reward x3, kernel x0.6; from k0_v1 it 1499, 500 its): 30 seeds 28 · **30** · 28 of 30 at it 200 / 400 / 499, 0 falls →
+  `kim_rung0.onnx` = k0_v2 it 400 (critic + confidence refit, AUC 0.70; parity reference re-recorded, Unity gates not
+  re-run). k2_v4 (`-Bands3`: 30 % top-speed sprint band; from k2_v3 it 600, 600 its): 28/30 at it 200 / 400 / 599 — no
+  gain, `kim_rung2.onnx` stays k2_v3 it 600 (29/30). Written, smoke-tested and queued, not run yet: `-Rung2-Flight`
+  (MATT's r2f_v3 terms, Froude-scaled) and `-RungS-Stance` (rs_v7 recipe on her Rung 2 base; `stance_env` now follows the
+  process body). Queue stopped by the user to play in Unity.
 - Open: G5 closed-loop gate for her brains; her joint speeds in the crawl; the phone build has not been made with her;
   her height / mass / strength are Claude's picks, to be confirmed by the user.
 ## Backlog (later rungs & platforms)
