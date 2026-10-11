@@ -551,7 +551,7 @@ def body_getup_ladder_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     torque penalty as in zombie_env. A body's first get-up brain: the ladder starts at the squat (stage 0); warm start =
     the body's Rung 0 brain (it already stands, which is the end of every stage)."""
     b = C.BODY
-    if b.name == "grandma":
+    if b.name in ("grandma", "kim"):          # grandma_env binds its entity to the process body for KIM
         from .grandma_env import grandma_entity_cfg as entity
     elif b.name == "zombie":
         from .zombie_env import zombie_entity_cfg as entity

@@ -176,8 +176,7 @@ def grandma_crawl_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     lanes). The zombie's final recipe (zcrawl_v3 = crawl5: heading-frame speed terms, progress gated on all fours,
     climb-to-crawl-height, turn tracking x3 + linear turn error) on her body, Froude-scaled. Warm start: her own
     Rung 0 brain, as on the zombie (another body's crawl actions are offsets from that body's default pose)."""
-    from .grandma_env import grandma_entity_cfg  # noqa: F401  (grandma process only)
-    g = bodies.BODIES["grandma"]
+    from .grandma_env import G as g, grandma_entity_cfg  # noqa: F401  (grandma / KIM process: G = that body)
     lam, ss, ws = g.length_scale, g.speed_scale, 1.0 / g.time_scale
     cfg = M.matt_getup3_env_cfg(play=play)
     cfg.scene.entities["robot"] = grandma_entity_cfg()
@@ -209,6 +208,10 @@ def grandma_crawl_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
 GRANDMA_FOURS = ({"shoulder_elev": 0, "shoulder_flex": 100, "elbow": 5, "hip_flex": 85, "knee": 110, "ankle_dorsi": -30,
                   "abdomen_flex": 0}, 74.0)
 GRANDMA_CRAWL_Z = 0.32
+# KIM (short thighs too, tools FK 2026-10-10): the same joint pose touches hands and knees at 73 deg, pelvis 0.335 m
+if bodies.current().name == "kim":
+    GRANDMA_FOURS, GRANDMA_CRAWL_Z = (GRANDMA_FOURS[0], 73.0), 0.335
+_CRAWL_BODY = bodies.current() if bodies.current().name == "kim" else bodies.BODIES["grandma"]
 FOURS_BLENDS = (0.25, 0.5, 0.75, 1.0)      # start poses between lying face down (0) and on hands and knees (1)
 
 
@@ -276,7 +279,7 @@ def grandma_crawl2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     """gcrawl_v2 = gcrawl_v1's recipe + (1) 60 % of the episodes start between lying and hands-and-knees
     (reset_crawl_mix), (2) the crawl height is her hands-and-knees height, 0.32 m (was 0.435 m). Warm start: her Rung 0
     brain again (v1 learned to lie still)."""
-    lam = bodies.BODIES["grandma"].length_scale
+    lam = _CRAWL_BODY.length_scale
     cfg = grandma_crawl_env_cfg(play=play)
     cfg.events.pop("reset_joints", None)
     cfg.events["reset_base"] = EventTermCfg(func=reset_crawl_mix, mode="reset", params={"z": (0.2 * lam, 0.25 * lam)})
@@ -292,7 +295,7 @@ def grandma_crawl3_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     +6 mean reward per 100 its when the run ended). Same recipe without what a restart would bring back: no torso assist
     (it had faded to 0 by it 600) and the full speed range from the first iteration (no curriculum stage)."""
     from mjlab.managers.curriculum_manager import CurriculumTermCfg
-    ss = bodies.BODIES["grandma"].speed_scale
+    ss = _CRAWL_BODY.speed_scale
     cfg = grandma_crawl2_env_cfg(play=play)
     cfg.events.pop("getup_assist", None)
     full = (CRAWL_VX[0] * ss, CRAWL_VX[1] * ss)

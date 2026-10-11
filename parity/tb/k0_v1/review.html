@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KIM Rung 0 Review</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --card: #ffffff; --text: #1d1d1f; --muted: #5d5d66; --line: #e2e0da;
+    --g: #e52592; --m: #3c4a5e; --good: #1f8a4c; --warn: #b8660b; --bad: #c2372b;
+    --t1: #fff4d6; --t2: #e3f3ff; --t3: #eeeaf8; --verdict: #e8f6ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+      --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+      --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+    --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+    --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.8rem; margin: 0 0 4px; }
+  h2 { margin: 0 0 4px; font-size: 1.3rem; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+  .verdict { background: var(--verdict); }
+  .verdict p { margin: 6px 0 0; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 10px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+  .up { color: var(--good); font-weight: 600; } .same { color: var(--muted); font-weight: 600; }
+  .down { color: var(--warn); font-weight: 600; } .fail { color: var(--bad); font-weight: 600; }
+  .tag { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--muted); }
+  img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); margin: 12px 0 16px; background: #fff; }
+  .levels { display: grid; gap: 12px; }
+  .lvl { border-radius: 10px; padding: 12px 16px; }
+  .lvl h3 { margin: 0 0 4px; font-size: .95rem; }
+  .lvl p { margin: 0; }
+  .l1 { background: var(--t1); } .l2 { background: var(--t2); } .l3 { background: var(--t3); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 8px; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+  footer { color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>KIM Rung 0 training review: standing and shove recovery</h1>
+  <p class="sub">2026-10-10 23:35, run k0_v1, iteration 1499 · KIM (1.55 m, 54 kg, 90 % strength) · 1500 iterations in 53 min, 4096 environments, from scratch.
+    Earlier runs of the same task (GRANDMA g0_v2, ZOMBIE z0_v1, MATT r0_v2) are shown from their saved charts: this clone of the repository no longer has their TensorBoard logs, so the lines cannot be drawn on one chart.</p>
+
+  <div class="box verdict">
+    <h2>Verdict: KIM passes Rung 0</h2>
+    <p><strong>In one sentence:</strong> she stands upright, recovers from every shove and dropped cube without falling, and passes the standing test 10 out of 10 at iterations 1000 and 1499; in the harder 30-seed check she passes 27.</p>
+    <p><strong>Compared with the earlier bodies on the same task:</strong> better than GRANDMA and ZOMBIE on the 30-seed check (27 against 24 and 25), just below MATT (29). She learned to stay up a little slower than GRANDMA (iteration 177 against 119) and a little faster than ZOMBIE and MATT (214, 210). She stands with the least effort for her strength of the three trained from scratch.</p>
+    <div class="scroll"><table>
+      <tr><th>Standing test (CPU MuJoCo)</th><th>it 500</th><th>it 1000</th><th>it 1499 (chosen)</th><th>Pass needs</th></tr>
+      <tr><td>G1 Rung 0, 10 seeds</td><td class="down">9/10</td><td class="up">10/10</td><td class="up">10/10</td><td>10/10</td></tr>
+      <tr><td>Falls</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+      <tr><td>30 other seeds</td><td></td><td></td><td class="same">27/30, 0 falls</td><td>not a gate (GRANDMA 24, ZOMBIE 25, MATT 29)</td></tr>
+    </table></div>
+    <p>Brain: <code>parity/brains/kim_rung0.onnx</code> = k0_v1 iteration 1499. The three misses in the 30-seed check were not looked into; on GRANDMA the same misses were recovery steps that travelled too far.</p>
+  </div>
+
+  <div class="box">
+    <h2>1 · How long she stays up</h2>
+    <p class="tag">Train/mean_episode_length (1000 = stood for the whole 20 s episode). Top: KIM. Bottom: the earlier runs (first pink line GRANDMA, later pink line ZOMBIE, dark line MATT).</p>
+    <img src="1_episode_length.png" alt="KIM episode length">
+    <img src="../g0_v2/1_episode_length.png" alt="GRANDMA, ZOMBIE and MATT episode length">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>Kim learned to stand up without falling down.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>The line shows how long the robot stays on its feet before it falls. At the top it never falls. Kim's line reaches the top after about 200 rounds of practice and stays there. Grandma was a bit quicker; Zombie and Matt were a bit slower.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>First iteration at 900 of 1000 ticks: KIM 177 (GRANDMA 119, ZOMBIE 214, MATT 210). From iteration 400 she sits at 996–1000 to the end and no episode ends in a fall (all terminations are time-outs). Action noise settles from 0.72 at iteration 100 to 0.22 at the end.</p></div>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2>2 · Total reward</h2>
+    <p class="tag">Train/mean_reward. Top: KIM (ends at 82). Bottom: ZOMBIE ends at 97, GRANDMA at 88, MATT at 82.</p>
+    <img src="2_reward.png" alt="KIM mean reward">
+    <img src="../g0_v2/2_reward.png" alt="GRANDMA, ZOMBIE and MATT mean reward">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The robot gets points for standing nicely. Kim's points go up and then stay high.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This is the robot's score for each try. Kim's score climbs fast for 500 rounds, then slowly, and levels off at about 82. That is the same score as Matt, because the two are scored in the same way. Grandma and Zombie get extra points for their own styles, so their lines end higher without being better.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>KIM is at 76.6 by iteration 500, 81.7 at 1000 and 82.5 at 1499: a plateau from about iteration 900, and the 1000 and 1499 checkpoints gate the same. Her reward terms are MATT's (upright term, no style terms), which is why she ends at his level; GRANDMA's and ZOMBIE's totals include style terms and are not comparable. Her posture terms are near their ceilings (height 0.999, upright 0.992).</p></div>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2>3 · Effort</h2>
+    <p class="tag">Episode_Reward/torques (penalty on joint torque, scaled so equal effort relative to each body's strength costs the same). Top: KIM (ends at −0.046). Bottom: GRANDMA −0.155, ZOMBIE −0.204, MATT −0.049.</p>
+    <img src="3_torques.png" alt="KIM torque penalty">
+    <img src="../g0_v2/3_torques.png" alt="GRANDMA, ZOMBIE and MATT torque penalty">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>Standing is easy for Kim. She does not have to push hard.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This line shows how hard the robot's muscles work. Closer to zero means less work. At first Kim works very hard to stay up. Then she finds an easier way to stand, and the line climbs back towards zero. She ends up working about as little as Matt, and three times less than Grandma.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>Same shape as the other bodies: effort peaks while the policy learns to stay up (−0.26 at iteration 200), then falls as it finds a cheaper stance, to −0.046 at the end, level with MATT's −0.049 and about a third of GRANDMA's −0.155. That fits a light, upright body with 90 % of its size-scaled torque: nothing to hold against gravity except small corrections.</p></div>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2>What is not established</h2>
+    <p>Her height, mass and strength were chosen by Claude from the scan ("give her unique characteristics"), not measured. The rig's hip joints sit at 0.44 of her height, which gives her short legs; whether that is the person's real proportion or the auto-rig's placement was not checked. This page has no render of her standing: the MuJoCo viewer was not opened during the run. She is not in Unity yet.</p>
+  </div>
+  <footer>Charts: TensorBoard at localhost:6006, run k0_v1 (<code>training/tools/tb_shots.py</code>); earlier runs from <code>parity/tb/g0_v2/</code>. Gate data: <code>parity/watch_k0_v1.jsonl</code>, <code>parity/eval_rung0_kim_rung0.json</code>.</footer>
+</main>
+</body>
+</html>

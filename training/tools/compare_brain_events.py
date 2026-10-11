@@ -56,9 +56,10 @@ def main() -> int:
     ap.add_argument("--heats", type=int, default=6)
     ap.add_argument("--workers", type=int, default=6)
     ap.add_argument("--out", type=Path, default=None)
+    ap.add_argument("--seed0", type=int, default=7000, help="first heat seed: picks the lineup (fit_odds.LINEUPS; 9000 = with KIM)")
     a = ap.parse_args()
     import fit_odds as F
-    jobs = [(e, 7000 + s, a.body, b) for e in EVENTS for s in range(a.heats) for b in a.brains]
+    jobs = [(e, a.seed0 + s, a.body, b) for e in EVENTS for s in range(a.heats) for b in a.brains]
     with ProcessPoolExecutor(a.workers) as ex:
         out = list(ex.map(run_one, jobs))
     if a.out:

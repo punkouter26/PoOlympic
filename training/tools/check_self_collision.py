@@ -6,7 +6,7 @@
   rest     no self-contact in the T-pose (qpos = 0), the default stance, or a normal arm and leg swing (legs: hip flexion
            -25..+40 deg with the knee bending on the forward swing; arms: +-40 deg about the shoulder flexion axis, opposite
            to the legs; 21 phases of the stride)
-Usage: uv run python tools/check_self_collision.py [body ...]      (default: matt mattbio zombie grandma)
+Usage: uv run python tools/check_self_collision.py [body ...]      (default: matt mattbio zombie grandma kim)
 Writes parity/self_collision.json; exit code 1 on any violation.
 """
 
@@ -22,7 +22,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "assets"
-BODIES = ["matt", "mattbio", "zombie", "grandma"]
+BODIES = ["matt", "mattbio", "zombie", "grandma", "kim"]
 SIMPLE = {mujoco.mjtGeom.mjGEOM_CAPSULE: "capsule", mujoco.mjtGeom.mjGEOM_BOX: "box", mujoco.mjtGeom.mjGEOM_SPHERE: "sphere"}
 
 

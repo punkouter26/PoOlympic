@@ -35,7 +35,7 @@ namespace PoOlympic
     /// <summary>
     /// Betting odds from athlete traits (tasks.md D4). Per event a Plackett-Luce rating fitted on CPU heats
     /// (training/tools/fit_odds.py → Models/odds_model.json):
-    ///   rating = w · [zombie, strength − 1, latency substeps, obs noise, grandma],  P(win) = softmax(rating)
+    ///   rating = w · [zombie, strength − 1, latency substeps, obs noise, grandma, kim],  P(win) = softmax(rating)
     /// P is shrunk 10 % towards uniform; decimal odds = (1 − margin) / P, clamped to [1.01, 50].
     /// </summary>
     public static class Odds
@@ -53,6 +53,7 @@ namespace PoOlympic
             string contract = r.contractJson != null ? r.contractJson.name : "";
             if (r.athletePrefix.StartsWith("Z") || contract.Contains("zombie")) return "ZOMBIE";
             if (r.athletePrefix.StartsWith("G") || contract.Contains("grandma")) return "GRANDMA";
+            if (r.athletePrefix.StartsWith("K") || contract.Contains("kim")) return "KIM";
             return "MATT";
         }
 
@@ -62,7 +63,8 @@ namespace PoOlympic
         {
             string body = BodyOf(r);
             return w[0] * (body == "ZOMBIE" ? 1f : 0f) + w[1] * (r.strength - 1f) + w[2] * r.latencySubsteps + w[3] * r.obsNoise
-                   + (w.Length > 4 && body == "GRANDMA" ? w[4] : 0f);
+                   + (w.Length > 4 && body == "GRANDMA" ? w[4] : 0f)
+                   + (w.Length > 5 && body == "KIM" ? w[5] : 0f);
         }
 
         /// <summary>Win probability per runner (same order); uniform when the event has no fitted weights.</summary>

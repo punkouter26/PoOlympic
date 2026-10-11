@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &318017594
+--- !u!1 &375137481
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,8 +127,224 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 318017596}
-  - component: {fileID: 318017595}
+  - component: {fileID: 375137484}
+  - component: {fileID: 375137483}
+  - component: {fileID: 375137482}
+  m_Layer: 0
+  m_Name: MainMenu
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &375137482
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 375137481}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 213e7403b4b52c348978b1782a2866f3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.MainMenuController
+  events:
+  - number: 1
+    name: The Iron Pedestal
+    rules: 8 athletes stand shoulder to shoulder on one narrow iron beam. Gusts shove them into each other; the last one still on the beam wins.
+    brain: rung0
+    scene: Event_IronPedestal_Heat
+    lineup: []
+    bodies:
+    - MATT
+    - ZOMBIE
+    - GRANDMA
+    - KIM
+  - number: 3
+    name: Deep Squat Endurance
+    rules: Rhythmic squat repetitions. Lowest torso drop combined with balance retention scores maximum points.
+    brain: stance skills
+    scene: Event_DeepSquat
+    lineup: []
+    bodies:
+    - MATT
+  - number: 5
+    name: The Gust Gauntlet
+    rules: 'All 8 share one shaker floor: lateral wind bursts push them into each other and the floor jolts everyone at once. Scored on recovery time back to your spot.'
+    brain: rung2
+    scene: Event_GustGauntlet
+    lineup: []
+    bodies:
+    - MATT
+    - ZOMBIE
+    - GRANDMA
+    - KIM
+  - number: 6
+    name: The Flamingo Classic
+    rules: One foot raised; time-until-touchdown determines placement.
+    brain: stance skills
+    scene: Event_FlamingoClassic
+    lineup: []
+    bodies:
+    - MATT
+  - number: 7
+    name: Cadence March
+    rules: High-knee marching synchronized to a rising stadium metronome.
+    brain: stance skills
+    scene: Event_CadenceMarch
+    lineup: []
+    bodies:
+    - MATT
+  - number: 8
+    name: 30m All Fours
+    rules: 30 m race on hands and feet, crawlers side by side 1.1 m apart - bumping and tangling allowed. Falling never eliminates - get back on all fours and keep going; standing up is a DQ.
+    brain: crawl
+    scene: Event_30mAllFours
+    lineup: []
+    bodies:
+    - MATT
+    - ZOMBIE
+    - GRANDMA
+    - KIM
+  - number: 9
+    name: The Inverted Sprint
+    rules: 20m reverse sprint. Disqualification upon lane drifting or backward tumbling.
+    brain: rung2
+    scene: Event_InvertedSprint
+    lineup: []
+    bodies:
+    - MATT
+    - ZOMBIE
+    - GRANDMA
+    - KIM
+  - number: 10
+    name: Crab Shuffle Relay
+    rules: Side-stepping dash between parallel boundary rails without crossing legs.
+    brain: rung2
+    scene: Event_CrabShuffle
+    lineup: []
+    bodies:
+    - MATT
+    - ZOMBIE
+    - GRANDMA
+    - KIM
+  - number: 11
+    name: Slalom Sprint
+    rules: 'Mirror slalom: neighbouring lanes weave in opposite directions and meet at every other gate. Penalties added for missed gates or clipping flags.'
+    brain: rung2
+    scene: Event_SlalomSprint
+    lineup: []
+    bodies:
+    - MATT
+    - ZOMBIE
+    - GRANDMA
+    - KIM
+  - number: 12
+    name: The 360 Turntable
+    rules: '8 spin spots on one tight ring: turn 3 times without being knocked off your spot. Scored on speed and drift; pushed onto a neighbour''s spot is a DQ.'
+    brain: rung2
+    scene: Event_360Turntable
+    lineup: []
+    bodies:
+    - MATT
+    - ZOMBIE
+    - GRANDMA
+    - KIM
+  - number: 13
+    name: Steeplechase Jog
+    rules: 50m sprint requiring sustained aerial flight phases between foot strikes; scored on ground time (finish time minus hang time).
+    brain: flight
+    scene: Event_SteeplechaseJog
+    lineup: []
+    bodies:
+    - MATT
+    - ZOMBIE
+    - GRANDMA
+    - KIM
+  - number: 19
+    name: Terminal Velocity Sprint
+    rules: Open sprint at top speed; past the green break line the field squeezes to the inside, shoulder to shoulder. Ranked by peak speed; a fall ranks last.
+    brain: rung2
+    scene: Event_TerminalVelocity
+    lineup: []
+    bodies:
+    - MATT
+    - ZOMBIE
+    - GRANDMA
+    - KIM
+  - number: 22
+    name: Emergency Brake
+    rules: Full sprint toward a red stop line. Athletes must reach full standstill without crossing the boundary.
+    brain: rung2
+    scene: Event_EmergencyBrake
+    lineup: []
+    bodies:
+    - MATT
+    - ZOMBIE
+    - GRANDMA
+    - KIM
+  - number: 23
+    name: The Trench Crawl
+    rules: 'Low ceiling tunnel forcing all-fours crawl movement: 16 m on hands and feet under a 12 m trench ceiling 0.72 m high; standing up = DQ.'
+    brain: crawl
+    scene: Event_TrenchCrawl
+    lineup: []
+    bodies:
+    - MATT
+    - ZOMBIE
+    - GRANDMA
+    - KIM
+  columns: 3
+  idleDemoSeconds: 45
+--- !u!114 &375137483
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 375137481}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.UIElements.UIDocument
+  m_PanelSettings: {fileID: 11400000, guid: 222f647c662592149a9e9170de25570c, type: 2}
+  m_ParentUI: {fileID: 0}
+  sourceAsset: {fileID: 9197481963319205126, guid: 30b7e4b9a7ec9044d9b570d00a71957e, type: 3}
+  m_SortingOrder: 0
+  m_Position: 0
+  m_WorldSpaceSizeMode: 1
+  m_WorldSpaceWidth: 1920
+  m_WorldSpaceHeight: 1080
+  m_PivotReferenceSize: 0
+  m_Pivot: 0
+  m_WorldSpaceCollider: {fileID: 0}
+--- !u!4 &375137484
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 375137481}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2093591956
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2093591958}
+  - component: {fileID: 2093591957}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -136,13 +352,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!20 &318017595
+--- !u!20 &2093591957
 Camera:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 318017594}
+  m_GameObject: {fileID: 2093591956}
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
@@ -187,218 +403,13 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!4 &318017596
+--- !u!4 &2093591958
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 318017594}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1054141914
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1054141917}
-  - component: {fileID: 1054141916}
-  - component: {fileID: 1054141915}
-  m_Layer: 0
-  m_Name: MainMenu
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1054141915
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1054141914}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 213e7403b4b52c348978b1782a2866f3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PoOlympic.Runtime::PoOlympic.MainMenuController
-  events:
-  - number: 1
-    name: The Iron Pedestal
-    rules: 8 athletes stand shoulder to shoulder on one narrow iron beam. Gusts shove them into each other; the last one still on the beam wins.
-    brain: rung0
-    scene: Event_IronPedestal_Heat
-    lineup: []
-    bodies:
-    - MATT
-    - ZOMBIE
-    - GRANDMA
-  - number: 3
-    name: Deep Squat Endurance
-    rules: Rhythmic squat repetitions. Lowest torso drop combined with balance retention scores maximum points.
-    brain: stance skills
-    scene: Event_DeepSquat
-    lineup: []
-    bodies:
-    - MATT
-  - number: 5
-    name: The Gust Gauntlet
-    rules: 'All 8 share one shaker floor: lateral wind bursts push them into each other and the floor jolts everyone at once. Scored on recovery time back to your spot.'
-    brain: rung2
-    scene: Event_GustGauntlet
-    lineup: []
-    bodies:
-    - MATT
-    - ZOMBIE
-    - GRANDMA
-  - number: 6
-    name: The Flamingo Classic
-    rules: One foot raised; time-until-touchdown determines placement.
-    brain: stance skills
-    scene: Event_FlamingoClassic
-    lineup: []
-    bodies:
-    - MATT
-  - number: 7
-    name: Cadence March
-    rules: High-knee marching synchronized to a rising stadium metronome.
-    brain: stance skills
-    scene: Event_CadenceMarch
-    lineup: []
-    bodies:
-    - MATT
-  - number: 8
-    name: 30m All Fours
-    rules: 30 m race on hands and feet, crawlers side by side 1.1 m apart - bumping and tangling allowed. Falling never eliminates - get back on all fours and keep going; standing up is a DQ.
-    brain: crawl
-    scene: Event_30mAllFours
-    lineup: []
-    bodies:
-    - MATT
-    - ZOMBIE
-    - GRANDMA
-  - number: 9
-    name: The Inverted Sprint
-    rules: 20m reverse sprint. Disqualification upon lane drifting or backward tumbling.
-    brain: rung2
-    scene: Event_InvertedSprint
-    lineup: []
-    bodies:
-    - MATT
-    - ZOMBIE
-    - GRANDMA
-  - number: 10
-    name: Crab Shuffle Relay
-    rules: Side-stepping dash between parallel boundary rails without crossing legs.
-    brain: rung2
-    scene: Event_CrabShuffle
-    lineup: []
-    bodies:
-    - MATT
-    - ZOMBIE
-    - GRANDMA
-  - number: 11
-    name: Slalom Sprint
-    rules: 'Mirror slalom: neighbouring lanes weave in opposite directions and meet at every other gate. Penalties added for missed gates or clipping flags.'
-    brain: rung2
-    scene: Event_SlalomSprint
-    lineup: []
-    bodies:
-    - MATT
-    - ZOMBIE
-    - GRANDMA
-  - number: 12
-    name: The 360 Turntable
-    rules: '8 spin spots on one tight ring: turn 3 times without being knocked off your spot. Scored on speed and drift; pushed onto a neighbour''s spot is a DQ.'
-    brain: rung2
-    scene: Event_360Turntable
-    lineup: []
-    bodies:
-    - MATT
-    - ZOMBIE
-    - GRANDMA
-  - number: 13
-    name: Steeplechase Jog
-    rules: 50m sprint requiring sustained aerial flight phases between foot strikes; scored on ground time (finish time minus hang time).
-    brain: flight
-    scene: Event_SteeplechaseJog
-    lineup: []
-    bodies:
-    - MATT
-    - ZOMBIE
-    - GRANDMA
-  - number: 19
-    name: Terminal Velocity Sprint
-    rules: Open sprint at top speed; past the green break line the field squeezes to the inside, shoulder to shoulder. Ranked by peak speed; a fall ranks last.
-    brain: rung2
-    scene: Event_TerminalVelocity
-    lineup: []
-    bodies:
-    - MATT
-    - ZOMBIE
-    - GRANDMA
-  - number: 22
-    name: Emergency Brake
-    rules: Full sprint toward a red stop line. Athletes must reach full standstill without crossing the boundary.
-    brain: rung2
-    scene: Event_EmergencyBrake
-    lineup: []
-    bodies:
-    - MATT
-    - ZOMBIE
-    - GRANDMA
-  - number: 23
-    name: The Trench Crawl
-    rules: 'Low ceiling tunnel forcing all-fours crawl movement: 16 m on hands and feet under a 12 m trench ceiling 0.72 m high; standing up = DQ.'
-    brain: crawl
-    scene: Event_TrenchCrawl
-    lineup: []
-    bodies:
-    - MATT
-    - ZOMBIE
-    - GRANDMA
-  columns: 3
-  idleDemoSeconds: 45
---- !u!114 &1054141916
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1054141914}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.UIElements.UIDocument
-  m_PanelSettings: {fileID: 11400000, guid: 222f647c662592149a9e9170de25570c, type: 2}
-  m_ParentUI: {fileID: 0}
-  sourceAsset: {fileID: 9197481963319205126, guid: 30b7e4b9a7ec9044d9b570d00a71957e, type: 3}
-  m_SortingOrder: 0
-  m_Position: 0
-  m_WorldSpaceSizeMode: 1
-  m_WorldSpaceWidth: 1920
-  m_WorldSpaceHeight: 1080
-  m_PivotReferenceSize: 0
-  m_Pivot: 0
-  m_WorldSpaceCollider: {fileID: 0}
---- !u!4 &1054141917
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1054141914}
+  m_GameObject: {fileID: 2093591956}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -411,5 +422,5 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 318017596}
-  - {fileID: 1054141917}
+  - {fileID: 2093591958}
+  - {fileID: 375137484}

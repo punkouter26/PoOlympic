@@ -1262,3 +1262,40 @@ One entry per run or decision. Newest at the bottom.
   (crossed the line).
 - Seen, not new: MATT lanes 4 / 7 DNF in the 30 m crawl with tumbles (2 of 3 MATTs; the heat then runs to the 60 s
   limit) — crawl DNFs were there before GRANDMA joined (2026-10-01 tour: Z4 4 tumbles, L5 58 s).
+
+## 2026-10-11 07:00 · KIM, fourth athlete: body, Rung 0 / 1 / 2, crawl, get-up — all gates passed in one night
+- **Start state:** the repo was a fresh clone without Git LFS content (991 pointer files: no brains, visuals, `mujoco.dll`)
+  and without `training/.venv` / `training/runs`; `git lfs pull` + `uv sync`. Old checkpoints and TensorBoard logs are
+  gone: comparisons with earlier runs use the saved charts in `parity/tb/`.
+- **Body** (user: "give her unique characteristics"; picked: "light and quick"): 1.55 m, 54 kg, strength 0.9, stiffness
+  1.0, full self-collision, MATT's upright stance. `SourceArt/Kim/convert_kim.py` (headless Blender through
+  `blender-launcher.exe`). Her hip joints sit at 0.44 of her height (short legs), while every bar is scaled by height.
+- **Recipes:** GRANDMA's, with `grandma_env.G` bound to the process body (`tasks/kim_env.py`); no stoop / careful steps,
+  swing-time reward capped at 0.45 s × √λ. Queue (`train_queue.ps1`), 4096 envs, 1.5-2.1 s/it, Unity closed:
+  | run | task | from | its | min | gates |
+  |---|---|---|---|---|---|
+  | k0_v1 | Rung0-Stand | scratch | 1500 | 53 | 9 · 10 · 10 of 10 |
+  | k1_v1 | Rung1-Run | k0_v1 it 1499 (warm_start) | 2000 | 71 | 7 · 10 · 10 · 10 of 10 |
+  | k2_v1 | Rung2-Omni-Base | k1_v1 it 1999 (warm_start) | 2000 | 67 | 0 · 2 · 3 · 7 of 10 |
+  | k2_v2 | Rung2-Omni-Bands | k2_v1 it 1999 (plain_init, std ≤ 0.3) | 1200 | 49 | 5 · 8 · 8 · 9 of 10 |
+  | k2_v3 | Rung2-Omni-Bands2 | k2_v2 it 1199 | 1000 | 41 | 10 of 10 at 200 / 400 / 600 / 800 / 999 |
+  | kcrawl_v1 | Crawl2 | k0_v1 it 1499 (warm_start) | 1500 | 50 | 0/5 until 1200, 5/5 at 1499 (32.4-33.3 s, lane 5 m) |
+  | kcrawl_v2 | Crawl3 | kcrawl_v1 it 1499 | 1000 | 33 | 5/5 at every gate, 28.1-29.1 s, lane 0.15 m at 999 |
+  | kgetup_v1 | Getup | k0_v1 it 1499 (plain_init) | ~1030 (stopped) | 26 | supine 0 · 10 of 10 |
+  | kgetup_prone_v1 | Getup-Prone | kgetup_v1 it 1000 | 600 | 15 | supine 10/10; face down 0 · 0 · 10 of 10 |
+- **Rung 2 diagnosis** (`tools/gate_fails.py`): k2_v1's misses were one-sided — one turntable direction 0.3-0.5 s slower,
+  only right-hand side-steps over the bar — as on GRANDMA; the mirrored trainer evened the two directions within 0.2 s.
+  What was left at 9/10 were fast side-steps (|vy| 0.76-0.87 m/s); a band of 30 % fast side-step commands (k2_v3) passed
+  at its first gate. Not tested: whether k2_v2 alone would have got there with more iterations.
+- **Checks beyond the gates:** Rung 0 30 seeds 27/30; Rung 2 30 seeds 28 / 29 / 28 at k2_v3 it 200 / 600 / 999 (0 falls;
+  miss = 3.45 m/s sprint with a 0.42 rad/s turn); event heats pick it 600 (no fall, no DQ; it 999 falls in the Gauntlet
+  and the Slalom); get-up 30/30 both ways (0.70-0.82 s supine, 1.00-1.06 s face down), joint speeds inside the bar.
+- **Deployed:** `kim_rung0` = k0_v1 it 1499 · `kim_rung2` = k2_v3 it 600 · `crawl_kim` = kcrawl_v2 it 999 · `getup_kim`
+  = kgetup_prone_v1 it 599 (no event uses it). Critics + confidence (AUC 0.67 / 0.67 / 0.70), odds with a sixth (KIM)
+  feature, roster scenes with four bodies per lane (verify 46/46, crowd contacts 32/32), Unity G0 / G2-G4 PASS, 11 event
+  scenes rebuilt + baked, menu with her card. Reviews: `parity/tb/k0_v1`, `k1_v1`, `k2_v3`, `kcrawl_v2`; get-up films
+  `parity/tb/kgetup_prone_v1`; menu `parity/ui/kim_menu_before_after.html`.
+- **Mistakes made on the way:** two scripted multi-line replacements dropped their second half (PowerShell argument
+  parsing without parentheses) — a deleted `pedestal8` scene entry and an unterminated C# initialiser, both caught by the
+  next run; running three 30-seed CPU evals during kcrawl_v1 slowed it to a crawl for ~15 min.
+- The MuJoCo viewer was not opened during these runs (night, user away); the get-up films are the only renders.

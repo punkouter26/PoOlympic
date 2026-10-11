@@ -7,6 +7,7 @@ lane-isolated), every lane driven like its Unity event (tools/export_critic.py c
   rung2   rung2 / zombie_rung2            random envelope commands         (every other standing event)
   flight  r2f_v3_it100                    3.0-3.8 m/s runs, 1 command in 4 a standstill   (Steeplechase Jog)
   crawl   crawl_matt / crawl_zombie       prone start, 3 s setup, 1.2 m/s  (30m All Fours, Trench Crawl)
+  stand_k / rung2_k / crawl_k   kim_rung0 / kim_rung2 / crawl_kim on the KIM lanes of scene_track8_mzgkmzgk.xml
   stand_g / rung2_g   grandma_rung0 / grandma_rung2: the stand / rung2 drives on the GRANDMA lanes of
                                           scene_track8_mzgmzgmg.xml (commands capped at her 2.8 m/s like the events)
 
@@ -63,13 +64,17 @@ GROUPS = {
     "stand_g": {"grandma": "grandma_rung0"},
     "rung2_g": {"grandma": "grandma_rung2"},
     "crawl_g": {"grandma": "crawl_grandma"},
+    "stand_k": {"kim": "kim_rung0"},
+    "rung2_k": {"kim": "kim_rung2"},
+    "crawl_k": {"kim": "crawl_kim"},
 }
-KIND = {"stand_g": "stand", "rung2_g": "rung2", "crawl_g": "crawl"}        # how a group is driven (default: its own name)
+KIND = {"stand_g": "stand", "rung2_g": "rung2", "crawl_g": "crawl",        # how a group is driven (default: its own name)
+        "stand_k": "stand", "rung2_k": "rung2", "crawl_k": "crawl"}
 FLIGHT_STAND_P = 0.25                                  # flight: share of commands that are a standstill
 
 
 def scene_tag(group: str) -> str:
-    return "mzgmzgmg" if "grandma" in GROUPS[group] else "mzmzmzmz"
+    return "mzgkmzgk" if "kim" in GROUPS[group] else "mzgmzgmg" if "grandma" in GROUPS[group] else "mzmzmzmz"
 
 
 def rollout(group: str, seed: int, seconds: float) -> dict[str, list[tuple[float, int]]]:

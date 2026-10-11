@@ -277,6 +277,35 @@ def _low_entropy(rl, coef: float = 0.001):
     return rl
 
 
+if bodies.current().name == "kim":
+    # KIM (2026-10-10): the GRANDMA chain on her body — Rung 0 / 1, Rung 2 (base -> cap -> bands), crawl, get-up ladder
+    # (supine, then face down: prone = press-up recipe, roll = the roll ladder if her arms cannot press her up)
+    from .crawl_env import grandma_crawl2_env_cfg, grandma_crawl3_env_cfg
+    from .getup_env import body_getup_ladder_env_cfg, body_getup_prone_env_cfg, body_getup_roll_env_cfg
+    from .kim_env import (kim_rung0_env_cfg, kim_rung0_tight_env_cfg, kim_rung1_env_cfg, kim_rung2_bands2_env_cfg,
+                          kim_rung2_bands3_env_cfg, kim_rung2_bands_env_cfg, kim_rung2_base_env_cfg, kim_rung2_cap_env_cfg)
+    from .matt_env import matt_ppo_cfg
+    from .symmetry import SymmetricRunner
+
+    for _tid, _fn, _exp, _its, _runner, _ent in (
+            ("PoOlympic-Kim-Rung0-Stand", kim_rung0_env_cfg, "kim_rung0", 1500, MjlabOnPolicyRunner, None),
+            ("PoOlympic-Kim-Rung1-Run", kim_rung1_env_cfg, "kim_rung1", 3000, MjlabOnPolicyRunner, None),
+            ("PoOlympic-Kim-Rung2-Omni-Base", kim_rung2_base_env_cfg, "kim_rung2", 2000, MjlabOnPolicyRunner, None),
+            ("PoOlympic-Kim-Rung2-Omni-Cap", kim_rung2_cap_env_cfg, "kim_rung2", 1200, MjlabOnPolicyRunner, 0.001),
+            ("PoOlympic-Kim-Rung2-Omni-Bands", kim_rung2_bands_env_cfg, "kim_rung2", 1200, SymmetricRunner, 0.001),
+            ("PoOlympic-Kim-Rung2-Omni-Bands2", kim_rung2_bands2_env_cfg, "kim_rung2", 1000, SymmetricRunner, 0.001),
+            ("PoOlympic-Kim-Rung2-Omni-Bands3", kim_rung2_bands3_env_cfg, "kim_rung2", 600, SymmetricRunner, 0.001),
+            ("PoOlympic-Kim-Rung0-Tight", kim_rung0_tight_env_cfg, "kim_rung0", 500, MjlabOnPolicyRunner, 0.001),
+            ("PoOlympic-Kim-Crawl2", grandma_crawl2_env_cfg, "kim_crawl", 1500, MjlabOnPolicyRunner, None),
+            ("PoOlympic-Kim-Crawl3", grandma_crawl3_env_cfg, "kim_crawl", 1000, MjlabOnPolicyRunner, None),
+            ("PoOlympic-Kim-Getup", body_getup_ladder_env_cfg, "kim_getup", 2000, MjlabOnPolicyRunner, None),
+            ("PoOlympic-Kim-Getup-Prone", body_getup_prone_env_cfg, "kim_getup", 600, MjlabOnPolicyRunner, None),
+            ("PoOlympic-Kim-Getup-Roll", body_getup_roll_env_cfg, "kim_getup", 800, MjlabOnPolicyRunner, None)):
+        _rl = matt_ppo_cfg(_exp, max_iterations=_its)
+        if _ent is not None:
+            _rl.algorithm.entropy_coef = _ent      # GRANDMA's Rung 2 finding (g2_v2b): 0.005 out-pulls the task
+        register_mjlab_task(task_id=_tid, env_cfg=_fn(), play_env_cfg=_fn(play=True), rl_cfg=_rl, runner_cls=_runner)
+
 if bodies.current().name == "grandma":
     from .grandma_env import (grandma_rung0_env_cfg, grandma_rung1_env_cfg, grandma_rung2_base_env_cfg,
                               grandma_rung2_cap28_env_cfg, grandma_rung2_cap_env_cfg, grandma_rung2_env_cfg,

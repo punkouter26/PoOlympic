@@ -22,7 +22,8 @@ from .. import contract as C
 from . import matt_env as M
 from . import mdp
 
-G = bodies.BODIES["grandma"]
+# KIM (2026-10-10) reuses this module's recipes on her own body: tasks/kim_env.py (one process = one body)
+G = C.BODY if C.BODY.name == "kim" else bodies.BODIES["grandma"]
 LAM, SS, TS = G.length_scale, G.speed_scale, G.time_scale
 WS = 1.0 / TS                     # angular-rate scale
 
@@ -56,8 +57,8 @@ def grandma_entity_cfg() -> EntityCfg:
 
 
 def _check_body():
-    if C.BODY.name != "grandma":
-        raise RuntimeError("grandma tasks need POOLYMPIC_BODY=grandma (contract/mdp load the active body's scene)")
+    if C.BODY.name != G.name:
+        raise RuntimeError(f"{G.name} tasks need POOLYMPIC_BODY={G.name} (contract/mdp load the active body's scene)")
 
 
 def _scale_xy_range(r: dict, k: float) -> dict:
@@ -84,10 +85,11 @@ def _grandmafy(cfg: ManagerBasedRlEnvCfg) -> ManagerBasedRlEnvCfg:
         rw["still_lin"].params["std"] *= SS
     rw["joint_vel_limit"].params["limit"] = 18.0 * WS
     rw["torques"].weight = rw["torques"].weight / G.torque_scale ** 2      # same penalty for the same relative effort
-    # personality "frail but steady": a slight stoop instead of upright; a steady hip-width stance
-    rw.pop("upright", None)
-    rw["stoop"] = RewardTermCfg(func=mdp.torso_pitch_tracking, weight=1.0, params={"target_deg": STOOP_DEG, "std_deg": 10.0})
-    rw["steady_stance"] = RewardTermCfg(func=mdp.feet_width, weight=0.5, params={"target": STANCE_WIDTH, "std": 0.06})
+    if G.name == "grandma":
+        # personality "frail but steady": a slight stoop instead of upright; a steady hip-width stance
+        rw.pop("upright", None)
+        rw["stoop"] = RewardTermCfg(func=mdp.torso_pitch_tracking, weight=1.0, params={"target_deg": STOOP_DEG, "std_deg": 10.0})
+        rw["steady_stance"] = RewardTermCfg(func=mdp.feet_width, weight=0.5, params={"target": STANCE_WIDTH, "std": 0.06})
     # full self-collision: more contacts per env
     cfg.sim.nconmax, cfg.sim.njmax = 160, 800
     cfg.scene.num_envs = 4096        # g0_v1 was launched without --env.scene.num-envs and trained ONE environment
@@ -218,7 +220,8 @@ def grandma_rung2_cap_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     return cfg
 
 
-GRANDMA_VX_TOP = 3.0         # MATT units (× SS = 2.80 m/s): the Rung 1 top speed, which she tracked (2.8 -> 2.66 m/s)
+GRANDMA_VX_TOP = 3.0 if G.name == "grandma" else 4.0   # KIM: the full envelope (cap28 == cap, bands reach 4.0 x SS)
+#                            GRANDMA: MATT units (× SS = 2.80 m/s): the Rung 1 top speed, which she tracked (2.8 -> 2.66 m/s)
 
 
 def grandma_rung2_cap28_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:

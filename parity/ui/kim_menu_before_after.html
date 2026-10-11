@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KIM Menu Before After</title>
+<style>
+  :root { --bg: #f6f5f2; --card: #fff; --text: #1d1d1f; --muted: #5d5d66; --line: #e2e0da; --mark: #e0245e; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b; } }
+  :root[data-theme="dark"] { --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.7rem; margin: 0 0 4px; } h2 { font-size: 1.2rem; margin: 28px 0 8px; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  .pair, .trio { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .trio { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  @media (max-width: 640px) { .pair, .trio { grid-template-columns: 1fr; } }
+  figure { margin: 0; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+  figcaption { font-weight: 600; margin-bottom: 8px; }
+  .shot { position: relative; } .shot img { display: block; width: 100%; height: auto; border-radius: 6px; }
+  .box { position: absolute; border: 3px solid var(--mark); border-radius: 6px; }
+  .box b { position: absolute; top: -14px; left: -14px; width: 26px; height: 26px; border-radius: 50%; background: var(--mark); color: #fff; font-size: 14px; display: grid; place-items: center; }
+  ol { padding-left: 22px; } li { margin: 4px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Main menu with KIM: before and after</h1>
+  <p class="sub">2026-10-11 · Game view 1440 × 3088 · before = 3 athletes (2026-10-10 22:14), after = 4 athletes.</p>
+  <div class="pair">
+    <figure><figcaption>Before</figcaption><div class="shot"><img src="menu_before.jpg" alt="Main menu before: three roster cards">
+      <div class="box" style="left:1.5%;top:9.3%;width:97%;height:5.9%"><b>2</b></div></div></figure>
+    <figure><figcaption>After</figcaption><div class="shot"><img src="menu_after.jpg" alt="Main menu after: four roster cards with KIM">
+      <div class="box" style="left:74.8%;top:9.3%;width:23.7%;height:5.9%"><b>1</b></div>
+      <div class="box" style="left:1.5%;top:9.3%;width:72.4%;height:5.9%"><b>2</b></div></div></figure>
+  </div>
+  <ol>
+    <li><strong>New roster card KIM</strong> (orange K chip, 1.55 m · 54 kg). Tap it to put her in all 8 lanes; tapping a lane tile now cycles MATT → ZOMBIE → GRANDMA → KIM.</li>
+    <li><strong>The roster row holds four cards instead of three.</strong> Each card is narrower. The text keeps its size (the project's tests require at least 28 px); to make room the cards have less padding, a narrower chip, and no longer show the &times;8 label. The header line (&quot;8&times; MATT&quot;) and the card tooltip still say that a tap fills all 8 lanes.</li>
+  </ol>
+  <p>Nothing else on the menu changed: the event grid, the detail panel and the bottom row are the same. Events 3, 6 and 7 are MATT-only as before; in every other event KIM takes part with her own brain.</p>
+  <h2>KIM in the events</h2>
+  <div class="trio">
+    <figure><figcaption>Terminal Velocity: K8 third at 3.6 m/s</figcaption><div class="shot"><img src="race_kim.jpg" alt="KIM running in the Terminal Velocity sprint"></div></figure>
+    <figure><figcaption>Iron Pedestal: K1 and K4 on the beam</figcaption><div class="shot"><img src="pedestal_kim.jpg" alt="KIM standing on the iron beam"></div></figure>
+    <figure><figcaption>30m All Fours: K8 29.28 s, K1 29.40 s</figcaption><div class="shot"><img src="crawl_kim.jpg" alt="Result of the crawl heat with KIM second and third"></div></figure>
+  </div>
+  <p>The broadcast HUD shows her lanes as K1 to K8 with the same orange chip, and her confidence readout works (73 % in the pedestal shot).</p>
+</main>
+</body>
+</html>

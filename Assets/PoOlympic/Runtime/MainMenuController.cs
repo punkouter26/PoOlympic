@@ -231,6 +231,7 @@ namespace PoOlympic
             var chip = MakeLabel(athlete.Substring(0, 1), "menu-chip");
             chip.EnableInClassList("menu-chip--zombie", athlete == "ZOMBIE");
             chip.EnableInClassList("menu-chip--grandma", athlete == "GRANDMA");
+            chip.EnableInClassList("menu-chip--kim", athlete == "KIM");
             return chip;
         }
 
@@ -270,6 +271,7 @@ namespace PoOlympic
                 name.text = _lineup[k] ?? "empty";
                 tile.EnableInClassList("slot--zombie", _lineup[k] == "ZOMBIE");
                 tile.EnableInClassList("slot--grandma", _lineup[k] == "GRANDMA");
+                tile.EnableInClassList("slot--kim", _lineup[k] == "KIM");
                 tile.EnableInClassList("slot--sub", _lineup[k] != null && !InEvent(_lineup[k]));   // sits this event out
                 tile.EnableInClassList("slot--fixed", LineupFixed);
             }

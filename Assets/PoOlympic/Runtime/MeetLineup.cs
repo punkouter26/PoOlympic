@@ -13,13 +13,14 @@ namespace PoOlympic
     public static class MeetLineup
     {
         public const string MenuScene = "MainMenu";
-        public static readonly string[] Roster = { "MATT", "ZOMBIE", "GRANDMA" };
+        public static readonly string[] Roster = { "MATT", "ZOMBIE", "GRANDMA", "KIM" };
         /// <summary>One-line card stats per roster athlete (body + brains).</summary>
         public static string Stats(string athlete) => athlete switch
         {
             "MATT" => "1.84 m · 80 kg\nRung 0/2 · Crawl",
             "ZOMBIE" => "1.10 m · 22 kg\nRung 0/2 · Crawl",
             "GRANDMA" => "1.60 m · 65 kg\nRung 0/2",
+            "KIM" => "1.55 m · 54 kg\nRung 0/2 · Crawl",
             _ => "",
         };
         public static string[] Athletes { get; private set; } = Enumerable.Repeat(Roster[0], 8).ToArray();

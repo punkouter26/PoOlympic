@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KIM Crawl Review</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --card: #ffffff; --text: #1d1d1f; --muted: #5d5d66; --line: #e2e0da;
+    --g: #e52592; --m: #3c4a5e; --good: #1f8a4c; --warn: #b8660b; --bad: #c2372b;
+    --t1: #fff4d6; --t2: #e3f3ff; --t3: #eeeaf8; --verdict: #e8f6ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+      --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+      --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+    --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+    --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.8rem; margin: 0 0 4px; }
+  h2 { margin: 0 0 4px; font-size: 1.3rem; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+  .verdict { background: var(--verdict); }
+  .verdict p { margin: 6px 0 0; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 10px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+  .up { color: var(--good); font-weight: 600; } .same { color: var(--muted); font-weight: 600; }
+  .down { color: var(--warn); font-weight: 600; } .fail { color: var(--bad); font-weight: 600; }
+  .tag { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--muted); }
+  img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); margin: 12px 0 16px; background: #fff; }
+  .levels { display: grid; gap: 12px; }
+  .lvl { border-radius: 10px; padding: 12px 16px; }
+  .lvl h3 { margin: 0 0 4px; font-size: .95rem; }
+  .lvl p { margin: 0; }
+  .l1 { background: var(--t1); } .l2 { background: var(--t2); } .l3 { background: var(--t3); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 8px; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+  footer { color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>KIM crawl training review: 30 m on hands and knees</h1>
+  <p class="sub">2026-10-11 04:46, runs kcrawl_v1 → kcrawl_v2 · KIM (1.55 m, 54 kg, 90 % strength) · 1500 + 1000 iterations in 50 + 33 min, 4096 environments · kcrawl_v1 from her Rung 0 brain, kcrawl_v2 continued from kcrawl_v1's last brain without the lift assist and on the full speed range from the start.
+    GRANDMA's run of the same recipe (gcrawl_v2) is shown from its saved charts: this clone no longer has its TensorBoard logs.</p>
+
+  <div class="box verdict">
+    <h2>Verdict: KIM crawls 30 m on hands and knees, 5 of 5, at every gate of the second run</h2>
+    <p><strong>In one sentence:</strong> from lying face down she gets onto hands and knees and crawls 30 m in 28.1 to 29.1 s, 5 of 5 tests, with no tumbles, ending 0.15 m from her lane line.</p>
+    <p><strong>Compared with the earlier bodies:</strong> between MATT (25.7–26.7 s) and ZOMBIE (about 31.7 s), a second behind GRANDMA (27.1–27.9 s, 0.10 m). She took longer than GRANDMA to start moving: at iteration 1200 of the first run she had covered 1.1 m where GRANDMA had finished the 30 m.</p>
+    <div class="scroll"><table>
+      <tr><th>30 m from lying face down (CPU, 5 seeds)</th><th>v1 it 300</th><th>600</th><th>900</th><th>1200</th><th>1499</th><th>v2 it 200</th><th>400</th><th>600</th><th>800</th><th>999 (chosen)</th></tr>
+      <tr><td>Finished in 60 s</td><td class="fail">0/5</td><td class="fail">0/5</td><td class="fail">0/5</td><td class="fail">0/5</td><td class="up">5/5</td><td class="up">5/5</td><td class="up">5/5</td><td class="up">5/5</td><td class="up">5/5</td><td class="up">5/5</td></tr>
+      <tr><td>Distance or time</td><td>0 m</td><td>0 m</td><td>0.5 m</td><td>1.1 m</td><td>32.4–33.3 s</td><td>28.3–29.1 s</td><td>27.8–28.7 s</td><td>27.9–28.8 s</td><td>27.9–28.9 s</td><td>28.1–29.1 s</td></tr>
+      <tr><td>Time on all fours</td><td>0 %</td><td>75 %</td><td>100 %</td><td>100 %</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>Distance from the lane line</td><td>0.03 m</td><td>0.03 m</td><td>0.27 m</td><td>0.42 m</td><td class="fail">5.00 m</td><td>0.32 m</td><td>0.35 m</td><td>0.25 m</td><td>0.22 m</td><td class="up">0.15 m</td></tr>
+    </table></div>
+    <p>Brain: <code>parity/brains/crawl_kim.onnx</code> = kcrawl_v2 iteration 999, chosen for the smallest lane error; iteration 400 is 0.3 s faster. The cells left empty were not recorded in the gate line for a finished run. Not in the game yet.</p>
+  </div>
+
+  <div class="box">
+    <h2>1 · Moving forward</h2>
+    <p class="tag">Episode_Reward/progress (points for forward speed while on all fours; 3 is the most possible). Top: KIM's two runs. Bottom: GRANDMA's gcrawl_v2 (pink) and her failed first attempt (cyan).</p>
+    <img src="1_progress.png" alt="KIM crawl progress">
+    <img src="../gcrawl_v2/1_progress.png" alt="GRANDMA crawl progress">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The line stays low for a long time. Then it goes up and up. Kim learned to crawl.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This line goes up when Kim moves forward on her hands and knees. For the first 800 rounds she hardly moved: she was still learning to get up off the floor. Then she worked out how to move her hands and knees in turn, and the line climbed until the end. The second run starts where the first stopped and climbs a bit more.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>kcrawl_v1: 0.02 at iteration 300, 0.05 at 600, 0.28 at 900, then 0.62 → 1.08 → 1.76 at 1200 / 1400 / 1499, still rising steeply when it ended (GRANDMA took off at ~750 and also ended at 1.74). kcrawl_v2 starts at 2.0 and levels at 2.3 from iteration ~600. The term is gated on pelvis height, so it only pays for motion on all fours.</p></div>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2>2 · Getting off the floor</h2>
+    <p class="tag">Episode_Reward/crawl_up (points for pelvis height up to her hands-and-knees height, 0.335 m; 1.5 is the most possible). Top: KIM. Bottom: GRANDMA.</p>
+    <img src="2_height.png" alt="KIM crawl height">
+    <img src="../gcrawl_v2/2_height.png" alt="GRANDMA crawl height">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>First Kim lies on her tummy. Then she pushes up onto her hands and knees. The line goes up when she does.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>Before she can crawl, Kim has to get her tummy off the floor. This line shows how high her hips are. It rises slowly for 600 rounds, then quickly, and by round 900 she is up on hands and knees nearly all the time.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>0.71 at iteration 300, 0.87 at 600, 1.33 at 900 and 1.34–1.42 from then on, through both runs. The gate agrees: on all fours 0 % of the time at iteration 300, 75 % at 600 (with 91 tumbles and recoveries, i.e. rocking up and down), 100 % from 900. 60 % of practice episodes start part of the way up or on hands and knees, the recipe that got GRANDMA off the floor; whether KIM, with stronger arms, needed it was not tested.</p></div>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2>3 · Total reward</h2>
+    <p class="tag">Train/mean_reward. Top: KIM. Bottom: GRANDMA.</p>
+    <img src="3_mean_reward.png" alt="KIM crawl mean reward">
+    <img src="../gcrawl_v2/3_mean_reward.png" alt="GRANDMA crawl mean reward">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>More points is better. Kim's points keep going up.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This is Kim's score for each try. It creeps up while she learns to get off the floor, then jumps when she starts to crawl. In the second run she is asked to crawl faster, so she can score more, and she does.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>kcrawl_v1: 110 at iteration 300, 117 at 900, 140 at 1499 and accelerating. kcrawl_v2: 159 at iteration 50, 197 at 600, 202 at 999, flat over the last 400 iterations. The jump between the runs comes mostly from the wider speed range (track_lin 1.4 → 1.9) and not from a change in the policy. The lane error tells more than the reward here: 5.0 m at the end of the first run, when speed had just arrived and turn tracking had dropped (track_yaw 2.35 → 1.93), 0.15 m at the end of the second (2.54).</p></div>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2>What is not established</h2>
+    <p>How she crawls in a heat with seven others, and under the Trench Crawl ceiling (0.72 m): untested. Her joint speeds while crawling were not measured against the realism bar. No render of her crawling: the MuJoCo viewer was not opened during the run.</p>
+  </div>
+  <footer>Charts: TensorBoard at localhost:6006, runs kcrawl_v1, kcrawl_v2 (<code>training/tools/tb_shots.py</code>); GRANDMA's from <code>parity/tb/gcrawl_v2/</code>. Gate data: <code>parity/watch_kcrawl_v*.jsonl</code>, <code>parity/watch/crawl_kcrawl_v*.json</code>.</footer>
+</main>
+</body>
+</html>

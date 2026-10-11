@@ -46,6 +46,20 @@
    ]
   },
   {
+   "lane": 0,
+   "prefix": "K0_",
+   "body": "kim",
+   "origin": [
+    -0.6929000000000016,
+    1.6728,
+    0.0
+   ],
+   "cubes": [
+    0,
+    1
+   ]
+  },
+  {
    "lane": 1,
    "prefix": "L1_",
    "body": "matt",
@@ -77,6 +91,20 @@
    "lane": 1,
    "prefix": "G1_",
    "body": "grandma",
+   "origin": [
+    0.0,
+    1.3858,
+    0.0
+   ],
+   "cubes": [
+    2,
+    3
+   ]
+  },
+  {
+   "lane": 1,
+   "prefix": "K1_",
+   "body": "kim",
    "origin": [
     0.0,
     1.3858,
@@ -130,6 +158,20 @@
    ]
   },
   {
+   "lane": 2,
+   "prefix": "K2_",
+   "body": "kim",
+   "origin": [
+    0.28699999999999903,
+    0.6929,
+    0.0
+   ],
+   "cubes": [
+    4,
+    5
+   ]
+  },
+  {
    "lane": 3,
    "prefix": "L3_",
    "body": "matt",
@@ -161,6 +203,20 @@
    "lane": 3,
    "prefix": "G3_",
    "body": "grandma",
+   "origin": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cubes": [
+    6,
+    7
+   ]
+  },
+  {
+   "lane": 3,
+   "prefix": "K3_",
+   "body": "kim",
    "origin": [
     0.0,
     0.0,
@@ -214,6 +270,20 @@
    ]
   },
   {
+   "lane": 4,
+   "prefix": "K4_",
+   "body": "kim",
+   "origin": [
+    -0.6929000000000016,
+    -0.28700000000000003,
+    0.0
+   ],
+   "cubes": [
+    8,
+    9
+   ]
+  },
+  {
    "lane": 5,
    "prefix": "L5_",
    "body": "matt",
@@ -245,6 +315,20 @@
    "lane": 5,
    "prefix": "G5_",
    "body": "grandma",
+   "origin": [
+    -1.3858000000000033,
+    0.0,
+    0.0
+   ],
+   "cubes": [
+    10,
+    11
+   ]
+  },
+  {
+   "lane": 5,
+   "prefix": "K5_",
+   "body": "kim",
    "origin": [
     -1.3858000000000033,
     0.0,
@@ -298,6 +382,20 @@
    ]
   },
   {
+   "lane": 6,
+   "prefix": "K6_",
+   "body": "kim",
+   "origin": [
+    -1.6728000000000023,
+    0.6929,
+    0.0
+   ],
+   "cubes": [
+    12,
+    13
+   ]
+  },
+  {
    "lane": 7,
    "prefix": "L7_",
    "body": "matt",
@@ -338,6 +436,20 @@
     14,
     15
    ]
+  },
+  {
+   "lane": 7,
+   "prefix": "K7_",
+   "body": "kim",
+   "origin": [
+    -1.3858000000000033,
+    1.3858,
+    0.0
+   ],
+   "cubes": [
+    14,
+    15
+   ]
   }
  ],
  "pedestal_h": 0.0,
@@ -346,42 +458,50 @@
   [
    "matt",
    "zombie",
-   "grandma"
+   "grandma",
+   "kim"
   ],
   [
    "matt",
    "zombie",
-   "grandma"
+   "grandma",
+   "kim"
   ],
   [
    "matt",
    "zombie",
-   "grandma"
+   "grandma",
+   "kim"
   ],
   [
    "matt",
    "zombie",
-   "grandma"
+   "grandma",
+   "kim"
   ],
   [
    "matt",
    "zombie",
-   "grandma"
+   "grandma",
+   "kim"
   ],
   [
    "matt",
    "zombie",
-   "grandma"
+   "grandma",
+   "kim"
   ],
   [
    "matt",
    "zombie",
-   "grandma"
+   "grandma",
+   "kim"
   ],
   [
    "matt",
    "zombie",
-   "grandma"
+   "grandma",
+   "kim"
   ]
  ],
  "note": "lane k: names prefixed L<k>_, athlete body per lane (assets/<body>.xml), pelvis shifted by origin"

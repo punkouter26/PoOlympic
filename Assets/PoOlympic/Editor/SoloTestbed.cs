@@ -13,7 +13,7 @@ namespace PoOlympic.Editor
     /// scene (training/assets/scene_&lt;body&gt;.xml: athlete + 4-cube pool) with the camera / light / track / HUD look of
     /// Testbed_ZeroBrain, one PolicyRunner on the body's contract and its bound visual. ParityHarness runs every
     /// reference of that body (meta.body) here; ConfigurePlay arms the standard parity script + recording for G5.
-    /// Bodies: zombie (Phase Z7), grandma (Phase G4).
+    /// Bodies: zombie (Phase Z7), grandma (Phase G4), kim (Phase K).
     /// </summary>
     public static class SoloTestbed
     {
@@ -24,6 +24,9 @@ namespace PoOlympic.Editor
 
         [MenuItem("PoOlympic/Build Testbed_Grandma (solo grandma)")]
         public static string BuildGrandma() => Build("grandma");
+
+        [MenuItem("PoOlympic/Build Testbed_Kim (solo kim)")]
+        public static string BuildKim() => Build("kim");
 
         public static string Build(string body)
         {

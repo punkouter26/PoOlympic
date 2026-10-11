@@ -83,6 +83,7 @@ MATT_MASS = 80.0
 MATT_HEIGHT = 1.837          # body mesh height (skeleton_matt.json height_body_mesh_m)
 ZOMBIE_HEIGHT = 1.135        # SourceArt/Zombie/convert_report.json
 GRANDMA_HEIGHT = 1.600       # SourceArt/Grandma/rig_report.json
+KIM_HEIGHT = 1.550           # SourceArt/Kim/convert_report.json
 
 BODIES = {
     "matt": Body("matt", ROOT.parent / "SourceArt" / "test_MATT_Avaturn.glb", 52, (1.80, 1.90), MATT_MASS, 1.0),
@@ -108,6 +109,13 @@ BODIES = {
         # stance: pelvis level (hip − knee + ankle = 0), shins 7° forward; COM 35 % of the way heel -> toe like MATT (the
         # first stance, hip 14 / ankle 10, put it at 43 %: 6 cm ahead of the ankles)
         joint_defaults={"abdomen_flex": 10.0, "hip_flex": 17.0, "hip_abd": 3.0, "knee": 24.0, "ankle_dorsi": 7.0}),
+    # KIM (user 2026-10-10: "give her unique characteristics" -> Claude's pick, "light and quick"): 1.55 m woman, 54 kg,
+    # long trunk on short legs (hip joints at 0.44 of her height: a low centre of mass); 90 % of the size-scaled torque
+    # (knee extension cap ≈ 144 Nm at 54 kg: the best strength-to-weight after MATT), servos at full size-scaled
+    # stiffness, full self-collision. Stance: MATT's upright athletic one.
+    "kim": Body(
+        "kim", ROOT.parent / "SourceArt" / "Kim" / "kim.glb", 22, (1.52, 1.58), 54.0,
+        KIM_HEIGHT / MATT_HEIGHT, strength=0.9, stiffness=1.0, self_collision=True, yaw_per_stride=True),
 }
 
 

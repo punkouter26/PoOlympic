@@ -279,11 +279,13 @@ def fit_geoms(skin: Skin) -> dict[str, list[dict]]:
     J = skin.joint_pos
     g: dict[str, list[dict]] = {}
     # GRANDMA's automatic (bone heat) weights give the hip / buttock skin to the thighs, so her Hips-only skin is
-    # narrower than deep (zero-length capsule): her pelvis is fitted to all skin in the hip slab
-    pelvis_v = skin.verts if BODY.family == "grandma" else skin.of(["Hips"])
+    # narrower than deep (zero-length capsule): her pelvis is fitted to all skin in the hip slab. KIM's auto-rig: same.
+    pelvis_v = skin.verts if BODY.family in ("grandma", "kim") else skin.of(["Hips"])
     g["pelvis"] = [fit_trunk_capsule(pelvis_v, J["Hips"][2] - 0.08 * L, J["Spine"][2] + 0.02 * L)]
     g["torso"] = [fit_trunk_capsule(skin.of(["Spine", "Spine1"]))]
-    g["chest"] = [fit_trunk_capsule(skin.of(["Spine2"]), J["Spine2"][2], J["LeftArm"][2] - 0.03 * L)]
+    # KIM's rig weights the sides of the chest to the shoulder bones (Spine2-only skin is 0.19 m wide, 0.25 m deep)
+    chest_bones = ["Spine2", "LeftShoulder", "RightShoulder"] if BODY.family == "kim" else ["Spine2"]
+    g["chest"] = [fit_trunk_capsule(skin.of(chest_bones), J["Spine2"][2], J["LeftArm"][2] - 0.03 * L)]
     neck = fit_limb_capsule(J["Neck"], J["Head"], skin.of(["Neck"]), pct=60, shrink=0.0)
     head = fit_sphere(skin.of(["Head"]))
     g["head"] = [neck, head]

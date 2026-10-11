@@ -80,6 +80,11 @@ namespace PoOlympic.Editor
         // bars). No crawl brain: the all-fours scenes (8, 23) hold MATT + zombie only.
         public const string DefaultGrandmaRung0Brain = "grandma_rung0.onnx";
         public const string DefaultGrandmaRung2Brain = "grandma_rung2.onnx";
+        // KIM (Phase K, 2026-10-11): SourceArt/Kim/kim.glb (convert_kim.py); Rung 0 = k0_v1 it 1499 (G1 10/10), Rung 2 =
+        // k2_v3 it 600 (G1 10/10, 29/30), crawl = kcrawl_v2 it 999 (30 m 5/5)
+        public const string KimAsset = "Assets/PoOlympic/Art/Kim.glb";
+        public const string DefaultKimRung0Brain = "kim_rung0.onnx";
+        public const string DefaultKimRung2Brain = "kim_rung2.onnx";
 
         /// <summary>Per-body assets: contract (Models/contract[_body].json), visual (glTF) and lane label letter.</summary>
         public static (string contract, string visual, string letter) BodyAssets(string body) => body switch
@@ -88,6 +93,7 @@ namespace PoOlympic.Editor
             "zombie" => ("Assets/PoOlympic/Models/contract_zombie.json", ZombieAsset, "Z"),
             "mattbio" => ("Assets/PoOlympic/Models/contract_mattbio.json", VisualBinding.MattAsset, "M"),   // MATT's skeleton
             "grandma" => ("Assets/PoOlympic/Models/contract_grandma.json", GrandmaAsset, "G"),
+            "kim" => ("Assets/PoOlympic/Models/contract_kim.json", KimAsset, "K"),
             _ => throw new ArgumentException($"unknown athlete body '{body}'"),
         };
 
@@ -135,7 +141,8 @@ namespace PoOlympic.Editor
                 if (cube && cubeMat != null) rend.sharedMaterial = cubeMat;
             }
 
-            var brains = new System.Collections.Generic.Dictionary<string, string> { { "matt", brainFile }, { "zombie", zombieBrain }, { "grandma", grandmaBrain } };
+            var brains = new System.Collections.Generic.Dictionary<string, string> { { "matt", brainFile }, { "zombie", zombieBrain }, { "grandma", grandmaBrain },
+                                                                                     { "kim", DefaultKimRung0Brain } };
             var pool = new GameObject("CubePool").AddComponent<MjCubePool>();
             pool.poolSize = (int)layout["n_cubes"];
             var heat = new GameObject("IronPedestalHeat").AddComponent<IronPedestalHeat>();
@@ -206,6 +213,7 @@ namespace PoOlympic.Editor
         public const string CrawlMattBrain = "crawl_matt.onnx";
         public const string CrawlZombieBrain = "crawl_zombie.onnx";
         public const string CrawlGrandmaBrain = "crawl_grandma.onnx";
+        public const string CrawlKimBrain = "crawl_kim.onnx";
         // Event 13 (Steeplechase Jog): MATT's flight brain (tasks PoOlympic-Matt-Rung2-Flight, r2f_v3 it100); the zombie
         // keeps its Rung 2 brain
         public const string SteepleScene = "Assets/PoOlympic/Scenes/Event_SteeplechaseJog.unity";
@@ -246,9 +254,9 @@ namespace PoOlympic.Editor
             bool crawl = mode == TrackRaceEvent.Mode.AllFours;
             bool steeple = mode == TrackRaceEvent.Mode.Steeplechase;
             var brains = crawl ? new System.Collections.Generic.Dictionary<string, string> { { "matt", CrawlMattBrain }, { "zombie", CrawlZombieBrain },
-                                                                                             { "grandma", CrawlGrandmaBrain } }
+                                                                                             { "grandma", CrawlGrandmaBrain }, { "kim", CrawlKimBrain } }
                        : steeple ? new System.Collections.Generic.Dictionary<string, string> { { "matt", FlightMattBrain }, { "zombie", DefaultZombieRung2Brain },
-                                                                                               { "grandma", DefaultGrandmaRung2Brain } }
+                                                                                               { "grandma", DefaultGrandmaRung2Brain }, { "kim", DefaultKimRung2Brain } }
                        : null;
             if (crawl) brainFile = CrawlMattBrain;
             if (steeple) brainFile = FlightMattBrain;
@@ -582,12 +590,12 @@ namespace PoOlympic.Editor
         /// <summary>HUD lane label: the zombie's lanes read Z&lt;n&gt;, GRANDMA's G&lt;n&gt; (roster prefixes Z&lt;k&gt;_ / G&lt;k&gt;_),
         /// MATT keeps the event's own label.</summary>
         static string LaneLabel(string label, PolicyRunner r) =>
-            r.athletePrefix.StartsWith("Z") || r.athletePrefix.StartsWith("G") ? r.athletePrefix.Substring(0, 1) + label.Substring(1) : label;
+            r.athletePrefix.StartsWith("Z") || r.athletePrefix.StartsWith("G") || r.athletePrefix.StartsWith("K") ? r.athletePrefix.Substring(0, 1) + label.Substring(1) : label;
 
         static string BrainsLabel(string brainFile) =>
             $"v0 · {Path.GetFileNameWithoutExtension(brainFile)} + " +
-            (brainFile == CrawlMattBrain ? $"{Path.GetFileNameWithoutExtension(CrawlZombieBrain)} + {Path.GetFileNameWithoutExtension(CrawlGrandmaBrain)}"
-                : $"{Path.GetFileNameWithoutExtension(DefaultZombieRung2Brain)} + {Path.GetFileNameWithoutExtension(DefaultGrandmaRung2Brain)}");
+            (brainFile == CrawlMattBrain ? $"{Path.GetFileNameWithoutExtension(CrawlZombieBrain)} + {Path.GetFileNameWithoutExtension(CrawlGrandmaBrain)} + {Path.GetFileNameWithoutExtension(CrawlKimBrain)}"
+                : $"{Path.GetFileNameWithoutExtension(DefaultZombieRung2Brain)} + {Path.GetFileNameWithoutExtension(DefaultGrandmaRung2Brain)} + {Path.GetFileNameWithoutExtension(DefaultKimRung2Brain)}");
 
         public sealed class MeetScene
         {
@@ -637,7 +645,7 @@ namespace PoOlympic.Editor
             }
             // per-lane body (layout "body", tools/compose_mixed.py; default matt): its contract, brain and visual
             bodyBrains ??= new System.Collections.Generic.Dictionary<string, string> { { "matt", brainFile }, { "zombie", DefaultZombieRung2Brain },
-                                                                                       { "grandma", DefaultGrandmaRung2Brain } };
+                                                                                       { "grandma", DefaultGrandmaRung2Brain }, { "kim", DefaultKimRung2Brain } };
             string BrainOf(string body) => bodyBrains.TryGetValue(body, out var b) ? b : brainFile;
             meet.Pool = new GameObject("CubePool").AddComponent<MjCubePool>();
             meet.Pool.poolSize = (int)layout["n_cubes"];

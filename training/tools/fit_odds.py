@@ -32,10 +32,11 @@ BR = ROOT.parent / "parity" / "brains"
 A = ROOT / "assets"
 OUT_DIR = ROOT.parent / "parity" / "odds"
 MODEL = ROOT.parent / "Assets" / "PoOlympic" / "Models" / "odds_model.json"
-FEATURES = ["zombie", "strength", "latency", "noise", "grandma"]   # Unity Odds.Rating reads them in this order
+FEATURES = ["zombie", "strength", "latency", "noise", "grandma", "kim"]   # Unity Odds.Rating reads them in this order
 RIDGE = 0.5
-R2 = {"matt": BR / "rung2.onnx", "zombie": BR / "zombie_rung2.onnx", "grandma": BR / "grandma_rung2.onnx"}
-LINEUPS = {"mzmzmzmz": 5000, "mzgmzgmg": 7000}     # scene tag -> first seed (GRANDMA crawls in 8 / 23 since 2026-10-02)
+R2 = {"matt": BR / "rung2.onnx", "zombie": BR / "zombie_rung2.onnx", "grandma": BR / "grandma_rung2.onnx",
+      "kim": BR / "kim_rung2.onnx"}
+LINEUPS = {"mzmzmzmz": 5000, "mzgmzgmg": 7000, "mzgkmzgk": 9000}     # KIM in lanes 4 / 8 since 2026-10-11; scene tag -> first seed (GRANDMA crawls in 8 / 23 since 2026-10-02)
 
 # event -> (name, runner kind, scene tag)
 EVENTS = {
@@ -62,11 +63,12 @@ def run_one(event: int, seed: int) -> dict:
     _, kind, tag = EVENTS[event]
     scene, layout = A / f"scene_{tag}_{lineup_of(seed)}.xml", A / f"{tag}_{lineup_of(seed)}_layout.json"
     if kind == "pedestal":
-        brains = {"matt": BR / "r0_v2_it1000.onnx", "zombie": BR / "zombie_rung0.onnx", "grandma": BR / "grandma_rung0.onnx"}
+        brains = {"matt": BR / "r0_v2_it1000.onnx", "zombie": BR / "zombie_rung0.onnx", "grandma": BR / "grandma_rung0.onnx",
+                  "kim": BR / "kim_rung0.onnx"}
         res = iron_pedestal.run_heat(brains["matt"], seed, scene=scene, layout_path=layout, brains=brains)
     elif kind in ("all_fours", "trench"):
         res = all_fours.run_race({"matt": BR / "crawl_matt.onnx", "zombie": BR / "crawl_zombie.onnx",
-                                  "grandma": BR / "crawl_grandma.onnx"}, seed, scene=scene,
+                                  "grandma": BR / "crawl_grandma.onnx", "kim": BR / "crawl_kim.onnx"}, seed, scene=scene,
                                  layout_path=layout, distance=all_fours.TRENCH_DISTANCE if kind == "trench" else None)
     elif kind.startswith("track:"):
         mode = kind.split(":")[1]
@@ -83,7 +85,7 @@ def run_one(event: int, seed: int) -> dict:
 
 def features(lane: dict) -> np.ndarray:
     return np.array([1.0 if lane["body"] == "zombie" else 0.0, lane["strength"] - 1.0, float(lane["latency"]), lane["noise"],
-                     1.0 if lane["body"] == "grandma" else 0.0])
+                     1.0 if lane["body"] == "grandma" else 0.0, 1.0 if lane["body"] == "kim" else 0.0])
 
 
 def fit(heats: list[dict]) -> tuple[np.ndarray, dict]:
@@ -146,7 +148,7 @@ def main() -> int:
                     print(f"  {i}/{len(jobs)}", flush=True)
     heats = [json.loads(x) for x in raw.read_text().splitlines()]
     model = {"note": "PoOlympic betting odds (training/tools/fit_odds.py): rating = w . [zombie, strength-1, latency, "
-                     "noise, grandma]; P(win) = softmax(rating); Plackett-Luce fit on CPU heats, mixed MATT / zombie / GRANDMA lineups",
+                     "noise, grandma, kim]; P(win) = softmax(rating); Plackett-Luce fit on CPU heats, mixed MATT / zombie / GRANDMA / KIM lineups",
              "features": FEATURES, "margin": 0.10, "events": []}
     for e in sorted({h["event"] for h in heats}):
         w, diag = fit([h for h in heats if h["event"] == e])

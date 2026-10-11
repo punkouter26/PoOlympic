@@ -30,7 +30,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "assets"
 EVENT_SCENES = ["pedestal8", "shaker8", "crawl8", "slalom8", "turntable8", "track8", "crab8", "trench8"]
-LINEUPS = ["", "_mzmzmzmz", "_mzgmzgmg"]        # all-MATT, alternating MATT / zombie, MATT / zombie / GRANDMA
+LINEUPS = ["", "_mzmzmzmz", "_mzgmzgmg", "_mzgkmzgk"]   # all-MATT, MATT / zombie, MATT / zombie / GRANDMA, + KIM
 NUDGE = np.array([0.011, 0.007, 0.004])         # m — never place two geom centres exactly on top of each other
 
 

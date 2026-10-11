@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KIM Rung 2 Review</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --card: #ffffff; --text: #1d1d1f; --muted: #5d5d66; --line: #e2e0da;
+    --g: #e52592; --m: #3c4a5e; --good: #1f8a4c; --warn: #b8660b; --bad: #c2372b;
+    --t1: #fff4d6; --t2: #e3f3ff; --t3: #eeeaf8; --verdict: #e8f6ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+      --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+      --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+    --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+    --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.8rem; margin: 0 0 4px; }
+  h2 { margin: 0 0 4px; font-size: 1.3rem; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+  .verdict { background: var(--verdict); }
+  .verdict p { margin: 6px 0 0; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 10px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+  .up { color: var(--good); font-weight: 600; } .same { color: var(--muted); font-weight: 600; }
+  .down { color: var(--warn); font-weight: 600; } .fail { color: var(--bad); font-weight: 600; }
+  .tag { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--muted); }
+  img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); margin: 12px 0 16px; background: #fff; }
+  .levels { display: grid; gap: 12px; }
+  .lvl { border-radius: 10px; padding: 12px 16px; }
+  .lvl h3 { margin: 0 0 4px; font-size: .95rem; }
+  .lvl p { margin: 0; }
+  .l1 { background: var(--t1); } .l2 { background: var(--t2); } .l3 { background: var(--t3); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 8px; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+  footer { color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>KIM Rung 2 training review: turning, side-steps, backwards, sprints</h1>
+  <p class="sub">2026-10-11 03:23, runs k2_v1 → k2_v2 → k2_v3 · KIM (1.55 m, 54 kg, 90 % strength) · 2000 + 1200 + 1000 iterations in 67 + 49 + 41 min, 4096 environments, each run continued from the one before (k2_v1 from her Rung 1 brain) ·
+    <span class="dot" style="background:#e52592"></span>k2_v1 base recipe
+    <span class="dot" style="background:#f9ab00"></span>k2_v2 mirrored trainer + command bands
+    <span class="dot" style="background:#9334e6"></span>k2_v3 same, more fast side-steps.
+    GRANDMA's runs of the same recipes (g2_v7, g2_v8) are shown from their saved charts: this clone no longer has their TensorBoard logs.</p>
+
+  <div class="box verdict">
+    <h2>Verdict: KIM passes Rung 2, 10 out of 10</h2>
+    <p><strong>In one sentence:</strong> she follows speed, turn, side-step and backward commands inside the bars, spins 360° in 2.3–2.5 s, brakes from a run and never falls, on all ten seeds at every checkpoint of the last run; on 30 other seeds the chosen checkpoint passes 29.</p>
+    <p><strong>Compared with the two bodies trained on this scaled recipe:</strong> GRANDMA's best is 8/10 after five more runs than this, ZOMBIE's 8/10 (MATT's own Rung 2 history was not looked up for this page). The same three-step recipe that took GRANDMA from 4 to 8 took KIM from 7 to 10.</p>
+    <div class="scroll"><table>
+      <tr><th>Gate (10 seeds, CPU)</th><th>k2_v1 it 500</th><th>1000</th><th>1500</th><th>1999</th><th>k2_v2 it 300</th><th>600</th><th>900</th><th>1199</th><th>k2_v3 it 200 – 999</th></tr>
+      <tr><td>Seeds passed</td><td class="fail">0/10</td><td class="down">2/10</td><td class="down">3/10</td><td class="down">7/10</td><td class="down">5/10</td><td class="down">8/10</td><td class="down">8/10</td><td class="down">9/10</td><td class="up">10/10 at all five</td></tr>
+      <tr><td>Falls</td><td class="fail">3</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+      <tr><td>Segments over the speed bar (of 50)</td><td></td><td>7</td><td>8</td><td>4</td><td>5</td><td>2</td><td>3</td><td>1</td><td>0</td></tr>
+      <tr><td>Turntable, the two directions</td><td>too slow</td><td>2.42 / 2.98 s</td><td>2.46 / 2.78 s</td><td>2.32 / 2.38 s</td><td>2.58 / 2.58 s</td><td>2.44 / 2.46 s</td><td>2.36 / 2.60 s</td><td>2.36 / 2.54 s</td><td>2.34 / 2.52 s (it 200)</td></tr>
+    </table></div>
+    <div class="scroll"><table>
+      <tr><th>30 other seeds</th><th>k2_v3 it 200</th><th>it 600 (chosen)</th><th>it 999</th><th>For scale</th></tr>
+      <tr><td>Seeds passed</td><td>28/30</td><td class="up">29/30</td><td>28/30</td><td>ZOMBIE's brain 21–23/30</td></tr>
+      <tr><td>Falls</td><td>0</td><td>0</td><td>0</td><td></td></tr>
+      <tr><td>What missed</td><td colspan="3">a 3.45 m/s sprint with a 0.42 rad/s turn (speed error 0.23–0.29 against the 0.184 m/s bar); at it 999 also the same sprint turning the other way</td><td></td></tr>
+    </table></div>
+    <p>Brain: <code>parity/brains/kim_rung2.onnx</code> = k2_v3 iteration 600. Not yet tried in event heats, which is how the other bodies' brains were finally chosen.</p>
+  </div>
+
+  <div class="box">
+    <h2>1 · Turn-rate error</h2>
+    <p class="tag">Metrics/athlete/error_vel_yaw (how far her turn rate is from the commanded one during practice, rad/s; lower is better). Top: KIM's three runs. Bottom: GRANDMA's g2_v7.</p>
+    <img src="1_yaw_error.png" alt="KIM yaw error, three runs">
+    <img src="../g2_v7/2_yaw_error.png" alt="GRANDMA yaw error">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>Lower is better. Pink goes up, which is bad. Orange and purple go down, which is good.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This is how much Kim turns wrongly. In the pink run we kept asking for sharper and sharper turns (the two jumps), and her mistakes grew. In the orange run a new trick was used: every move is also practised as its mirror image, left for right. Her mistakes shrank steadily. Purple carried on from there and is the lowest of all.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>k2_v1 falls to 0.87 rad/s within its first command stage, then steps up at iterations ~520 and ~1000 as the curriculum widens the turn range to ±2.7 rad/s, ending at 1.67. Part of that rise is simply larger commands, so the level is not comparable across stages. k2_v2 starts on the full range with the lateral-acceleration cap, the mirror loss and command bands, and falls from 1.25 to 0.88; k2_v3 from 0.88 to 0.76 and still falling slowly. The gate saw the same thing from the other side: in k2_v1 one turntable direction was 0.3–0.5 s slower than the other and only right-hand side-steps failed; from k2_v2 on, the two directions are within 0.2 s.</p></div>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2>2 · Total reward</h2>
+    <p class="tag">Train/mean_reward. Top: KIM's three runs. Bottom: GRANDMA's g2_v7 (purple) and g2_v8 (yellow).</p>
+    <img src="2_mean_reward.png" alt="KIM mean reward, three runs">
+    <img src="../g2_v8/3_mean_reward.png" alt="GRANDMA mean reward">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>More points is better. Purple has the most points.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This is Kim's score for each try. The pink line drops twice: that is not her getting worse, it is the exercises getting harder. The orange line climbs the whole time, and the purple line starts where orange stopped and climbs a little more.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>k2_v1 reaches 111 on the first stage, then drops to ~91 and ~85 at the two curriculum steps and recovers only to 88: on the full command range its recipe had stopped improving, with the action noise rising from 0.42 to 0.53. k2_v2 (entropy 0.001, start noise capped at 0.3) climbs from 95 to 108 without levelling off; k2_v3 from 109 to 113, nearly flat after iteration 600, which fits its gate being 10/10 from iteration 200 on. The three runs do not share one reward definition (k2_v2 and k2_v3 use a sharper speed kernel with a lower weight), so only the shapes compare.</p></div>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2>3 · Speed tracking</h2>
+    <p class="tag">Episode_Reward/track_lin (points for moving at the commanded speed). Top: KIM's three runs. Bottom: GRANDMA's g2_v7 and g2_v8.</p>
+    <img src="3_track_lin.png" alt="KIM speed tracking, three runs">
+    <img src="../g2_v8/1_track_lin.png" alt="GRANDMA speed tracking">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>Kim moves at the speed she is told. Orange and purple end a little higher than they start.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>The line is high when Kim moves at exactly the speed she was asked for. The pink line sits higher only because it is scored more gently. For orange and purple the scoring is strict: a small mistake costs a lot. They still climb.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>k2_v1's term has weight 3 and a 0.5 m/s kernel (1.49 on the first stage, 1.28 at the end); k2_v2 and k2_v3 use weight 2 and a 0.28 m/s kernel, so their 0.89 → 0.95 → 1.0 of 2.0 is on a stricter scale. GRANDMA on the same strict kernel ended g2_v8 at 0.97–0.99 with a top speed capped at 2.8 m/s; KIM reaches the same level on her full envelope (3.67 m/s). The last segments over the gate's bar were fast side-steps (0.76–0.87 m/s); k2_v3 gave those 30 % of the commands and they passed at its first gate.</p></div>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2>What is not established</h2>
+    <p>Event heats with this brain (Slalom, Crab, Gust Gauntlet and the track races) have not been run; GRANDMA's gate-best brain fell in the Slalom, so the gate alone does not settle the choice between iterations 200, 600 and 999. The one 30-seed miss, a sprint at 3.45 m/s with a turn, is at the top of an envelope that was scaled by her height; her legs are short for her height, so the bars are slightly harder for her than for a body of average proportions. Whether k2_v3's side-step emphasis was needed, or k2_v2 would have reached 10/10 with more iterations, was not tested.</p>
+  </div>
+  <footer>Charts: TensorBoard at localhost:6006, runs k2_v1, k2_v2, k2_v3 (<code>training/tools/tb_shots.py</code>); GRANDMA's from <code>parity/tb/g2_v7/</code> and <code>g2_v8/</code>. Gate data: <code>parity/watch_k2_v*.jsonl</code>, <code>parity/watch/g1_rung2_k2_v*.json</code>, 30 seeds <code>parity/eval_rung2_k2_v3_it*.json</code>; breakdown <code>training/tools/gate_fails.py</code>.</footer>
+</main>
+</body>
+</html>

@@ -305,6 +305,56 @@ User decisions (2026-09-30): Claude rigs the unrigged scan in Blender (no AccuRi
   her joint-speed bar (allowance 5 %), peak 35 rad/s in a shoulder — a slower version is needed before an event uses it.
   Not deployed (Event 27 is not built).
 
+## Phase K — KIM: fourth athlete body (added 2026-10-10)
+
+User (2026-10-10): "i have a new unique player to train · train her · give her unique characteristics · add her to the
+menu", then the goal "train kim to achieve all behaviors 100% as others" = Rung 0, Rung 2, crawl, get-up, each at its
+gate. Characteristics picked by Claude ("light and quick"): **1.55 m, 54 kg**, λ = 0.844, strength 0.9 of the size-scaled
+torque (knee cap 144 Nm: the best strength-to-weight after MATT), servo stiffness 1.0, full self-collision, upright
+athletic stance, quick short steps (air-time reward up to 0.45 s × √λ instead of 0.6). The scan has a long trunk on
+short legs (hip joints at 0.44 of her height).
+
+- [x] **K1 Asset** — `Kim.glb` (user; skinned, 21 bones, 1.062 m, one walk action) → `SourceArt/Kim/Kim_source.glb`;
+  `SourceArt/Kim/convert_kim.py` (headless Blender): rig symmetrised (it was 13-20 mm off left / right), hip joints
+  16.4 cm apart, legs posed vertical and baked as rest (feet hip-width: only the thigh pair touches at rest), Chest
+  split into Spine1 + Spine2, Mixamo names, 1.550 m, soles on z = 0 → `SourceArt/Kim/kim.glb` (22 bones, 32k verts,
+  0 unweighted, mirror error 0) + `convert_report.json`.
+- [x] **K2 Body pipeline** — `bodies.BODIES["kim"]`; extract_skeleton A4 PASS; build_mjcf (pelvis fitted to the hip
+  slab like GRANDMA; chest fitted to Spine2 + shoulder skin) → `kim.xml` / `scene_kim.xml` (54.0 kg, root z 0.723 m),
+  fingerprint, `contract_kim.json`; `check_self_collision.py kim` PASS (118 of 135 pairs collide, 16 parent-child,
+  thigh pair off = overlap at rest; no contact in the T-pose, the stance or the arm / leg swing).
+- [x] **K3 Tasks** — `tasks/kim_env.py`: GRANDMA's recipes on her body (`grandma_env.G` = the process body for KIM),
+  without the stoop / careful steps. Tasks `PoOlympic-Kim-Rung0-Stand`, `-Rung1-Run`, `-Rung2-Omni-Base` / `-Cap` /
+  `-Bands`, `-Crawl2` / `-Crawl3` (hands-and-knees pose at 73°, pelvis 0.335 m), `-Getup` / `-Getup-Prone` / `-Getup-Roll`.
+  C1 PASS on rung0; every task builds and steps (16 envs).
+- [x] **K4 Rung 0** — k0_v1 (from scratch, 4096 envs, 1500 its, 53 min): gates 9/10 · **10/10 · 10/10** at it 500 / 1000 /
+  1499, 0 falls; 30 other seeds 27/30 (GRANDMA 24, ZOMBIE 25, MATT 29) → `kim_rung0.onnx` = it 1499. Review
+  `parity/tb/k0_v1/review.html`.
+- [x] **K5 Rung 1 → Rung 2** — k1_v1 (warm start k0_v1, 2000 its): G1 rung 1 **10/10 at it 1000 / 1500 / 1999**. k2_v1
+  (base recipe, 2000 its): 0 → 2 → 3 → 7/10, one turntable direction and the right-hand side-steps slow; k2_v2
+  (`-Bands`: SymmetricRunner + sharp kernel + command bands, entropy 0.001, 1200 its): 5 → 8 → 8 → 9/10; k2_v3
+  (`-Bands2`: 30 % fast side-steps, 1000 its): **10/10 at all five gates, 0 falls**; 30 other seeds 28 / **29** / 28 of 30 at
+  it 200 / 600 / 999 (the miss: a 3.45 m/s sprint with a turn). Event heats (6 per event, her 2 lanes): finishes every
+  race in Events 5, 9, 10, 11, 12, 13, 19, 22; it 600 has no fall and no DQ → `kim_rung2.onnx` = k2_v3 it 600. Reviews
+  `parity/tb/k1_v1`, `parity/tb/k2_v3`; `tools/gate_fails.py` (which checks / segments fail).
+- [x] **K6 Crawl** — kcrawl_v1 (`-Crawl2`, from Rung 0, 1500 its): flat until it ~600, on all fours from 900, 30 m 5/5 in
+  32.4-33.3 s at it 1499 but 5 m off the lane; kcrawl_v2 (`-Crawl3`, 1000 its): **5/5 at every gate, 28.1-29.1 s, lane
+  0.15 m at it 999** (MATT 25.7-26.7 s, GRANDMA 27.1-27.9 s, zombie 31.7 s) → `crawl_kim.onnx`. Review `parity/tb/kcrawl_v2`.
+- [x] **K7 Get-up** — kgetup_v1 (ladder from Rung 0; stopped by hand at it ~1030, ladder complete): supine **10/10 at it
+  1000**, up in 0.74-0.78 s; kgetup_prone_v1 (`-Getup-Prone`, 600 its, press-up recipe — no roll ladder needed): **supine
+  10/10 + face down 10/10 at it 599; 30 seeds: 30/30 (0.70-0.82 s) and 30/30 (1.00-1.06 s), 0 falls after**; joint speeds
+  0.8 % / 0.0 % of substeps above 18 rad/s (allowance 5 %) → `getup_kim.onnx` (no event uses a get-up brain yet). Films
+  `parity/tb/kgetup_prone_v1/`.
+- [x] **K8 Unity / menu** (2026-10-11) — `compose_mixed.ROSTER` + kim (prefix `K<k>_`): roster verify 46/46, crowd-contact
+  audit 32/32 scenes (new lineup `mzgkmzgk`); `Testbed_Kim.unity`: 16 bones bound at 0.00 mm · **G0 0 mismatches · G2**
+  ≤ 2.2e-16 · **G3** ≤ 6.6e-7 · **G4** (1 s) ≤ 1.7e-5 on `kim_rung0` / `kim_rung2` (G5 not run); critics + confidence for
+  her three event brains (AUC 0.67 / 0.67 / 0.70); odds refitted with a KIM weight (40 heats per event with her, 6
+  features); the 11 roster event scenes rebuilt (32 athletes each), re-dressed and baked; main menu rebuilt (fourth
+  roster card, orange K chip, tighter card text). Played in the editor: Terminal Velocity (K8 third, 3.6 m/s), Iron
+  Pedestal, 30m All Fours (K8 29.28 s, K1 29.40 s), Slalom; no errors besides one "Unknown error … LightingData.asset" per
+  scene, present since the fresh clone. Before / after: `parity/ui/kim_menu_before_after.html`.
+- Open: G5 closed-loop gate for her brains; her joint speeds in the crawl; the phone build has not been made with her;
+  her height / mass / strength are Claude's picks, to be confirmed by the user.
 ## Backlog (later rungs & platforms)
 
   - **Menu lineups (roster scenes):** `compose_mixed.py <scene> roster` puts MATT (L<k>_) + zombie (Z<k>_) in every lane of every event scene (verify: every roster athlete == its one-body composition, 18/18); `LaneLineup` keeps the menu's pick per lane before MuJoCo compiles (bodies, actuators, excludes off), events drop the others, camera/pool follow. Zombie commands = MATT's × √λ (speeds) / ÷ √λ (yaw), `PolicyRunner.BodyCommand`; gauntlet gusts × √λ; shaker is the lane's (L<k>_shaker). All 9 events rebuilt; mixed 30m Dash + Gust Gauntlet played clean.

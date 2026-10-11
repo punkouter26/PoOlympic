@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KIM Rung 1 Review</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --card: #ffffff; --text: #1d1d1f; --muted: #5d5d66; --line: #e2e0da;
+    --g: #e52592; --m: #3c4a5e; --good: #1f8a4c; --warn: #b8660b; --bad: #c2372b;
+    --t1: #fff4d6; --t2: #e3f3ff; --t3: #eeeaf8; --verdict: #e8f6ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+      --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+      --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+    --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+    --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.8rem; margin: 0 0 4px; }
+  h2 { margin: 0 0 4px; font-size: 1.3rem; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+  .verdict { background: var(--verdict); }
+  .verdict p { margin: 6px 0 0; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 10px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+  .up { color: var(--good); font-weight: 600; } .same { color: var(--muted); font-weight: 600; }
+  .down { color: var(--warn); font-weight: 600; } .fail { color: var(--bad); font-weight: 600; }
+  .tag { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--muted); }
+  img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); margin: 12px 0 16px; background: #fff; }
+  .levels { display: grid; gap: 12px; }
+  .lvl { border-radius: 10px; padding: 12px 16px; }
+  .lvl h3 { margin: 0 0 4px; font-size: .95rem; }
+  .lvl p { margin: 0; }
+  .l1 { background: var(--t1); } .l2 { background: var(--t2); } .l3 { background: var(--t3); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 8px; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+  footer { color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>KIM Rung 1 training review: walking and running forward</h1>
+  <p class="sub">2026-10-11 00:46, run k1_v1, iteration 1999 · KIM (1.55 m, 54 kg, 90 % strength) · 2000 iterations in 71 min, 4096 environments, warm start from her Rung 0 brain (k0_v1 it 1499).
+    Earlier runs of the same task (GRANDMA g1_v1, MATT r1_v2, ZOMBIE z1_v1) are shown from their saved charts: this clone of the repository no longer has their TensorBoard logs.</p>
+
+  <div class="box verdict">
+    <h2>Verdict: KIM passes Rung 1, 10 out of 10</h2>
+    <p><strong>In one sentence:</strong> she covers the 30 m test at every commanded speed with no falls and inside her lane on all ten seeds, at iterations 1000, 1500 and 1999.</p>
+    <p><strong>Compared with the two bodies trained on this scaled recipe</strong> (MATT's gate history was not looked up): GRANDMA's best Rung 1 checkpoint passed 8/10 and ZOMBIE's 3/10. KIM follows the commanded speed more closely than GRANDMA did at the same point (track_lin 1.84 against 1.67 early on, 1.63 against 1.58 at the end) and her steering error ends lower (0.73 against 1.05 rad/s). She was also the only one that started from a standing brain instead of from scratch, so the early part of the curves is not a like-for-like comparison.</p>
+    <div class="scroll"><table>
+      <tr><th>30 m test, 10 seeds (CPU)</th><th>it 500</th><th>it 1000</th><th>it 1500</th><th>it 1999</th><th>Pass needs</th></tr>
+      <tr><td>G1 Rung 1</td><td class="down">7/10</td><td class="up">10/10</td><td class="up">10/10</td><td class="up">10/10</td><td>10/10</td></tr>
+      <tr><td>Falls</td><td class="fail">2</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+      <tr><td>Speed error, worst seed</td><td>0.149 m/s</td><td>0.120</td><td>0.121</td><td>0.095</td><td>&lt; 0.138 m/s (MATT's 0.15 × √λ)</td></tr>
+      <tr><td>Lane drift, worst seed</td><td>0.19 m</td><td>0.19 m</td><td>0.30 m</td><td>0.32 m</td><td>&lt; 0.42 m (MATT's 0.5 m × λ)</td></tr>
+    </table></div>
+    <p>Rung 2 (turning and sideways walking) was warm-started from iteration 1999, as queued. Iteration 1000 has the best lane keeping (0.19 m); if Rung 2 has trouble steering, that is the checkpoint to restart from.</p>
+  </div>
+
+  <div class="box">
+    <h2>1 · Speed tracking</h2>
+    <p class="tag">Episode_Reward/track_lin (how closely the commanded forward speed is followed). The drops are the curriculum raising the top speed (0.92 → 1.84 → 2.76 m/s for KIM). Top: KIM. Bottom: GRANDMA, MATT and ZOMBIE.</p>
+    <img src="1_track_lin.png" alt="KIM speed tracking">
+    <img src="../g1_v1/1_track_lin.png" alt="GRANDMA, MATT and ZOMBIE speed tracking">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>Kim is learning to walk as fast as she is told. Each time we ask her to go faster the line drops a little, then she catches up.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>The line is high when the robot moves at exactly the speed it was asked for. The sudden drops are where we started asking for faster running. Kim already knew how to stand, so she picked up slow walking very quickly, and she ends a little higher than Grandma did.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>1.53 by iteration 100 and 1.81 by 250 (GRANDMA 1.67 at 250 from scratch), 1.84 at 500, then 1.73 at 1000 and 1.59 at 1500 after the two curriculum steps, ending at 1.63 with a top command of 2.79 m/s (GRANDMA 1.58, MATT 1.60, ZOMBIE 1.57 at the same point). The ten test seeds drew commands up to 1.87 m/s (the test's range ends at 2.76), so they did not probe the top of her envelope; Rung 2's gate does.</p></div>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2>2 · Steering error</h2>
+    <p class="tag">Metrics/athlete/error_vel_yaw (turn-rate error in rad/s; lower is better). Top: KIM. Bottom: the earlier runs.</p>
+    <img src="2_yaw_error.png" alt="KIM yaw error">
+    <img src="../g1_v1/2_yaw_error.png" alt="GRANDMA, MATT and ZOMBIE yaw error">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>When Kim runs fast she wobbles a little. She wobbles less than Grandma.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This line shows how much the robot turns when it should go straight. Lower is better. It is low while Kim walks slowly and climbs when we ask for fast running, but it stops at about 0.7. Grandma's and Zombie's lines kept climbing past 1.0. That is why Kim stays in her lane in the test.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>0.44 rad/s at iteration 500, 0.55 at 1000, 0.73 at 1500 and 1999: level with MATT's 0.74–0.78 and below GRANDMA's 1.05 and ZOMBIE's 1.13 at iteration 2000. The gates agree in direction: worst lane drift grows from 0.19 m (it 1000) to 0.32 m (it 1999) but stays inside the bar on every seed. The metric includes the roll and pitch rates of the gait, so part of the rise is body rocking at speed.</p></div>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2>3 · Staying on her feet</h2>
+    <p class="tag">Train/mean_episode_length (1000 = stayed up for the whole 20 s episode). Top: KIM. Bottom: the earlier runs.</p>
+    <img src="3_episode_length.png" alt="KIM episode length">
+    <img src="../g1_v1/3_episode_length.png" alt="GRANDMA, MATT and ZOMBIE episode length">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>Kim almost never falls down, even when she runs.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>At the top of the chart the robot never falls. Kim starts near the top, because she already knew how to stand. When we ask for faster running she trips for a moment, then she is fine again.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>965 of 1000 at iteration 50 (warm start), 1000 from iteration 250, 998 at the end with a 2.79 m/s top command. The fall penalty term is −0.002 at the end. The two falls at the iteration 500 gate are from before the first curriculum step and are gone at every later gate.</p></div>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2>What is not established</h2>
+    <p>Whether her "quick short steps" style shows: the swing-time reward was capped at 0.45 s × √λ instead of 0.6, and her mean swing time ends at 0.18 s, but GRANDMA's and MATT's swing times were not measured for comparison, so the cap may not be what set it. Speeds above 1.87 m/s are trained (to 2.79 m/s) but were not drawn by these ten test seeds. No render of her running: the MuJoCo viewer was not opened during the run.</p>
+  </div>
+  <footer>Charts: TensorBoard at localhost:6006, run k1_v1 (<code>training/tools/tb_shots.py</code>); earlier runs from <code>parity/tb/g1_v1/</code>. Gate data: <code>parity/watch_k1_v1.jsonl</code>, <code>parity/watch/g1_rung1_k1_v1_it*.json</code>.</footer>
+</main>
+</body>
+</html>

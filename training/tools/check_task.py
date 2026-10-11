@@ -51,6 +51,16 @@ def _grandma(rung: str):
 TASKS.update({f"grandma_{r}": _grandma(r) for r in ("rung0", "rung1", "rung2_base", "rung2_cap", "rung2")})
 
 
+def _kim(rung: str):
+    def make():   # needs POOLYMPIC_BODY=kim
+        from poolympic.tasks import kim_env
+        return getattr(kim_env, f"kim_{rung}_env_cfg")()
+    return make
+
+
+TASKS.update({f"kim_{r}": _kim(r) for r in ("rung0", "rung1")})
+
+
 def check_skill_measures(env, m) -> bool:
     """Rung S: the torch skill measurements (tasks/skill_mdp.py) == the numpy ones (poolympic/skills.py) on the same
     states — training rewards and G1 drills measure the same thing."""

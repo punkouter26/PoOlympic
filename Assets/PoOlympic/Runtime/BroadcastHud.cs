@@ -230,6 +230,7 @@ namespace PoOlympic
             chip.text = body.Substring(0, 1);
             chip.EnableInClassList("bh-chip-zombie", body == "ZOMBIE");
             chip.EnableInClassList("bh-chip-grandma", body == "GRANDMA");
+            chip.EnableInClassList("bh-chip-kim", body == "KIM");
             chip.EnableInClassList("bh-chip-matt", body == "MATT");
         }
 

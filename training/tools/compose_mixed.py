@@ -30,7 +30,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 import build_mjcf as B  # noqa: E402  (MATT profile: only the scene helpers / constants are used here)
 
 ASSETS = ROOT / "assets"
-ROSTER = ["matt", "zombie", "grandma"]      # = Unity MeetLineup.Roster (lower case)
+ROSTER = ["matt", "zombie", "grandma", "kim"]      # = Unity MeetLineup.Roster (lower case)
 
 
 def march_props() -> list[dict]:
