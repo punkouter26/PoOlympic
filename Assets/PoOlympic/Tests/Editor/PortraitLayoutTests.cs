@@ -30,6 +30,8 @@ namespace PoOlympic.Tests
             new object[] { "Pixel9Pro", 1280, 2856, new Rect(0f, 66f / 2856f, 1f, (2856f - 66f - 140f) / 2856f) },
             new object[] { "720x1280", 720, 1280, new Rect(0f, 0f, 1f, 1f) },
             new object[] { "1080x2400", 1080, 2400, new Rect(0f, 48f / 2400f, 1f, (2400f - 48f - 110f) / 2400f) },
+            // tall 21:9 with a dynamic-island style cut-out (deep top inset) and a gesture bar
+            new object[] { "1080x2520", 1080, 2520, new Rect(0f, 60f / 2520f, 1f, (2520f - 60f - 150f) / 2520f) },
         };
 
         readonly List<UnityEngine.Object> _trash = new();
@@ -155,6 +157,17 @@ namespace PoOlympic.Tests
             Layout(doc);
             Assert.IsTrue(menu.Anchors.SheetOpen);
             AssertClean($"{phone} menu (sheet open)", Audit());
+
+            for (int tab = 0; tab < 3; tab++)                       // the settings bottom sheet, every tab
+            {
+                menu.Anchors.ShowSettingsTab(tab);
+                Layout(doc);
+                Assert.IsTrue(menu.Anchors.SettingsOpen && !menu.Anchors.SheetOpen);
+                AssertClean($"{phone} menu (settings tab {tab})", Audit());
+                var values = root.Query<Button>(className: "ha-set-value").ToList();
+                Assert.AreEqual(4, values.Count, $"{phone}: settings tab {tab} rows");
+                foreach (var v in values) Assert.GreaterOrEqual(v.resolvedStyle.height, 71.5f, $"{phone}: settings value under the 72 chip height");
+            }
         }
 
         // ------------------------------------------------------------------------------------------ broadcast HUD
@@ -243,6 +256,13 @@ namespace PoOlympic.Tests
             Call(hud.Anchors, "ToggleSheet");
             Settle(hud, doc);
             AssertClean($"{phone} HUD sheet open", HudLayoutAudit.Check(hud.Frame, bounds, 28f));
+
+            for (int tab = 0; tab < 3; tab++)
+            {
+                hud.Anchors.ShowSettingsTab(tab);
+                Settle(hud, doc);
+                AssertClean($"{phone} HUD settings tab {tab}", HudLayoutAudit.Check(hud.Frame, bounds, 28f));
+            }
         }
     }
 }

@@ -8,8 +8,8 @@ below, read on that date. **Not legal advice** — the blockers need a lawyer's 
 | Asset | Where | Licence | Commercial use | Status |
 |---|---|---|---|---|
 | MATT avatar (Avaturn) | `SourceArt/test_MATT_Avaturn.glb`, `Assets/PoOlympic/Art/MATT.glb` | Avaturn Terms of Use (26 Jan 2023) | conditional | **action needed** |
-| ZOMBIE + GRANDMA meshes (likely Hunyuan3D output) | `Assets/PoOlympic/Art/Zombie.glb`, `test_GRANDMA_riggedTenCent.glb` | Tencent Hunyuan 3D Community License | not in EU / UK / South Korea | **blocker for a worldwide release** |
-| ZOMBIE rig (ActorCore AccuRIG) | `test_ZOMBIE_RiggedAccurig.fbx` | AccuRIG FAQ: free for personal and commercial use | yes | ok (the mesh's own licence applies) |
+| ZOMBIE + GRANDMA meshes (likely Hunyuan3D output) | `Assets/PoOlympic/Art/Zombie.glb`, `SourceArt/test_GRANDMA_riggedTenCent.glb` | Tencent Hunyuan 3D Community License | not in EU / UK / South Korea | **blocker for a worldwide release** |
+| ZOMBIE rig (ActorCore AccuRIG) | `SourceArt/test_ZOMBIE_RiggedAccurig.fbx` | AccuRIG FAQ: free for personal and commercial use | yes | ok (the mesh's own licence applies) |
 | Stadium textures (Poly Haven) | `SourceArt/Stadium/fetch_textures.py` | CC0 | yes, no credit needed | ok |
 | Inter font | `Assets/PoOlympic/UI/Fonts/` | SIL OFL 1.1 | yes | ship `Inter-LICENSE.txt` |
 | MuJoCo 3.11 + Unity plug-in | `Packages/org.mujoco`, `Assets/Plugins/MuJoCo/` | Apache-2.0 | yes | ship licence + note our patches (`POOLYMPIC_PATCHES.md`) |

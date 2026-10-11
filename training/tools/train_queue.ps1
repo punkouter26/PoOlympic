@@ -1,5 +1,5 @@
 <#
-Sequential GPU training queue (PowerShell port of train_queue.sh, 2026-10-01). Start it detached through WMI:
+Sequential GPU training queue (2026-10-01). Start it detached through WMI:
 
   Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{ CurrentDirectory = '<repo>\training'; CommandLine =
     'cmd /c C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File tools\train_queue.ps1 > runs\queue_launcher.log 2>&1' }

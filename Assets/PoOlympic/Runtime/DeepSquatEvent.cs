@@ -97,14 +97,7 @@ namespace PoOlympic
             for (int i = 0; i < squatters.Count; i++)
             {
                 var r = squatters[i].runner;
-                if (randomTraits && tr != null)
-                {
-                    float str = (float)(tr.strength[0] + _rng.NextDouble() * (tr.strength[1] - tr.strength[0]));
-                    int lat = _rng.Next((int)tr.latency_substeps[0], (int)tr.latency_substeps[1] + 1);
-                    float noise = (float)(tr.obs_noise[0] + _rng.NextDouble() * (tr.obs_noise[1] - tr.obs_noise[0]));
-                    r.SetTraits(str, lat, noise, seed * 1000 + Attempt * 16 + i);
-                }
-                else r.SetTraits(1f, 0, 0f, 0);
+                r.DrawTraits(tr, _rng, randomTraits, seed * 1000 + Attempt * 16 + i);
             }
         }
 

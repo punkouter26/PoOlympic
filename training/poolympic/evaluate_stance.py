@@ -59,6 +59,8 @@ class SkillSim(E.Sim):
         self.phase = C.advance_phase(self.phase, command, C.skill_cadence(self.skill))
         obs = C.build_obs(self.ath, d.qpos, d.qvel, command, self.phase, self.last_action, self.skill)
         ctrl, action = self.sess.run(None, {"obs": obs[None]})
+        if E.AL.current is not None:
+            E.AL.current.tick(self.m, d, self.ath, self.torso, command, action[0], ctrl[0])
         d.ctrl[self.ath.actuator_ids] = ctrl[0].astype(np.float64)
         for _ in range(C.DECIMATION):
             mujoco.mj_step(self.m, d)
@@ -223,6 +225,7 @@ DRILLS = {"E3_squat": drill_squat, "E6_flamingo": drill_flamingo, "E7_march": dr
           "E2_torso": drill_torso, "E4_reach": drill_reach}
 
 
+@E.AL.logged("rungS", passed=lambda r: r.passed)
 def stance_episode(onnx_path: Path, seed: int, sim: SkillSim | None = None) -> StanceResult:
     sim = sim or SkillSim(onnx_path)
     res = StanceResult(seed)

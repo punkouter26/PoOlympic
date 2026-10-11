@@ -401,6 +401,7 @@ namespace PoOlympic.Editor
             foreach (var s in new[] { audio.bed, audio.tensionLayer, audio.stinger }) if (s != null) s.outputAudioMixerGroup = G("Crowd");
             if (audio.ui != null) audio.ui.outputAudioMixerGroup = G("Ui");
             foreach (var v in audio.voices) v.outputAudioMixerGroup = G("Sfx");
+            if (audio.scrape != null) audio.scrape.outputAudioMixerGroup = G("Sfx");
             var ago = audio.gameObject;
             var bedClip = audio.bed != null ? audio.bed.clip : null;
             var sectors = new List<AudioSource>();

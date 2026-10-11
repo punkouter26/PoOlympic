@@ -30,6 +30,7 @@ import mujoco
 import numpy as np
 import onnxruntime as ort
 
+from .. import action_log as AL
 from .. import contract as C
 from .iron_pedestal import Traits, _Lane, make_lanes
 
@@ -115,6 +116,7 @@ class RaceResult:
     lanes: list[RaceLane] = field(default_factory=list)
 
 
+@AL.logged("event_track")
 def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = None, scene=None, layout_path=None, brains: dict | None = None) -> RaceResult:
     cfg = MODES[mode]
     m = mujoco.MjModel.from_xml_path(str(scene or SCENE))

@@ -64,6 +64,23 @@ SKILL_IDX = [_S + 0, _S + 2, _S + 1, _S + 3, _S + 4, _S + 5, _S + 6, _S + 7, _S 
 SKILL_SIGN = [1, 1, 1, 1, 1, -1, 1, 1, -1, 1, -1]
 assert len(SKILL_IDX) == C.SKILL_DIM
 MARCH_HZ = _S + 3
+# 2026-10-11 (opt-in blocks). Contract v5 fatigue block: one level per joint group, both sides share it -> unchanged.
+# Privileged critic block (mdp.PRIV_DIM: foot forces (L vertical, L horizontal, R vertical, R horizontal), friction,
+# mass, shove (x, y) in the heading frame): the feet swap, the shove's y flips. Layouts by input size:
+#   84 v3 · 95 v4 (skill) · 90 v5 (fatigue) · 92 v3 + privileged · 98 v5 + privileged
+_PRIV_PERM, _PRIV_SIGN = [2, 3, 0, 1, 4, 5, 6, 7], [1, 1, 1, 1, 1, 1, 1, -1]
+
+
+def _tails() -> dict:
+    from .mdp import PRIV_DIM
+    assert len(_PRIV_PERM) == PRIV_DIM
+    fat = (list(range(_S, _S + C.FATIGUE_DIM)), [1] * C.FATIGUE_DIM)
+    priv = lambda o: ([o + p for p in _PRIV_PERM], _PRIV_SIGN)  # noqa: E731
+    return {C.OBS_DIM: ([], []), C.OBS_DIM_V4: (SKILL_IDX, SKILL_SIGN), C.OBS_DIM_V5: fat, _S + PRIV_DIM: priv(_S),
+            C.OBS_DIM_V5 + PRIV_DIM: (fat[0] + priv(C.OBS_DIM_V5)[0], fat[1] + _PRIV_SIGN)}
+
+
+TAILS = _tails()
 
 
 _OFF = {}
@@ -76,8 +93,9 @@ CMD_SLICE, PHASE_SLICE = slice(*_OFF["command"]), slice(*_OFF["gait_phase_sincos
 
 def mirror_obs(x: torch.Tensor) -> torch.Tensor:
     v4 = x.shape[-1] == C.OBS_DIM_V4
-    idx = torch.as_tensor(OBS_IDX + (SKILL_IDX if v4 else []), device=x.device)
-    sgn = torch.as_tensor(OBS_SIGN + (SKILL_SIGN if v4 else []), device=x.device, dtype=x.dtype)
+    tail_idx, tail_sgn = TAILS[x.shape[-1]]
+    idx = torch.as_tensor(OBS_IDX + tail_idx, device=x.device)
+    sgn = torch.as_tensor(OBS_SIGN + tail_sgn, device=x.device, dtype=x.dtype)
     y = x[..., idx] * sgn
     # The gait clock is frozen at phase 0 while standing (|cmd| < threshold): a mirrored standing athlete is still at
     # phase 0, so only a running clock shifts by half a stride. (r2_v3 bug: unconditional flip made every mirrored

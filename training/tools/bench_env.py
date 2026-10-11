@@ -5,9 +5,9 @@ the share of each env.step phase (physics graph vs the eager torch managers), pe
 iterations, peak contacts / constraints per world (to size nconmax / njmax) and GPU memory.
 
 Usage (from training/):
-  uv run python tools/bench_env.py                                   # Rung 2 final recipe (r2_v8), 4096 envs
-  uv run python tools/bench_env.py --task stance --envs 8192
-  uv run python tools/bench_env.py --tolerance 1e-6 --ls-iterations 10 --cubes 1 --njmax 160 --nconmax 40
+  uv run python tools/bench_env.py --ckpt runs/<experiment>/<run>/model_600.pt        # Rung 2 final recipe, 4096 envs
+  uv run python tools/bench_env.py --ckpt <model.pt> --task stance --envs 8192
+  uv run python tools/bench_env.py --ckpt <model.pt> --tolerance 1e-6 --ls-iterations 10 --cubes 1 --njmax 160 --nconmax 40
 Knobs change the TRAINING copy of the physics only (CPU MuJoCo / Unity keep scene_matt.xml); every change must still
 pass G1 on CPU MuJoCo before it is adopted (DESIGN §4: the golden reference is CPU MuJoCo).
 """
@@ -27,8 +27,6 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from mjlab.envs import ManagerBasedRlEnv  # noqa: E402
-
-DEFAULT_CKPT = ROOT / "runs" / "matt_rung2" / "2026-09-28_04-54-44_r2_v8" / "model_600.pt"
 
 
 def make_cfg(task: str):
@@ -105,7 +103,8 @@ class Timers:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--task", default="rung2_sym5")
-    ap.add_argument("--ckpt", type=Path, default=DEFAULT_CKPT)
+    ap.add_argument("--ckpt", type=Path, required=True,
+                    help="rsl_rl checkpoint that drives the envs (model_XXXX.pt of the same body; 84 or 95 inputs)")
     ap.add_argument("--envs", type=int, default=4096)
     ap.add_argument("--steps", type=int, default=240, help="policy steps timed (24 = one PPO iteration)")
     ap.add_argument("--warmup", type=int, default=60)

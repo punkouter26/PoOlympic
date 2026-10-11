@@ -39,8 +39,7 @@ namespace PoOlympic
 
         void OnGUI()
         {
-            var r = cam != null ? cam.pixelRect : new Rect(0, 0, Screen.width, Screen.height);
-            var a = new Rect(r.x, Screen.height - r.yMax, r.width, r.height);
+            var a = HudAnchors.GuiArea(cam);
             float s = Mathf.Clamp(a.width / 540f, 0.6f, 2f), pad = 10 * s;
             _title ??= new GUIStyle(GUI.skin.label) { fontStyle = FontStyle.Bold, wordWrap = true };
             _body ??= new GUIStyle(GUI.skin.label) { wordWrap = true };
@@ -74,7 +73,7 @@ namespace PoOlympic
             GUI.Label(new Rect(card.x + 8 * s, card.y + 132 * s, card.width * 0.6f, 24 * s),
                 $"8 competitor spots · brain: {cur.brain} · {(cur.Playable ? "PLAYABLE" : "coming soon")}", _small);
             if (cur.Playable && GUI.Button(new Rect(card.xMax - 110 * s, card.y + 128 * s, 100 * s, 32 * s), "Play ▸"))
-                SceneManager.LoadScene(cur.eventScene);
+                MeetLineup.Load(cur.eventScene);
             if (GUI.Button(new Rect(a.x + pad, a.yMax - 40 * s - pad, 60 * s, 40 * s), "◀")) selected = (selected + 28) % 30 + 1;
             if (GUI.Button(new Rect(a.xMax - 60 * s - pad, a.yMax - 40 * s - pad, 60 * s, 40 * s), "▶")) selected = selected % 30 + 1;
         }

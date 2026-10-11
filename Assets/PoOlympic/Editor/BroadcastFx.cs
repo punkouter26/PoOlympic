@@ -169,6 +169,21 @@ namespace PoOlympic.Editor
             fx.shockwaves = Pool<ParticleSystem>(fxGo, FxPrefabs + "/Shockwave.prefab", 4);
             fx.sparks = Pool<VisualEffect>(fxGo, FxPrefabs + "/SparksVfx.prefab", 3);
             fx.sparksFallback = Pool<ParticleSystem>(fxGo, FxPrefabs + "/SparksFallback.prefab", 3);
+            fx.marks = Pool<ParticleSystem>(fxGo, FxPrefabs + "/ScuffMark.prefab", 12);
+
+            // follow spot on the athlete the shot is about (BroadcastDirector.UpdateLook aims and dims it; off at rest)
+            var spot = Child(root, "FocusSpot").AddComponent<Light>();
+            spot.type = LightType.Spot;
+            spot.spotAngle = 26f;
+            spot.innerSpotAngle = 14f;
+            spot.range = 30f;
+            spot.intensity = 0f;
+            spot.color = new Color(1f, 0.96f, 0.88f);
+            spot.shadows = LightShadows.None;
+            spot.lightmapBakeType = LightmapBakeType.Realtime;
+            spot.enabled = false;
+            director.focusSpot = spot;
+            EditorUtility.SetDirty(director);
 
             // audio
             var audioGo = Child(root, "ArenaAudio");
@@ -189,6 +204,12 @@ namespace PoOlympic.Editor
                 s.dopplerLevel = 0f;
                 return s;
             }).ToArray();
+            audio.scrape = Source(audioGo, "Scrape3D", Clip("Sfx/Scrape/scrape_loop.wav"), true, 0f);
+            audio.scrape.spatialBlend = 1f;
+            audio.scrape.rolloffMode = AudioRolloffMode.Linear;
+            audio.scrape.minDistance = 3f;
+            audio.scrape.maxDistance = 50f;
+            audio.scrape.dopplerLevel = 0f;
             audio.cheers = Clips("Crowd", "crowd_cheer_big_");
             audio.reactions = Clips("Crowd", "crowd_react_");
             audio.bodySlams = Clips("Sfx/BodySlam", "");
@@ -277,6 +298,11 @@ namespace PoOlympic.Editor
             var dust = ParticleMaterial("FxDust", dot, false);
             var shock = ParticleMaterial("FxShock", ring, true);
             var spark = ParticleMaterial("FxSpark", dot, true);
+            // scuff: a soft blot with streaks along x, dark on the track
+            var scuffTex = Texture(FxFolder + "/fx_scuff.png", 128, (x, y) =>
+                Mathf.Pow(Mathf.Clamp01(1f - Mathf.Sqrt(x * x * 0.6f + y * y * 2.2f)), 0.8f) * (0.55f + 0.45f * Mathf.Sin(y * 23f) * Mathf.Sin(x * 5f + y * 9f)));
+            var scuff = ParticleMaterial("FxScuff", scuffTex, false);
+            ScrapeClip();
             AudioImport();
 
             MakePrefab("FootDust", go =>
@@ -317,6 +343,21 @@ namespace PoOlympic.Editor
                 r.velocityScale = 0.06f;
                 r.lengthScale = 1f;
                 FadeOut(ps);
+            });
+            // ground mark: one flat particle that stays ~18 s and fades (world space, so a pooled emitter can move on
+            // and leave its earlier marks where they are)
+            MakePrefab("ScuffMark", go =>
+            {
+                var ps = Particles(go, scuff, 0.1f, (16f, 20f), (0f, 0f), (0.35f, 0.6f), new Color(0.07f, 0.06f, 0.05f, 0.5f), 6);
+                var em = ps.emission; em.SetBursts(new[] { new ParticleSystem.Burst(0f, 1) });
+                var sh = ps.shape; sh.enabled = false;
+                go.GetComponent<ParticleSystemRenderer>().renderMode = ParticleSystemRenderMode.HorizontalBillboard;
+                var c = ps.colorOverLifetime;
+                c.enabled = true;
+                var g = new Gradient();
+                g.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                          new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 0.7f), new GradientAlphaKey(0f, 1f) });
+                c.color = g;
             });
             var sparks = AssetDatabase.LoadAssetAtPath<VisualEffectAsset>(SparksVfx);
             MakePrefab("SparksVfx", go =>
@@ -432,6 +473,38 @@ namespace PoOlympic.Editor
             g.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
                       new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0.8f, 0.3f), new GradientAlphaKey(0f, 1f) });
             c.color = g;
+        }
+
+        /// <summary>The surface-drag loop (ArenaAudio.Scrape): 1 s of band-limited noise with a little grain, generated
+        /// once as a 22 kHz mono WAV whose end is cross-faded into its start (no click at the loop point).</summary>
+        static void ScrapeClip()
+        {
+            var path = AudioFolder + "/Sfx/Scrape/scrape_loop.wav";
+            if (File.Exists(path)) return;
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            const int rate = 22050, n = rate, fade = rate / 10;
+            var rng = new System.Random(11);
+            var raw = new float[n + fade];
+            float lp = 0f, slow = 0f;
+            for (int i = 0; i < raw.Length; i++)
+            {
+                float white = (float)rng.NextDouble() * 2f - 1f;
+                lp += 0.32f * (white - lp);                 // roll off the hiss
+                slow += 0.015f * (lp - slow);               // and take out the rumble: what is left is the "shhh"
+                raw[i] = (lp - slow) * (0.75f + 0.25f * Mathf.Sin(2f * Mathf.PI * 37f * i / rate));
+            }
+            using var w = new BinaryWriter(File.Create(path));
+            w.Write(System.Text.Encoding.ASCII.GetBytes("RIFF")); w.Write(36 + n * 2); w.Write(System.Text.Encoding.ASCII.GetBytes("WAVEfmt "));
+            w.Write(16); w.Write((short)1); w.Write((short)1); w.Write(rate); w.Write(rate * 2); w.Write((short)2); w.Write((short)16);
+            w.Write(System.Text.Encoding.ASCII.GetBytes("data")); w.Write(n * 2);
+            for (int i = 0; i < n; i++)
+            {
+                float u = i < fade ? (float)i / fade : 1f;
+                float v = raw[i] * u + (i < fade ? raw[n + i] * (1f - u) : 0f);
+                w.Write((short)Mathf.Clamp(v * 2.2f * 32767f, -32767f, 32767f));
+            }
+            w.Close();
+            AssetDatabase.ImportAsset(path);
         }
 
         /// <summary>Mobile-friendly import: crowd loops stereo, compressed in memory; short SFX mono (3D), decompressed on load.</summary>

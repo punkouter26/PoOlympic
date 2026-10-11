@@ -15,9 +15,9 @@ import numpy as np
 import torch
 
 from .. import contract as C
+from ..skills import REACH_AZ, REACH_EL, REACH_FRAC, SKILL_MODES  # noqa: F401 (one definition, shared with the G1 drills)
 from .mdp import AthleteCommand, AthleteCommandCfg, _foot_contact, _root, torso_upright
 
-SKILL_MODES = ("locomotion", "squat", "flamingo", "march", "torso", "reach")
 MODE = {n: i for i, n in enumerate(SKILL_MODES)}
 
 
@@ -38,9 +38,6 @@ def _skill_geometry() -> dict:
 
 SKILL_GEOM = _skill_geometry()
 SKILL_RANGES = C.skill_block()["ranges"]
-REACH_AZ = (math.radians(-30), math.radians(90))      # target direction from the shoulder: forward .. arm's side
-REACH_EL = (math.radians(-40), math.radians(60))
-REACH_FRAC = (0.45, 0.95)                             # of the reach radius
 
 
 def _qrot(q: torch.Tensor, v: torch.Tensor) -> torch.Tensor:

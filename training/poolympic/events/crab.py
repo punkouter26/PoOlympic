@@ -23,6 +23,7 @@ import mujoco
 import numpy as np
 import onnxruntime as ort
 
+from .. import action_log as AL
 from .. import contract as C
 from .iron_pedestal import Traits, _Lane, make_lanes
 
@@ -71,6 +72,7 @@ class CrabResult:
     lanes: list[CrabLane] = field(default_factory=list)
 
 
+@AL.logged("event_crab")
 def run_heat(onnx, seed: int, traits: list[Traits] | None = None, vy: float = VY, scene=None, layout_path=None, brains: dict | None = None) -> CrabResult:
     m = mujoco.MjModel.from_xml_path(str(scene or SCENE))
     d = mujoco.MjData(m)

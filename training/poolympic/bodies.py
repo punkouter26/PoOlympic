@@ -80,6 +80,11 @@ class Body:
 
 
 MATT_MASS = 80.0
+MATT_ROOT_Z = 0.9549291      # standing pelvis height (scene_matt.xml keyframe "default")
+# MATT's fall / joint-speed rules (G1 gates, event judges, training terminations); other bodies Froude-scale them
+FALL_PELVIS_Z = 0.55         # m
+FALL_TILT_DEG = 60.0         # torso tilt from vertical
+JOINT_VEL_LIMIT = 18.0       # rad/s
 MATT_HEIGHT = 1.837          # body mesh height (skeleton_matt.json height_body_mesh_m)
 ZOMBIE_HEIGHT = 1.135        # SourceArt/Zombie/convert_report.json
 GRANDMA_HEIGHT = 1.600       # SourceArt/Grandma/rig_report.json

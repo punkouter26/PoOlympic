@@ -20,6 +20,7 @@ import mujoco
 import numpy as np
 import onnxruntime as ort
 
+from .. import action_log as AL
 from .. import contract as C
 from .iron_pedestal import Traits, _Lane, make_lanes
 
@@ -57,6 +58,7 @@ def heat_direction(seed: int) -> int:
     return 1 if np.random.default_rng([seed, 3000]).uniform() < 0.5 else -1
 
 
+@AL.logged("event_turntable")
 def run_heat(onnx, seed: int, traits: list[Traits] | None = None, scene=None, layout_path=None, brains: dict | None = None) -> SpinResult:
     m = mujoco.MjModel.from_xml_path(str(scene or SCENE))
     d = mujoco.MjData(m)

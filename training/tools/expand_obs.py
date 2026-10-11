@@ -9,6 +9,11 @@
 Verifies: expanded actor(obs95) == source actor(obs84) for random obs + random skill blocks.
 Usage: uv run python tools/expand_obs.py <src model_XXXX.pt> <dst run dir> [--count 1e6] [--min-std 0.25]
        e.g.  tools/expand_obs.py runs/matt_rung2/2026-09-28_04-54-44_r2_v8/model_600.pt runs/matt_stance/rs_init
+
+Other new inputs (2026-10-11): --actor-zeros N / --critic-zeros M append N / M zero-weight input columns INSTEAD of the
+skill block (normaliser mean 0, variance 1 for them; any source input size). The same function at iteration 0.
+  privileged critic (Rung2-Ramp tasks)            --critic-zeros 8
+  fatigue block + privileged critic (Rung2-Bio)   --actor-zeros 6 --critic-zeros 14
 """
 
 from __future__ import annotations
@@ -70,17 +75,27 @@ def main() -> int:
     ap.add_argument("dst", type=Path)
     ap.add_argument("--count", type=float, default=1e6)
     ap.add_argument("--min-std", type=float, default=0.25)
+    ap.add_argument("--actor-zeros", type=int, default=None, help="append N zero-weight actor inputs (no skill block)")
+    ap.add_argument("--critic-zeros", type=int, default=None, help="append M zero-weight critic inputs (no skill block)")
     a = ap.parse_args()
     sd = torch.load(a.src, map_location="cpu", weights_only=False)
     src = {g: {k: v.clone() for k, v in sd[g].items()} for g in ("actor_state_dict", "critic_state_dict")}
-    assert sd["actor_state_dict"]["mlp.0.weight"].shape[1] == C.OBS_DIM, "source is not a v3 (84-obs) checkpoint"
-    sk = skill_samples(200_000, np.random.default_rng(0))
-    mean = torch.as_tensor(sk.mean(0), dtype=torch.float32)[None]
-    var = torch.as_tensor(np.maximum(sk.var(0), 1e-4), dtype=torch.float32)[None]
+    generic = a.actor_zeros is not None or a.critic_zeros is not None
+    n_in = sd["actor_state_dict"]["mlp.0.weight"].shape[1]
+    assert generic or n_in == C.OBS_DIM, "source is not a v3 (84-obs) checkpoint"
+    extra = {"actor_state_dict": a.actor_zeros or 0, "critic_state_dict": a.critic_zeros or 0}
+    if generic:
+        sk = np.random.default_rng(0).uniform(0.0, 1.0, (512, extra["actor_state_dict"]))
+    else:
+        sk = skill_samples(200_000, np.random.default_rng(0))
+        mean = torch.as_tensor(sk.mean(0), dtype=torch.float32)[None]
+        var = torch.as_tensor(np.maximum(sk.var(0), 1e-4), dtype=torch.float32)[None]
     for group in ("actor_state_dict", "critic_state_dict"):
         g = sd[group]
         w = g["mlp.0.weight"]
-        g["mlp.0.weight"] = torch.cat([w, torch.zeros(w.shape[0], C.SKILL_DIM, dtype=w.dtype)], dim=1)
+        if generic:
+            mean, var = torch.zeros(1, extra[group]), torch.ones(1, extra[group])
+        g["mlp.0.weight"] = torch.cat([w, torch.zeros(w.shape[0], mean.shape[1], dtype=w.dtype)], dim=1)
         g["obs_normalizer._mean"] = torch.cat([g["obs_normalizer._mean"], mean], dim=1)
         g["obs_normalizer._var"] = torch.cat([g["obs_normalizer._var"], var], dim=1)
         g["obs_normalizer._std"] = torch.cat([g["obs_normalizer._std"], var.sqrt()], dim=1)
@@ -94,14 +109,15 @@ def main() -> int:
     sd["optimizer_state_dict"] = {"state": {}, "param_groups": sd["optimizer_state_dict"]["param_groups"]}
 
     # the expanded actor is the source function at iteration 0
-    x84 = torch.randn(512, C.OBS_DIM)
+    x84 = torch.randn(512, n_in)
     x95 = torch.cat([x84, torch.as_tensor(sk[:512], dtype=torch.float32)], dim=1)
     worst = float((mlp_forward(sd["actor_state_dict"], x95) - mlp_forward(src["actor_state_dict"], x84)).abs().max())
-    print(f"expanded actor(obs95) vs source actor(obs84): max |diff| {worst:.2e}")
+    print(f"expanded actor(obs{x95.shape[1]}) vs source actor(obs{n_in}): max |diff| {worst:.2e}")
     assert worst < 1e-4, worst
-    names = [n for n, _ in C.SKILL_LAYOUT for _ in range(dict(C.SKILL_LAYOUT)[n])]
-    print("skill stats (mean / std):", [(n, round(float(mm), 3), round(math.sqrt(float(v)), 3))
-                                        for n, mm, v in zip(names, mean[0], var[0])])
+    if not generic:
+        names = [n for n, _ in C.SKILL_LAYOUT for _ in range(dict(C.SKILL_LAYOUT)[n])]
+        print("skill stats (mean / std):", [(n, round(float(mm), 3), round(math.sqrt(float(v)), 3))
+                                            for n, mm, v in zip(names, mean[0], var[0])])
     a.dst.mkdir(parents=True, exist_ok=True)
     out = a.dst / "model_0.pt"
     torch.save(sd, out)

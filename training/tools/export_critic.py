@@ -57,12 +57,16 @@ class Critic(nn.Module):
 def export_one(brain: str) -> Path:
     name = brain.removesuffix(".onnx")
     side = json.loads((BRAINS / f"{name}.onnx.json").read_text())
-    ckpt = ROOT / Path(side["checkpoint"].replace("\\", "/"))
-    if not ckpt.is_file():
-        ckpt = Path(side["checkpoint"])
-    sd = torch.load(ckpt, map_location="cpu", weights_only=False)["critic_state_dict"]
-    critic = Critic(sd).eval()
+    rel = Path(side["checkpoint"].replace("\\", "/"))
+    # sidecars since 2026-10-11: relative to the repo root; older ones: relative to training/ or absolute
+    ckpt = next((p for p in (ROOT.parent / rel, ROOT / rel) if p.is_file()), Path(side["checkpoint"]))
+    state = torch.load(ckpt, map_location="cpu", weights_only=False)
+    critic = Critic(state["critic_state_dict"]).eval()
     obs_dim = critic.mean.shape[1]
+    actor_dim = state["actor_state_dict"]["obs_normalizer._mean"].shape[1]
+    assert obs_dim == actor_dim, (
+        f"{name}: the critic reads {obs_dim} inputs, the actor {actor_dim} — a privileged (asymmetric) critic cannot be "
+        "the Unity confidence critic (Unity has only the actor's observation)")
     out = BRAINS / f"{name}.critic.onnx"
     torch.onnx.export(critic, (torch.zeros(1, obs_dim),), str(out), input_names=["obs"], output_names=["value"],
                       opset_version=OPSET, dynamic_axes=None, dynamo=False)

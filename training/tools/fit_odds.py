@@ -34,8 +34,15 @@ OUT_DIR = ROOT.parent / "parity" / "odds"
 MODEL = ROOT.parent / "Assets" / "PoOlympic" / "Models" / "odds_model.json"
 FEATURES = ["zombie", "strength", "latency", "noise", "grandma", "kim"]   # Unity Odds.Rating reads them in this order
 RIDGE = 0.5
-R2 = {"matt": BR / "rung2.onnx", "zombie": BR / "zombie_rung2.onnx", "grandma": BR / "grandma_rung2.onnx",
-      "kim": BR / "kim_rung2.onnx"}
+
+
+def deployed(role: str) -> dict[str, Path]:
+    """body -> brain for a role, from the production manifest (parity/brains/manifest.json, tools/brain_manifest.py)."""
+    brains = json.loads((BR / "manifest.json").read_text())["brains"]
+    return {b["body"]: BR / b["file"] for b in brains if b["role"] == role}
+
+
+R2 = deployed("rung2")
 LINEUPS = {"mzmzmzmz": 5000, "mzgmzgmg": 7000, "mzgkmzgk": 9000}     # KIM in lanes 4 / 8 since 2026-10-11; scene tag -> first seed (GRANDMA crawls in 8 / 23 since 2026-10-02)
 
 # event -> (name, runner kind, scene tag)
@@ -63,16 +70,14 @@ def run_one(event: int, seed: int) -> dict:
     _, kind, tag = EVENTS[event]
     scene, layout = A / f"scene_{tag}_{lineup_of(seed)}.xml", A / f"{tag}_{lineup_of(seed)}_layout.json"
     if kind == "pedestal":
-        brains = {"matt": BR / "r0_v2_it1000.onnx", "zombie": BR / "zombie_rung0.onnx", "grandma": BR / "grandma_rung0.onnx",
-                  "kim": BR / "kim_rung0.onnx"}
+        brains = deployed("pedestal")
         res = iron_pedestal.run_heat(brains["matt"], seed, scene=scene, layout_path=layout, brains=brains)
     elif kind in ("all_fours", "trench"):
-        res = all_fours.run_race({"matt": BR / "crawl_matt.onnx", "zombie": BR / "crawl_zombie.onnx",
-                                  "grandma": BR / "crawl_grandma.onnx", "kim": BR / "crawl_kim.onnx"}, seed, scene=scene,
+        res = all_fours.run_race(deployed("crawl"), seed, scene=scene,
                                  layout_path=layout, distance=all_fours.TRENCH_DISTANCE if kind == "trench" else None)
     elif kind.startswith("track:"):
         mode = kind.split(":")[1]
-        brains = dict(R2, matt=BR / "r2f_v3_it100.onnx") if mode == "steeple" else R2
+        brains = {**R2, **deployed("flight")} if mode == "steeple" else R2
         res = track.run_race(brains["matt"], mode, seed, scene=scene, layout_path=layout, brains=brains)
     else:
         mod = {"gauntlet": gauntlet, "crab": crab, "slalom": slalom, "turntable": turntable}[kind]

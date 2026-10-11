@@ -23,6 +23,7 @@ from pathlib import Path
 import mujoco
 import numpy as np
 
+from .. import action_log as AL
 from .. import contract as C
 from .iron_pedestal import Traits, _Lane, make_lanes
 
@@ -84,6 +85,7 @@ class _FlamingoJudge:
         return False
 
 
+@AL.logged("event_flamingo")
 def run_heat(onnx, seed: int, traits: list[Traits] | None = None, scene=None, layout_path=None,
              max_s: float = MAX_S) -> FlamingoResult:
     m = mujoco.MjModel.from_xml_path(str(scene or SCENE))

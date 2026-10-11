@@ -124,14 +124,7 @@ namespace PoOlympic
             for (int i = 0; i < runners.Count; i++)
             {
                 var r = runners[i];
-                if (randomTraits && tr != null)
-                {
-                    float str = (float)(tr.strength[0] + _rng.NextDouble() * (tr.strength[1] - tr.strength[0]));
-                    int lat = _rng.Next((int)tr.latency_substeps[0], (int)tr.latency_substeps[1] + 1);
-                    float noise = (float)(tr.obs_noise[0] + _rng.NextDouble() * (tr.obs_noise[1] - tr.obs_noise[0]));
-                    r.runner.SetTraits(str, lat, noise, seed * 1000 + Attempt * 16 + i);
-                }
-                else r.runner.SetTraits(1f, 0, 0f, 0);
+                r.runner.DrawTraits(tr, _rng, randomTraits, seed * 1000 + Attempt * 16 + i);
                 r.nerveM = brakeNerve.x + (float)_rng.NextDouble() * (brakeNerve.y - brakeNerve.x);
             }
         }

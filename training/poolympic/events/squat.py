@@ -21,6 +21,7 @@ from pathlib import Path
 import mujoco
 import numpy as np
 
+from .. import action_log as AL
 from .. import contract as C
 from .iron_pedestal import FALL_TILT_DEG, Traits, _Lane, make_lanes
 
@@ -120,6 +121,7 @@ class _SquatJudge:
         return None
 
 
+@AL.logged("event_squat")
 def run_heat(onnx, seed: int, traits: list[Traits] | None = None, scene=None, layout_path=None) -> SquatResult:
     m = mujoco.MjModel.from_xml_path(str(scene or SCENE))
     d = mujoco.MjData(m)

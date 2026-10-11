@@ -8,10 +8,7 @@ Use with POOLYMPIC_BODY=grandma (contract / mdp then load her scene, actuators, 
 
 from __future__ import annotations
 
-import mujoco
-
-from mjlab.actuator import XmlActuatorCfg
-from mjlab.entity import EntityArticulationInfoCfg, EntityCfg
+from mjlab.entity import EntityCfg
 from mjlab.envs import ManagerBasedRlEnvCfg
 from mjlab.managers.curriculum_manager import CurriculumTermCfg
 from mjlab.managers.reward_manager import RewardTermCfg
@@ -28,72 +25,32 @@ LAM, SS, TS = G.length_scale, G.speed_scale, G.time_scale
 WS = 1.0 / TS                     # angular-rate scale
 
 
-def _default_root_z() -> float:
-    m = mujoco.MjModel.from_xml_path(str(G.scene_xml))
-    return float(m.key("default").qpos[2])
-
-
-ROOT_Z = _default_root_z()                       # soft-kneed stance, ~0.678 m
-FALL_Z = 0.55 * ROOT_Z / M.DEFAULT_ROOT_Z        # MATT's fall rule at the same fraction of standing pelvis height
+ROOT_Z = M.scene_root_z(G.scene_xml)             # soft-kneed stance, ~0.678 m
+FALL_Z = M.body_fall_z(ROOT_Z)                   # MATT's fall rule at the same fraction of standing pelvis height
 # style targets
 STOOP_DEG = 10.0                                  # trunk lean (= the default pose's abdomen_flex)
 STANCE_WIDTH = 0.26                               # m between foot centres (her hip joints are 0.25 m apart)
 
 
 def grandma_entity_cfg() -> EntityCfg:
-    return EntityCfg(
-        spec_fn=lambda: mujoco.MjSpec.from_file(str(G.robot_xml)),
-        init_state=EntityCfg.InitialStateCfg(
-            pos=(0.0, 0.0, ROOT_Z),
-            joint_pos={n: v for n, v in zip(mdp.CONTRACT_ACTUATORS, mdp.CONTRACT_DEFAULTS)} | {"toe_.*": 0.0},
-            joint_vel={".*": 0.0},
-        ),
-        articulation=EntityArticulationInfoCfg(
-            actuators=(XmlActuatorCfg(target_names_expr=(".*",), delay_min_lag=0, delay_max_lag=4,
-                                      delay_update_period=4000),),
-            soft_joint_pos_limit_factor=0.95,
-        ),
-    )
+    return M.body_entity_cfg(G.robot_xml, ROOT_Z)
 
 
 def _check_body():
-    if C.BODY.name != G.name:
-        raise RuntimeError(f"{G.name} tasks need POOLYMPIC_BODY={G.name} (contract/mdp load the active body's scene)")
-
-
-def _scale_xy_range(r: dict, k: float) -> dict:
-    return {a: (lo * k, hi * k) for a, (lo, hi) in r.items()}
+    M.check_body(G.name)
 
 
 def _grandmafy(cfg: ManagerBasedRlEnvCfg) -> ManagerBasedRlEnvCfg:
-    """Swap in the GRANDMA body and scale MATT's size-dependent numbers (= zombie_env._zombify's scaling)."""
-    cfg.scene.entities["robot"] = grandma_entity_cfg()
-    cfg.terminations["pelvis_low"].params["minimum_height"] = FALL_Z
-    ev = cfg.events
-    ev["reset_base"].params["pose_range"]["x"] = (-0.05 * LAM, 0.05 * LAM)
-    ev["reset_base"].params["pose_range"]["y"] = (-0.05 * LAM, 0.05 * LAM)
-    ev["reset_base"].params["velocity_range"] = _scale_xy_range(ev["reset_base"].params["velocity_range"], SS)
-    ev["push_robot"].params["velocity_range"] = _scale_xy_range(ev["push_robot"].params["velocity_range"], SS)
-    ev["drop_cube"].params.update({"height_above_shoulder": 1.5 * LAM, "shoulder_above_pelvis": 0.55 * LAM,
-                                   "xy_jitter": 0.15 * LAM})
+    """Swap in the GRANDMA (or KIM) body and scale MATT's size-dependent numbers (matt_env.scale_to_body, the same
+    scaling as the zombie's), plus GRANDMA's style."""
+    cfg = M.scale_to_body(cfg, G, grandma_entity_cfg(), ROOT_Z)
     rw = cfg.rewards
-    if "height" in rw:
-        rw["height"].params.update({"target": ROOT_Z, "std": rw["height"].params["std"] * LAM})
-    if "near_origin" in rw:
-        rw["near_origin"].params["std"] *= LAM
-    if "still_lin" in rw:
-        rw["still_lin"].params["std"] *= SS
-    rw["joint_vel_limit"].params["limit"] = 18.0 * WS
-    rw["torques"].weight = rw["torques"].weight / G.torque_scale ** 2      # same penalty for the same relative effort
     if G.name == "grandma":
         # personality "frail but steady": a slight stoop instead of upright; a steady hip-width stance
         rw.pop("upright", None)
         rw["stoop"] = RewardTermCfg(func=mdp.torso_pitch_tracking, weight=1.0, params={"target_deg": STOOP_DEG, "std_deg": 10.0})
         rw["steady_stance"] = RewardTermCfg(func=mdp.feet_width, weight=0.5, params={"target": STANCE_WIDTH, "std": 0.06})
-    # full self-collision: more contacts per env
-    cfg.sim.nconmax, cfg.sim.njmax = 160, 800
     cfg.scene.num_envs = 4096        # g0_v1 was launched without --env.scene.num-envs and trained ONE environment
-    cfg.viewer.distance = 3.5 * LAM
     return cfg
 
 
@@ -127,9 +84,7 @@ def grandma_rung1_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
 
 
 def _scaled_env(env: dict) -> dict:
-    return {"lin_vel_x": (env["lin_vel_x"][0] * SS, env["lin_vel_x"][1] * SS),
-            "lin_vel_y": (env["lin_vel_y"][0] * SS, env["lin_vel_y"][1] * SS),
-            "ang_vel_z": (env["ang_vel_z"][0] * WS, env["ang_vel_z"][1] * WS)}
+    return M.scaled_envelope(env, SS, WS)
 
 
 RUNG2_STAGES = [dict(_scaled_env(s), step=s["step"]) for s in M.RUNG2_STAGES]
@@ -272,3 +227,14 @@ def grandma_rung2_bands_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
                  (0.15, (-1.5 * SS, -0.8 * SS), (0.0, 0.0), 0.5 * WS),
                  (0.20, (-0.5 * SS, 0.5 * SS), (0.4 * SS, 1.1 * SS), 0.0))
     return cfg
+
+
+# ---- 2026-10-11 audit: opt-in variants (GRANDMA; KIM's own are in kim_env.py) --------------------------------------------
+def grandma_rung0_full_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """Rung 0 + DESIGN §5's foot-slip and CoM-over-support terms. Warm start: g0_v2 it 1499 (plain_init)."""
+    return M.add_rung0_full(grandma_rung0_env_cfg(play=play), LAM)
+
+
+def grandma_rung2_ramp_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """g2_v8's recipe (Cap28-Bands = grandma_rung2) + shove ramp, solref DR, privileged critic. Warm start g2_v8 it 1199."""
+    return M.add_ramp_recipe(grandma_rung2_bands_env_cfg(play=play))

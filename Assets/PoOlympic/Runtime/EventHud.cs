@@ -30,8 +30,7 @@ namespace PoOlympic
         {
             if (ev == null) return;
             var cam = Camera.main;
-            var r = cam != null ? cam.pixelRect : new Rect(0, 0, Screen.width, Screen.height);
-            var a = new Rect(r.x, Screen.height - r.yMax, r.width, r.height); // GUI space is y-down
+            var a = HudAnchors.GuiArea(cam);
             float s = Mathf.Clamp(a.width / 540f, 0.6f, 2f);
             Styles(s);
             float pad = 12 * s;

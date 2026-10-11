@@ -13,6 +13,8 @@
     --po-pad: 12px;
     --po-gap: 16px;
     --po-radius: 10px;
+    --po-radius-s: 4px;
+    --po-radius-l: 14px;
 
     --po-dock: rgb(9, 13, 24);
     --po-panel: rgb(18, 25, 43);
@@ -26,4 +28,18 @@
     --po-cyan: rgb(120, 220, 255);
     --po-green: rgb(120, 230, 140);
     --po-red: rgb(255, 110, 90);
+    --po-bad: rgb(255, 120, 120);
+    --po-white: rgb(255, 255, 255);
+    --po-tile: rgb(20, 29, 48);
+    --po-screen: rgb(6, 10, 22);
+    --po-debug: rgb(120, 255, 170);
+    /* overlays over the game / the menu */
+    --po-sheet: rgba(10, 16, 30, 0.97);
+    --po-scrim: rgba(10, 16, 30, 0.93);
+    --po-scrim-soft: rgba(10, 16, 30, 0.72);
+    /* athlete body colours (chips, lane tiles) */
+    --po-matt: rgb(52, 120, 220);
+    --po-zombie: rgb(92, 170, 70);
+    --po-grandma: rgb(206, 96, 160);
+    --po-kim: rgb(236, 138, 44);
 }

@@ -8,6 +8,7 @@ Unity parity gates then check.
 from __future__ import annotations
 
 import math
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -15,26 +16,26 @@ import mujoco
 import numpy as np
 import onnxruntime as ort
 
+from . import action_log as AL
+from . import biomech
 from . import contract as C
 
-FALL_PELVIS_Z = 0.55
-FALL_TILT_DEG = 60.0
+from .bodies import FALL_PELVIS_Z, FALL_TILT_DEG, JOINT_VEL_LIMIT, MATT_ROOT_Z  # noqa: E402 (MATT's rules; rescaled below)
+
 RECOVER_TILT_DEG = 10.0
 RECOVER_WINDOW_S = 1.5
-JOINT_VEL_LIMIT = 18.0
 JOINT_VEL_MAX_FRACTION = 0.05
 # Phase Z: other bodies get MATT's bars Froude-scaled (lengths x λ, speeds and times x √λ, rates / √λ). MATT keeps the
 # literal values above. The zombie stands hunched, so its recovery is judged relative to its own settled lean.
 B = C.BODY
 LAM, SS, TS = B.length_scale, B.speed_scale, B.time_scale
 WS = 1.0 / TS            # angular rates
-MATT_ROOT_Z = 0.9549291
 RELATIVE_TILT = B.family != "matt"
 if B.family != "matt":
     _root_z = float(mujoco.MjModel.from_xml_path(str(C.SCENE_XML)).key("default").qpos[2])
-    FALL_PELVIS_Z = 0.55 * _root_z / MATT_ROOT_Z
+    FALL_PELVIS_Z = FALL_PELVIS_Z * _root_z / MATT_ROOT_Z
     RECOVER_WINDOW_S = 1.5 * TS
-    JOINT_VEL_LIMIT = 18.0 / TS
+    JOINT_VEL_LIMIT = JOINT_VEL_LIMIT / TS
 
 
 @dataclass
@@ -68,6 +69,8 @@ class Sim:
         self.foot_geoms = [m.geom(n).id for n in ("foot_l_geom0", "toe_l_geom0", "foot_r_geom0", "toe_r_geom0")]
         self.foot_geom_set = set(self.foot_geoms)
         self.athlete_geoms = {g for g in range(m.ngeom) if m.geom_bodyid[g] != 0 and g not in self.cube_geoms}
+        self.v5 = self.obs_dim == C.OBS_DIM_V5                # contract v5 proposal: fatigue block + physics-side limits
+        self.bio = biomech.BioLimits(m, self.ath) if self.v5 or os.environ.get("POOLYMPIC_BIO") else None
         self.reset()
 
     def reset(self):
@@ -76,14 +79,20 @@ class Sim:
         self.phase = 0.0
         self.last_action = np.zeros(C.NUM_ACTIONS)
         self.tick = 0
+        if self.bio is not None:
+            self.bio.reset(self.m)
 
     def control_tick(self, command: np.ndarray, pre_step=None):
         d = self.d
+        fatigue = self.bio.tick(self.m, d) if self.bio is not None else None
         self.phase = C.advance_phase(self.phase, command)
-        obs = C.build_obs(self.ath, d.qpos, d.qvel, command, self.phase, self.last_action)
+        obs = C.build_obs(self.ath, d.qpos, d.qvel, command, self.phase, self.last_action,
+                          fatigue=fatigue if self.v5 else None)
         if isinstance(self.obs_dim, int) and self.obs_dim > len(obs):
             obs = np.concatenate([obs, np.zeros(self.obs_dim - len(obs), dtype=obs.dtype)])
         ctrl, action = self.sess.run(None, {"obs": obs[None]})
+        if AL.current is not None:
+            AL.current.tick(self.m, d, self.ath, self.torso, command, action[0], ctrl[0])
         d.ctrl[self.ath.actuator_ids] = ctrl[0].astype(np.float64)
         if pre_step is not None:
             pre_step(self)
@@ -134,6 +143,7 @@ class Sim:
         return f"contact:{bad}" if bad else None
 
 
+@AL.logged("rung0", passed=lambda r: rung0_verdict([r])["PASS"])
 def rung0_episode(onnx_path: Path, seed: int, seconds: float = 20.0, shove_dv: float = 0.5 * SS,
                   cube_drop_m: float = 1.5 * LAM, sim: Sim | None = None) -> EpisodeResult:
     """Rung 0: stand under random 0.5 m/s shoves + 2 kg cube drops (independent 3–5 s schedules); other bodies:
@@ -255,6 +265,7 @@ class DashResult:
     joint_vel_over_fraction: float
 
 
+@AL.logged("rung1", passed=lambda r: rung1_verdict([r])["PASS"])
 def rung1_episode(onnx_path: Path, seed: int, speed: float | None = None, distance: float = 30.0,
                   shove_dv: float = 0.3 * SS, warmup_s: float = 2.0 * TS, sim: Sim | None = None) -> DashResult:
     rng = np.random.default_rng(seed)
@@ -386,6 +397,7 @@ STEADY_ACCEL = 1.5  # m/s^2 — tracking is measured once the athlete can have r
                     # 0.5 + |dv| / STEADY_ACCEL) s (user decision 2026-09-28; acceleration is scored by the dash events)
 
 
+@AL.logged("rung2", passed=lambda r: rung2_verdict([r])["PASS"])
 def rung2_episode(onnx_path: Path, seed: int, sim: Sim | None = None, shove_dv: float = 0.3 * SS,
                   steady_state: bool = True) -> Rung2Result:
     """G1 drill. steady_state=True (official since 2026-09-28): the settle time grows with the speed change,

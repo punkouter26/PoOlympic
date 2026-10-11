@@ -47,7 +47,6 @@ namespace PoOlympic
         const string PrefKey = "poolympic.perfOverlay";
         static readonly Stopwatch SimWatch = new();
         static double _simMsAccum;
-        static bool _loopPatched;
 
         Label _label;
         bool _visible;
@@ -106,6 +105,11 @@ namespace PoOlympic
 
         public static void Toggle() { if (Instance != null) Instance.Visible = !Instance.Visible; }
 
+        /// <summary>TAB (or F3) this frame: the debug readout's keyboard switch, also read by HudAnchors on screens
+        /// without a PerfOverlay (the main menu).</summary>
+        public static bool DebugKeyPressed =>
+            Keyboard.current != null && (Keyboard.current.tabKey.wasPressedThisFrame || Keyboard.current.f3Key.wasPressedThisFrame);
+
         void ShowLabel()
         {
             if (_label != null) _label.style.display = _visible && !HudAnchors.AnyAttached ? DisplayStyle.Flex : DisplayStyle.None;
@@ -118,13 +122,15 @@ namespace PoOlympic
         /// <summary>Wrap the FixedUpdate script pass (MuJoCo step + PolicyRunner brains) with a stopwatch.</summary>
         static void PatchPlayerLoop()
         {
-            if (_loopPatched) return;
+            // checked on the loop itself, not a static flag: play mode starts without a domain reload, so a flag from
+            // the last session says nothing about this session's player loop
             var loop = PlayerLoop.GetCurrentPlayerLoop();
             for (int i = 0; i < loop.subSystemList.Length; i++)
             {
                 if (loop.subSystemList[i].type != typeof(FixedUpdate)) continue;
                 var fixedLoop = loop.subSystemList[i];
                 var list = fixedLoop.subSystemList.ToList();
+                if (list.Any(s => s.type == typeof(SimBegin))) return;
                 int k = list.FindIndex(s => s.type == typeof(FixedUpdate.ScriptRunBehaviourFixedUpdate));
                 if (k < 0) return;
                 list.Insert(k + 1, new PlayerLoopSystem { type = typeof(SimEnd), updateDelegate = () => { SimWatch.Stop(); _simMsAccum += SimWatch.Elapsed.TotalMilliseconds; } });
@@ -132,7 +138,6 @@ namespace PoOlympic
                 fixedLoop.subSystemList = list.ToArray();
                 loop.subSystemList[i] = fixedLoop;
                 PlayerLoop.SetPlayerLoop(loop);
-                _loopPatched = true;
                 return;
             }
         }
@@ -140,7 +145,7 @@ namespace PoOlympic
         // -------------------------------------------------------------------------------------- per frame
         void Update()
         {
-            if (Keyboard.current != null && Keyboard.current.f3Key.wasPressedThisFrame) Toggle();
+            if (DebugKeyPressed) Toggle();
             var ts = Touchscreen.current;
             if (ts != null && ts.touches.Count(t => t.press.isPressed) >= 3 && ts.touches.Any(t => t.press.wasPressedThisFrame)) Toggle();
 

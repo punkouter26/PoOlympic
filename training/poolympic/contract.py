@@ -15,7 +15,7 @@ from pathlib import Path
 import mujoco
 import numpy as np
 
-from . import bodies
+from . import biomech, bodies
 
 ROOT = Path(__file__).resolve().parents[1]
 BODY = bodies.current()                  # $POOLYMPIC_BODY (default matt) — one body per Python process (Phase Z)
@@ -87,6 +87,27 @@ SKILL_RANGES = {
     "torso_pitch": (-math.radians(20), math.radians(40)),
     "hand_reach": 0.75,     # m from the shoulder of the selected arm (target = forearm tip; wrists are welded)
 }
+
+
+# ---------------------------------------------------------------- contract v5 (PROPOSAL, opt-in): fatigue block
+# docs/CONTRACT_V5_FATIGUE_PROPOSAL.md (not approved; no deployed brain uses it). v5 = v3 + FATIGUE_DIM values appended
+# after the 84 v3 obs — the pattern of the v4 skill block: every v3 offset is unchanged, v3 / v4 brains keep their
+# 84 / 95 inputs, and the brain's input size / sidecar contract_version picks the layout. A v5 brain also runs with the
+# physics-side force limits of poolympic/biomech.py (torque-speed + fatigue). contract.json is NOT changed by this
+# block; export_brain adds fatigue_block() to a v5 brain's own metadata only.
+FATIGUE_VERSION = 5
+FATIGUE_LAYOUT = [("fatigue", len(biomech.JOINT_GROUPS))]   # level per joint group (abdomen .. ankle), 0 fresh .. 1 exhausted
+FATIGUE_DIM = sum(s for _, s in FATIGUE_LAYOUT)
+OBS_DIM_V5 = OBS_DIM + FATIGUE_DIM
+
+
+def fatigue_block() -> dict:
+    """The v5 block for a brain's metadata: layout + every constant a runtime needs to reproduce it."""
+    return {"version": FATIGUE_VERSION, "offset": OBS_DIM, "size": FATIGUE_DIM, "obs_dim": OBS_DIM_V5,
+            "groups": list(biomech.JOINT_GROUPS), "hill_w_max": biomech.HILL_W_MAX,
+            "tau_load_s": biomech.FATIGUE_TAU_LOAD, "tau_rest_s": biomech.FATIGUE_TAU_REST,
+            "floor": biomech.FATIGUE_FLOOR,
+            "tick": "read_state, bio_limits (fatigue update + force range), advance_phase, build_obs, ..."}
 
 
 @dataclass(frozen=True)
@@ -214,9 +235,10 @@ def gait_hz(command: np.ndarray) -> float:
 
 
 def build_obs(ath: Athlete, qpos: np.ndarray, qvel: np.ndarray, command: np.ndarray, phase: float,
-              last_action: np.ndarray, skill: np.ndarray | None = None) -> np.ndarray:
+              last_action: np.ndarray, skill: np.ndarray | None = None, fatigue: np.ndarray | None = None) -> np.ndarray:
     """84-dim (v3) observation, computed in float64 then cast to float32 (the ONNX input dtype). skill: the v4 block
-    (SKILL_DIM values, SkillCommand.to_array) appended after the v3 terms -> OBS_DIM_V4."""
+    (SKILL_DIM values, SkillCommand.to_array) appended after the v3 terms -> OBS_DIM_V4. fatigue: the v5 block
+    (FATIGUE_DIM levels, biomech.BioLimits.tick) appended after the v3 terms -> OBS_DIM_V5."""
     r = ath.root_qposadr
     dv = ath.root_dofadr
     quat = qpos[r + 3 : r + 7]
@@ -243,6 +265,10 @@ def build_obs(ath: Athlete, qpos: np.ndarray, qvel: np.ndarray, command: np.ndar
         skill = np.asarray(skill, dtype=np.float64)
         assert skill.shape == (SKILL_DIM,)
         obs = np.concatenate([obs, skill])
+    if fatigue is not None:
+        fatigue = np.asarray(fatigue, dtype=np.float64)
+        assert fatigue.shape == (FATIGUE_DIM,)
+        obs = np.concatenate([obs, fatigue])
     return obs.astype(np.float32)
 
 

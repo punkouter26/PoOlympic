@@ -4,12 +4,18 @@ The rsl_rl actor is  mlp( (obs - mean) / (std + 0.01) )  (EmpiricalNormalization
 that inside the contract graph (ExportedPolicy with clip_obs=None, std := std + 0.01) and append the contract's
 action mapping (ctrl = clip(default + 0.25·a, joint range)).
 
-Usage: uv run python tools/export_brain.py <run_dir or model_XXXX.pt> <name>   -> parity/brains/<name>.onnx(.json)
-A 95-input checkpoint (Rung S) is exported as a contract v4 brain (sidecar contract_version 4: v3 obs + skill block).
+Usage: uv run python tools/export_brain.py <run_dir or model_XXXX.pt> <name> [--clip-obs 5]
+       -> parity/brains/<name>.onnx(.json)
+A 95-input checkpoint (Rung S) is exported as a contract v4 brain (sidecar contract_version 4: v3 obs + skill block),
+a 90-input one as a contract v5 PROPOSAL brain (v3 obs + fatigue block; docs/CONTRACT_V5_FATIGUE_PROPOSAL.md — Unity
+does not run these yet). --clip-obs S (default: off, as every deployed brain) clamps the normalised observation to
++-S standard deviations inside the graph: a guard against out-of-distribution inputs; nothing for Unity to mirror.
+The sidecar stores the checkpoint path relative to the repo root.
 """
 
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -35,25 +41,32 @@ def latest_checkpoint(path: Path) -> Path:
     return pts[-1]
 
 
-def main(src: str, name: str) -> int:
+def main(src: str, name: str, clip_obs: float | None = None) -> int:
     ckpt = latest_checkpoint(Path(src))
     sd = torch.load(ckpt, map_location="cpu", weights_only=False)["actor_state_dict"]
     mean = sd["obs_normalizer._mean"][0].numpy()
     std = sd["obs_normalizer._std"][0].numpy()
     obs_dim = mean.shape[0]
-    assert obs_dim in (C.OBS_DIM, C.OBS_DIM_V4), f"checkpoint has {obs_dim} inputs"
-    version = C.SKILL_VERSION if obs_dim == C.OBS_DIM_V4 else None
+    assert obs_dim in (C.OBS_DIM, C.OBS_DIM_V4, C.OBS_DIM_V5), f"checkpoint has {obs_dim} inputs"
+    version = {C.OBS_DIM_V4: C.SKILL_VERSION, C.OBS_DIM_V5: C.FATIGUE_VERSION}.get(obs_dim)
     mlp = make_mlp(obs_dim)
     mlp.load_state_dict({k[len("mlp."):]: v for k, v in sd.items() if k.startswith("mlp.")})
     ath = C.Athlete.bind(mujoco.MjModel.from_xml_path(str(C.SCENE_XML)))
-    pol = ExportedPolicy(mlp, mean, std + EPS, ath.default_pos, ath.range_lo, ath.range_hi, clip_obs=None).eval()
+    pol = ExportedPolicy(mlp, mean, std + EPS, ath.default_pos, ath.range_lo, ath.range_hi, clip_obs=clip_obs).eval()
 
     from poolympic.fingerprint import write_python_fingerprint
 
     _, sha = write_python_fingerprint()
     contract = C.export_contract(fingerprint_sha256=sha)
+    if version == C.FATIGUE_VERSION:                     # in this brain's metadata only: contract.json is not changed
+        contract = {**contract, "fatigue_block": C.fatigue_block()}
     meta = standard_metadata(contract, name, version)
-    meta["poolympic.checkpoint"] = str(ckpt)
+    try:                                                 # relative to the repo root (a clone elsewhere still resolves it)
+        meta["poolympic.checkpoint"] = ckpt.resolve().relative_to(ROOT.parent).as_posix()
+    except ValueError:
+        meta["poolympic.checkpoint"] = str(ckpt)
+    if clip_obs is not None:
+        meta["poolympic.clip_obs"] = repr(float(clip_obs))
     out = export(pol, ROOT.parent / "parity" / "brains" / f"{name}.onnx", meta)
 
     # verify: ORT graph == reference rsl_rl actor math (float32), and ctrl == contract mapping
@@ -64,6 +77,8 @@ def main(src: str, name: str) -> int:
     W = [(sd[f"mlp.{i}.weight"].numpy(), sd[f"mlp.{i}.bias"].numpy()) for i in (0, 2, 4, 6)]
     for o in obs:
         x = (o - mean) / (std + EPS)
+        if clip_obs is not None:
+            x = np.clip(x, -clip_obs, clip_obs)
         for i, (w, b) in enumerate(W):
             x = x @ w.T + b
             if i < 3:
@@ -77,4 +92,9 @@ def main(src: str, name: str) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main(sys.argv[1], sys.argv[2]))
+    _ap = argparse.ArgumentParser()
+    _ap.add_argument("src")
+    _ap.add_argument("name")
+    _ap.add_argument("--clip-obs", type=float, default=None, metavar="SIGMA")
+    _a = _ap.parse_args()
+    raise SystemExit(main(_a.src, _a.name, _a.clip_obs))

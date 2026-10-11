@@ -15,6 +15,7 @@ import torch
 from mjlab.managers.scene_entity_config import SceneEntityCfg
 from mjlab.tasks.velocity.mdp.velocity_command import UniformVelocityCommand, UniformVelocityCommandCfg
 
+from .. import biomech
 from .. import contract as C
 
 if TYPE_CHECKING:
@@ -274,16 +275,20 @@ def reset_lying(env, env_ids, prone_fraction: float = 0.5, z: tuple[float, float
 
 
 def getup_assist(env, env_ids, asset_cfg, max_fraction: float = 0.6, decay_steps: int = 36000,
-                 body_weight_n: float = 80.0 * 9.81) -> None:
+                 body_weight_n: float | None = 80.0 * 9.81) -> None:
     """Get-up curriculum (reset event): a constant upward world force on the torso for the whole episode,
     U(0, current max) × body weight, the max fading linearly from max_fraction to 0 over decay_steps env steps
     (1500 its × 24). From flat on the floor no small motion changes height or uprightness — getup_v1/v2 lay still
-    (action std 0.5 -> 0.04) — the lift makes the first rising motions pay. Afterwards: unassisted, as in Unity."""
+    (action std 0.5 -> 0.04) — the lift makes the first rising motions pay. Afterwards: unassisted, as in Unity.
+    body_weight_n: the default is MATT's 80 kg (PoOlympic-Matt-Getup3/4/5, the only tasks that rely on it); None = each
+    env's own model mass (robot_mass: any body, mass DR included) — for new variants."""
     asset = env.scene[asset_cfg.name]
     if env_ids is None:
         env_ids = torch.arange(env.num_envs, device=env.device)
     n = len(env_ids)
     cur = max(0.0, max_fraction * (1.0 - float(env.common_step_counter) / decay_steps))
+    if body_weight_n is None:
+        body_weight_n = robot_mass(env)[env_ids] * 9.81
     fz = torch.rand(n, device=env.device) * cur * body_weight_n
     nb = len(asset_cfg.body_ids) if isinstance(asset_cfg.body_ids, list) else 1
     force = torch.zeros(n, nb, 3, device=env.device)
@@ -598,7 +603,7 @@ def mechanical_power(env) -> torch.Tensor:
 
 # Hill-type torque-velocity envelope: the torque a muscle group can still produce falls linearly from the actuator cap
 # at rest to 0 at w_max (joint-group shortening speed, rad/s; sprint data: knee ~20+, hip ~12-15, ankle ~15-20).
-HILL_W_MAX = {"abdomen": 8.0, "shoulder": 20.0, "elbow": 20.0, "hip": 15.0, "knee": 22.0, "ankle": 18.0}
+HILL_W_MAX = biomech.HILL_W_MAX      # one definition, shared with the physics-side limit (bio_force_limits)
 
 
 def _hill_tables(env):
@@ -685,30 +690,57 @@ def feet_under_pelvis(env, std: float, max_height: float = 0.08, height_std: flo
 
 
 # ------------------------------------------------------------------ Iron Pedestal v2: heat-shaped gusts + adaptive level
-def push_gust(env, env_ids, asset_cfg=None) -> None:
+def push_gust(env, env_ids, asset_cfg=None, min_fraction: float = 1.0, record: bool = False) -> None:
     """Heat gust: instantaneous horizontal Δv of the CURRENT curriculum magnitude in a uniformly random direction
-    (IronPedestalHeat / iron_pedestal.py apply exactly this)."""
+    (IronPedestalHeat / iron_pedestal.py apply exactly this). min_fraction < 1: magnitude U(min_fraction, 1) x the
+    level (the shove ramp: Rung 0-2 shoves vary in size). record: keep the Δv and its step for priv_shove."""
     ids = env_ids if env_ids is not None else torch.arange(env.num_envs, device=env.device)
     level = getattr(env, "_poolympic_gust", 0.3)
     asset = env.scene["robot"]
     vel = asset.data.root_link_vel_w[ids].clone()
     a = torch.rand(len(ids), device=env.device) * 2 * math.pi
-    vel[:, 0] += level * torch.cos(a)
-    vel[:, 1] += level * torch.sin(a)
+    if min_fraction < 1.0:
+        level = level * (min_fraction + (1.0 - min_fraction) * torch.rand(len(ids), device=env.device))
+    dv = torch.stack([level * torch.cos(a), level * torch.sin(a)], dim=-1)
+    vel[:, 0] += dv[:, 0]
+    vel[:, 1] += dv[:, 1]
     asset.write_root_link_velocity_to_sim(vel, env_ids=ids)
+    if record:
+        st = _shove_state(env)
+        st[0][ids], st[1][ids] = dv, int(env.common_step_counter)
 
 
-def gust_curriculum(env, env_ids, start: float, step: float, max_level: float, up: float, down: float) -> dict:
+def gust_curriculum(env, env_ids, start: float, step: float, max_level: float, up: float, down: float,
+                    steps_per_it: int = 0, min_count: int = 64) -> dict:
     """Adaptive gust magnitude: among the envs being reset, the fraction that lasted the full episode decides —
-    > up: harder (+step), < down: easier (−step). Keeps training at the edge of what the athlete can survive."""
+    > up: harder (+step), < down: easier (−step). Keeps training at the edge of what the athlete can survive.
+    steps_per_it = 0 (Pedestal2): one decision per reset batch. steps_per_it = 24 (the shove ramp, DESIGN §5 "intensity
+    ramps when success > 80 %"): the ended episodes are pooled and ONE decision is taken per PPO iteration, once
+    min_count episodes have ended (per-reset decisions arrive in waves and oscillate: ped_v2, getup_rev)."""
     if not hasattr(env, "_poolympic_gust"):
         env._poolympic_gust = start
-    if env_ids is not None and len(env_ids) > 0:
-        full = (env.episode_length_buf[env_ids] >= env.max_episode_length - 1).float().mean().item()
+        env._poolympic_gust_pool = [0.0, 0.0, -1]            # full episodes, ended episodes, last iteration
+
+    def decide(full: float) -> None:
         if full > up:
             env._poolympic_gust = min(max_level, env._poolympic_gust + step)
         elif full < down:
             env._poolympic_gust = max(start, env._poolympic_gust - step)
+
+    pool = env._poolympic_gust_pool
+    if env_ids is not None and len(env_ids) > 0:
+        full = (env.episode_length_buf[env_ids] >= env.max_episode_length - 1).float()
+        if steps_per_it:
+            pool[0] += full.sum().item()
+            pool[1] += len(env_ids)
+        else:
+            decide(full.mean().item())
+    if steps_per_it:
+        it = int(env.common_step_counter) // steps_per_it
+        if it != pool[2] and pool[1] >= min_count:
+            decide(pool[0] / pool[1])
+            pool[0] = pool[1] = 0.0
+            pool[2] = it
     return {"gust_mps": torch.tensor(env._poolympic_gust)}
 
 
@@ -755,3 +787,160 @@ def feet_low(env, max_height: float, std: float) -> torch.Tensor:
     h = ent.data.data.geom_xpos[:, ids[[0, 2]], 2]
     excess = torch.relu(h - max_height)
     return torch.exp(-(excess**2).sum(-1) / std**2)
+
+
+# ====================================================================================================================
+# 2026-10-11 audit additions — every term below is OPT-IN: no task registered before that date refers to them.
+# ====================================================================================================================
+def _per_world(field: torch.Tensor, n: int) -> torch.Tensor:
+    """A model field as [num_envs, ...] whether or not domain randomisation expanded it per world."""
+    return field if field.shape[0] == n else field.expand(n, *field.shape[1:])
+
+
+def robot_mass(env) -> torch.Tensor:
+    """[N] total mass of each env's athlete (kg), read from the model: any body, mass DR included."""
+    ent = env.scene["robot"]
+    return _per_world(env.sim.model.body_mass, env.num_envs)[:, ent.indexing.body_ids].sum(-1)
+
+
+# ---- rewards -------------------------------------------------------------------------------------------------------
+SELF_SENSOR = "self_contact"
+
+
+def self_contact_force(env, body_weight_n: float, sensor_name: str = SELF_SENSOR, deadband_bw: float = 0.0) -> torch.Tensor:
+    """Σ over the self-contact slots of relu(|F| − deadband) / body weight (use with a small negative weight; AGENTS.md
+    "Self-collision": self-contact never ends an episode — if the policy leans on it, charge the force). Needs the sensor
+    of matt_env.self_contact_sensor_cfg (athlete subtree against itself, fields found + force)."""
+    f = torch.linalg.norm(env.scene[sensor_name].data.force, dim=-1)              # [N, slots]
+    return torch.relu(f / body_weight_n - deadband_bw).sum(-1)
+
+
+def com_over_support(env, std: float) -> torch.Tensor:
+    """exp(-d² / std²), d = horizontal distance between the whole-body centre of mass and the centre of the four foot /
+    toe boxes (DESIGN §5 Rung 0 "CoM over support"). Standing: 1; leaning until the CoM leaves the feet: -> 0."""
+    ent = env.scene["robot"]
+    gid = getattr(env, "_poolympic_root_gid", None)
+    if gid is None:
+        gid = env._poolympic_root_gid = int(ent.indexing.body_ids[_body_id(env, "pelvis")])
+    com = env.sim.data.subtree_com[:, gid, :2] - env.scene.env_origins[:, :2]
+    d2 = ((com - _foot_geom_xy(env).mean(1)) ** 2).sum(-1)
+    return torch.exp(-d2 / std**2)
+
+
+# ---- domain randomisation --------------------------------------------------------------------------------------------
+def _solref_event():
+    from mjlab.envs.mdp.dr import _core
+    from mjlab.managers.event_manager import requires_model_fields
+
+    @requires_model_fields("geom_solref")
+    def dr_geom_solref(env, env_ids, ranges, asset_cfg, operation: str = "scale", shared_random: bool = True) -> None:
+        """Contact softness / restitution (DESIGN §4 "restitution via solref"): randomise geom_solref = (time constant,
+        damping ratio). ranges {0: (lo, hi), 1: (lo, hi)}; a damping ratio below 1 makes the contact bounce. The time
+        constant must stay >= 2 x the timestep (0.01 s here; the default is 0.02 s)."""
+        _core._randomize_model_field(env, env_ids, "geom_solref", entity_type="geom", ranges=ranges, operation=operation,
+                                     asset_cfg=asset_cfg, shared_random=shared_random, default_axes=[0, 1],
+                                     valid_axes=[0, 1])
+    return dr_geom_solref
+
+
+dr_geom_solref = _solref_event()
+
+
+# ---- biomechanics in the physics (poolympic/biomech.py; contract v5 proposal) -----------------------------------------
+def _bio_event():
+    from types import SimpleNamespace
+
+    from mjlab.managers.event_manager import requires_model_fields
+
+    def state(env):
+        st = getattr(env, "_poolympic_bio", None)
+        if st is None:
+            ix = _idx(env)
+            _act_torque_vel(env)                                           # resolves env._poolympic_act_ids (contract order)
+            gi, mean, wmax = biomech.tables(CONTRACT_ACTUATORS)
+            ctrl = ix.entity.indexing.ctrl_ids[env._poolympic_act_ids]
+            base = env.sim.model.actuator_forcerange[:, ctrl].clone()      # per env: after the strength DR (startup)
+            f32 = lambda a: torch.as_tensor(a, device=env.device, dtype=torch.float32)  # noqa: E731
+            st = env._poolympic_bio = SimpleNamespace(
+                ctrl=ctrl, base=base, cap=base.abs().amax(-1), gi=torch.as_tensor(gi, device=env.device), mean=f32(mean),
+                wmax=f32(wmax), level=torch.zeros(env.num_envs, len(biomech.JOINT_GROUPS), device=env.device))
+        return st
+
+    @requires_model_fields("actuator_forcerange")
+    def bio_force_limits(env, env_ids, hill: bool = True, fatigue: bool = True, init_level_max: float = 0.0) -> None:
+        """Register TWICE: mode="step" (once per control tick, after its substeps: update the fatigue levels from the
+        tick's actuator force, then write each actuator's force range for the next tick — biomech.force_scale) and
+        mode="reset" (level U(0, init_level_max) per group, force range = its fatigue scale; 0 = fresh, as every CPU /
+        Unity episode starts — a training episode is 20 s, too short to reach the tired states by effort alone).
+        CPU mirror: biomech.BioLimits."""
+        st = state(env)
+        fr = env.sim.model.actuator_forcerange
+        if env_ids is not None:                                            # reset
+            st.level[env_ids] = torch.rand(len(env_ids), st.level.shape[1], device=env.device) * init_level_max
+            scale, _ = biomech.force_scale(st.level[env_ids][:, st.gi], 0.0, st.wmax, False, fatigue)
+            fr[env_ids[:, None], st.ctrl] = st.base[env_ids] * scale[..., None]
+            return
+        tau, qd = _act_torque_vel(env)
+        st.level = biomech.fatigue_step(st.level, (tau.abs() / st.cap) @ st.mean, env.step_dt)
+        lo, hi = biomech.force_scale(st.level[:, st.gi], qd, st.wmax, hill, fatigue)
+        fr[:, st.ctrl, 0] = st.base[..., 0] * lo
+        fr[:, st.ctrl, 1] = st.base[..., 1] * hi
+        env.extras.setdefault("log", {})["Metrics/fatigue_max_group"] = st.level.mean(0).max()
+    return bio_force_limits
+
+
+bio_force_limits = _bio_event()
+
+
+def obs_fatigue(env) -> torch.Tensor:
+    """Contract v5 block: the fatigue level of each joint group (biomech.JOINT_GROUPS order), 0 fresh .. 1 exhausted.
+    Zeros until bio_force_limits has run (it owns the state: the force-range baseline must be read after startup DR)."""
+    st = getattr(env, "_poolympic_bio", None)
+    if st is None:
+        return torch.zeros(env.num_envs, len(biomech.JOINT_GROUPS), device=env.device)
+    return st.level
+
+
+# ---- privileged critic observations (asymmetric critic; never in the actor group, never exported) ----------------------
+PRIV_DIM = 8          # foot forces 4 + friction 1 + mass 1 + shove 2 (tasks/symmetry.py mirrors this block)
+
+
+def priv_foot_force(env, body_weight_n: float) -> torch.Tensor:
+    """[N, 4] ground reaction per foot subtree in body weights: (left vertical, left horizontal, right vertical, right
+    horizontal). Needs the feet_ground sensor (Rung 1+)."""
+    f = env.scene[FOOT_SENSOR].data.force / body_weight_n                    # [N, 2, 3] world frame (netforce)
+    return torch.stack([f[:, 0, 2].abs(), torch.linalg.norm(f[:, 0, :2], dim=-1),
+                        f[:, 1, 2].abs(), torch.linalg.norm(f[:, 1, :2], dim=-1)], dim=-1)
+
+
+def priv_friction_scale(env) -> torch.Tensor:
+    """[N, 1] foot friction of this env / nominal (dr_foot_friction: one shared scale for the four foot geoms)."""
+    _foot_geom_xy(env)
+    g = int(env._poolympic_foot_geom_ids[0])
+    cur = _per_world(env.sim.model.geom_friction, env.num_envs)[:, g, 0]
+    return (cur / env.sim.get_default_field("geom_friction")[g, 0])[:, None]
+
+
+def priv_mass_scale(env) -> torch.Tensor:
+    """[N, 1] athlete mass of this env / nominal (dr_mass)."""
+    ids = env.scene["robot"].indexing.body_ids
+    return (robot_mass(env) / env.sim.get_default_field("body_mass")[ids].sum())[:, None]
+
+
+def _shove_state(env):
+    st = getattr(env, "_poolympic_shove", None)
+    if st is None:
+        st = env._poolympic_shove = [torch.zeros(env.num_envs, 2, device=env.device),
+                                     torch.full((env.num_envs,), -10**6, device=env.device, dtype=torch.long)]
+    return st
+
+
+def priv_shove(env, hold_steps: int = 25) -> torch.Tensor:
+    """[N, 2] the last shove's Δv (m/s) in the heading frame, for hold_steps control ticks after it (0.5 s), else 0.
+    Shoves must come from push_gust(record=True)."""
+    dv, at = _shove_state(env)
+    age = int(env.common_step_counter) - at
+    # not a previous episode's shove: one from this episode is younger than the episode (events fire after the step
+    # counter moved on); one from the last episode's terminal step is exactly as old as the new episode
+    live = ((age < hold_steps) & (age < env.episode_length_buf)).float()[:, None]
+    return _heading_frame_xy(env, dv) * live

@@ -21,7 +21,10 @@ import mujoco
 import numpy as np
 import onnxruntime as ort
 
+from .. import action_log as AL
+from .. import biomech
 from .. import contract as C
+from ..bodies import FALL_PELVIS_Z, FALL_TILT_DEG  # noqa: F401 (FALL_TILT_DEG re-exported: squat.py)
 
 SCENE = C.ROOT / "assets" / "scene_pedestal8.xml"
 LAYOUT = C.ROOT / "assets" / "pedestal8_layout.json"
@@ -32,7 +35,7 @@ CUBE_EVERY = 3
 CUBE_DROP_M = 1.5
 COUNTDOWN_S = 1.0     # settle before the first gust
 MAX_S = 120.0
-FALL_Z, FALL_TILT_DEG, STEPPED_OFF_Z = 0.55, 60.0, -0.06
+FALL_Z, STEPPED_OFF_Z = FALL_PELVIS_Z, -0.06
 
 
 @dataclass
@@ -74,6 +77,7 @@ class _Lane:
     def __init__(self, m, d, k: int, prefix: str, origin: np.ndarray, traits: Traits, rng: np.random.Generator,
                  fall_z: float = FALL_Z, gait: tuple[float, float, float] | None = None, body: str = "matt"):
         self.k, self.prefix, self.origin, self.traits, self.rng = k, prefix, origin, traits, rng
+        self.m = m
         self.fall_z = fall_z          # per body: the same fraction of its standing pelvis height as MATT's 0.55 m
         self.body = body
         # gait clock (base Hz, Hz per m/s, yaw weight) of this lane's body; default = the process body's contract
@@ -89,6 +93,7 @@ class _Lane:
                                                if n in names}
         self.phase = 0.0
         self.skill: np.ndarray | None = None   # contract v4 skill block (Rung S brains, event 3); None = v3 obs
+        self.bio: biomech.BioLimits | None = None   # contract v5 brains (make_lanes): fatigue block + force limits
         self.last = np.zeros(C.NUM_ACTIONS)
         self.ctrl_now = self.ath.default_pos.copy()
         self.ctrl_prev = self.ath.default_pos.copy()
@@ -117,11 +122,14 @@ class _Lane:
         """cmd in MATT units: scaled to this lane's body like Unity PolicyRunner.BodyCommand (identity for MATT)."""
         cmd = np.zeros(3) if cmd is None else body_command(np.asarray(cmd, float), self.body)
         self.phase = self.advance_phase(cmd)
-        obs = C.build_obs(self.ath, d.qpos, d.qvel, cmd, self.phase, self.last, self.skill)
+        obs = C.build_obs(self.ath, d.qpos, d.qvel, cmd, self.phase, self.last, self.skill,
+                          None if self.bio is None else self.bio.tick(self.m, d))
         if self.traits.obs_noise > 0:     # the skill block is a command: no noise (as in training)
             obs = obs.copy()
             obs[:C.OBS_DIM] = (obs[:C.OBS_DIM] + self.rng.uniform(-1, 1, C.OBS_DIM) * self.noise).astype(np.float32)
         ctrl, act = sess.run(None, {"obs": obs[None]})
+        if AL.current is not None:
+            AL.current.tick(self.m, d, self.ath, self.torso, cmd, act[0], ctrl[0], lane=self.k)
         self.ctrl_prev, self.ctrl_now = self.ctrl_now, ctrl[0].astype(np.float64)
         self.last = act[0].astype(np.float64)
 
@@ -190,7 +198,11 @@ def make_lanes(m, d, layout: dict, seed: int, traits: list[Traits], onnx, brains
         if body not in sessions:
             sessions[body] = ort.InferenceSession(str((brains or {}).get(body, onnx)), providers=["CPUExecutionProvider"])
         ln.sess = sessions[body]
+        if ln.sess.get_inputs()[0].shape[1] == C.OBS_DIM_V5:
+            ln.bio = biomech.BioLimits(m, ln.ath)
         lanes.append(ln)
+        if AL.current is not None:
+            AL.current.lane(ln.k, body)
     return lanes
 
 
@@ -204,6 +216,7 @@ def body_fall_z(body: str) -> float:
     return FALL_Z * z / matt
 
 
+@AL.logged("event_pedestal")
 def run_heat(onnx: Path, seed: int, traits: list[Traits] | None = None, max_s: float = MAX_S,
              scene: Path = SCENE, layout_path: Path = LAYOUT, brains: dict[str, Path] | None = None) -> HeatResult:
     """brains: body -> ONNX for multi-body heats (layout lanes carry "body", tools/compose_mixed.py); default: `onnx`

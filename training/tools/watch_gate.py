@@ -1,4 +1,4 @@
-"""Unattended checkpoint gate for any rung (recipe v5 successor of watch_eval.py): wait for model_<it>.pt, export it,
+"""Unattended checkpoint gate for any rung (recipe v5): wait for model_<it>.pt, export it,
 run the G1 drills of every requested rung on CPU MuJoCo (eval_cpu.py, sequentially — parallel CPU evals slow training
 to a crawl) and, optionally, the bio-realism probe. One JSON line per checkpoint in parity/watch_<prefix>.jsonl.
 
@@ -33,6 +33,8 @@ def main() -> int:
     ap.add_argument("--its", required=True, help="comma list of checkpoint iterations")
     ap.add_argument("--seeds", type=int, default=10)
     ap.add_argument("--bio", action="store_true", help="also run tools/bio_probe.py (walk / run / sprint / spin)")
+    ap.add_argument("--log-actions", action="store_true",
+                    help="G1 drills also write per-tick action logs to parity/actions/<prefix>_it<N>/ (not the probes)")
     a = ap.parse_args()
     out = PARITY / f"watch_{a.prefix}.jsonl"
     for it in [int(x) for x in a.its.split(",")]:
@@ -58,7 +60,7 @@ def main() -> int:
                 rec["crawl"] = f"finished {m.group(1)}/{m.group(2)} in {m.group(3)} s, lane {m.group(4)} m" if m else "ERROR " + txt[-300:]
                 continue
             txt = run([str(ROOT / "tools" / "eval_cpu.py"), str(onnx), "--rung", g, "--seeds", str(a.seeds),
-                       "--out", str(PARITY / "watch" / f"g1_rung{g}_{name}.json")])
+                       "--out", str(PARITY / "watch" / f"g1_rung{g}_{name}.json")] + (["--log-actions"] if a.log_actions else []))
             m = re.search(rf"G1 rung {g}: (\d+)/(\d+) seeds pass(.*?)->", txt)
             rec[f"g1_{g}"] = f"{m.group(1)}/{m.group(2)}{m.group(3).strip() and ' ' + m.group(3).strip()}" if m else "ERROR"
             if not m:

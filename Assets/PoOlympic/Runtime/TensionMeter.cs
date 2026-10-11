@@ -20,6 +20,8 @@ namespace PoOlympic
     public class TensionMeter : MonoBehaviour
     {
         public static TensionMeter Instance { get; private set; }
+        /// <summary>Danger from which an athlete is "in trouble" (hot athlete, HUD row highlight, 4th standings row).</summary>
+        public const float HotThreshold = 0.45f;
 
         public MonoBehaviour board;                    // IBroadcastBoard
         public BroadcastDirector.Kind kind = BroadcastDirector.Kind.Race;
@@ -150,7 +152,7 @@ namespace PoOlympic
             }
 
             HotDanger = maxDanger;
-            Hot = maxDanger >= 0.45f ? hot : Leader;
+            Hot = maxDanger >= HotThreshold ? hot : Leader;
             float target = _phase switch
             {
                 BoardPhase.Ready => 0.15f,

@@ -21,12 +21,20 @@ namespace PoOlympic
         public readonly Label Title, Sub, Fps, Version, DebugPanel;
         public readonly Button MenuButton, DebugButton;
         readonly VisualElement _sheet, _overlay;
+        VisualElement _settings, _settingsRows;
+        int _settingsTab;
+        bool _eraseArmed;
+        /// <summary>Extra lines for the debug readout (BroadcastHud: the athlete on camera); null / "" = none.</summary>
+        public Func<string> DebugExtra;
         Func<IEnumerable<(string label, Action act)>> _items = () => Array.Empty<(string, Action)>();
         float _acc, _frames, _debugNext;
         float _fps = float.NaN;
 
         static readonly List<HudAnchors> Live = new();
         const string DebugPref = "poolympic.perfOverlay";
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() => Live.Clear();
 
         /// <summary>Normalised safe area (0..1, y up). Screen.safeArea by default; tests set their own.</summary>
         public static Func<Rect> SafeArea = () =>
@@ -96,9 +104,107 @@ namespace PoOlympic
             MenuButton.RemoveFromClassList("ha-icon-btn--on");
         }
 
+        // ---------------------------------------------------------------- settings: one tabbed bottom sheet
+        public bool SettingsOpen => _settings != null && _settings.ClassListContains("ha-settings--open");
+
+        static readonly string[] Tabs = { "Audio", "Display", "Game" };
+        static readonly float[] Levels = { 1f, 0.75f, 0.5f, 0.25f, 0f };
+
+        static string Pct(float v) => $"{v * 100f:0}%";
+        static string OnOff(bool v) => v ? "On" : "Off";
+        /// <summary>A level button steps down 100 → 75 → 50 → 25 → 0 % and wraps (one tap target, no slider to drag).</summary>
+        static float NextLevel(float v) => Levels[(Array.FindIndex(Levels, l => l <= v + 0.01f) + 1) % Levels.Length];
+
+        /// <summary>The options of one tab: label, current value text, what a tap does.</summary>
+        IEnumerable<(string label, Func<string> value, Action tap)> SettingsRows(int tab) => tab switch
+        {
+            0 => new (string, Func<string>, Action)[]
+            {
+                ("Master volume", () => Pct(GameSettings.VolMaster), () => GameSettings.VolMaster = NextLevel(GameSettings.VolMaster)),
+                ("Crowd", () => Pct(GameSettings.VolCrowd), () => GameSettings.VolCrowd = NextLevel(GameSettings.VolCrowd)),
+                ("Impacts and cues", () => Pct(GameSettings.VolSfx), () => GameSettings.VolSfx = NextLevel(GameSettings.VolSfx)),
+                ("Announcer", () => Pct(GameSettings.VolAnnouncer), () => GameSettings.VolAnnouncer = NextLevel(GameSettings.VolAnnouncer)),
+            },
+            1 => new (string, Func<string>, Action)[]
+            {
+                ("Camera shake on impacts", () => Pct(GameSettings.CameraShake), () => GameSettings.CameraShake = NextLevel(GameSettings.CameraShake)),
+                ("Zoom in on trouble", () => OnOff(GameSettings.TensionZoom), () => GameSettings.TensionZoom = !GameSettings.TensionZoom),
+                ("Focus blur on close-ups", () => OnOff(GameSettings.FocusBlur), () => GameSettings.FocusBlur = !GameSettings.FocusBlur),
+                ("Impact marks", () => OnOff(GameSettings.ImpactMarks), () => GameSettings.ImpactMarks = !GameSettings.ImpactMarks),
+            },
+            _ => new (string, Func<string>, Action)[]
+            {
+                ("Betting slip before heats", () => OnOff(GameSettings.OfferBets), () => GameSettings.OfferBets = !GameSettings.OfferBets),
+                ("Debug readout (TAB)", () => OnOff(DebugOn), () => DebugOn = !DebugOn),
+                ("Log every action to file", () => OnOff(GameSettings.LogActions), () => GameSettings.LogActions = !GameSettings.LogActions),
+                ("Erase coins and records", () => _eraseArmed ? "Tap again" : "Erase", () =>
+                {
+                    if (_eraseArmed) GameSettings.ResetSave(Enumerable.Range(1, 40));
+                    _eraseArmed = !_eraseArmed;
+                }),
+            },
+        };
+
+        public void OpenSettings()
+        {
+            CloseSheet();
+            if (_settings == null)
+            {
+                _settings = Add(_overlay, "ha-settings");
+                var head = Add(_settings, "ha-settings-head");
+                for (int i = 0; i < Tabs.Length; i++)
+                {
+                    int tab = i;
+                    var b = new Button(() => { _settingsTab = tab; FillSettings(); }) { text = Tabs[i] };
+                    b.AddToClassList("ha-tab");
+                    head.Add(b);
+                }
+                var done = new Button(CloseSettings) { text = "Done" };
+                done.AddToClassList("ha-tab");
+                done.AddToClassList("ha-tab-done");
+                head.Add(done);
+                _settingsRows = Add(_settings, "ha-settings-rows");
+            }
+            _eraseArmed = false;
+            FillSettings();
+            PlaceSettings();
+            _settings.AddToClassList("ha-settings--open");
+        }
+
+        /// <summary>Docked just above the bottom bar (so inside the safe area wherever the overlay reaches).</summary>
+        void PlaceSettings()
+        {
+            float h = _overlay.layout.height;
+            if (float.IsNaN(h) || float.IsNaN(BottomBar.layout.height)) return;
+            _settings.style.bottom = Mathf.Max(0f, h - BottomBar.ChangeCoordinatesTo(_overlay, Vector2.zero).y) + 8f;
+        }
+
+        public void CloseSettings() => _settings?.RemoveFromClassList("ha-settings--open");
+
+        /// <summary>Open the sheet on tab 0-2 (Audio, Display, Game): the layout tests.</summary>
+        public void ShowSettingsTab(int tab) { OpenSettings(); _settingsTab = Mathf.Clamp(tab, 0, Tabs.Length - 1); FillSettings(); }
+
+        void FillSettings()
+        {
+            var tabs = _settings.Query<Button>(className: "ha-tab").ToList();
+            for (int i = 0; i < Tabs.Length; i++) tabs[i].EnableInClassList("ha-tab--on", i == _settingsTab);
+            _settingsRows.Clear();
+            foreach (var (label, value, tap) in SettingsRows(_settingsTab))
+            {
+                var row = Add(_settingsRows, "ha-set-row");
+                AddLabel(row, "ha-set-label", label);
+                var t = tap;
+                var b = new Button(() => { t(); FillSettings(); }) { text = value() };
+                b.AddToClassList("ha-set-value");
+                b.EnableInClassList("ha-set-value--off", b.text is "Off" or "0%");
+                row.Add(b);
+            }
+        }
+
         void ToggleSheet()
         {
             if (SheetOpen) { CloseSheet(); return; }
+            CloseSettings();
             _sheet.Clear();
             foreach (var (label, act) in _items())
             {
@@ -136,6 +242,9 @@ namespace PoOlympic
                 Fps.EnableInClassList("ha-fps-low", _fps < target * 0.5f);
             }
             if (SheetOpen) PlaceSheet();
+            if (SettingsOpen) PlaceSettings();
+            // the debug key on screens without a PerfOverlay (it reads the key itself where there is one)
+            if (PerfOverlay.Instance == null && Application.isPlaying && PerfOverlay.DebugKeyPressed) { DebugOn = !DebugOn; _debugNext = 0f; }
 
             bool on = DebugOn;
             DebugPanel.EnableInClassList("ha-debug--on", on);
@@ -151,9 +260,21 @@ namespace PoOlympic
             _debugNext = Time.unscaledTime + 1f;
             var n = SafeArea();
             string screen = $"{Screen.width}×{Screen.height} · safe {n.width * 100f:0}×{n.height * 100f:0}%";
-            DebugPanel.text = PerfOverlay.Instance != null && !string.IsNullOrEmpty(PerfOverlay.Line)
+            string extra = DebugExtra?.Invoke();
+            DebugPanel.text = (PerfOverlay.Instance != null && !string.IsNullOrEmpty(PerfOverlay.Line)
                 ? PerfOverlay.Line + " · " + screen
-                : $"{(float.IsNaN(_fps) ? "—" : _fps.ToString("0"))} fps · {screen}";
+                : $"{(float.IsNaN(_fps) ? "—" : _fps.ToString("0"))} fps · {screen}") + (string.IsNullOrEmpty(extra) ? "" : "\n" + extra);
+        }
+
+        /// <summary>GUI-space rectangle (pixels, y down) for the IMGUI dev HUDs (testbeds, the stadium hub): the camera's
+        /// view, kept inside the screen's safe area (status bar, camera cut-out, gesture bar).</summary>
+        public static Rect GuiArea(Camera cam)
+        {
+            var r = cam != null ? cam.pixelRect : new Rect(0, 0, Screen.width, Screen.height);
+            var n = SafeArea();
+            var s = new Rect(n.x * Screen.width, n.y * Screen.height, n.width * Screen.width, n.height * Screen.height);
+            float x0 = Mathf.Max(r.xMin, s.xMin), x1 = Mathf.Min(r.xMax, s.xMax), y0 = Mathf.Max(r.yMin, s.yMin), y1 = Mathf.Min(r.yMax, s.yMax);
+            return new Rect(x0, Screen.height - y1, Mathf.Max(0f, x1 - x0), Mathf.Max(0f, y1 - y0));
         }
 
         /// <summary>Panel-space rectangle of the safe area inside a panel of the given size (y down).</summary>

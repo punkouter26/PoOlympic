@@ -26,6 +26,7 @@ import mujoco
 import numpy as np
 
 from .. import bodies
+from .. import action_log as AL
 from .. import contract as C
 from .iron_pedestal import Traits, body_command, make_lanes  # noqa: F401 (body_command re-exported)
 
@@ -87,6 +88,7 @@ def prone_start(m, d, ln) -> None:
     d.qvel[dv:dv + 6] = 0.0
 
 
+@AL.logged("event_all_fours")
 def run_race(brains: dict[str, Path], seed: int, traits: list[Traits] | None = None, scene: Path = SCENE,
              layout_path: Path = LAYOUT, distance: float | None = None) -> CrawlResult:
     """distance: race length (default DISTANCE = 30 m; Event 23 The Trench Crawl: TRENCH_DISTANCE on TRENCH_SCENE)."""

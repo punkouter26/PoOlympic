@@ -119,8 +119,8 @@ namespace PoOlympic
             var parts = pose.GetComponentsInChildren<MeshFilter>(true);
             var skins = r.GetComponentsInChildren<SkinnedMeshRenderer>(false).Where(s => s.enabled && s.gameObject.activeInHierarchy).ToList();
             if (skins.Count == 0 || parts.Length == 0) return;
-            var pelvis = FindObjectsByType<MjBody>().FirstOrDefault(x => x.name == r.athletePrefix + "pelvis");
-            var hip = pelvis != null ? pelvis.transform.position : skins[0].bounds.center;
+            var pelvis = r.PelvisTransform;
+            var hip = pelvis != null ? pelvis.position : skins[0].bounds.center;
             slot.gameObject.SetActive(true);
             slot.SetPositionAndRotation(hip, Quaternion.identity);
             pose.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);

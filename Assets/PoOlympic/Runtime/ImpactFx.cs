@@ -26,6 +26,8 @@ namespace PoOlympic
         public ParticleSystem[] shockwaves;
         public VisualEffect[] sparks;
         public ParticleSystem[] sparksFallback;
+        [Tooltip("Ground marks (flat, long-lived): a scuff where a body slams down, a trail under a body part that slides.")]
+        public ParticleSystem[] marks;
         public CinemachineImpulseSource impulse;
 
         [Header("Thresholds")]
@@ -38,6 +40,8 @@ namespace PoOlympic
         [Tooltip("Shake + hit-stop from this slam force (body weights).")]
         public float bigSlamWeights = 3f;
         public float cubeHitStopWeights = 0.6f;
+        [Tooltip("A body part sliding on the ground faster than this (m/s) leaves scuff marks, one per slideMarkGap metres.")]
+        public float slideMarkSpeed = 1.5f, slideMarkGap = 0.35f;
 
         [Header("Hit-stop")]
         public bool hitStop = true;
@@ -49,10 +53,11 @@ namespace PoOlympic
 
         public int Emitted { get; private set; }
 
-        int _dust, _slam, _wave, _spark;
+        int _dust, _slam, _wave, _spark, _mark;
+        readonly Dictionary<AthleteTelemetry, Vector3> _lastMark = new();
         float _lastStop = -99f;
         bool _stopping;
-        float _stopBefore = 1f, _stopUntil;
+        float _stopUntil;
         IBroadcastBoard _board;
         bool _boardSearched;
         bool _vfxOk;
@@ -67,7 +72,7 @@ namespace PoOlympic
         void OnDisable()
         {
             AthleteTelemetry.Impact -= OnImpact;
-            if (_stopping) { Time.timeScale = 1f; _stopping = false; }
+            if (_stopping) { Time.timeScale = GameSettings.SimSpeed; _stopping = false; }
         }
 
         void OnImpact(ImpactEvent e)
@@ -86,6 +91,7 @@ namespace PoOlympic
                     float s = Mathf.Clamp01((e.weightRatio - need) / (bigSlamWeights * 2f));
                     Burst(slamDust, ref _slam, e.position + Vector3.up * 0.03f, s);
                     Burst(shockwaves, ref _wave, new Vector3(e.position.x, e.position.y + 0.02f, e.position.z), s);
+                    if (GameSettings.ImpactMarks) Burst(marks, ref _mark, e.position + Vector3.up * 0.012f, s);
                     if (e.weightRatio >= bigSlamWeights * (need / slamMinWeights)) Big(e, 0.25f + 0.5f * s);
                     break;
                 case ImpactEvent.Kind.CubeHit:
@@ -144,7 +150,6 @@ namespace PoOlympic
             if (!hitStopWhileLive && HeatLive()) return;                // no slow motion during the race
             _stopping = true;
             _lastStop = Time.unscaledTime;
-            _stopBefore = Time.timeScale;
             _stopUntil = Time.realtimeSinceStartup + hitStopSeconds;
             Time.timeScale = 0f;
         }
@@ -163,10 +168,24 @@ namespace PoOlympic
             return _board == null || _board.BoardState == BoardPhase.Live;
         }
 
+        /// <summary>Scuff trail: a body part dragged along the ground (a fall that slides, a crawler's knees).</summary>
+        void SlideMarks()
+        {
+            if (marks == null || marks.Length == 0 || !GameSettings.ImpactMarks) return;
+            foreach (var t in AthleteTelemetry.All)
+            {
+                if (t == null || !t.Ready || t.SlideSpeed < slideMarkSpeed) continue;
+                if (_lastMark.TryGetValue(t, out var last) && (t.SlidePoint - last).sqrMagnitude < slideMarkGap * slideMarkGap) continue;
+                _lastMark[t] = t.SlidePoint;
+                Burst(marks, ref _mark, t.SlidePoint + Vector3.up * 0.012f, 0f);
+            }
+        }
+
         void Update()
         {
+            SlideMarks();
             if (!_stopping || Time.realtimeSinceStartup < _stopUntil) return;
-            Time.timeScale = _stopBefore > 0f ? _stopBefore : 1f;
+            Time.timeScale = GameSettings.SimSpeed;       // the viewing speed chosen meanwhile, not the one before the stop
             _stopping = false;
         }
     }

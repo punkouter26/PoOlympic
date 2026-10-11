@@ -3,6 +3,8 @@ using System.Linq;
 using Mujoco;
 using Unity.Cinemachine;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 namespace PoOlympic
 {
@@ -93,16 +95,35 @@ namespace PoOlympic
         public float minPositionDamping = 0.6f, minAimDamping = 0.5f;
         [Tooltip("Hand-held noise caps (amplitude 0 = tripod).")]
         public float handheldAmplitude = 0.15f, handheldFrequency = 0.5f;
-        [Tooltip("Camera shake from body slams (Cinemachine impulse gain; 0 = none).")]
+        [Tooltip("Camera shake from body slams (Cinemachine impulse gain; 0 = none). The player's Camera shake setting " +
+                 "(GameSettings.CameraShake, off by default) adds up to shakeSettingGain on top.")]
         public float impactShakeGain = 0f;
+        public float shakeSettingGain = 0.5f;
+
+        [Header("Tension framing (GameSettings.TensionZoom / FocusBlur)")]
+        [Tooltip("Close-ups narrow their lens by this share as the athlete on camera gets into trouble (eased over zoomSeconds).")]
+        public float tensionZoom = 0.18f;
+        public float zoomSeconds = 1.2f;
+        [Tooltip("Close-ups: the background goes soft from this far behind the athlete (m) to focusFar; 0 radius = off.")]
+        public float focusNear = 2f, focusFar = 14f, focusRadius = 1f;
+        [Tooltip("Follow spot on the athlete the shot is about (scene object, BroadcastFX/FocusSpot): intensity at full " +
+                 "tension, and its height / offset behind the athlete (m).")]
+        public Light focusSpot;
+        public float spotIntensity = 40f, spotHeight = 9f, spotBack = 3f;
 
         public Shot Current => _shotNow;
+        /// <summary>Spectator focus lock (BroadcastHud: tap a standings row): while the heat is live the close-up stays
+        /// on this athlete — no context shots, no near-fall cuts — until it is cleared or the athlete is out.</summary>
+        public PolicyRunner FocusLock { get; set; }
+        /// <summary>Spectator orbit around the locked athlete (degrees, drag on the picture); 0 = the director's angle.</summary>
+        public float UserOrbitDeg { get; set; }
+        /// <summary>BroadcastHud: an instant replay is running (time is frozen): Cinemachine keeps following anyway.</summary>
+        public bool Replaying { set { if (_brain != null) _brain.IgnoreTimeScale = value; } }
         /// <summary>The athlete the live shot is about: the one close to falling (Hot), the winner at the result, else
         /// the current winner of the heat. The HUD stats card follows it.</summary>
         public PolicyRunner Subject { get; private set; }
 
         IBroadcastBoard B => board as IBroadcastBoard;
-        readonly Dictionary<PolicyRunner, Transform> _pelvis = new();
         float _shotClock;
         int _shot;
         BoardPhase _last = BoardPhase.Ready;
@@ -179,6 +200,85 @@ namespace PoOlympic
             _brain = GetComponent<CinemachineBrain>();
             if (tension == null) tension = FindAnyObjectByType<TensionMeter>();
             ApplyCalm();
+            InitLook();
+            GameSettings.Changed += ApplyShake;
+        }
+
+        void OnDestroy() => GameSettings.Changed -= ApplyShake;
+
+        void ApplyShake()
+        {
+            float gain = Mathf.Max(impactShakeGain, GameSettings.CameraShake * shakeSettingGain);
+            foreach (var c in new[] { wide, headOn, high, hot, winner, podium, leaderClose })
+                if (c != null && c.TryGetComponent<CinemachineImpulseListener>(out var shake)) shake.Gain = gain;
+        }
+
+        // ---------------------------------------------------------------- look: tension zoom, focus blur, glow, follow spot
+        Volume _volume;
+        DepthOfField _dof;
+        Bloom _bloom;
+        float _bloomBase, _pulse, _zoom, _closeFov, _hotFov;
+
+        /// <summary>The scene's global volume gets a runtime copy of its profile (Volume.profile), so nothing here is
+        /// written back to Settings/StadiumLook_Volume.asset.</summary>
+        void InitLook()
+        {
+            if (leaderClose != null) _closeFov = leaderClose.Lens.FieldOfView;
+            if (hot != null) _hotFov = hot.Lens.FieldOfView;
+            _volume = FindObjectsByType<Volume>(FindObjectsSortMode.None).FirstOrDefault(v => v.isGlobal && v.sharedProfile != null);
+            if (_volume == null) return;
+            var p = _volume.profile;
+            if (!p.TryGet(out _dof)) _dof = p.Add<DepthOfField>(false);
+            _dof.mode.Override(DepthOfFieldMode.Gaussian);
+            _dof.highQualitySampling.Override(false);
+            _dof.active = false;
+            if (p.TryGet(out _bloom)) _bloomBase = _bloom.intensity.value;
+        }
+
+        /// <summary>A short glow (BroadcastHud: new world record), with the follow spot flashing.</summary>
+        public void Pulse() => _pulse = 1f;
+
+        void UpdateLook(Transform target, bool closeUp)
+        {
+            float dt = Time.unscaledDeltaTime;
+            // lens: ease in on the athlete in trouble (slow — calm camera)
+            float danger = Subject != null && tension != null && tension.Danger.TryGetValue(Subject, out var dz) ? dz : 0f;
+            float want = GameSettings.TensionZoom && closeUp ? Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.3f, 0.9f, danger)) : 0f;
+            _zoom += (want - _zoom) * (1f - Mathf.Exp(-dt / Mathf.Max(0.05f, zoomSeconds)));
+            SetFov(leaderClose, _closeFov * (1f - tensionZoom * _zoom));
+            SetFov(hot, _hotFov * (1f - tensionZoom * _zoom));
+
+            _pulse = Mathf.Max(0f, _pulse - dt / 0.9f);
+            bool cinematic = GameSettings.FocusBlur;
+            if (_dof != null)
+            {
+                _dof.active = cinematic && closeUp && focusRadius > 0f && target != null;
+                if (_dof.active)
+                {
+                    float d = Vector3.Distance(transform.position, target.position);
+                    _dof.gaussianStart.Override(d + focusNear);
+                    _dof.gaussianEnd.Override(d + focusFar);
+                    _dof.gaussianMaxRadius.Override(focusRadius);
+                }
+            }
+            if (_bloom != null) _bloom.intensity.Override(_bloomBase * (1f + (cinematic ? 2.5f * _pulse : 0f)));
+
+            if (focusSpot == null) return;
+            float level = Mathf.Max(_pulse, tension != null ? Mathf.InverseLerp(0.45f, 0.9f, tension.Tension) : 0f);
+            focusSpot.enabled = target != null && level > 0.01f;
+            if (!focusSpot.enabled) return;
+            focusSpot.intensity = spotIntensity * level;
+            var f = new Vector3(forward.x, 0, forward.z).normalized;
+            var from = target.position + Vector3.up * spotHeight - f * spotBack;
+            focusSpot.transform.SetPositionAndRotation(from, Quaternion.LookRotation(target.position - from));
+        }
+
+        static void SetFov(CinemachineCamera cam, float fov)
+        {
+            if (cam == null || fov <= 1f) return;
+            var lens = cam.Lens;
+            lens.FieldOfView = fov;
+            cam.Lens = lens;
         }
 
         /// <summary>Calm camera on the rig the scene builder made (BroadcastFx): damping floors, hand-held noise caps, no
@@ -198,8 +298,8 @@ namespace PoOlympic
                     noise.AmplitudeGain = Mathf.Min(noise.AmplitudeGain, handheldAmplitude);
                     noise.FrequencyGain = Mathf.Min(noise.FrequencyGain, handheldFrequency);
                 }
-                if (c.TryGetComponent<CinemachineImpulseListener>(out var shake)) shake.Gain = impactShakeGain;
             }
+            ApplyShake();
             float p = Mathf.Max(1f, pacingScale);
             minShotSeconds *= p; closeupSeconds *= p; contextSeconds *= p; leaderSwitchSeconds *= p; hotCooldown *= p;
         }
@@ -212,14 +312,7 @@ namespace PoOlympic
             return (lead.t != null ? lead.t : bodies[0].t).position;
         }
 
-        Transform Pelvis(PolicyRunner r)
-        {
-            if (r == null) return null;
-            if (_pelvis.TryGetValue(r, out var t) && t != null) return t;
-            var body = FindObjectsByType<MjBody>(FindObjectsSortMode.None).FirstOrDefault(b => b.name == r.athletePrefix + "pelvis");
-            _pelvis[r] = body != null ? body.transform : null;
-            return _pelvis[r];
-        }
+        Transform Pelvis(PolicyRunner r) => r != null ? r.PelvisTransform : null;      // cached by the runner, misses too
 
         void LateUpdate()
         {
@@ -287,7 +380,13 @@ namespace PoOlympic
                     bool hotOk = _hotRunner != null && bodies.Any(x => x.r.runner == _hotRunner && !x.r.bad);
                     // no shot shorter than minShotSeconds; the winner close-up is only interrupted after 3/4 of its time
                     bool canCut = _shotHeld >= (_shotNow == Shot.Leader ? Mathf.Max(minShotSeconds, closeupSeconds * 0.75f) : minShotSeconds);
-                    if (_shotNow == Shot.Hot && hotOk && (_hotClock < minShotSeconds ||
+                    if (FocusLock != null && (leaderClose == null || !bodies.Any(x => x.r.runner == FocusLock && !x.r.bad))) { FocusLock = null; UserOrbitDeg = 0f; }
+                    if (FocusLock != null)
+                    {
+                        want = Shot.Leader;                                  // the spectator's athlete, for as long as they like
+                        if (_closeRunner != FocusLock) { _closeRunner = FocusLock; _closeSince = now; }
+                    }
+                    else if (_shotNow == Shot.Hot && hotOk && (_hotClock < minShotSeconds ||
                         (tension != null && tension.Danger.TryGetValue(_hotRunner, out var dz) && dz > 0.35f && _hotClock < 7f)))
                         want = Shot.Hot;                                     // stay with the athlete in trouble
                     else if (hotRunner != null && _shotNow != Shot.Hot && canCut &&
@@ -349,7 +448,8 @@ namespace PoOlympic
                 var lf = FaceOf(_closeRunner);
                 // in front, a little to the side, from chest height: 3.2 m with a 42° lens = the whole body, face visible
                 // (user, 2026-09-29: "back up about 2 feet so the whole body is in picture")
-                SetOffset(leaderClose, leaderProxy, lf * 3.2f + Vector3.Cross(Vector3.up, lf) * 1.0f + Vector3.up * (crawl ? 0.4f : 0.45f));
+                var around = Quaternion.AngleAxis(FocusLock != null ? UserOrbitDeg : 0f, Vector3.up);
+                SetOffset(leaderClose, leaderProxy, around * (lf * 3.2f + Vector3.Cross(Vector3.up, lf) * 1.0f) + Vector3.up * (crawl ? 0.4f : 0.45f));
             }
             SetOffset(winner, winnerProxy, f * 5.5f - left * 3.2f + Vector3.up * 1.2f);
 
@@ -357,6 +457,8 @@ namespace PoOlympic
             Subject = want == Shot.Hot ? _hotRunner
                     : want == Shot.Winner || want == Shot.Podium ? w.r.runner
                     : _closeRunner != null ? _closeRunner : bodies.FirstOrDefault(x => !x.r.bad).r.runner;
+            UpdateLook(want == Shot.Hot ? hotProxy : want == Shot.Leader ? leaderProxy : want == Shot.Winner ? winnerProxy : Pelvis(Subject),
+                       want == Shot.Hot || want == Shot.Leader || want == Shot.Winner);
         }
 
         bool _liveSet, _snap;

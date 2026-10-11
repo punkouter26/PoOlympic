@@ -94,3 +94,26 @@ def kim_rung2_flight_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     cfg.rewards["flight_landing"] = RewardTermCfg(func=mdp.flight_landing, weight=4.0, params={
         "command_name": "athlete", "speed_threshold": 2.2 * ss, "min_s": 0.04 * ts, "cap_s": 0.12 * ts})
     return cfg
+
+
+# ---- 2026-10-11 audit: opt-in variants ---------------------------------------------------------------------------------
+def kim_rung0_full_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """k0_v2's recipe (Rung0-Tight = kim_rung0) + DESIGN §5's foot-slip and CoM-over-support terms. Warm start: k0_v2
+    it 400 (plain_init)."""
+    from .matt_env import add_rung0_full
+    return add_rung0_full(kim_rung0_tight_env_cfg(play=play), GE.LAM)
+
+
+def kim_rung2_ramp_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """k2_v3's recipe (Bands2 = kim_rung2) + shove ramp, solref DR, privileged critic. Warm start k2_v3 it 600."""
+    from .matt_env import add_ramp_recipe
+    return add_ramp_recipe(kim_rung2_bands2_env_cfg(play=play))
+
+
+def kim_rung2_bio_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """Contract v5 proposal on KIM (docs/CONTRACT_V5_FATIGUE_PROPOSAL.md): k2_v3's recipe (Bands2) with the torque-speed
+    limit and the fatigue model in the physics, the six fatigue levels as observations (84 -> 90) and the privileged
+    critic. One change at a time: the shoves and DR are k2_v3's. Warm start k2_v3 it 600 with zero columns for the new
+    inputs (tools/expand_obs.py --actor-zeros 6 --critic-zeros 14): the same function at iteration 0."""
+    from .matt_env import add_bio_limits, add_privileged_critic
+    return add_privileged_critic(add_bio_limits(kim_rung2_bands2_env_cfg(play=play)))

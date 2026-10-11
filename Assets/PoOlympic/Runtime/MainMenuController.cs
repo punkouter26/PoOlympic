@@ -221,7 +221,7 @@ namespace PoOlympic
                     for (int k = 0; k < _lineup.Length; k++) _lineup[k] = MeetLineup.Roster[k % MeetLineup.Roster.Length];
                     RefreshSlots();
                 });
-            yield return (HudAnchors.DebugOn ? "Performance: hide" : "Performance: show", () => HudAnchors.DebugOn = !HudAnchors.DebugOn);
+            yield return ("Settings", _anchors.OpenSettings);
             yield return ($"Demo mode (starts by itself after {idleDemoSeconds:0} s idle)", StartDemo);
             if (DemoSeason.SeriesPlayed > 0) yield return ("Demo season: reset", () => { DemoSeason.Reset(); UpdateStatus(); });
         }
@@ -229,9 +229,7 @@ namespace PoOlympic
         static Label Chip(string athlete)
         {
             var chip = MakeLabel(athlete.Substring(0, 1), "menu-chip");
-            chip.EnableInClassList("menu-chip--zombie", athlete == "ZOMBIE");
-            chip.EnableInClassList("menu-chip--grandma", athlete == "GRANDMA");
-            chip.EnableInClassList("menu-chip--kim", athlete == "KIM");
+            chip.AddToClassList("menu-chip--" + athlete.ToLowerInvariant());
             return chip;
         }
 
@@ -269,9 +267,7 @@ namespace PoOlympic
             {
                 var (tile, name) = _slots[k];
                 name.text = _lineup[k] ?? "empty";
-                tile.EnableInClassList("slot--zombie", _lineup[k] == "ZOMBIE");
-                tile.EnableInClassList("slot--grandma", _lineup[k] == "GRANDMA");
-                tile.EnableInClassList("slot--kim", _lineup[k] == "KIM");
+                foreach (var a in MeetLineup.Roster) tile.EnableInClassList("slot--" + a.ToLowerInvariant(), _lineup[k] == a);
                 tile.EnableInClassList("slot--sub", _lineup[k] != null && !InEvent(_lineup[k]));   // sits this event out
                 tile.EnableInClassList("slot--fixed", LineupFixed);
             }
@@ -407,7 +403,7 @@ namespace PoOlympic
             }
             Gauntlet.Abandon();
             MeetLineup.Set(_lineup, _selected.number);
-            SceneManager.LoadScene(_selected.scene);
+            MeetLineup.Load(_selected.scene);
         }
     }
 }

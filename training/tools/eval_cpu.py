@@ -30,7 +30,12 @@ def main() -> int:
     ap.add_argument("--seeds", type=int, default=10)
     ap.add_argument("--first-seed", type=int, default=1000)
     ap.add_argument("--out", type=Path, default=None)
+    ap.add_argument("--log-actions", nargs="?", const="1", default=None, metavar="RUN",
+                    help="per-tick action log -> parity/actions/<RUN, default the brain's name>/ (poolympic/action_log.py)")
     a = ap.parse_args()
+    if a.log_actions:
+        import os
+        os.environ[E.AL.ENV] = a.log_actions
     if str(a.rung).upper() == "S":
         return stance(a)
     a.rung = int(a.rung)

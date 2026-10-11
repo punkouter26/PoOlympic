@@ -47,3 +47,9 @@ MUJOCO_LOG.TXT
 # Blender auto-backups
 *.blend1
 training/runs_archive/
+
+# Android Gradle / CMake intermediates of the Unity build
+.utmp/
+
+# per-tick action logs (ActionLog.cs, watch_gate.py --log-actions): large, regenerated
+parity/actions/

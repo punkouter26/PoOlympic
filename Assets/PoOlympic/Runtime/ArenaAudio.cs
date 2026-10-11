@@ -32,6 +32,10 @@ namespace PoOlympic
         public AudioSource[] voices;                   // 3D pool
         public AudioSource[] crowdSectors;             // 3D crowd loops on the stands
         public AudioSource pa, eventSfx;
+        [Tooltip("3D loop that follows the fastest-sliding body part (AthleteTelemetry.SlideSpeed): scrape / foot drag.")]
+        public AudioSource scrape;
+        [Tooltip("Slide speed (m/s) where the scrape starts and where it is at full volume.")]
+        public float scrapeFrom = 1.2f, scrapeFull = 4.5f, scrapeMax = 0.45f;
         public AudioLowPassFilter listenerLowPass;
 
         [Header("Clips")]
@@ -59,6 +63,11 @@ namespace PoOlympic
         public float photoFinishGap = 0.25f;
 
         IBroadcastBoard B => board as IBroadcastBoard;
+        // the player's volume settings on top of the scene's mix (GameSettings; the mixer snapshots still duck per phase)
+        float Master => master * GameSettings.VolMaster;
+        float CrowdVol => Master * GameSettings.VolCrowd;
+        float SfxVol => Master * GameSettings.VolSfx;
+        float PaVol => Master * GameSettings.VolAnnouncer;
         int _voice, _heat = -1;
         string _banner = "";
         BoardPhase _phase = BoardPhase.Ready;
@@ -105,7 +114,7 @@ namespace PoOlympic
             float now = Time.unscaledTime;
             float t = tension != null ? tension.Tension : 0.3f;
             float k = 1f - Mathf.Exp(-3f * Time.unscaledDeltaTime);
-            float bedTarget = master * Mathf.Lerp(bedMin, bedMax, t);
+            float bedTarget = CrowdVol * Mathf.Lerp(bedMin, bedMax, t);
             if (bed != null)
             {
                 bed.volume = Mathf.Lerp(bed.volume, bedTarget * (crowdSectors != null && crowdSectors.Length > 0 ? 0.55f : 1f), k);
@@ -115,10 +124,11 @@ namespace PoOlympic
                 foreach (var s in crowdSectors)
                     if (s != null) { s.volume = Mathf.Lerp(s.volume, bedTarget * 0.9f, k); s.pitch = bed != null ? bed.pitch : 1f; }
             if (tensionLayer != null)
-                tensionLayer.volume = Mathf.Lerp(tensionLayer.volume, master * tensionMax * Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(tensionFrom, tensionFull, t)), k);
+                tensionLayer.volume = Mathf.Lerp(tensionLayer.volume, CrowdVol * tensionMax * Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(tensionFrom, tensionFull, t)), k);
 
             HitStopFilter();
             Shutters(now);
+            Scrape();
 
             var b = B;
             if (b != null)
@@ -266,11 +276,11 @@ namespace PoOlympic
             float lead = 0f;
             if (chime && paChime != null)
             {
-                pa.PlayOneShot(paChime, 0.55f * master);
+                pa.PlayOneShot(paChime, 0.55f * PaVol);
                 lead = 0.75f;
             }
             if (lead > 0f) { _delayed = clip; _delayedAt = now + lead; }
-            else pa.PlayOneShot(clip, master);
+            else pa.PlayOneShot(clip, PaVol);
             _paBusyUntil = now + lead + clip.length + 0.25f;
         }
 
@@ -279,7 +289,7 @@ namespace PoOlympic
 
         void LateUpdate()
         {
-            if (_delayed != null && Time.unscaledTime >= _delayedAt) { pa.PlayOneShot(_delayed, master); _delayed = null; }
+            if (_delayed != null && Time.unscaledTime >= _delayedAt) { pa.PlayOneShot(_delayed, PaVol); _delayed = null; }
         }
 
         void Mix()
@@ -306,8 +316,36 @@ namespace PoOlympic
         {
             if (crowd == null || cameraFlash == null || eventSfx == null || crowd.FlashLevel <= 0f || now < _nextClick) return;
             eventSfx.pitch = Random(0.9f, 1.15f);
-            eventSfx.PlayOneShot(cameraFlash, 0.18f * master * crowd.FlashLevel);
+            eventSfx.PlayOneShot(cameraFlash, 0.18f * SfxVol * crowd.FlashLevel);
             _nextClick = now + Random(0.05f, 0.3f) / Mathf.Max(0.3f, crowd.FlashLevel);
+        }
+
+        /// <summary>Surface drag: one looping 3D voice on the body part that slides fastest over what it touches
+        /// (crawlers' knees, a fall that skids, a braking foot); volume and pitch follow the slide speed.</summary>
+        void Scrape()
+        {
+            if (scrape == null || scrape.clip == null) return;
+            AthleteTelemetry worst = null;
+            foreach (var t in AthleteTelemetry.All)
+                if (t != null && t.Ready && t.Contacts > 0 && (worst == null || t.SlideSpeed > worst.SlideSpeed)) worst = t;
+            float u = worst != null && Time.timeScale > 0.01f ? Mathf.InverseLerp(scrapeFrom, scrapeFull, worst.SlideSpeed) : 0f;
+            scrape.volume = Mathf.Lerp(scrape.volume, u * scrapeMax * SfxVol, 1f - Mathf.Exp(-12f * Time.unscaledDeltaTime));
+            if (u > 0f)
+            {
+                scrape.transform.position = worst.SlidePoint;
+                scrape.pitch = Mathf.Lerp(0.7f, 1.35f, u);
+                if (!scrape.isPlaying) scrape.Play();
+            }
+            else if (scrape.isPlaying && scrape.volume < 0.005f) scrape.Stop();
+        }
+
+        /// <summary>How a hit of `ratio` body weights sounds: loudness grows with the log of the force (as hearing does),
+        /// and big hits and heavy bodies sound lower (22 kg ZOMBIE ≈ +19 %, 80 kg MATT = 1).</summary>
+        static (float volume, float pitch) HitSound(ImpactEvent e, float ratio, float floor)
+        {
+            float mass = e.weightRatio > 0f ? e.forceN / (e.weightRatio * 9.81f) : 80f;
+            float size = Mathf.Pow(80f / Mathf.Clamp(mass, 15f, 120f), 0.14f);
+            return (Mathf.Clamp01(floor + 0.28f * Mathf.Log(1f + ratio, 2f)), size * Mathf.Lerp(1.1f, 0.82f, Mathf.InverseLerp(1f, 6f, ratio)));
         }
 
         void OnImpact(ImpactEvent e)
@@ -318,17 +356,19 @@ namespace PoOlympic
                     if (tension == null || tension.Hot != e.runner || e.speedMps < 0.4f) return;
                     if (_lastStep.TryGetValue(e.runner, out var last) && Time.time - last < 0.18f) return;
                     _lastStep[e.runner] = Time.time;
-                    Voice(Pick(footsteps), e.position, Mathf.Lerp(0.25f, 0.7f, e.speedMps / 4f), Random(0.92f, 1.08f));
+                    var (stepVol, stepPitch) = HitSound(e, e.weightRatio, 0f);
+                    Voice(Pick(footsteps), e.position, Mathf.Clamp(stepVol, 0.2f, 0.7f), stepPitch * Random(0.95f, 1.05f));
                     break;
                 case ImpactEvent.Kind.BodySlam:
                     float need = e.runner != null && e.runner.crawlSteering ? 2.5f : 1.0f;
                     if (e.weightRatio < need) return;
-                    Voice(e.weightRatio > 3f * need ? Pick(bodySlams) : Pick(thuds), e.position,
-                          Mathf.Clamp01(0.35f + 0.15f * e.weightRatio / need), Random(0.9f, 1.05f));
+                    var (slamVol, slamPitch) = HitSound(e, e.weightRatio / need, 0.15f);
+                    Voice(e.weightRatio > 3f * need ? Pick(bodySlams) : Pick(thuds), e.position, slamVol, slamPitch * Random(0.96f, 1.04f));
                     break;
                 case ImpactEvent.Kind.CubeHit:
                     if (e.weightRatio < 0.1f) return;
-                    Voice(Pick(cubeHits), e.position, Mathf.Clamp01(0.5f + e.weightRatio), Random(0.95f, 1.1f));
+                    // a cube is 2 kg whoever it hits: its own pitch, louder with the force
+                    Voice(Pick(cubeHits), e.position, Mathf.Clamp01(0.4f + 0.3f * Mathf.Log(1f + 4f * e.weightRatio, 2f)), Random(0.95f, 1.1f));
                     break;
             }
         }
@@ -340,7 +380,7 @@ namespace PoOlympic
             _voice = (_voice + 1) % voices.Length;
             v.transform.position = at;
             v.pitch = pitch;
-            v.PlayOneShot(clip, volume * master);
+            v.PlayOneShot(clip, volume * SfxVol);
         }
 
         void Event(AudioClip clip, float volume)
@@ -349,11 +389,11 @@ namespace PoOlympic
             var s = eventSfx != null ? eventSfx : stinger;
             if (s == null) return;
             s.pitch = 1f;
-            s.PlayOneShot(clip, volume * master);
+            s.PlayOneShot(clip, volume * SfxVol);
         }
 
-        void Stinger(AudioClip clip, float volume) { if (clip != null && stinger != null) stinger.PlayOneShot(clip, volume * master); }
-        void Ui(AudioClip clip, float volume) { if (clip != null && ui != null) ui.PlayOneShot(clip, volume * master); }
+        void Stinger(AudioClip clip, float volume) { if (clip != null && stinger != null) stinger.PlayOneShot(clip, volume * CrowdVol); }
+        void Ui(AudioClip clip, float volume) { if (clip != null && ui != null) ui.PlayOneShot(clip, volume * Master); }
         AudioClip Pick(AudioClip[] clips) => clips == null || clips.Length == 0 ? null : clips[_rng.Next(clips.Length)];
         float Random(float a, float b) => a + (float)_rng.NextDouble() * (b - a);
     }

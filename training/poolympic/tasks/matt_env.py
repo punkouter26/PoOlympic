@@ -34,23 +34,25 @@ from mjlab.utils.spec_config import CollisionCfg
 from mjlab.viewer import ViewerConfig
 
 from .. import contract as C
+from ..bodies import FALL_PELVIS_Z, FALL_TILT_DEG, JOINT_VEL_LIMIT, MATT_ROOT_Z
 from . import mdp
 
 # MATT or a MATT variant (bodies.BODIES["mattbio"]: same rig, same contract, own MJCF)
 MATT_XML = C.BODY.robot_xml if C.BODY.family == "matt" else C.ROOT / "assets" / "matt.xml"
 CUBE_XML = C.ROOT / "assets" / "cube.xml"
 N_CUBES = 4
-DEFAULT_ROOT_Z = 0.9549291  # scene_matt.xml keyframe "default"
+DEFAULT_ROOT_Z = MATT_ROOT_Z  # scene_matt.xml keyframe "default"
 CUBE_NAMES = tuple(f"cube{i}" for i in range(N_CUBES))
 FOOT_BODIES = ("foot_l", "toe_l", "foot_r", "toe_r")
 ALL_BITS = 0xFFFF
 
 
-def matt_entity_cfg() -> EntityCfg:
+def body_entity_cfg(robot_xml, root_z: float) -> EntityCfg:
+    """An athlete entity from its MJCF, standing in the contract's default pose (every body: MATT, zombie, GRANDMA, KIM)."""
     return EntityCfg(
-        spec_fn=lambda: mujoco.MjSpec.from_file(str(MATT_XML)),
+        spec_fn=lambda: mujoco.MjSpec.from_file(str(robot_xml)),
         init_state=EntityCfg.InitialStateCfg(
-            pos=(0.0, 0.0, DEFAULT_ROOT_Z),
+            pos=(0.0, 0.0, root_z),
             joint_pos={n: v for n, v in zip(mdp.CONTRACT_ACTUATORS, mdp.CONTRACT_DEFAULTS)} | {"toe_.*": 0.0},
             joint_vel={".*": 0.0},
         ),
@@ -61,6 +63,64 @@ def matt_entity_cfg() -> EntityCfg:
             soft_joint_pos_limit_factor=0.95,
         ),
     )
+
+
+def matt_entity_cfg() -> EntityCfg:
+    return body_entity_cfg(MATT_XML, DEFAULT_ROOT_Z)
+
+
+# ---- shared by the Froude-scaled bodies (zombie_env, grandma_env / kim_env) -----------------------------------------
+def scene_root_z(scene_xml) -> float:
+    """Standing pelvis height of a body: its scene's "default" keyframe."""
+    return float(mujoco.MjModel.from_xml_path(str(scene_xml)).key("default").qpos[2])
+
+
+def body_fall_z(root_z: float) -> float:
+    """MATT's fall rule at the same fraction of the body's standing pelvis height."""
+    return FALL_PELVIS_Z * root_z / DEFAULT_ROOT_Z
+
+
+def check_body(name: str) -> None:
+    if C.BODY.name != name:
+        raise RuntimeError(f"{name} tasks need POOLYMPIC_BODY={name} (contract/mdp load the active body's scene)")
+
+
+def scale_xy_range(r: dict, k: float) -> dict:
+    return {a: (lo * k, hi * k) for a, (lo, hi) in r.items()}
+
+
+def scaled_envelope(env: dict, ss: float, ws: float) -> dict:
+    """A MATT command envelope in another body's units (speeds x ss, yaw rates x ws)."""
+    return {"lin_vel_x": (env["lin_vel_x"][0] * ss, env["lin_vel_x"][1] * ss),
+            "lin_vel_y": (env["lin_vel_y"][0] * ss, env["lin_vel_y"][1] * ss),
+            "ang_vel_z": (env["ang_vel_z"][0] * ws, env["ang_vel_z"][1] * ws)}
+
+
+def scale_to_body(cfg: ManagerBasedRlEnvCfg, body, entity: EntityCfg, root_z: float) -> ManagerBasedRlEnvCfg:
+    """Swap a MATT env cfg onto another body and scale its size-dependent numbers (lengths x λ, speeds x √λ, rates
+    / √λ, torque penalty per relative effort); buffers sized for full self-collision. Style rewards: the caller."""
+    lam, ss, ws = body.length_scale, body.speed_scale, 1.0 / body.time_scale
+    cfg.scene.entities["robot"] = entity
+    cfg.terminations["pelvis_low"].params["minimum_height"] = body_fall_z(root_z)
+    ev = cfg.events
+    ev["reset_base"].params["pose_range"]["x"] = (-0.05 * lam, 0.05 * lam)
+    ev["reset_base"].params["pose_range"]["y"] = (-0.05 * lam, 0.05 * lam)
+    ev["reset_base"].params["velocity_range"] = scale_xy_range(ev["reset_base"].params["velocity_range"], ss)
+    ev["push_robot"].params["velocity_range"] = scale_xy_range(ev["push_robot"].params["velocity_range"], ss)
+    ev["drop_cube"].params.update({"height_above_shoulder": 1.5 * lam, "shoulder_above_pelvis": 0.55 * lam,
+                                   "xy_jitter": 0.15 * lam})
+    rw = cfg.rewards
+    if "height" in rw:
+        rw["height"].params.update({"target": root_z, "std": rw["height"].params["std"] * lam})
+    if "near_origin" in rw:
+        rw["near_origin"].params["std"] *= lam
+    if "still_lin" in rw:
+        rw["still_lin"].params["std"] *= ss
+    rw["joint_vel_limit"].params["limit"] = JOINT_VEL_LIMIT * ws
+    rw["torques"].weight = rw["torques"].weight / body.torque_scale ** 2      # same penalty for the same relative effort
+    cfg.sim.nconmax, cfg.sim.njmax = 160, 800                                # full self-collision: more contacts per env
+    cfg.viewer.distance = 3.5 * lam
+    return cfg
 
 
 def cube_entity_cfg(i: int) -> EntityCfg:
@@ -200,14 +260,14 @@ def matt_rung0_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
         "action_rate": RewardTermCfg(func=envs_mdp.action_rate_l2, weight=-0.05),
         "joint_limits": RewardTermCfg(func=envs_mdp.joint_pos_limits, weight=-1.0),
         "torques": RewardTermCfg(func=envs_mdp.joint_torques_l2, weight=-1e-5),
-        "joint_vel_limit": RewardTermCfg(func=mdp.joint_vel_limit_excess, weight=-0.5, params={"limit": 18.0}),
+        "joint_vel_limit": RewardTermCfg(func=mdp.joint_vel_limit_excess, weight=-0.5, params={"limit": JOINT_VEL_LIMIT}),
         "terminated": RewardTermCfg(func=envs_mdp.is_terminated, weight=-200.0),
     }
 
     terminations = {
         "time_out": TerminationTermCfg(func=envs_mdp.time_out, time_out=True),
-        "pelvis_low": TerminationTermCfg(func=mdp.pelvis_below, params={"minimum_height": 0.55}),
-        "torso_tilt": TerminationTermCfg(func=mdp.torso_tilt_exceeds, params={"limit_deg": 60.0}),
+        "pelvis_low": TerminationTermCfg(func=mdp.pelvis_below, params={"minimum_height": FALL_PELVIS_Z}),
+        "torso_tilt": TerminationTermCfg(func=mdp.torso_tilt_exceeds, params={"limit_deg": FALL_TILT_DEG}),
         "nonfoot_contact": TerminationTermCfg(func=mdp.nonfoot_ground_contact, params={"sensor_name": "nonfoot_ground"}),
     }
 
@@ -399,20 +459,23 @@ def matt_ppo_cfg(experiment: str, max_iterations: int) -> RslRlOnPolicyRunnerCfg
     )
 
 
+def feet_sensor_cfg() -> ContactSensorCfg:
+    """Ground contact + net ground reaction of each foot subtree (foot + toe), order (foot_l, foot_r)."""
+    return ContactSensorCfg(
+        name=mdp.FOOT_SENSOR,
+        primary=ContactMatch(mode="subtree", pattern=r"^(foot_l|foot_r)$", entity="robot"),
+        secondary=ContactMatch(mode="body", pattern="terrain"),
+        fields=("found", "force"),
+        reduce="netforce",
+        num_slots=1,
+        track_air_time=True,
+    )
+
+
 def matt_rung1_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     """Rung 1 — forward walk/run at a commanded speed with heading hold (30m Dash, Terminal Velocity)."""
     cfg = matt_rung0_env_cfg(play=play)
-    cfg.scene.sensors = cfg.scene.sensors + (
-        ContactSensorCfg(
-            name=mdp.FOOT_SENSOR,
-            primary=ContactMatch(mode="subtree", pattern=r"^(foot_l|foot_r)$", entity="robot"),
-            secondary=ContactMatch(mode="body", pattern="terrain"),
-            fields=("found", "force"),
-            reduce="netforce",
-            num_slots=1,
-            track_air_time=True,
-        ),
-    )
+    cfg.scene.sensors = cfg.scene.sensors + (feet_sensor_cfg(),)
     cmd = cfg.commands["athlete"]
     cmd.resampling_time_range = (5.0, 10.0)
     cmd.rel_standing_envs = 0.1
@@ -614,4 +677,99 @@ def matt_rung2_sym5_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     over |wz| up to ±1.1."""
     cfg = matt_rung2_sym4_env_cfg(play=play)
     cfg.commands["athlete"].sprint_fraction = 0.3
+    return cfg
+
+
+# ====================================================================================================================
+# 2026-10-11 audit: opt-in recipe pieces. Only the task IDs registered that day use them (Rung0-Full, Rung2-Ramp,
+# Kim-Rung2-Bio); every earlier ID builds what it always built (tools/dump_task_cfgs.py --diff).
+# ====================================================================================================================
+def self_contact_sensor_cfg(num_slots: int = 4) -> ContactSensorCfg:
+    """The athlete against itself (mdp.self_contact_force): the num_slots strongest self-contacts, contact-frame force.
+    Not part of any registered task — add it with a small negative weight when a policy leans on self-contact."""
+    return ContactSensorCfg(
+        name=mdp.SELF_SENSOR,
+        primary=ContactMatch(mode="subtree", pattern="pelvis", entity="robot"),
+        secondary=ContactMatch(mode="subtree", pattern="pelvis", entity="robot"),
+        fields=("found", "force"),
+        reduce="maxforce",
+        num_slots=num_slots,
+    )
+
+
+def add_rung0_full(cfg: ManagerBasedRlEnvCfg, lam: float = 1.0) -> ManagerBasedRlEnvCfg:
+    """DESIGN §5 lists "CoM over support, no foot slip" for Rung 0; the Rung 0 recipes never had them. Adds the feet
+    sensor (as Rung 1), foot_slip (Rung 1's weight) and com_over_support (std 0.10 m x λ: half a foot length)."""
+    if not any(getattr(s, "name", None) == mdp.FOOT_SENSOR for s in cfg.scene.sensors):
+        cfg.scene.sensors = cfg.scene.sensors + (feet_sensor_cfg(),)
+    cfg.rewards["foot_slip"] = RewardTermCfg(func=mdp.foot_slip, weight=-0.1)
+    cfg.rewards["com_over_support"] = RewardTermCfg(func=mdp.com_over_support, weight=0.5, params={"std": 0.10 * lam})
+    return cfg
+
+
+def matt_rung0_full_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """Rung 0 with every DESIGN §5 term. Warm start: r0_v2 (plain_init)."""
+    return add_rung0_full(matt_rung0_env_cfg(play=play))
+
+
+def add_shove_ramp(cfg: ManagerBasedRlEnvCfg) -> ManagerBasedRlEnvCfg:
+    """DESIGN §5 "intensity ramps when success > 80 %". The fixed-size shove box (±v per axis) becomes a shove of size
+    U(0, level) in a uniformly random direction; the level starts at the box's corner (√2 v: the largest shove the
+    recipe had) and moves by 3 % of v per PPO iteration — up while > 80 % of the ended episodes reached the time-out, down
+    while < 50 % did — to at most 2√2 v. Shoves are recorded for the privileged critic (mdp.priv_shove)."""
+    old = cfg.events["push_robot"]
+    v = max(abs(x) for r in old.params["velocity_range"].values() for x in r)
+    cfg.events["push_robot"] = EventTermCfg(func=mdp.push_gust, mode="interval", interval_range_s=old.interval_range_s,
+                                            params={"min_fraction": 0.0, "record": True})
+    cfg.curriculum = dict(cfg.curriculum or {})
+    cfg.curriculum["shove_ramp"] = CurriculumTermCfg(func=mdp.gust_curriculum, params={
+        "start": math.sqrt(2) * v, "step": 0.03 * v, "max_level": 2 * math.sqrt(2) * v, "up": 0.8, "down": 0.5,
+        "steps_per_it": 24})
+    return cfg
+
+
+def add_solref_dr(cfg: ManagerBasedRlEnvCfg) -> ManagerBasedRlEnvCfg:
+    """DESIGN §4 "restitution via solref" (missing until now): foot / toe contact time constant x U(0.8, 1.25) and
+    damping ratio x U(0.7, 1.0) per env (below 1 = a little bounce). Training only, like the other DR terms."""
+    if "dr_foot_friction" in cfg.events:                 # play configs have no DR
+        cfg.events["dr_foot_solref"] = EventTermCfg(func=mdp.dr_geom_solref, mode="startup", params={
+            "asset_cfg": SceneEntityCfg("robot", geom_names=(r"(foot|toe)_[lr]_geom0",)),
+            "ranges": {0: (0.8, 1.25), 1: (0.7, 1.0)}, "operation": "scale", "shared_random": True})
+    return cfg
+
+
+def add_privileged_critic(cfg: ManagerBasedRlEnvCfg) -> ManagerBasedRlEnvCfg:
+    """Asymmetric critic: the critic group (already noise-free) also sees what the actor cannot — ground reaction per
+    foot, this env's friction and mass scale, the shove just applied (mdp.PRIV_DIM values, mirrored by symmetry.py).
+    The actor group, the contract and the exported ONNX are untouched. Needs the feet sensor (Rung 1+)."""
+    t = cfg.observations["critic"].terms
+    t["priv_foot_force"] = ObservationTermCfg(func=mdp.priv_foot_force, params={"body_weight_n": BODY_WEIGHT_N})
+    t["priv_friction"] = ObservationTermCfg(func=mdp.priv_friction_scale, params={})
+    t["priv_mass"] = ObservationTermCfg(func=mdp.priv_mass_scale, params={})
+    t["priv_shove"] = ObservationTermCfg(func=mdp.priv_shove, params={})
+    return cfg
+
+
+def add_ramp_recipe(cfg: ManagerBasedRlEnvCfg) -> ManagerBasedRlEnvCfg:
+    """Rung2-Ramp = a body's production Rung 2 recipe + success-driven shove ramp + contact solref DR + privileged
+    critic. Warm start: the production checkpoint with 8 zero critic columns (tools/expand_obs.py --critic-zeros 8)."""
+    return add_privileged_critic(add_solref_dr(add_shove_ramp(cfg)))
+
+
+def matt_rung2_ramp_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """MATT: r2_v8 (Sym5) + the ramp recipe. Warm start r2_v8 it 600."""
+    return add_ramp_recipe(matt_rung2_sym5_env_cfg(play=play))
+
+
+def add_bio_limits(cfg: ManagerBasedRlEnvCfg, init_level_max: float = 0.8) -> ManagerBasedRlEnvCfg:
+    """Contract v5 proposal: torque-speed limit + fatigue in the physics (mdp.bio_force_limits, poolympic/biomech.py)
+    and the per-group fatigue level as an observation block after the v3 terms (actor 84 -> 90). Training episodes
+    start with each group's level at U(0, init_level_max) (play: fresh). Call BEFORE add_privileged_critic (critic
+    order: v3, fatigue, privileged)."""
+    fresh = "dr_strength" not in cfg.events              # play configs: no DR
+    cfg.events["bio_limits"] = EventTermCfg(func=mdp.bio_force_limits, mode="step", params={})
+    cfg.events["bio_limits_reset"] = EventTermCfg(func=mdp.bio_force_limits, mode="reset",
+                                                  params={"init_level_max": 0.0 if fresh else init_level_max})
+    for group in ("actor", "critic"):
+        cfg.observations[group].terms["fatigue"] = ObservationTermCfg(func=mdp.obs_fatigue, params={})
     return cfg

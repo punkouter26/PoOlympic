@@ -57,8 +57,7 @@ namespace PoOlympic
         void OnGUI()
         {
             var cam = Camera.main;
-            var r = cam != null ? cam.pixelRect : new Rect(0, 0, Screen.width, Screen.height);
-            var area = new Rect(r.x, Screen.height - r.yMax, r.width, r.height); // GUI space is y-down
+            var area = HudAnchors.GuiArea(cam);
             GUI.Label(new Rect(area.x + 10, area.y + 8, 300, 24), title);
             GUI.Label(new Rect(area.x + 10, area.y + 30, 300, 24), $"t {Time.fixedTime:F2} s · tick {(runner ? runner.ControlTick : 0)}");
             GUI.Label(new Rect(area.x + area.width * 0.5f - 40, area.y + 8, 80, 24), $"FPS {_fps:F0}");

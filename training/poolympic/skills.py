@@ -120,7 +120,7 @@ def shoulder_in_heading(d: mujoco.MjData, m: mujoco.MjModel, arm: int, prefix: s
     return np.array([c * rel[0] + s * rel[1], -s * rel[0] + c * rel[1], rel[2]])
 
 
-REACH_AZ = (math.radians(-30), math.radians(90))      # = tasks/skill_mdp.py: forward .. the arm's own side
+REACH_AZ = (math.radians(-30), math.radians(90))      # target direction from the shoulder: forward .. the arm's own side (tasks/skill_mdp.py imports these)
 REACH_EL = (math.radians(-40), math.radians(60))
 REACH_FRAC = (0.45, 0.95)                             # of the reach radius
 

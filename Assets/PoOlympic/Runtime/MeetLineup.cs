@@ -36,7 +36,31 @@ namespace PoOlympic
 
         public static void ReturnToMenu()
         {
-            if (MenuAvailable) SceneManager.LoadScene(MenuScene);
+            if (!MenuAvailable) return;
+            GameSettings.SimSpeed = 1f;
+            Load(MenuScene);
+        }
+
+        static int _loadFrame = -1;
+        /// <summary>A scene load was requested this frame (callers that change state before Load check this first).</summary>
+        public static bool Loading => _loadFrame == Time.frameCount;
+
+        /// <summary>The one place a scene is loaded. LoadScene switches at the next frame, so a second request in the
+        /// same frame (a double tap, the demo watchdog and the HUD countdown together) is dropped: false.</summary>
+        public static bool Load(string scene)
+        {
+            if (_loadFrame == Time.frameCount) return false;
+            _loadFrame = Time.frameCount;
+            SceneManager.LoadScene(scene);
+            return true;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics()
+        {
+            Athletes = Enumerable.Repeat(Roster[0], 8).ToArray();
+            EventNumber = 1;
+            _loadFrame = -1;
         }
     }
 
@@ -72,7 +96,16 @@ namespace PoOlympic
         static void Load()
         {
             MeetLineup.Set(MeetLineup.Athletes, Events[Index]);
-            SceneManager.LoadScene(_scenes[Index]);
+            MeetLineup.Load(_scenes[Index]);
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics()
+        {
+            Abandon();
+            _scenes = Array.Empty<string>();
+            Array.Clear(_points, 0, _points.Length);
+            LastResult = "";
         }
 
         /// <summary>Lane number (1-8) from a HUD name such as "L3", "Z3", "S8", "M1".</summary>
@@ -101,6 +134,7 @@ namespace PoOlympic
 
         public static void Next()
         {
+            if (MeetLineup.Loading) return;      // a scene is already on its way: Load would drop this one, with Index moved on
             if (IsLast)
             {
                 LastResult = string.Join("\n", Table().Take(3).Select((x, i) => $"{i + 1}. {x.lane} — {x.points} pts"));

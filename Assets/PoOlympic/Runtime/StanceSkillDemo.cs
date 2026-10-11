@@ -76,9 +76,10 @@ namespace PoOlympic
             };
             string label = cycle && _i >= 0 ? steps[_i].label : "Manual (PolicyRunner.skill)";
             string brain = runner.brain != null ? runner.brain.name : "no brain";
-            float w = Screen.width - 40;
+            var safe = HudAnchors.GuiArea(null);
+            float w = safe.width - 40;
             float h = _style.CalcHeight(new GUIContent(label), w);
-            var r = new Rect(20, Screen.height * 0.12f, w, h);
+            var r = new Rect(safe.x + 20, safe.y + safe.height * 0.12f, w, h);
             GUI.color = Color.black;
             GUI.Label(new Rect(r.x + 2, r.y + 2, r.width, r.height), label, _style);
             GUI.color = Color.white;

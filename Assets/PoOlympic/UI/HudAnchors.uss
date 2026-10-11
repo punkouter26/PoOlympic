@@ -95,10 +95,10 @@
     right: var(--po-gap);
     min-width: 440px;
     padding: var(--po-pad-s);
-    background-color: rgba(10, 16, 30, 0.97);
+    background-color: var(--po-sheet);
     border-width: 2px;
     border-color: var(--po-gold);
-    border-radius: 14px;
+    border-radius: var(--po-radius-l);
     display: none;
 }
 .ha-sheet--open { display: flex; }
@@ -116,6 +116,56 @@
 }
 .ha-sheet-item:hover { background-color: var(--po-card-hover); }
 
+/* settings: one tabbed sheet docked at the bottom (thumb reach), over the content */
+.ha-settings {
+    position: absolute;
+    left: var(--po-gap);
+    right: var(--po-gap);
+    bottom: var(--po-gap);
+    padding: var(--po-pad);
+    background-color: var(--po-dock);
+    border-width: 2px;
+    border-color: var(--po-gold);
+    border-radius: var(--po-radius-l);
+    display: none;
+}
+.ha-settings--open { display: flex; }
+.ha-settings-head { flex-direction: row; margin-bottom: var(--po-pad-s); }
+.ha-tab {
+    flex-grow: 1;
+    flex-basis: 0;
+    height: var(--po-btn);
+    -unity-text-align: middle-center;
+    margin: 0 4px;
+    padding: 0;
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
+    font-size: var(--po-text-m);
+    color: var(--po-soft);
+    background-color: var(--po-card);
+    border-width: 0;
+    border-radius: var(--po-radius);
+}
+.ha-tab:hover { background-color: var(--po-card-hover); }
+.ha-tab--on { color: var(--po-ink); background-color: var(--po-gold); }
+.ha-tab-done { color: var(--po-ink); background-color: var(--po-green); }
+.ha-set-row { flex-direction: row; align-items: center; height: 88px; padding: 0 var(--po-pad-s); }
+.ha-set-label { flex-grow: 1; flex-shrink: 1; font-size: var(--po-text-m); color: var(--po-fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ha-set-value {
+    width: 240px;
+    height: var(--po-chip);
+    -unity-text-align: middle-center;
+    margin: 0;
+    padding: 0;
+    flex-shrink: 0;
+    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
+    font-size: var(--po-text-m);
+    color: var(--po-ink);
+    background-color: var(--po-cyan);
+    border-width: 0;
+    border-radius: var(--po-radius);
+}
+.ha-set-value--off { color: var(--po-soft); background-color: var(--po-card); }
+
 /* debug panel: grows up from BL */
 .ha-debug {
     position: absolute;
@@ -126,7 +176,7 @@
     font-size: var(--po-text);
     -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
     white-space: normal;
-    color: rgb(120, 255, 170);
+    color: var(--po-debug);
     background-color: rgba(0, 0, 0, 0.7);
     border-radius: 8px;
     display: none;

@@ -25,6 +25,18 @@ namespace PoOlympic
         static (int number, string scene)[] _events = Array.Empty<(int, string)>();
         static int _advancedAt = -1;                           // Gauntlet stage already advanced (one Advance per stage)
 
+        // Play mode starts without a domain reload (EditorSettings: enter play mode options): statics from the last
+        // session would otherwise still say "demo running".
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics()
+        {
+            Active = false;
+            Theme = "";
+            Series = 0;
+            _events = Array.Empty<(int, string)>();
+            _advancedAt = -1;
+        }
+
         public static void Begin(IEnumerable<(int number, string scene)> events)
         {
             _events = events.Where(e => Application.CanStreamedLevelBeLoaded(e.scene)).ToArray();
@@ -186,6 +198,10 @@ namespace PoOlympic
         const int MaxExceptions = 10;
 
         static DemoRunner _instance;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() => _instance = null;
+
         float _sceneStart, _phaseStart;
         BoardPhase? _phase;
         int _exceptions;

@@ -26,6 +26,7 @@ from pathlib import Path
 import mujoco
 import numpy as np
 
+from .. import action_log as AL
 from .. import contract as C
 from .iron_pedestal import Traits, _Lane, make_lanes
 
@@ -124,6 +125,7 @@ class _MarchJudge:
         return self.knees[0].take() + self.knees[1].take()
 
 
+@AL.logged("event_march")
 def run_heat(onnx, seed: int, traits: list[Traits] | None = None, scene=None, layout_path=None) -> MarchResult:
     m = mujoco.MjModel.from_xml_path(str(scene or SCENE))
     d = mujoco.MjData(m)

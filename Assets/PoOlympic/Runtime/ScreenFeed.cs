@@ -36,6 +36,7 @@ namespace PoOlympic
         bool _camInit;
         PolicyRunner _subject;
         BroadcastDirector _director;
+        bool _directorSearched;
         Transform _subjectPelvis;
 
         void OnEnable()
@@ -114,7 +115,7 @@ namespace PoOlympic
             else
             {
                 // the same story as the broadcast camera (BroadcastDirector.Subject)
-                if (_director == null) _director = FindAnyObjectByType<BroadcastDirector>();
+                if (!_directorSearched) { _directorSearched = true; _director = FindAnyObjectByType<BroadcastDirector>(); }
                 who = _director != null && _director.Subject != null ? _director.Subject
                     : tension != null && tension.Leader != null ? tension.Leader : rows.FirstOrDefault(r => !r.bad).runner;
                 tag = _director != null && _director.Current == BroadcastDirector.Shot.Hot ? "IN TROUBLE" : b.BoardState == BoardPhase.Live ? "LEADER" : "ON THE LINE";
@@ -134,7 +135,7 @@ namespace PoOlympic
             if (who != _subject)
             {
                 _subject = who;
-                _subjectPelvis = FindObjectsByType<MjBody>().FirstOrDefault(x => x.name == who.athletePrefix + "pelvis")?.transform;
+                _subjectPelvis = who.PelvisTransform;
                 _camInit = false;
             }
             if (_subjectPelvis == null) return;

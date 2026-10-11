@@ -88,7 +88,6 @@ if bodies.current().name == "matt":
     )
 
     from .matt_env import matt_ppo_v5_cfg, matt_rung2_v5_env_cfg
-    from .stance_env import matt_stance_env_cfg
 
     # recipe v5 on the current MATT body (staged): r2_v8 + fast sim + bio rewards; warm start r2_v8 it 600
     register_mjlab_task(
@@ -240,6 +239,17 @@ if bodies.current().name == "matt":
         runner_cls=SymmetricRunner,
     )
 
+    # 2026-10-11 audit (opt-in variants; nothing above changed): Rung 0 with DESIGN §5's foot-slip / CoM terms, Rung 2
+    # with the success-driven shove ramp + contact solref DR + privileged critic
+    from .matt_env import matt_rung0_full_env_cfg, matt_rung2_ramp_env_cfg
+
+    register_mjlab_task(task_id="PoOlympic-Matt-Rung0-Full", env_cfg=matt_rung0_full_env_cfg(),
+                        play_env_cfg=matt_rung0_full_env_cfg(play=True),
+                        rl_cfg=matt_ppo_cfg("matt_rung0", max_iterations=400), runner_cls=MjlabOnPolicyRunner)
+    register_mjlab_task(task_id="PoOlympic-Matt-Rung2-Ramp", env_cfg=matt_rung2_ramp_env_cfg(),
+                        play_env_cfg=matt_rung2_ramp_env_cfg(play=True),
+                        rl_cfg=matt_ppo_cfg("matt_rung2", max_iterations=600), runner_cls=SymmetricRunner)
+
 if bodies.current().name == "mattbio":
     # STAGED (not trained; needs the user's OK — DESIGN §2 body change): MATT with full self-collision + bio torque caps
     # (bodies.BIO_TORQUE_CAPS). Same contract, so every MATT checkpoint warm-starts directly. POOLYMPIC_BODY=mattbio.
@@ -318,6 +328,19 @@ if bodies.current().name == "kim":
     register_mjlab_task(task_id="PoOlympic-Kim-Rung2-Flight", env_cfg=kim_rung2_flight_env_cfg(),
                         play_env_cfg=kim_rung2_flight_env_cfg(play=True),
                         rl_cfg=_low_entropy(matt_ppo_cfg("kim_rung2", max_iterations=400)), runner_cls=SymmetricRunner)
+
+    # 2026-10-11 audit (opt-in variants; nothing above changed). Rung2-Bio = the contract v5 proposal (fatigue block)
+    from .kim_env import kim_rung0_full_env_cfg, kim_rung2_bio_env_cfg, kim_rung2_ramp_env_cfg
+
+    register_mjlab_task(task_id="PoOlympic-Kim-Rung0-Full", env_cfg=kim_rung0_full_env_cfg(),
+                        play_env_cfg=kim_rung0_full_env_cfg(play=True),
+                        rl_cfg=_low_entropy(matt_ppo_cfg("kim_rung0", max_iterations=400)), runner_cls=MjlabOnPolicyRunner)
+    register_mjlab_task(task_id="PoOlympic-Kim-Rung2-Ramp", env_cfg=kim_rung2_ramp_env_cfg(),
+                        play_env_cfg=kim_rung2_ramp_env_cfg(play=True),
+                        rl_cfg=_low_entropy(matt_ppo_cfg("kim_rung2", max_iterations=600)), runner_cls=SymmetricRunner)
+    register_mjlab_task(task_id="PoOlympic-Kim-Rung2-Bio", env_cfg=kim_rung2_bio_env_cfg(),
+                        play_env_cfg=kim_rung2_bio_env_cfg(play=True),
+                        rl_cfg=_low_entropy(matt_ppo_cfg("kim_rung2", max_iterations=800)), runner_cls=SymmetricRunner)
 
 if bodies.current().name == "grandma":
     from .grandma_env import (grandma_rung0_env_cfg, grandma_rung1_env_cfg, grandma_rung2_base_env_cfg,
@@ -413,6 +436,16 @@ if bodies.current().name == "grandma":
         rl_cfg=matt_ppo_cfg("grandma_rung0", max_iterations=1500),
         runner_cls=MjlabOnPolicyRunner,
     )
+
+    # 2026-10-11 audit (opt-in variants; nothing above changed)
+    from .grandma_env import grandma_rung0_full_env_cfg, grandma_rung2_ramp_env_cfg
+
+    register_mjlab_task(task_id="PoOlympic-Grandma-Rung0-Full", env_cfg=grandma_rung0_full_env_cfg(),
+                        play_env_cfg=grandma_rung0_full_env_cfg(play=True),
+                        rl_cfg=matt_ppo_cfg("grandma_rung0", max_iterations=400), runner_cls=MjlabOnPolicyRunner)
+    register_mjlab_task(task_id="PoOlympic-Grandma-Rung2-Ramp", env_cfg=grandma_rung2_ramp_env_cfg(),
+                        play_env_cfg=grandma_rung2_ramp_env_cfg(play=True),
+                        rl_cfg=_low_entropy(matt_ppo_cfg("grandma_rung2", max_iterations=600)), runner_cls=SymmetricRunner)
 
 if bodies.current().name == "zombie":
     from .matt_env import matt_ppo_cfg
@@ -595,3 +628,40 @@ if bodies.current().name == "zombie":
         rl_cfg=matt_ppo_cfg("zombie_crawl", max_iterations=2500),
         runner_cls=MjlabOnPolicyRunner,
     )
+
+    # 2026-10-11 audit (opt-in variants; nothing above changed)
+    from .zombie_env import zombie_rung0_full_env_cfg, zombie_rung2_ramp_env_cfg
+
+    register_mjlab_task(task_id="PoOlympic-Zombie-Rung0-Full", env_cfg=zombie_rung0_full_env_cfg(),
+                        play_env_cfg=zombie_rung0_full_env_cfg(play=True),
+                        rl_cfg=matt_ppo_cfg("zombie_rung0", max_iterations=400), runner_cls=MjlabOnPolicyRunner)
+    register_mjlab_task(task_id="PoOlympic-Zombie-Rung2-Ramp", env_cfg=zombie_rung2_ramp_env_cfg(),
+                        play_env_cfg=zombie_rung2_ramp_env_cfg(play=True),
+                        rl_cfg=matt_ppo_cfg("zombie_rung2", max_iterations=600), runner_cls=SymmetricRunner)
+
+
+# ---- registry hygiene -------------------------------------------------------------------------------------------------
+# Task IDs whose recipe a later ID of the same body and skill replaced, or that were tried and dropped. They stay
+# registered (old runs, the queue and the log refer to them) and build exactly what they always built; do not start new
+# runs on them. Not listed = current: the recipe behind a deployed brain, a stage of a warm-start chain (Rung 0 -> 1 ->
+# Rung2-Omni-Base ...), or still open work. `uv run python tools/dump_task_cfgs.py --list` prints both groups.
+SUPERSEDED = frozenset("PoOlympic-" + t for t in (
+    # MATT: get-up v1-v4 (-> Getup5, then the mattbio ladder), crawl v1-v2 (-> Crawl3 = crawl_matt), Rung 2 r2_v3-v7
+    # (-> Sym5 = rung2), pedestal v1 (-> Pedestal2), flight v1-v2 (-> Flight3 = r2f_v3)
+    "Matt-Getup", "Matt-Getup2", "Matt-Getup3", "Matt-Getup4", "Matt-Crawl", "Matt-Crawl2",
+    "Matt-Rung2-Omni-Sym", "Matt-Rung2-Omni-Sym2", "Matt-Rung2-Omni-Sym3", "Matt-Rung2-Omni-Sym4",
+    "Matt-Pedestal", "Matt-Rung2-Flight", "Matt-Rung2-Flight2",
+    # mattbio: Rung S rs_v5-v7 (-> Stance-v8 = rs_v7's env at entropy 0.001, by design), reach v1 (-> Reach2), get-up
+    # reverse curriculum and ladder v2-v2d (-> Getup-Ladder-e)
+    "MattBio-RungS-Stance", "MattBio-RungS-Stance-v6", "MattBio-RungS-Stance-v7", "MattBio-RungS-Reach",
+    "MattBio-Getup-Rev", "MattBio-Getup-Ladder", "MattBio-Getup-Ladder-b", "MattBio-Getup-Ladder-c", "MattBio-Getup-Ladder-d",
+    # zombie: Rung 2 z2_v1-v10 (-> Wobble = z2_v11 = zombie_rung2), z2_v13 / v14 (no gain), crawl v1-v2
+    "Zombie-Rung2-Omni", "Zombie-Rung2-Omni-Sym3", "Zombie-Rung2-Omni-Sym3Yaw", "Zombie-Rung2-Omni-YawGrad",
+    "Zombie-Rung2-Omni-YawFilt", "Zombie-Rung2-Omni-YawFiltCap3", "Zombie-Rung2-Omni-YawFiltCap3Lin3",
+    "Zombie-Rung2-Omni-WobbleSharp", "Zombie-Rung2-Omni-WobbleSprint", "Zombie-Crawl", "Zombie-Crawl2",
+    # GRANDMA: Rung 2 g2_v2b-v6 (-> Cap28-Bands = g2_v7 / v8 = grandma_rung2), crawl v1, the press-up get-up (-> Getup-Roll)
+    "Grandma-Rung2-Omni", "Grandma-Rung2-Omni-Cap", "Grandma-Rung2-Omni-Cap28", "Grandma-Rung2-Omni-Cap28-Sharp",
+    "Grandma-Crawl", "Grandma-Getup-Prone",
+    # KIM: Rung 2 Cap (skipped), Bands (-> Bands2 = k2_v3 = kim_rung2), Bands3 (k2_v4: no gain)
+    "Kim-Rung2-Omni-Cap", "Kim-Rung2-Omni-Bands", "Kim-Rung2-Omni-Bands3",
+))

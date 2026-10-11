@@ -26,6 +26,7 @@ import mujoco
 import numpy as np
 import onnxruntime as ort
 
+from .. import action_log as AL
 from .. import contract as C
 from .iron_pedestal import Traits, _Lane, make_lanes
 
@@ -77,6 +78,7 @@ class GauntletResult:
     lanes: list[GauntletLane] = field(default_factory=list)
 
 
+@AL.logged("event_gauntlet")
 def run_heat(onnx, seed: int, traits: list[Traits] | None = None, scene=None, layout_path=None, brains: dict | None = None) -> GauntletResult:
     m = mujoco.MjModel.from_xml_path(str(scene or SCENE))
     d = mujoco.MjData(m)

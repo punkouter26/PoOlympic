@@ -556,3 +556,61 @@ short legs (hip joints at 0.44 of her height).
 - [x] Licensing review (Avaturn, Hunyuan3D) before any commercial release → `docs/LICENSING.md` (2026-09-29). Blockers
   to act on before a store release: Olympic rings / name, Hunyuan3D territory (EU / UK / KR), Avaturn notification +
   attribution; checklist in the doc
+
+## Training audit (2026-10-11) — opt-in additions, nothing trained yet
+
+Log: `rl_optimization_log.md` 2026-10-11 "Training audit". Existing task IDs, bodies, contracts and brains unchanged
+(`tools/dump_task_cfgs.py --diff`: 91 of 91 cfg hashes equal; tests 87/87).
+
+- [x] Action logging in the CPU gates and event heats (`poolympic/action_log.py`, `--log-actions`,
+  `tools/report_actions.py`) — AGENTS "Data logging"
+  - [ ] the get-up / crawl / flight probes and GPU training rollouts do not log yet
+  - [ ] reports aggregated over time (Azure Tables or a dated `parity/actions/` index) — only per-run reports so far
+- [x] Opt-in terms: self-contact force penalty, CoM over support, model-mass get-up assist, success-driven shove ramp,
+  contact solref DR, privileged critic, observation clip at export
+- [x] Registry: `SUPERSEDED` list (42 IDs), dead tools removed, env-module duplicates merged
+- [x] Production brain manifest `parity/brains/manifest.json` (`tools/brain_manifest.py`, `--check`); `fit_odds.py`
+  reads it
+- [ ] Train `PoOlympic-<Body>-Rung2-Ramp` (4 bodies; production recipe + shove ramp + solref DR + privileged critic;
+  600 its, gates 200 / 400 / 599) — only KIM's warm-start checkpoint is on disk
+- [ ] Train `PoOlympic-<Body>-Rung0-Full` (4 bodies; + foot slip, CoM over support; 400 its, gates 200 / 399, 30 seeds)
+- [ ] **Decision:** contract v5 fatigue block (`docs/CONTRACT_V5_FATIGUE_PROPOSAL.md`) — go / no-go, constants, per-side
+  levels. Python side done and tested; Unity has nothing of it. `kim_rung2` already passes G1 Rung 2 10/10 under the
+  proposed limits untrained
+  - [ ] if go: train `PoOlympic-Kim-Rung2-Bio` (800 its, gates 200 / 400 / 600 / 799), Unity `BioLimits` + parity refs
+- [ ] The three stance brains carry mattbio's fingerprint (manifest) — confirm that is intended for MATT lanes
+
+## App audit (2026-10-11) — Unity, UI and clean-up (35-item list, "do all")
+
+Play-tested in Event 19 (no console errors); PoOlympic.Tests 87/87 (5 phone sizes incl. 21:9, settings sheet on every
+tab). Before / after: `parity/ui/audit35_before_after.html`.
+
+- [x] State flow: every static resets at play start (no domain reload); `MeetLineup.Load` is the one scene loader and
+  drops a second load in the same frame; the demo countdown no longer loads a scene from inside `Refresh()`; no
+  per-frame scene searches (`PolicyRunner.PelvisTransform`); hit-stop and replay release to the chosen speed
+- [x] `GameSettings` + one tabbed settings sheet (Audio / Display / Game) in the HudAnchors frame, menu and events;
+  defaults keep the earlier rulings (no shake, no betting slip, real time)
+- [x] Spectator: tap a standings row = camera locked on that athlete, drag the picture = orbit, menu "Speed" 1 / 0.5 /
+  0.25 / 2×, "Replay" of the last 5 s at 0.5× (match card + menu; kinematic, state restored)
+- [x] Camera: tension zoom on close-ups, focus blur + record glow (runtime volume copy), follow spot (scene object
+  `BroadcastFX/FocusSpot`), shake behind the Camera shake setting
+- [x] Debug readout on TAB (F3, three-finger tap, BL button as before) with the athlete on camera: brain + cost,
+  balance, effort, tiredness, cadence, joints over 18 rad/s, slide speed, contacts
+- [x] Status bars per standings row (balance over effort / tiredness), "tired %" in the story strip. Tiredness is
+  display-only (`AthleteTelemetry.Fatigue`); the physics does not weaken until contract v5 is decided
+- [x] Audio: hit loudness ~ log force, pitch by force and body mass; scrape loop on the fastest-sliding body part;
+  volume settings per group
+- [x] Ground scuff marks (pooled flat particles, 16-20 s) at slams and under sliding parts
+- [x] Action log: `ActionLog` → `parity/actions/unity/*.csv.gz` per heat + `heats.jsonl` (editor default on, phones off)
+- [x] USS: body colours, scrims, radii as tokens; `ScreenBoard.uss` and `PerfOverlay.uss` import `Tokens.uss`
+  (colour literals 61 → 28, the rest are one-off tints)
+- [x] IMGUI dev HUDs draw inside the safe area (`HudAnchors.GuiArea`)
+- [x] Clean-up: 1,670 intermediate brain files removed from `Models/Brains` and `parity/brains` (≈ 450 MB; kept every
+  brain a scene, a script or the manifest names), template leftovers, duplicate root models, 23 unused packages /
+  modules, `.utmp/` and `parity/actions/` ignored
+- [ ] `pwsh training/tools/prune_checkpoints.ps1 -Delete` — 101 files, 644 MB in `training/runs` (not recoverable, so
+  left for the user to run)
+- [ ] Tune by eye on a phone: follow-spot intensity (`spotIntensity` 40), scuff size / darkness, scrape threshold
+- [ ] Not done: URP decal projectors (ground marks cover it without a renderer feature), an event base class (the
+  trait draw is shared now; the rest differs per event), ScriptableObject tuning assets (values are already per-scene
+  inspector fields), mattbio → MATT promotion (still the user's call; it ends the legs-only self-collision exception)

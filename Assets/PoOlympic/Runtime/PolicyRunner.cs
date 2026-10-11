@@ -89,6 +89,23 @@ namespace PoOlympic
         /// <summary>Latest critic value (NaN without a critic) and how many times it has been evaluated.</summary>
         public float CriticValue { get; private set; } = float.NaN;
         public int CriticEvaluations { get; private set; }
+        /// <summary>Brain inference time per control tick (ms, smoothed over ~20 ticks): the debug readout.</summary>
+        public float BrainMs { get; private set; }
+
+        Transform _pelvisT;
+        bool _pelvisSearched;
+        /// <summary>This athlete's pelvis MjBody transform (cameras, podium, screens); searched once, null if absent.</summary>
+        public Transform PelvisTransform
+        {
+            get
+            {
+                if (_pelvisSearched) return _pelvisT;
+                _pelvisSearched = true;
+                foreach (var b in FindObjectsByType<MjBody>(FindObjectsInactive.Include))
+                    if (b.name == athletePrefix + "pelvis") { _pelvisT = b.transform; break; }
+                return _pelvisT;
+            }
+        }
 
         PolicyBrain _brain;
         PolicyCritic _critic;
@@ -221,6 +238,18 @@ namespace PoOlympic
             if (Initialized && MjScene.InstanceExists) ApplyTraits(MjScene.Instance.Model);
         }
 
+        /// <summary>A heat's traits for this athlete, drawn from the event's seeded stream: strength, latency, noise —
+        /// in that order, three draws (the Python event loops draw the same way, so heats stay seed-exact). Nominal
+        /// traits and no draw when the event has random traits off or the contract gives no ranges.</summary>
+        public void DrawTraits(Contract.TraitRanges tr, System.Random rng, bool random, int seed)
+        {
+            if (!random || tr == null) { SetTraits(1f, 0, 0f, 0); return; }
+            float str = (float)(tr.strength[0] + rng.NextDouble() * (tr.strength[1] - tr.strength[0]));
+            int lat = rng.Next((int)tr.latency_substeps[0], (int)tr.latency_substeps[1] + 1);
+            float noise = (float)(tr.obs_noise[0] + rng.NextDouble() * (tr.obs_noise[1] - tr.obs_noise[0]));
+            SetTraits(str, lat, noise, seed);
+        }
+
         void ApplyTraits(MujocoLib.mjModel_* m)
         {
             for (int i = 0; i < Binding.ActuatorIds.Length; i++)
@@ -327,10 +356,18 @@ namespace PoOlympic
             }
             else
             {
+                long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
                 _brain.Run(_obs, _ctrlF, _actionRaw);
+                float ms = (System.Diagnostics.Stopwatch.GetTimestamp() - t0) * 1000f / System.Diagnostics.Stopwatch.Frequency;
+                BrainMs += (ms - BrainMs) * 0.05f;
                 for (int i = 0; i < _ctrl.Length; i++) _ctrl[i] = _ctrlF[i];
             }
             Array.Copy(_actionRaw, _lastAction, _lastAction.Length);
+            if (ActionLog.Active)
+            {
+                int r = Binding.RootQposAdr;
+                ActionLog.Tick(ControlTick, athletePrefix, bodyCommand, d->qpos[r] - laneOriginX, d->qpos[r + 1] - laneOriginY, d->qpos[r + 2], _actionRaw, _ctrl);
+            }
             if (_critic != null && (ControlTick + _criticStagger) % Math.Max(1, criticEvery) == 0)
             {
                 CriticValue = _critic.Run(_obs);

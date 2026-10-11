@@ -70,7 +70,28 @@ namespace PoOlympic
         public float MinConfidence { get; private set; } = 1f;
         public readonly List<float> ConfidenceHistory = new();
         public Vector3 PelvisPosition { get; private set; }
+        /// <summary>Mean |actuator force| / limit over all joints, ~0.25 s smoothed: how hard the whole body works (0..1).</summary>
+        public float Effort { get; private set; }
+        /// <summary>Display-only tiredness (0..1): effort above <see cref="RestEffort"/> fills it over ~<see cref="TireSeconds"/>
+        /// of all-out work, rest drains it. The physics does not weaken with it (that is the contract v5 proposal).</summary>
+        public float Fatigue { get; private set; }
+        /// <summary>Fastest joint right now (rad/s) and the share of this heat's steps with a joint over
+        /// <see cref="JointSpeedBar"/> (the realism bar: ≤ 5 %).</summary>
+        public float JointSpeedMax { get; private set; }
+        public float OverSpeedShare => _steps > 0 ? (float)_overSteps / _steps : 0f;
+        /// <summary>Speed (m/s) of the fastest body part sliding on a surface it touches, smoothed; where; and whether
+        /// that part is a foot (scrape audio, scuff marks).</summary>
+        public float SlideSpeed { get; private set; }
+        public Vector3 SlidePoint { get; private set; }
+        /// <summary>This athlete's contacts with anything else at the last step.</summary>
+        public int Contacts { get; private set; }
 
+        public const float JointSpeedBar = 18f, RestEffort = 0.15f, TireSeconds = 25f, RecoverSeconds = 12f;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() { Impact = null; All.Clear(); }
+
+        int _steps, _overSteps;
         BrainConfidence.Entry _conf;
         float _valueEma;
         int _criticSeen;
@@ -159,6 +180,8 @@ namespace PoOlympic
             CadenceSpm = GroundContactS = 0f;
             _criticSeen = Runner != null ? Runner.CriticEvaluations : 0;
             _valueEma = float.NaN;
+            _steps = _overSteps = 0;
+            Fatigue = 0f;
         }
 
         void OnPostStep(object sender, MjStepArgs args)
@@ -170,7 +193,7 @@ namespace PoOlympic
             var ids = Runner.Binding.ActuatorIds;
 
             // stress + power
-            float smax = 0f, power = 0f;
+            float smax = 0f, power = 0f, ssum = 0f, vmax = 0f;
             int jmax = 0;
             for (int i = 0; i < ids.Length; i++)
             {
@@ -179,12 +202,20 @@ namespace PoOlympic
                 double lim = Math.Max(Math.Abs(m->actuator_forcerange[2 * a]), Math.Abs(m->actuator_forcerange[2 * a + 1]));
                 float s = lim > 0 ? (float)(Math.Abs(f) / lim) : 0f;
                 if (s > smax) { smax = s; jmax = i; }
+                ssum += s;
                 power += (float)Math.Abs(f * d->actuator_velocity[a]);
+                vmax = Mathf.Max(vmax, (float)Math.Abs(d->actuator_velocity[a]));
             }
             float k = 1f - Mathf.Exp(-(float)_dt / 0.25f);
             StressMax += (smax - StressMax) * k;
             if (smax >= StressMax) StressJoint = _jointNames[jmax];
             PowerW += (power - PowerW) * k;
+            Effort += (ssum / Mathf.Max(1, ids.Length) - Effort) * k;
+            float load = Mathf.InverseLerp(RestEffort, 1f, Effort);
+            Fatigue = Mathf.Clamp01(Fatigue + (float)_dt * (load > 0f ? load / TireSeconds : -1f / RecoverSeconds));
+            JointSpeedMax = vmax;
+            _steps++;
+            if (vmax > JointSpeedBar) _overSteps++;
 
             // pelvis speed, tilt
             int r = Runner.Binding.RootDofAdr;
@@ -205,6 +236,9 @@ namespace PoOlympic
             _ptsZ.Clear();
             bool footNowL = false, footNowR = false;
             var force = stackalloc double[6];
+            var vel = stackalloc double[6];
+            float slide = 0f;
+            int contacts = 0;
             for (int g = 0; g < _ngeom; g++) { _bodyOffSteps[g]++; _cubeOffSteps[g]++; }
             for (int i = 0; i < d->ncon; i++)
             {
@@ -214,10 +248,22 @@ namespace PoOlympic
                 if (_own[g1] && !_own[g2]) { own = g1; other = g2; }
                 else if (_own[g2] && !_own[g1]) { own = g2; other = g1; }
                 else continue;
+                contacts++;
                 double px = c.pos[0], py = c.pos[1], pz = c.pos[2];
                 bool cube = _cube[other];
                 if (!cube)
                 {
+                    // sliding: the touching part's own speed along the surface (world frame; [3..5] = linear). Static
+                    // surfaces only (welded to the world): against another athlete the world speed is not a slide,
+                    // and a ground scuff there would hang in the air.
+                    if (m->body_weldid[m->geom_bodyid[other]] == 0)
+                    {
+                        MujocoLib.mj_objectVelocity(m, d, (int)MujocoLib.mjtObj.mjOBJ_GEOM, own, vel, 0);
+                        double vn = vel[3] * c.frame[0] + vel[4] * c.frame[1] + vel[5] * c.frame[2];
+                        double tx = vel[3] - vn * c.frame[0], ty = vel[4] - vn * c.frame[1], tz = vel[5] - vn * c.frame[2];
+                        float along = (float)Math.Sqrt(tx * tx + ty * ty + tz * tz);
+                        if (along > slide) { slide = along; SlidePoint = new Vector3((float)px, (float)pz, (float)py); }
+                    }
                     _pts.Add(new Vector2((float)px, (float)py));
                     _ptsZ.Add((float)pz);
                     if (_foot[own])
@@ -254,6 +300,8 @@ namespace PoOlympic
                 if (_bodyOffSteps[g] > 0) _bodyOnSurface[g] = false;
                 if (_cubeOffSteps[g] > 0) _bodyOnCube[g] = false;
             }
+            Contacts = contacts;
+            SlideSpeed += (slide - SlideSpeed) * (1f - Mathf.Exp(-(float)_dt / 0.05f));
             if (_pending.Count > 0)
             {
                 _done.Clear();
@@ -369,6 +417,9 @@ namespace PoOlympic
         [Serializable] class Model { public float horizon_s; public float ema_tau_s = 1f; public Entry[] brains; }
 
         static readonly Dictionary<TextAsset, Model> Cache = new();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() => Cache.Clear();
 
         /// <summary>The calibrated entry for a brain (ModelAsset name = file name without .onnx), else null.</summary>
         public static Entry Find(TextAsset json, string brain)

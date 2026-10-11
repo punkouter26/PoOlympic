@@ -1299,3 +1299,97 @@ One entry per run or decision. Newest at the bottom.
   parsing without parentheses) — a deleted `pedestal8` scene entry and an unterminated C# initialiser, both caught by the
   next run; running three 30-seed CPU evals during kcrawl_v1 slowed it to a crawl for ~15 min.
 - The MuJoCo viewer was not opened during these runs (night, user away); the get-up films are the only renders.
+## 2026-10-11 14:16 · Training audit: action logs, opt-in reward / curriculum / biomechanics terms, registry hygiene, brain manifest
+
+No training run was started and no brain, MJCF or `contract*.json` changed. Proof that the registered tasks are what
+they were: `tools/dump_task_cfgs.py` hashes every task's train + play env cfg, PPO cfg and runner per body (entity
+MJCFs by content) — **91 task IDs before, the same 91 hashes after**, 9 new IDs, assets identical. 17 older IDs
+(get-up 3-5, crawls, Pedestal2, MattBio-Getup-Rev) show a *code* change only: `getup_assist`, `push_gust` and
+`gust_curriculum` gained optional arguments whose defaults are the old behaviour. Tests 76/76 before, 87/87 after
+(`tests/test_audit.py`, 11 new).
+
+- **Action logging (AGENTS "Data logging"; nothing logged actions before).** `poolympic/action_log.py`: with
+  `$POOLYMPIC_LOG_ACTIONS=<run>` or `--log-actions` (`eval_cpu.py`, `watch_gate.py`) every G1 episode (Rung 0 / 1 / 2 /
+  S) and every event heat (all ten event modules: one decorator each, ticks come from `_Lane.control`) writes
+  `parity/actions/<run>/<gate>_seed<N>.jsonl.gz`: header, one line per tick (command, pelvis position, tilt, velocity,
+  joint speeds, action, ctrl, actuator force; per lane in heats), one summary line (outcome, pass, fall time, the
+  episode's own record). ~1 MB per Rung 2 seed. `tools/report_actions.py` → markdown / CSV per run: success rate,
+  fall-time histogram, mean |torque| per joint group, action rate, ticks and joints over the speed bar. Not covered:
+  the get-up / crawl / flight probes (own loops), GPU training rollouts.
+  First numbers (KIM `kim_rung2`, Rung 2 drill, 3 seeds): mean torque 4-10 % of the caps per group, action rate 0.148
+  per joint and tick, 0 ticks over the joint-speed bar.
+- **Reward gaps, as opt-in terms.** `mdp.self_contact_force` + `matt_env.self_contact_sensor_cfg` (AGENTS: charge the
+  force if a policy leans on self-contact) — unit-tested and built once on KIM (random flailing: up to 2.3 body
+  weights), in no task. `getup_assist`'s 80 kg default: **no body was trained with a wrong weight** — only
+  `PoOlympic-Matt-Getup3/4/5` rely on the default and MATT weighs 80 kg; `MattBio-Getup-Rev` passes
+  `C.BODY.total_mass`; every ladder task (mattbio, zombie, GRANDMA, KIM) uses `ladder_assist` with the body's mass
+  (zombie 22, GRANDMA 65, KIM 54 kg). New: `body_weight_n=None` reads each env's model mass (`mdp.robot_mass`, DR
+  included). Rung 0 never had DESIGN §5's "CoM over support, no foot slip": `mdp.com_over_support` + Rung 1's
+  `foot_slip` in new IDs `PoOlympic-{Matt,Zombie,Grandma,Kim}-Rung0-Full` (the old Rung 0 IDs are untouched).
+- **Curriculum / DR, opt-in.** `gust_curriculum` generalised (`steps_per_it`, `min_count`: ended episodes pooled, one
+  decision per PPO iteration — the ped_v2 / getup_rev lesson) and `push_gust` (`min_fraction`, `record`) →
+  `matt_env.add_shove_ramp`: shove size U(0, level), level from the old box's corner (√2 × 0.5 m/s × √λ) up to twice
+  that, +3 % per iteration while > 80 % of ended episodes reach the time-out, down below 50 % (DESIGN §5). Restitution
+  DR via solref (DESIGN §4, missing): `mdp.dr_geom_solref`, foot / toe time constant × U(0.8, 1.25), damping ratio ×
+  U(0.7, 1.0). Both in `PoOlympic-{Matt,Zombie,Grandma,Kim}-Rung2-Ramp` = each body's production Rung 2 recipe (Sym5 /
+  Wobble / Cap28-Bands / Bands2) + ramp + solref + privileged critic.
+- **Asymmetric critic + export.** `matt_env.add_privileged_critic`: the critic also sees ground reaction per foot,
+  friction scale, mass scale and the shove just applied (8 values; mirror map in `symmetry.py`, sizes 92 / 98). Warm
+  start: `tools/expand_obs.py --critic-zeros 8` (zero columns: the same function at iteration 0). Consequence:
+  `export_critic.py` now refuses a critic whose input differs from the actor's — a privileged critic cannot be Unity's
+  confidence critic. `export_brain.py --clip-obs S` clamps the normalised observation to ±S σ inside the graph
+  (default off = every deployed brain); new sidecars store the checkpoint path relative to the repo root.
+- **Biomechanics in the physics, opt-in (contract v5 proposal, `docs/CONTRACT_V5_FATIGUE_PROPOSAL.md`).**
+  `poolympic/biomech.py`: the torque-speed curve the reward term assumes now also limits the actuator force range
+  (only on the side pushing with the motion), and a fatigue level per joint group (leaky integral of (effort / 0.25)²,
+  10 s to tire, 30 s to recover, cap never below 60 %). Six fatigue levels appended after the v3 observation (84 → 90).
+  Training: `mdp.bio_force_limits` (step + reset event), `obs_fatigue`; CPU: `biomech.BioLimits` in `evaluate.Sim` and
+  the event lanes for 90-input brains (`POOLYMPIC_BIO=1` forces it for any brain). Task `PoOlympic-Kim-Rung2-Bio`
+  (k2_v3's recipe + limits + fatigue block + privileged critic; warm start `expand_obs.py --actor-zeros 6
+  --critic-zeros 14`).
+  **Measured first (CPU, no training):** `kim_rung2` under both limits passes G1 Rung 2 **10/10**. With effort = torque
+  / cap alone no group passed level 0.04 in 55 s (she uses 3-10 % of her caps on average, 0.87-0.92 at the ankle's 99th
+  percentile), hence the 0.25 reference; with it the drill reaches ankle 0.60, knee 0.39, abdomen 0.36. The constants
+  are proposals; as they stand the limits are mild.
+- **Registry.** `-RungS-Stance-v8` registering rs_v7's env function is **not a typo** (log 2026-10-01: "rs_v8 = rs_v7's
+  env, entropy 0.001") — left alone. Duplicate `matt_stance_env_cfg` import removed. `SUPERSEDED` set in
+  `tasks/__init__.py` (42 IDs; nothing unregistered; `dump_task_cfgs.py --list`). Deleted, unreferenced:
+  `tools/train_queue.sh`, `watch_eval.py`, `rank_zombie_r2.py`. `bench_env.py --ckpt` is now required (its default
+  pointed at r2_v8, which is not on disk: `training/runs` holds KIM's runs only).
+- **Dedupe (hash diff empty).** `matt_env.body_entity_cfg / scale_to_body / scaled_envelope / check_body / scene_root_z
+  / body_fall_z` replace the copies in `zombie_env` and `grandma_env`; `MATT_ROOT_Z`, `FALL_PELVIS_Z`, `FALL_TILT_DEG`,
+  `JOINT_VEL_LIMIT` live in `bodies.py` (were literals in `evaluate.py`, `matt_env.py`, `iron_pedestal.py`);
+  `skill_mdp` imports the reach-sampling constants from `skills.py`.
+- **Brain manifest.** `tools/brain_manifest.py` → `parity/brains/manifest.json`: 22 deployed brains (no `_itNNN` suffix,
+  or a confidence critic next to them) with body (from the fingerprint), role, events, run, iteration, sha256, gate
+  result; `--check` fails on a missing / changed / unlisted file. `fit_odds.py` reads its brains from it (same files as
+  its old dict, asserted). Seen while generating: the three stance brains (`rs_v6_it2550`, `rs_v6_it3299`,
+  `rs_v8_it1199`) carry **mattbio's** fingerprint; `rung1.onnx` and `r0_v2_latest.onnx` are contract v2 with an old
+  fingerprint; no gate record found for `rung2`, `zombie_rung0`, `zombie_rung2`, `crawl_matt`, `crawl_zombie`,
+  `r2f_v3_it100`.
+- **Only smoke-tested (16 envs, 80-120 random-action steps, `tools/smoke_task.py`):** the nine new tasks build, step,
+  stay finite and mirror cleanly on the GPU. Not exercised: a PPO iteration on any of them, the warm starts beyond the
+  checkpoint surgery, whether the training-side limits and `BioLimits` agree tick for tick (the formulas are one piece
+  of code and numpy == torch is tested; the event timing is by reading mjlab's step order), every reward weight.
+- **Suggested first runs** (4096 envs, checkpoints every 100): `-Rung2-Ramp` 600 its, gates 200 / 400 / 599;
+  `Kim-Rung2-Bio` 800 its, gates 200 / 400 / 600 / 799; `-Rung0-Full` 400 its, gates 200 / 399 (`--gates 0 --seeds 30`).
+  Only KIM's warm-start checkpoints are on disk.
+
+## 2026-10-11 — App audit, Unity side (no training, no contract change)
+
+- Nothing here touches ctrl, the model or the step size: `PolicyRunner` gained only a stopwatch (`BrainMs`), the
+  `ActionLog.Tick` call after the brain ran and `DrawTraits` (the same three draws in the same order the nine events
+  did inline — heats stay seed-exact). `GameSettings.SimSpeed` is `Time.timeScale` (fixedDeltaTime stays 0.005).
+  Instant replay runs at timeScale 0 (no mj_step), writes recorded qpos + `mj_kinematics`, then restores qpos and
+  calls `mj_forward`; checked in Event 19: pelvis back to within 7 mm after 10 s more of live standing, no errors.
+- Parity gates after the change: EditMode suite 87/87; `gate_report_kim_rung0.json` regenerated for the k0_v2 brain
+  deployed this morning (G2-G4 pass, G4 5 s drift 2.3 mm); the other 38 reports only changed their timestamp (restored).
+- `AthleteTelemetry` now also reports mean effort, a display-only tiredness (effort above 15 % fills it in ~25 s of
+  all-out work, 12 s to recover), the fastest joint and the share of steps over 18 rad/s, slide speed
+  (`mj_objectVelocity` of the touching geom, tangential part) and the contact count. Event 19, MATT, mid-race:
+  effort 13-19 %, joints 6-7 rad/s, 1 % of steps over 18 rad/s, brain 0.2 ms (8 brains 1.8 ms per tick).
+- Unity action logs: `parity/actions/unity/e<event>_h<heat>_<time>.csv.gz` (1.4 MB for a 23 s 8-lane heat) and
+  `heats.jsonl` (places, marks, traits, telemetry bests per lane). `training/tools/report_actions.py` reads the Python
+  gate logs; the Unity files share the folder but not yet the report.
+- Brain clean-up: `parity/brains` 644 → 98 files, `Models/Brains` 262 → 33 MB; `tools/brain_manifest.py --check`: 22
+  deployed brains, 0 problems. Checkpoints in `training/runs` were not pruned (script: `tools/prune_checkpoints.ps1`).
