@@ -35,6 +35,11 @@ def _patch_rsl_code_state() -> None:
 
 _patch_rsl_code_state()
 
+def _low_entropy(rl, coef: float = 0.001):
+    rl.algorithm.entropy_coef = coef
+    return rl
+
+
 if bodies.current().name == "matt":
 
     from .matt_env import (matt_getup2_env_cfg, matt_getup3_env_cfg, matt_getup4_env_cfg, matt_getup5_env_cfg, matt_getup_env_cfg, matt_pedestal2_env_cfg, matt_pedestal_env_cfg, matt_ppo_cfg, matt_rung0_env_cfg, matt_rung1_env_cfg,
@@ -272,11 +277,6 @@ if bodies.current().name == "mattbio":
             rl.algorithm.entropy_coef = 0.001
         register_mjlab_task(task_id=task_id, env_cfg=fn(), play_env_cfg=fn(play=True), rl_cfg=rl, runner_cls=runner)
 
-def _low_entropy(rl, coef: float = 0.001):
-    rl.algorithm.entropy_coef = coef
-    return rl
-
-
 if bodies.current().name == "kim":
     # KIM (2026-10-10): the GRANDMA chain on her body — Rung 0 / 1, Rung 2 (base -> cap -> bands), crawl, get-up ladder
     # (supine, then face down: prone = press-up recipe, roll = the roll ladder if her arms cannot press her up)
@@ -305,6 +305,19 @@ if bodies.current().name == "kim":
         if _ent is not None:
             _rl.algorithm.entropy_coef = _ent      # GRANDMA's Rung 2 finding (g2_v2b): 0.005 out-pulls the task
         register_mjlab_task(task_id=_tid, env_cfg=_fn(), play_env_cfg=_fn(play=True), rl_cfg=_rl, runner_cls=_runner)
+
+    # MATT's extra skills on her body (2026-10-11): Rung S stance skills (squat / flamingo / march / torso / reach: the
+    # rs_v7 recipe on her Rung 2 base, contract v4, 8192 envs) and the Event 13 flight brain
+    from .kim_env import kim_rung2_flight_env_cfg
+    from .matt_env import matt_ppo_v5_cfg
+    from .stance_env import matt_stance_v7_env_cfg
+
+    register_mjlab_task(task_id="PoOlympic-Kim-RungS-Stance", env_cfg=matt_stance_v7_env_cfg(),
+                        play_env_cfg=matt_stance_v7_env_cfg(play=True),
+                        rl_cfg=_low_entropy(matt_ppo_v5_cfg("kim_stance", max_iterations=1500)), runner_cls=SymmetricRunner)
+    register_mjlab_task(task_id="PoOlympic-Kim-Rung2-Flight", env_cfg=kim_rung2_flight_env_cfg(),
+                        play_env_cfg=kim_rung2_flight_env_cfg(play=True),
+                        rl_cfg=_low_entropy(matt_ppo_cfg("kim_rung2", max_iterations=400)), runner_cls=SymmetricRunner)
 
 if bodies.current().name == "grandma":
     from .grandma_env import (grandma_rung0_env_cfg, grandma_rung1_env_cfg, grandma_rung2_base_env_cfg,

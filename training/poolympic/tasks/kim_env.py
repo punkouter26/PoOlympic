@@ -9,8 +9,10 @@ Use with POOLYMPIC_BODY=kim (grandma_env then binds its scaling to her body).
 from __future__ import annotations
 
 from mjlab.envs import ManagerBasedRlEnvCfg
+from mjlab.managers.reward_manager import RewardTermCfg
 
 from . import grandma_env as GE
+from . import mdp
 
 QUICK_STEP_MAX_AIR = 0.45        # s (MATT units; MATT / GRANDMA 0.6): swing time that still earns the air-time reward
 
@@ -76,4 +78,19 @@ def kim_rung2_bands3_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     cfg.commands["athlete"].bands = ((0.30, (3.0 * ss, GE.GRANDMA_VX_TOP * ss), (0.0, 0.0), 0.6 * ws),
                                      (0.10, (-1.5 * ss, -0.8 * ss), (0.0, 0.0), 0.5 * ws),
                                      (0.20, (-0.5 * ss, 0.5 * ss), (0.7 * ss, 1.1 * ss), 0.0))
+    return cfg
+
+
+def kim_rung2_flight_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """k2f (Event 13, Steeplechase Jog: aerial phases between strikes) = MATT's r2f_v3 on her final Rung 2 recipe, Froude-
+    scaled: both feet airborne above 2.2 x SS pays 0.5 per step, each touchdown pays its flight time above 40 ms x TS up
+    to 120 ms x TS (weight 4), half of the commands come from the forward run band. Warm start: k2_v3 it 600."""
+    cfg = kim_rung2_bands2_env_cfg(play=play)
+    ss, ws, ts = GE.SS, GE.WS, GE.TS
+    cfg.commands["athlete"].bands = ((0.50, (2.5 * ss, GE.GRANDMA_VX_TOP * ss), (0.0, 0.0), 0.6 * ws),
+                                     (0.10, (-0.5 * ss, 0.5 * ss), (0.7 * ss, 1.1 * ss), 0.0))
+    cfg.rewards["flight"] = RewardTermCfg(func=mdp.flight_phase, weight=0.5,
+                                          params={"command_name": "athlete", "speed_threshold": 2.2 * ss})
+    cfg.rewards["flight_landing"] = RewardTermCfg(func=mdp.flight_landing, weight=4.0, params={
+        "command_name": "athlete", "speed_threshold": 2.2 * ss, "min_s": 0.04 * ts, "cap_s": 0.12 * ts})
     return cfg

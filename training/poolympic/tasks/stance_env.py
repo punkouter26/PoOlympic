@@ -19,14 +19,32 @@ from mjlab.managers.observation_manager import ObservationTermCfg
 from mjlab.managers.reward_manager import RewardTermCfg
 from mjlab.managers.termination_manager import TerminationTermCfg
 
+from .. import contract as C
 from . import skill_mdp as S
 from .matt_env import add_bio_rewards, fast_sim, matt_rung2_sym5_env_cfg
 
 SKILL_REWARD_WEIGHT = 3.0
+# KIM (2026-10-11) trains the same Rung S recipe on her body: the base is her final Rung 2 recipe and every length below is
+# scaled by her λ (LS = 1 and the fall line 0.55 m for the MATT family: his configs are unchanged). One process = one body.
+LS = 1.0 if C.BODY.family == "matt" else C.BODY.length_scale
+
+
+def _base_env_cfg(play: bool) -> ManagerBasedRlEnvCfg:
+    if C.BODY.name == "kim":
+        from .kim_env import kim_rung2_bands2_env_cfg
+        return kim_rung2_bands2_env_cfg(play=play)
+    return matt_rung2_sym5_env_cfg(play=play)
+
+
+def _fall_z() -> float:
+    if C.BODY.family == "matt":
+        return 0.55
+    from .grandma_env import FALL_Z
+    return FALL_Z
 
 
 def matt_stance_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
-    cfg = matt_rung2_sym5_env_cfg(play=play)
+    cfg = _base_env_cfg(play)
 
     # command: the Rung 2 velocity command + the skill block (same fields, skill-aware class)
     old = cfg.commands["athlete"]
@@ -39,18 +57,18 @@ def matt_stance_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
 
     r = cfg.rewards
     # skill-aware versions of the Rung 0/1/2 terms
-    r["height"] = RewardTermCfg(func=S.skill_pelvis_height, weight=r["height"].weight, params={"std": 0.15})
+    r["height"] = RewardTermCfg(func=S.skill_pelvis_height, weight=r["height"].weight, params={"std": 0.15 * LS})
     r["posture"] = RewardTermCfg(func=S.posture_locomotion, weight=r["posture"].weight, params=dict(r["posture"].params))
     r["upright"] = RewardTermCfg(func=S.upright_unless_aiming, weight=r["upright"].weight, params=dict(r["upright"].params))
     r["phase_contact"] = RewardTermCfg(func=S.phase_contact_v4, weight=r["phase_contact"].weight)
     # the five skills
     w = SKILL_REWARD_WEIGHT
-    r["skill_squat"] = RewardTermCfg(func=S.skill_squat, weight=w, params={"std": 0.05})
-    r["skill_flamingo"] = RewardTermCfg(func=S.skill_flamingo, weight=w, params={"clearance": 0.10, "slip_speed": 0.05})
-    r["skill_march"] = RewardTermCfg(func=S.skill_march, weight=w, params={"std": 0.06})
+    r["skill_squat"] = RewardTermCfg(func=S.skill_squat, weight=w, params={"std": 0.05 * LS})
+    r["skill_flamingo"] = RewardTermCfg(func=S.skill_flamingo, weight=w, params={"clearance": 0.10 * LS, "slip_speed": 0.05})
+    r["skill_march"] = RewardTermCfg(func=S.skill_march, weight=w, params={"std": 0.06 * LS})
     # coarse terms (rs_v3), same fix as reach: rs_v2 squatted ~0.29 m short of the target (std 0.05 pays e^-33) and
     # barely lifted a knee for the march (std 0.06 vs 0.15-0.30 m lifts) -> both flat for 300 iterations
-    r["skill_squat_coarse"] = RewardTermCfg(func=S.skill_squat, weight=w / 2, params={"std": 0.25})
+    r["skill_squat_coarse"] = RewardTermCfg(func=S.skill_squat, weight=w / 2, params={"std": 0.25 * LS})
     # rs_v4: the march coarse kernel paid ~73 % for standing still -> replaced by the swing-knee lift fraction
     r["skill_march_lift"] = RewardTermCfg(func=S.skill_march_lift, weight=w / 2)
     # rs_v5: joint-space leg guides for squat / flamingo / march (rs_v4 it950: no knee lift at all, squats 0.25 m short —
@@ -59,11 +77,11 @@ def matt_stance_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     r["skill_leg_pose"] = RewardTermCfg(func=S.skill_leg_pose, weight=w / 2, params={"std": 0.25})
     r["skill_torso"] = RewardTermCfg(func=S.skill_torso, weight=w, params={"std": math.radians(9)})
     # coarse term (rs_v2): the resting hand starts 0.5-1.2 m from the target, where std 0.10 pays ~0 (rs_v1 reach stayed 0)
-    r["skill_reach_coarse"] = RewardTermCfg(func=S.skill_reach, weight=w / 2, params={"std": 0.50})
-    r["skill_reach"] = RewardTermCfg(func=S.skill_reach, weight=w / 2, params={"std": 0.10})
-    r["skill_reach_fine"] = RewardTermCfg(func=S.skill_reach, weight=w / 2, params={"std": 0.03})
+    r["skill_reach_coarse"] = RewardTermCfg(func=S.skill_reach, weight=w / 2, params={"std": 0.50 * LS})
+    r["skill_reach"] = RewardTermCfg(func=S.skill_reach, weight=w / 2, params={"std": 0.10 * LS})
+    r["skill_reach_fine"] = RewardTermCfg(func=S.skill_reach, weight=w / 2, params={"std": 0.03 * LS})
 
-    cfg.terminations["pelvis_low"] = TerminationTermCfg(func=S.pelvis_below_skill, params={"minimum_height": 0.55})
+    cfg.terminations["pelvis_low"] = TerminationTermCfg(func=S.pelvis_below_skill, params={"minimum_height": _fall_z()})
 
     # recipe v5 (staged 2026-09-29, before the first Rung S run): the joints a skill does not use hold the default pose
     # (posture is off outside locomotion, so idle arms / legs would drift), bio-realism terms, fast simulation (8192 envs,
@@ -93,8 +111,8 @@ def matt_stance_v7_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     cfg = matt_stance_v6_env_cfg(play=play)
     r = cfg.rewards
     w = SKILL_REWARD_WEIGHT
-    r["skill_spot"] = RewardTermCfg(func=S.skill_spot, weight=w / 2, params={"std": 0.15})
-    r["skill_flamingo_lift"] = RewardTermCfg(func=S.skill_flamingo_lift, weight=w / 2, params={"clearance": 0.10})
+    r["skill_spot"] = RewardTermCfg(func=S.skill_spot, weight=w / 2, params={"std": 0.15 * LS})
+    r["skill_flamingo_lift"] = RewardTermCfg(func=S.skill_flamingo_lift, weight=w / 2, params={"clearance": 0.10 * LS})
     return cfg
 
 
@@ -109,7 +127,7 @@ def matt_stance_reach_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     cfg = matt_stance_v7_env_cfg(play=play)
     cfg.commands["athlete"].mode_probs = (0.20, 0.06, 0.06, 0.06, 0.12, 0.50)
     r = cfg.rewards
-    r["skill_reach_mid"] = RewardTermCfg(func=S.skill_reach, weight=SKILL_REWARD_WEIGHT / 2, params={"std": 0.06})
+    r["skill_reach_mid"] = RewardTermCfg(func=S.skill_reach, weight=SKILL_REWARD_WEIGHT / 2, params={"std": 0.06 * LS})
     r["upright"].params["also"] = ("reach",)
     return cfg
 
