@@ -220,6 +220,80 @@ def zombie_rung2_wobble_sprint_env_cfg(play: bool = False) -> ManagerBasedRlEnvC
     return cfg
 
 
+def zombie_rung2_bands_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """z2_v16 (2026-10-12) = the recipe that took GRANDMA (g2_v9) and KIM (k2_v3) to a stable 10/10, on the zombie:
+    grandma_env's Cap -> Sharp -> Bands line (MATT's base recipe + lateral-acceleration cap, track_lin std 0.3 x SS,
+    forward / backward / side-step command bands, symmetric runner, entropy 0.001), which binds its scaling to the
+    process body. The zombie's own final line (Wobble = z2_v11, 8/10 at one checkpoint, 1-4/10 next to it) is the
+    yaw-heavy one; z2_v12-v14 tried the sharp kernel, the low entropy and a sprint band only on top of that line.
+    Without GRANDMA's careful-step term (as KIM). Warm start: the zombie's Rung2-Omni-Base run (plain_init, std <= 0.3).
+    A walking brain of another body is no start for it: z2_v15 (KIM's k2_v3 on the Wobble task) never stood."""
+    _check_body()
+    from . import grandma_env as GE                # G = the zombie in a zombie process
+    cfg = GE.grandma_rung2_bands_env_cfg(play=play)
+    cfg.rewards.pop("careful_steps", None)
+    return cfg
+
+
+ZOMBIE_VX_TOP = 3.6              # MATT units (x SS = 2.83 m/s): G1 asks up to 2.76; z2_v11 ran 2.8 -> 2.74
+
+
+def zombie_rung2_bands2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """z2_v19 (from the base run z2b_v1 it 1999: 4/10, it runs and turns, 0 falls). z2_v18 (Bands from the same start)
+    went 2 -> 5/10 with the turns, the backward walk and most side-steps fixed, but the fast runs with a turn fell apart
+    (2.23 m/s, wz -0.45: 0.25 -> 1.87 m/s RMS between the base and it 600): Bands commands up to 4.0 x SS = 3.14 m/s,
+    past the zombie's 2.99 m/s envelope, under the sharp kernel — GRANDMA's "fast command = do not run" (g2_v4), which
+    her 2.8 m/s cut fixed (g2_v5). Here the same cut for the zombie (forward top 3.6 x SS = 2.83 m/s in the range, the
+    curriculum and the forward band) and KIM's band shares (k2_v3): forward 15 %, backward 10 %, fast side-steps 30 %
+    (|vy| 0.7-1.1 x SS = 0.55-0.86 m/s; left over at 0.65-0.74 m/s)."""
+    from . import grandma_env as GE
+    cfg = zombie_rung2_bands_env_cfg(play=play)
+    cmd = cfg.commands["athlete"]
+    top = ZOMBIE_VX_TOP * SS
+    cmd.ranges.lin_vel_x = (cmd.ranges.lin_vel_x[0], top)
+    for stage in cfg.curriculum["command_vel"].params["velocity_stages"]:
+        stage["lin_vel_x"] = (stage["lin_vel_x"][0], top)
+    cmd.bands = ((0.15, (2.0 * SS, top), (0.0, 0.0), 0.6 * GE.WS),
+                 (0.10, (-1.5 * SS, -0.8 * SS), (0.0, 0.0), 0.5 * GE.WS),
+                 (0.30, (-0.5 * SS, 0.5 * SS), (0.7 * SS, 1.1 * SS), 0.0))
+    return cfg
+
+
+def zombie_rung2_capbands_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """z2_v21 (from the base run z2b_v1 it 1999, 4/10). The base run's REWARDS kept the zombie running and turning; the
+    sharp speed kernel of Bands / Bands2 (std 0.3 x SS = 0.24 m/s) is where z2_v18 stopped running fast and z2_v19 ran
+    5-8 % slow and stopped turning in a sprint. So: the base rewards (kernel 0.5), and from the Bands2 line only the
+    command side — lateral-acceleration cap, forward top 2.83 m/s, the three bands — with the symmetric runner."""
+    from . import grandma_env as GE
+    _check_body()
+    cfg = GE.grandma_rung2_cap_env_cfg(play=play)
+    cfg.rewards.pop("careful_steps", None)
+    cmd = cfg.commands["athlete"]
+    top = ZOMBIE_VX_TOP * SS
+    cmd.ranges.lin_vel_x = (cmd.ranges.lin_vel_x[0], top)
+    for stage in cfg.curriculum["command_vel"].params["velocity_stages"]:
+        stage["lin_vel_x"] = (stage["lin_vel_x"][0], top)
+    cmd.bands = ((0.15, (2.0 * SS, top), (0.0, 0.0), 0.6 * GE.WS),
+                 (0.10, (-1.5 * SS, -0.8 * SS), (0.0, 0.0), 0.5 * GE.WS),
+                 (0.30, (-0.5 * SS, 0.5 * SS), (0.7 * SS, 1.1 * SS), 0.0))
+    return cfg
+
+
+def zombie_rung2_polish_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """z2_v20 = a careful polish of the DEPLOYED brain (z2_v11 it 400, rebuilt from zombie_rung2.onnx + its critic with
+    tools/onnx_to_checkpoint.py: the September checkpoints are gone). On 2026-10-12 it is 8/10 with two near misses:
+    a 2.76 m/s run with a -0.42 rad/s turn (0.21 vs the 0.157 m/s bar) and a slow diagonal side-step (0.2, -0.17;
+    0.17). Its own recipe (Wobble) unchanged, 4096 envs, plus two command bands on exactly those parts: 20 % fast runs
+    with a turn (2.0-3.6 x SS = 1.57-2.83 m/s, |wz| <= 0.6 / TS) and 20 % side-steps over the whole range (|vy|
+    0.1-1.1 x SS with vx +-0.5 x SS). The trainer takes small steps (desired KL 0.004, entropy 0.001, action std 0.15
+    at the start) and saves every 50 iterations: z2_v11's neighbours scored 1-4/10, so every checkpoint is gated."""
+    cfg = zombie_rung2_wobble_env_cfg(play=play)
+    cfg.scene.num_envs = 4096
+    cfg.commands["athlete"].bands = ((0.20, (2.0 * SS, ZOMBIE_VX_TOP * SS), (0.0, 0.0), 0.6 * WS),
+                                     (0.20, (-0.5 * SS, 0.5 * SS), (0.1 * SS, 1.1 * SS), 0.0))
+    return cfg
+
+
 def zombie_rung2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     """Rung 2 fine-tune — MATT's final recipe (r2_v8: symmetric runner, full widened
     envelope, lateral-acceleration cap, sharp linear tracking, sprint focus) on the scaled envelope. Warm start: the best

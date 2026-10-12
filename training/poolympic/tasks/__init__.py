@@ -313,6 +313,26 @@ if bodies.current().name == "mattbio":
             rl.algorithm.entropy_coef = 0.001
         register_mjlab_task(task_id=task_id, env_cfg=fn(), play_env_cfg=fn(play=True), rl_cfg=rl, runner_cls=runner)
 
+    # 2026-10-12: per-event specialists (user decision 2026-10-01: one stance brain per event). rs_v9 (Stance-v8 on from
+    # the deployed rs_v8 it 1199, rebuilt with tools/onnx_to_checkpoint.py) peaked at march 9/10 + torso 8/10 (it 450 /
+    # 600) and then lost the march (0/10 at it 1050): the five skills share one network and trade against each other.
+    # Same env, 65 % of the commands on ONE skill (locomotion 15 %, the other four 5 % each so they are not forgotten
+    # outright), entropy 0.001. Warm start: rs_v9 it 600 (plain_init --max-std 0.3).
+    def _specialist(mode: int):
+        def make(play: bool = False):
+            cfg = matt_stance_v7_env_cfg(play=play)
+            probs = [0.15, 0.05, 0.05, 0.05, 0.05, 0.05]
+            probs[mode] = 0.65
+            cfg.commands["athlete"].mode_probs = tuple(probs)
+            return cfg
+        return make
+
+    for task_id, mode in (("PoOlympic-MattBio-RungS-March", 3), ("PoOlympic-MattBio-RungS-Torso", 4)):
+        fn = _specialist(mode)
+        rl = matt_ppo_v5_cfg("mattbio_stance", max_iterations=600)
+        rl.algorithm.entropy_coef = 0.001
+        register_mjlab_task(task_id=task_id, env_cfg=fn(), play_env_cfg=fn(play=True), rl_cfg=rl, runner_cls=SymmetricRunner)
+
 if bodies.current().name == "kim":
     # KIM (2026-10-10): the GRANDMA chain on her body — Rung 0 / 1, Rung 2 (base -> cap -> bands), crawl, get-up ladder
     # (supine, then face down: prone = press-up recipe, roll = the roll ladder if her arms cannot press her up)
@@ -486,6 +506,42 @@ if bodies.current().name == "zombie":
                              zombie_rung2_yawfilt_cap3_env_cfg, zombie_rung2_yawfilt_cap3_lin3_env_cfg, zombie_rung2_yawfilt_env_cfg, zombie_rung2_wobble_env_cfg,
                              zombie_rung2_wobble_sharp_env_cfg, zombie_rung2_wobble_sprint_env_cfg,
                              zombie_rung2_yawgrad_env_cfg)
+
+    # 2026-10-12: GRANDMA's / KIM's Bands recipe on the zombie (z2_v16; see zombie_rung2_bands_env_cfg)
+    from .zombie_env import zombie_rung2_bands_env_cfg
+    _zb = matt_ppo_cfg("zombie_rung2", max_iterations=1200)
+    _zb.algorithm.entropy_coef = 0.001
+    register_mjlab_task(task_id="PoOlympic-Zombie-Rung2-Omni-Bands", env_cfg=zombie_rung2_bands_env_cfg(),
+                        play_env_cfg=zombie_rung2_bands_env_cfg(play=True), rl_cfg=_zb, runner_cls=SymmetricRunner)
+    from .zombie_env import zombie_rung2_bands2_env_cfg, zombie_rung2_polish_env_cfg
+    register_mjlab_task(task_id="PoOlympic-Zombie-Rung2-Omni-Bands2", env_cfg=zombie_rung2_bands2_env_cfg(),
+                        play_env_cfg=zombie_rung2_bands2_env_cfg(play=True), rl_cfg=_zb, runner_cls=SymmetricRunner)
+    from .zombie_env import zombie_rung2_capbands_env_cfg
+    register_mjlab_task(task_id="PoOlympic-Zombie-Rung2-Omni-CapBands", env_cfg=zombie_rung2_capbands_env_cfg(),
+                        play_env_cfg=zombie_rung2_capbands_env_cfg(play=True), rl_cfg=_zb, runner_cls=SymmetricRunner)
+    _zp = matt_ppo_cfg("zombie_rung2", max_iterations=400)
+    _zp.algorithm.entropy_coef, _zp.algorithm.desired_kl, _zp.save_interval = 0.001, 0.004, 50
+    register_mjlab_task(task_id="PoOlympic-Zombie-Rung2-Omni-Wobble-Polish", env_cfg=zombie_rung2_polish_env_cfg(),
+                        play_env_cfg=zombie_rung2_polish_env_cfg(play=True), rl_cfg=_zp, runner_cls=SymmetricRunner)
+
+    # The zombie's September tasks below build ONE environment unless the CLI passes --env.scene.num-envs, and the
+    # queue has no train-args field: z2_v15, z1_v2 and z0_v2 (2026-10-12) each trained a single env through it.
+    # "-4096" = the same task with the env count in the config, for the queue.
+    def _envs4096(fn):
+        def make(play: bool = False):
+            cfg = fn(play=play)
+            cfg.scene.num_envs = 4096
+            return cfg
+        return make
+
+    for _tid, _fn, _exp, _its, _runner in (
+            ("PoOlympic-Zombie-Rung0-Stand-4096", zombie_rung0_env_cfg, "zombie_rung0", 1500, MjlabOnPolicyRunner),
+            ("PoOlympic-Zombie-Rung1-Run-4096", zombie_rung1_env_cfg, "zombie_rung1", 3000, MjlabOnPolicyRunner),
+            ("PoOlympic-Zombie-Rung2-Omni-Base-4096", zombie_rung2_base_env_cfg, "zombie_rung2", 2000, MjlabOnPolicyRunner),
+            ("PoOlympic-Zombie-Rung2-Omni-Wobble-4096", zombie_rung2_wobble_env_cfg, "zombie_rung2", 1000, SymmetricRunner)):
+        _fn = _envs4096(_fn)
+        register_mjlab_task(task_id=_tid, env_cfg=_fn(), play_env_cfg=_fn(play=True),
+                            rl_cfg=matt_ppo_cfg(_exp, max_iterations=_its), runner_cls=_runner)
 
     register_mjlab_task(
         task_id="PoOlympic-Zombie-Rung0-Stand",

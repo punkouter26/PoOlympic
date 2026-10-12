@@ -296,7 +296,8 @@ namespace PoOlympic
         public string Banner => Current switch
         {
             Phase.Ready => Mathf.CeilToInt(countdownSeconds - PhaseTime).ToString(),
-            Phase.Result => $"{runners.First(x => x.place == 1).name} WINS\n{Describe(runners.First(x => x.place == 1))}",
+            // a heat nobody completed has no winner (place 1 is then just the first lane)
+            Phase.Result => TryWinningMark(out _, out _, out _) ? $"{runners.First(x => x.place == 1).name} WINS\n{Describe(runners.First(x => x.place == 1))}" : "NO FINISHER",
             _ => LiveTime < 0.8f ? "GO!" : "",
         };
         public bool TryWinningMark(out double value, out bool lowerIsBetter, out string text)

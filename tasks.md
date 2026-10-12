@@ -705,5 +705,9 @@ get up → finish). Unity: `SpectacleTests`.
 - [ ] GRANDMA still stays down in ~4 of 62 forced falls; her face-down get-up is over her joint-speed bar (5.3 %).
 - [ ] Recovery is not in Crab Shuffle / Turntable (a fall is still out there); Gust Gauntlet and Iron Pedestal stay
   elimination events by design.
-- [ ] A heat in which nobody finishes still announces a winner ("L1 WINS · DNF").
+- [x] A track heat in which nobody finishes shows "NO FINISHER" instead of a winner (2026-10-12; the other events
+  and the ticker's "wins" line are unchanged).
+- [x] 2026-10-12 finish-up: GRANDMA's forced-fall recovery re-measured with her new walking brain (g2_v9 it 1200):
+  59 of 68 fallers finish (87 %; with g2_v8 it was 58 of 62) — she now also goes down at the 2 m/s shove more often.
+  Event 27 odds refitted with that brain. ZOMBIE review page `parity/tb/zgetup_v3/review.html`.
 

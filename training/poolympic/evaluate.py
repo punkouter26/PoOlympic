@@ -431,21 +431,29 @@ def rung2_episode(onnx_path: Path, seed: int, sim: Sim | None = None, shove_dv: 
         if steady_state:
             settle = max(1.5 * TS, 0.5 * TS + float(np.linalg.norm(cmd[:2] - prev_cmd[:2])) / STEADY_ACCEL)
         prev_cmd = cmd
-        lin, yaw = [], []
+        lin, yaw, ex, ey = [], [], [], []
         for k in range(int(5.0 / dt)):
             if not tick(cmd, shove):
                 break
             if k * dt >= settle:
                 vx, vy, wz = _vel_heading(sim)
                 lin.append(math.hypot(vx - cmd[0], vy - cmd[1]))
+                ex.append(vx - cmd[0])
+                ey.append(vy - cmd[1])
                 yaw.append(wz - cmd[2])
         # yaw error averaged over one stride of the body's gait clock — the pelvis' natural transverse rotation (~±5°
         # per step) shows up in the per-tick RMS as a yaw-rate wobble. The pass criterion for bodies with
         # yaw_per_stride (rung2_checks), report-only for the others
         period = max(1, int(round(1.0 / (C.gait_hz(cmd) * dt)))) if np.linalg.norm(cmd) >= C.PHASE_CMD_THRESHOLD else 1
         yaw_avg = np.convolve(yaw, np.ones(period) / period, mode="valid") if len(yaw) >= period else np.array(yaw)
+        # the same for the speed error (report-only, 2026-10-12): the velocity error VECTOR averaged over one stride,
+        # then its RMS — what is left of lin_rms once the within-stride surge and sway of the pelvis is taken out
+        box = np.ones(period) / period
+        lin_avg = (np.hypot(np.convolve(ex, box, mode="valid"), np.convolve(ey, box, mode="valid"))
+                   if len(ex) >= period else np.array(lin))
         segments.append({"kind": kind, "cmd": cmd.round(3).tolist(),
                          "lin_rms": float(np.sqrt(np.mean(np.square(lin)))) if lin else None,
+                         "lin_rms_stride": float(np.sqrt(np.mean(np.square(lin_avg)))) if len(lin_avg) else None,
                          "yaw_rms": float(np.sqrt(np.mean(np.square(yaw)))) if yaw else None,
                          "yaw_rms_stride": float(np.sqrt(np.mean(np.square(yaw_avg)))) if len(yaw_avg) else None})
         if fell:

@@ -1437,3 +1437,93 @@ they left out.
   the queue does not read that file). `runs/queue.txt` was not touched.
 - **Noted, not changed:** `biomech.HILL_W_MAX` is in MATT units for every body while the joint-speed bar is scaled
   (18 rad/s ÷ √λ) — settle it with the contract v5 constants.
+
+## 2026-10-12 01:45 · Goal "all behaviours at 100 %": GRANDMA walks 10/10 (g2_v9); zombie warm start from KIM fails → own chain
+- **Where the roster stood** (parity/brains/manifest.json): below the bar were GRANDMA Rung 2 (g2_v8 8/10), zombie Rung 2
+  (z2_v11 8/10 at one checkpoint), zombie get-up (none) and the mattbio stance drills (torso 7, march 9, reach 0-1 of 10).
+  The GRANDMA / zombie checkpoints of September are gone (fresh clone), so nothing could be continued.
+- **g2_v9** — `PoOlympic-Grandma-Rung2-Omni-Cap28-Bands` (unchanged task), `plain_init --max-std 0.3` from **KIM's**
+  k2_v3 it 600, 1500 its, 64 min (the first 23 its took 9 min: Unity's EditMode suite was running). G1 Rung 2:
+  **8/10 at it 300, 10/10 with 0 falls at it 600 / 900 / 1200 / 1499** (g2_v8 needed the whole Rung 0 → 1 → 2 chain
+  and ended at 8/10). The only misses at it 300 were two stop segments (0.21 / 0.23 vs 0.187 m/s).
+  30 seeds: it 600 29/30 (one stop), it 900 29/30 and it 1499 29/30 (the same 2.76 m/s run with a −0.41 rad/s turn,
+  0.19-0.20), **it 1200 30/30**.
+- **Event heats** (`compare_brain_events.py grandma`, 6 heats, her 3 lanes; g2_v8 it 1199 → g2_v9 it 1200): Gust
+  Gauntlet still in 12 → **18 of 18** · Slalom 30.2 s (1 DNF) → 27.5 s (0) · Inverted Sprint 17.5 → 16.4 s · Crab 21.2 →
+  20.3 s · Steeplechase 17.6 → 17.4 s · Terminal Velocity 2.75 → 2.77 m/s · Brake DQ 3 → 1 · Turntable 7.08 → 7.34 s
+  (the one event that got slower).
+- **Deployed (Python side):** `grandma_rung2.onnx` = g2_v9 it 1200 (export_brain; G1 10/10 re-run on the deployed file),
+  critic, confidence group `rung2_g` (AUC 0.687), references `grandma_rung2` + `grandma_rung2_walk` (command 1.4, 0,
+  0.3). Still to do: odds refit for Events 5, 9-13, 19, 22 (the 640 cached heats with her old brain are removed from
+  `parity/odds/heats.jsonl`; 88 re-run so far), `brain_manifest.py`, Unity "Sync Contract + Brains" + G2-G4.
+- **z2_v15, z1_v2, z0_v2 — three zombie runs wasted on ONE environment.** `PoOlympic-Zombie-Rung0-Stand`, `-Rung1-Run`,
+  `-Rung2-Omni-Base` and the `-Rung2-Omni-*` line build a single env unless the CLI passes `--env.scene.num-envs` (as
+  in September); the queue has no train-args field. z2_v15 (Wobble from KIM's k2_v3: reward 14.7 -> -2.0, 0/10 at every
+  gate), z1_v2 (Rung 1 from the zombie's get-up brain: 0/10 x 4) and z0_v2 (Rung 0 from scratch: every episode ends on
+  torso_tilt at 59 ticks, reward flat at -3.05) therefore say NOTHING about those warm starts. Seen only at z0_v2,
+  from 0.5 s/it (4096 envs: ~2 s) and a from-scratch Rung 0 that did not move (z0_v1 was at 371 ticks by it 100) —
+  GRANDMA's g0_v1 died the same way on 2026-09-30. Same trap still open on 10 current `matt` tasks.
+- **Fix:** new IDs `PoOlympic-Zombie-Rung0-Stand-4096`, `-Rung1-Run-4096`, `-Rung2-Omni-Base-4096`,
+  `-Rung2-Omni-Wobble-4096` (the same cfg functions with `scene.num_envs = 4096`), and the **new task
+  `PoOlympic-Zombie-Rung2-Omni-Bands`**: GRANDMA's Cap -> Sharp -> Bands line bound to the zombie body
+  (`grandma_env.G`, `zombie_env.zombie_rung2_bands_env_cfg`; 4096 envs from grandma_env). That line was never run on
+  the zombie: z2_v12-v14 put its pieces on top of the yaw-heavy Wobble line. `dump_task_cfgs.py --diff`: 0 existing
+  cfgs changed.
+- **Queued:** z2_v16 (`Zombie-Rung2-Omni-Bands`, plain_init from KIM's k2_v3 it 600, 1500 its — the exact analogue of
+  g2_v9) and z2_v17 (`Zombie-Rung2-Omni-Wobble-4096`, same start, 1000 its — the valid rerun of z2_v15). If neither
+  carries over: Rung 0 -> Rung 1 -> Base -> Bands on the `-4096` IDs.
+- **Mistakes:** `fit_odds.py --workers 6` during a GPU run took every core (each worker ran 2-9 threads) — the training
+  process fell to 0.35 of a core and 2 % GPU for ~30 min and the odds heats themselves stopped advancing; stopped.
+  `tools/export_critic.py` raised a NameError in its self-check (`sd` undefined) — fixed.
+
+## 2026-10-12 05:50 · Zombie Rung 2: five valid runs, none beats the deployed 8/10; what is left is the top-speed run with a turn
+All on 4096 envs, 0 falls at every gate. G1 Rung 2, 10 seeds (bar 0.157 m/s = 0.2 x SS):
+| run | task | from | gates |
+|---|---|---|---|
+| z2_v16 | Rung2-Omni-Bands (new) | KIM k2_v3 it 600 | 0 · 0 · 0 · 1 · — : stands and side-steps, forward runs die (2.76 m/s command: 0.5 m/s by it 600) |
+| z2b_v1 | Rung2-Omni-Base-4096 | KIM k2_v3 it 600 | 1 · 1 · 4 · 4 (it 500-1999): full-length episodes by it 50, track_lin 1.47 at it 200 |
+| z2_v17 | Rung2-Omni-Wobble-4096 | z2b_v1 it 1999 | 0 · 1 · 2 · 1 · 0 |
+| z2_v18 | Rung2-Omni-Bands | z2b_v1 it 1999 | 2 · 5 · 4 · 3: turns, backward walk and side-steps fixed; runs with a turn collapse (2.23 m/s, wz -0.45: 1.87 m/s RMS) |
+| z2_v19 | Rung2-Omni-Bands2 (new: forward top 2.83 m/s, KIM's band shares) | z2b_v1 it 1999 | 5 · 2 · 4 · 5: no collapse, but 5-8 % slow at the top and it stops turning in a sprint (2.76 / -0.42 rad/s: -0.08) |
+| z2_v20 | Rung2-Omni-Wobble-Polish (new: Wobble + two bands, KL 0.004, std 0.15) | the DEPLOYED brain rebuilt from its ONNX | 3 · 2 · 3 · 3 · 3 · 3 · 3 · 3 (every 50 its) |
+- **The cross-body start works for the zombie too** when the task builds 4096 envs and starts on the base recipe; on
+  the final recipes it re-learns "fast command = do not run", as the log of 2026-09-29 and g2_v4 already said.
+- **`tools/onnx_to_checkpoint.py`** rebuilds a checkpoint from a deployed brain + its critic (actor, both normalisers,
+  value net; action std chosen; ctrl vs the brain 5e-7) — a way back to a brain whose run directory is gone.
+  z2_v20 from it fell 8 -> 3/10 within 50 iterations of small steps and stayed there: z2_v11 it 400 is an isolated
+  good point, as z2_v12-v14 found in September.
+- **Deployed `zombie_rung2` today: 8/10** — two misses, a 2.76 m/s run with a -0.42 rad/s turn (0.21) and a slow
+  diagonal side-step (0.2, -0.17: 0.17). New report-only field `lin_rms_stride` in the gate JSON (the velocity error
+  vector averaged over one stride, as `yaw_rms_stride`): its speed error is 0.64 of the per-tick one (median), the
+  side-step passes, the fast run with a turn stays over (0.18) -> **9/10 under a stride-averaged speed bar**. That
+  last one is a real shortfall at 92 % of the zombie's envelope while turning, not measurement noise.
+- **Not deployed:** nothing of these runs; `zombie_rung2.onnx` is unchanged. Open choices are the user's: judge the
+  zombie's speed per stride (as its yaw since 2026-09-29), lower the G1 sprint top for it (GRANDMA's 2.8 m/s
+  precedent), or accept 8/10.
+- **08:00 — queue empty, GRANDMA's deployment finished.** Odds refitted on 640 fresh heats with g2_v9 it 1200 (Events
+  5, 9-13, 19, 22; `odds_model.json`), Unity "Sync Contract + Brains" (headless) and `ParityGateTests` 39/39, brain
+  manifest 25 brains / 0 problems, pytest 90/90, `check_bodies.ps1` clean. KIM (poolympic-c8's jobs): k2f_v1 keeps
+  G1 Rung 2 10/10 at it 100-300; ks_v1 (stance from her walking brain, 1500 its) has no stance drill until it 1499,
+  where the flamingo drill is 10/10 and walking 6/10. My rs_v9 (the same recipe on mattbio) was dropped unrun.
+
+## 2026-10-12 10:45 · MATT stance drills: march is 10/10 (the 9 was the stopwatch), torso 7/10 is the joint range; zombie z2_v21
+- **z2_v21** (`Zombie-Rung2-Omni-CapBands`, new: base rewards + lateral cap, 2.83 m/s top, bands, symmetric runner;
+  from z2b_v1 it 1999): 1 · 2 · 1 · 1 · 0 of 10. Seven valid zombie runs now, none above the deployed 8/10.
+- **rs_v9** (`MattBio-RungS-Stance-v8`, 1200 its, from the DEPLOYED rs_v8 it 1199 rebuilt with
+  `onnx_to_checkpoint.py` on a KIM stance checkpoint as template): squat 10 throughout; march 8 · 7 · 9 · 9 · 5 · 5 ·
+  0 · 5; torso 7 · 7 · 8 · 8 · 7 · 7 · 5 · 7. Specialists from rs_v9 it 600 (new IDs `MattBio-RungS-March` / `-Torso`,
+  65 % of the commands on one skill): rsm_v1 march 4 · 5 · 8 · 7 · 3 · 5; rst_v1 torso 7 at every gate (march 9).
+- **March: the one failing seed was the measurement.** Seed 1006 commands 1.294 Hz; the drill counted lifts over its
+  8 s window, which can only read multiples of 0.125 Hz — 1.25 or 1.375, the second 6 % off against the 5 %
+  tolerance. `evaluate_stance.drill_march` now times the lifts (first to last; the count is kept as
+  `cadence_count_hz`); bars unchanged. The deployed march brain reads 1.295 Hz there: **rs_v8 it 1199 march 10/10**
+  (rst_v1 it 200 too; rs_v6 it 2550 stays 0/10: it does not lift). pytest 90/90.
+- **Torso: 7/10 is the body, not the brain.** The three failing seeds each contain one aim with |yaw| 0.93-1.0 rad at
+  a pitch of -0.15 to +0.07; the error there is 0.20-0.21 rad after 2 s and after 6 s, identical for rs_v8 and the
+  specialist. Chest yaw against the pelvis comes from `abdomen_twist`, range +-45 deg = 0.785 rad; the drill's
+  approved range is +-1.047 rad (60 deg). Leaning forward (pitch 0.6) reaches 0.94 by compounding the bend; upright
+  it cannot. No training closes that: either the torso-yaw range of the drill / event comes down to what the joint
+  allows (about +-0.75 rad), or the body gets a wider twist (new body ID, every brain retrained). User decision, like
+  the reach radius (open since 2026-10-02).
+- **Per-event stance brains today:** squat 10/10 (rs_v6 it 2550 / rs_v8 it 1199), flamingo 10/10 (rs_v6 it 2550),
+  march 10/10 (rs_v8 it 1199), torso 7/10 (range), reach 0-1/10 (radius). Nothing new deployed.

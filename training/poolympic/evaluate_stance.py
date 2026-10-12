@@ -165,22 +165,29 @@ def drill_march(sim: SkillSim, rng: np.random.Generator) -> dict:
     fall = fall or sim.run(10.0, sample)
     r = np.array(rise)
     thr = 0.5 * lift
-    peaks, i = [], 0
+    peaks, starts, i = [], [], 0
     while i < len(r):                      # one peak per excursion above half the lift
         if r[i] > thr:
             j = i
             while j < len(r) and r[j] > thr:
                 j += 1
             peaks.append(float(r[i:j].max()))
+            starts.append(i)
             i = j
         else:
             i += 1
     span = len(r) * TICK
-    cadence = len(peaks) / span if span else 0.0
+    count_cadence = len(peaks) / span if span else 0.0
+    # Cadence = lifts per second between the first and the last lift (2026-10-12). Counting lifts over the 8 s window
+    # (the earlier measure, kept as cadence_count_hz) can only read multiples of 0.125 Hz: a perfect march at the
+    # commanded 1.294 Hz makes 10.35 lifts and reads 1.25 or 1.375 by where the window falls, the second 6 % off
+    # against the 5 % tolerance (seed 1006 failed on exactly that with every brain).
+    cadence = ((len(starts) - 1) / ((starts[-1] - starts[0]) * TICK)) if len(starts) >= 3 else count_cadence
     mean_peak = float(np.mean(peaks)) if peaks else 0.0
     ok = (fall is None and abs(cadence - hz) <= MARCH_CADENCE_TOL * hz and mean_peak >= MARCH_LIFT_FRAC * lift
           and drift < MARCH_DRIFT)
     return {"pass": bool(ok), "fall": fall, "cadence_cmd_hz": round(hz, 3), "cadence_hz": round(cadence, 3),
+            "cadence_count_hz": round(count_cadence, 3),
             "lift_cmd_m": round(lift, 3), "mean_peak_m": round(mean_peak, 3), "drift_m": round(drift, 3)}
 
 

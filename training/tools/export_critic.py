@@ -85,6 +85,7 @@ def export_one(brain: str) -> Path:
     # verify: ORT graph == the rsl_rl critic math (numpy float32)
     sess = ort.InferenceSession(str(out), providers=["CPUExecutionProvider"])
     rng = np.random.default_rng(0)
+    sd = state["critic_state_dict"]
     mean, std = sd["obs_normalizer._mean"][0].numpy(), sd["obs_normalizer._std"][0].numpy()
     W = [(sd[f"mlp.{i}.weight"].numpy(), sd[f"mlp.{i}.bias"].numpy()) for i in (0, 2, 4, 6)]
     worst = 0.0

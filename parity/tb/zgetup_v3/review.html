@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZOMBIE get-up — training review (zgetup_v3, zgetup_prone_v1)</title>
+<style>
+  body { font: 16px/1.5 "Segoe UI", system-ui, sans-serif; background: #f6f7fa; color: #1b2030; margin: 0; padding: 24px 16px; }
+  main { max-width: 980px; margin: 0 auto; }
+  h1 { font-size: 24px; } h2 { font-size: 19px; margin-top: 40px; }
+  img { max-width: 100%; height: auto; border: 1px solid #d5d9e3; border-radius: 6px; background: #fff; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; } th, td { border: 1px solid #d5d9e3; padding: 6px 10px; text-align: left; vertical-align: top; }
+  th { background: #e9ecf3; width: 90px; } .box { background: #fff; border: 1px solid #d5d9e3; border-radius: 6px; padding: 12px 16px; }
+</style>
+</head>
+<body>
+<main>
+<h1>The zombie learns to get up — training review</h1>
+<div class="box">
+<p><b>Runs (2026-10-11 night):</b> <code>zgetup_v3</code> (task PoOlympic-Zombie-Getup2, 1500 iterations, 43 min, dark line)
+then <code>zgetup_prone_v1</code> (PoOlympic-Zombie-Getup-Prone, 800 iterations, 18 min, light blue). Warm start of the first
+run: KIM's get-up brain (<code>kgetup_v1</code> it 900), a different body.</p>
+<p><b>Result:</b> deployed brain <code>getup_zombie.onnx</code> = zgetup_prone_v1 iteration 600. CPU, 30 seeds: up from the back
+30/30 in 0.66-0.70 s, up from face down 30/30 in 0.26-0.40 s, nobody fell afterwards. Joint speeds: 0.0 % (back) and 0.9 %
+(face down) of physics steps above its 22.9 rad/s bar (allowance 5 %); one joint peaks at 46 rad/s face down, a flick worth
+slowing in a later run. In forced mid-race falls 75 of 76 fallen zombies finished.</p>
+<p><b>Better or worse than before?</b> Better: this is the first zombie run that gets up at all. The two earlier runs of this
+task family (zgetup_v1, zgetup_v2, from the zombie's own standing brain) stayed at 0 % on the seated stage for 830 iterations
+and more; their run folders are no longer on this machine, so they cannot be drawn in the same chart, and the comparison
+rests on the written record in tasks.md. What changed is only the starting brain.</p>
+</div>
+
+<h2>1. Ladder stage (how far up the ladder of starting poses)</h2>
+<img src="1_stage.png" alt="Curriculum stage over iterations for the two zombie get-up runs">
+<table>
+<tr><th>Toddler</th><td>The line stays low for a long time, then jumps to the top. That jump is the zombie learning to stand up.</td></tr>
+<tr><th>Child</th><td>Training starts from easy poses and moves to harder ones. The zombie was stuck on "sitting, leaning back" (step 2) for a long while. Then it found the trick and passed steps 3, 4, 5 and 6 one after another.</td></tr>
+<tr><th>Adult</th><td>The frontier sat at stage 2 for about 356 iterations, the same stage where both earlier runs stopped for good, then advanced to the last stage (6, lying flat) within about 45 iterations. The prone run starts at stage 6 by design and never leaves it. Lesson for scheduling: a flat stage line at iteration 300 was not yet a reason to stop this run.</td></tr>
+</table>
+
+<h2>2. Success at the frontier stage</h2>
+<img src="2_success.png" alt="Success rate at the frontier stage">
+<table>
+<tr><th>Toddler</th><td>Low line = it keeps falling over. High line = it gets up almost every time.</td></tr>
+<tr><th>Child</th><td>This is the score on the hardest pose in practice. It stays near zero while the zombie is stuck, then shoots up to nearly 1.</td></tr>
+<tr><th>Adult</th><td>Frontier success was about 0.5 % at iteration 100 and stayed near zero through the plateau; after the breakthrough it reaches about 1.0 and holds. The CPU gate without assist agrees: up 10/10 at iterations 500, 1000 and 1499. The prone run ends at 0.9995 and passed face down 10/10 at its first gate (iteration 200).</td></tr>
+</table>
+
+<h2>3. Helping hand (assist force)</h2>
+<img src="3_assist.png" alt="Maximum assist force as a share of body weight">
+<table>
+<tr><th>Toddler</th><td>The tall block is us helping to lift it. When the block ends, it stands up by itself.</td></tr>
+<tr><th>Child</th><td>While the zombie could not do it, training pushed up on its body as hard as allowed. When it worked out how to stand, the push faded to nothing and it kept standing up anyway.</td></tr>
+<tr><th>Adult</th><td>The success-driven assist was at its 0.8 body-weight cap from about iteration 40 to 280, then fell to 0 by about 360, just before the stage line jumps. The earlier runs hung from this assist with folded legs; this one let go of it. The prone run (light blue) needed no assist at all: 0 for all 800 iterations. All gate and probe numbers above are without assist.</td></tr>
+</table>
+</main>
+</body>
+</html>

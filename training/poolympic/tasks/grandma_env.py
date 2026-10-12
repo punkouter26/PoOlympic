@@ -19,8 +19,10 @@ from .. import contract as C
 from . import matt_env as M
 from . import mdp
 
-# KIM (2026-10-10) reuses this module's recipes on her own body: tasks/kim_env.py (one process = one body)
-G = C.BODY if C.BODY.name == "kim" else bodies.BODIES["grandma"]
+# KIM (2026-10-10) reuses this module's recipes on her own body: tasks/kim_env.py (one process = one body); so does the
+# zombie's Rung2-Omni-Bands (2026-10-12, zombie_env.zombie_rung2_bands_env_cfg — nothing else in a zombie process
+# imports this module)
+G = C.BODY if C.BODY.name in ("kim", "zombie") else bodies.BODIES["grandma"]
 LAM, SS, TS = G.length_scale, G.speed_scale, G.time_scale
 WS = 1.0 / TS                     # angular-rate scale
 
