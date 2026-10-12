@@ -91,7 +91,9 @@
    "file": "getup_grandma.onnx",
    "body": "grandma",
    "role": "getup",
-   "events": [],
+   "events": [
+    27
+   ],
    "name": "ggetup_roll_v4_it599",
    "experiment": "grandma_getup",
    "run": "ggetup_roll_v4",
@@ -112,7 +114,9 @@
    "file": "getup_kim.onnx",
    "body": "kim",
    "role": "getup",
-   "events": [],
+   "events": [
+    27
+   ],
    "name": "kgetup_prone_v1_it599",
    "experiment": "kim_getup",
    "run": "kgetup_prone_v1",
@@ -125,6 +129,29 @@
    "critic": null,
    "gate": {
     "source": "watch_kgetup_prone_v1.jsonl",
+    "getup": "up 10/10, at end 10",
+    "getup_prone": "up 10/10, at end 10"
+   }
+  },
+  {
+   "file": "getup_matt.onnx",
+   "body": "matt",
+   "role": "getup",
+   "events": [
+    27
+   ],
+   "name": "mgetup_prone_v1_it600",
+   "experiment": "matt_getup",
+   "run": "mgetup_prone_v1",
+   "iteration": 600,
+   "contract_version": 3,
+   "sha256": "bc3e018a6f51ab29b272584babe3b8e9c4a8408c87a9f3f74b5466fc4c868d54",
+   "sidecar_sha256_ok": true,
+   "fingerprint_sha256": "bfd287b0ce43147ad430d90787f724d9ef7a25a4cc281730278aa3ed0bb024e8",
+   "fingerprint_current": true,
+   "critic": null,
+   "gate": {
+    "source": "watch_mgetup_prone_v1.jsonl",
     "getup": "up 10/10, at end 10",
     "getup_prone": "up 10/10, at end 10"
    }

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MATT get-up — training review (mgetup_v1, mgetup_prone_v1)</title>
+<style>
+  body { font: 16px/1.5 "Segoe UI", system-ui, sans-serif; background: #f6f7fa; color: #1b2030; margin: 0; padding: 24px 16px; }
+  main { max-width: 980px; margin: 0 auto; }
+  h1 { font-size: 24px; } h2 { font-size: 19px; margin-top: 40px; }
+  img { max-width: 100%; height: auto; border: 1px solid #d5d9e3; border-radius: 6px; background: #fff; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; } th, td { border: 1px solid #d5d9e3; padding: 6px 10px; text-align: left; vertical-align: top; }
+  th { background: #e9ecf3; width: 90px; } .box { background: #fff; border: 1px solid #d5d9e3; border-radius: 6px; padding: 12px 16px; }
+</style>
+</head>
+<body>
+<main>
+<h1>MATT learns to get up — training review</h1>
+<div class="box">
+<p><b>Runs (2026-10-11):</b> <code>mgetup_v1</code> (task PoOlympic-Matt-Getup-Ladder, 1500 iterations, 44 min) then
+<code>mgetup_prone_v1</code> (PoOlympic-Matt-Getup-Prone, 800 iterations, 28 min). Warm start: KIM's get-up brain
+(<code>kgetup_prone_v1</code> it 599), because this clone holds no MATT checkpoints. Compared with KIM's two runs of the same
+recipe on her body (dark blue and light blue lines).</p>
+<p><b>Result:</b> deployed brain <code>getup_matt.onnx</code> = mgetup_prone_v1 iteration 600. CPU, 30 seeds: up from the back
+30/30 in 0.64-0.66 s, up from face down 30/30 in 0.88-0.92 s, nobody fell afterwards. Joint speeds: 0.1 % / 0.0 % of
+physics steps above 18 rad/s (allowance 5 %). In forced mid-race falls 25 of 26 fallen MATTs finished (the back-only brain
+of the first run: 4 of 26; iteration 799: 23 of 26).</p>
+<p><b>Better or worse than before?</b> Much faster than KIM's first run: MATT's ladder was finished after about 60 iterations,
+KIM's after about 680. The reason is the warm start: KIM began from a standing brain and had to discover getting up, MATT
+began from a brain that already knew how on a similar body.</p>
+</div>
+
+<h2>1. Ladder stage (how far up the ladder of starting poses)</h2>
+<img src="1_stage.png" alt="Curriculum stage over iterations for MATT's and KIM's get-up runs">
+<table>
+<tr><th>Toddler</th><td>The line going up means MATT is learning to stand up from harder and harder places. Green goes to the top very fast.</td></tr>
+<tr><th>Child</th><td>Training starts easy (a squat) and ends hard (lying flat). Each step up means "he can do this one, try the next". MATT (green) climbed all the steps almost at once. KIM (dark blue) was stuck on step 2 for a long time before she got it.</td></tr>
+<tr><th>Adult</th><td>The curriculum frontier advances when success at the current start pose passes a threshold. mgetup_v1 went from stage 2 to the last stage (6, lying) in about 60 iterations; kgetup_v1 needed about 680, with a 450-iteration plateau at stage 2. The two prone runs (orange, light blue) start at stage 6 by design.</td></tr>
+</table>
+
+<h2>2. Success at the frontier stage</h2>
+<img src="2_success.png" alt="Success rate at the frontier stage">
+<table>
+<tr><th>Toddler</th><td>High line = he gets up almost every time.</td></tr>
+<tr><th>Child</th><td>This is the score on the hardest pose he is practising. Near 1 means nearly every try works. The orange line dips at the start because lying face down was new, then it climbs back to the top.</td></tr>
+<tr><th>Adult</th><td>Frontier success for mgetup_v1 sits at about 1.0 for the whole run once the ladder is done. mgetup_prone_v1 adds face-down starts for half the resets: success starts lower (0.63 at iteration 230) and reaches 0.9995 by the end; the CPU gate first passed face down at iteration 400 (10/10), after 0/10 at iteration 200.</td></tr>
+</table>
+
+<h2>3. Helping hand (assist force)</h2>
+<img src="3_assist.png" alt="Maximum assist force as a share of body weight">
+<table>
+<tr><th>Toddler</th><td>This is how much we helped lift him. At the end the line is at zero: he does it by himself.</td></tr>
+<tr><th>Child</th><td>When a pose is too hard, training gives an invisible upward push, like a parent holding a child's hands. The push grows while he struggles and goes away as he learns. MATT's green line never needed it. For face down (orange) he needed help for about 250 iterations, then none.</td></tr>
+<tr><th>Adult</th><td>The success-driven assist (a vertical force on the torso, capped at 0.8 body weights) is the training crutch; a brain is only usable once it is back at 0. mgetup_v1: 0 throughout. mgetup_prone_v1: ramps to the 0.8 cap by iteration 170, back to 0 by iteration 300. KIM's prone run needed the cap until about iteration 380 and reached 0 at 545. All gate and probe numbers above are without assist.</td></tr>
+</table>
+</main>
+</body>
+</html>
