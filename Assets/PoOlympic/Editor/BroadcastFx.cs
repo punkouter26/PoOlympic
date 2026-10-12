@@ -231,6 +231,10 @@ namespace PoOlympic.Editor
                     var brainPath = AssetDatabase.GetAssetPath(r.brain);
                     var criticPath = Path.ChangeExtension(brainPath, null) + ".critic.onnx";
                     r.critic = AssetDatabase.LoadAssetAtPath<ModelAsset>(criticPath);
+                    // fall recovery: this body's get-up brain, where one is deployed (role "getup" in the brain manifest)
+                    var getup = $"{Path.GetDirectoryName(brainPath)}/getup_{Odds.BodyOf(r).ToLowerInvariant()}.onnx".Replace('\\', '/');
+                    r.recoverBrain = AssetDatabase.LoadAssetAtPath<ModelAsset>(getup);
+                    r.recoverSidecar = r.recoverBrain != null ? AssetDatabase.LoadAssetAtPath<TextAsset>(getup + ".json") : null;
                 }
                 EditorUtility.SetDirty(r);
             }

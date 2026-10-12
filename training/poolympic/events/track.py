@@ -17,6 +17,13 @@
                                        for >= MIN_FLIGHT): the clock only runs while a foot touches the track; a fall =
                                        out; rank by ground time, then finish time
 Runners steer with the contract's lane keeping (contract.steer_yaw_rate); traits as in the Iron Pedestal heat.
+
+Fall recovery (opt-in, `recover` = body -> get-up brain; Unity TrackRaceEvent.recoverFromFalls): a runner whose body has
+a get-up brain is not out when it falls. It first lies still in the default joint pose for RELAX_S (the tumble ends
+and the body is in the pose the get-up brain was trained from), then the get-up brain runs (zero command) until the
+pelvis is back above UP_Z x its standing height with the torso within UP_TILT_DEG for UP_HOLD_S, then the race brain
+runs on. Still down RETRY_S after lying still: lie still and try again (the brain can lock into a propped pose).
+Falls are counted (RaceLane.falls); a runner cannot finish while down. Not in the brake event.
 """
 
 from __future__ import annotations
@@ -54,6 +61,8 @@ BRAKE_NERVE = (1.4, 2.2)   # m before the line at which a runner hits the brakes
                            # brain stops from 3 m/s with the toe ~1.6 m past its trigger point → late = DQ, early = big gap
 TOE_AHEAD = 0.25      # m — the toe tip is ahead of the pelvis while standing
 STOPPED = 0.1         # m/s
+UP_Z, UP_TILT_DEG, UP_HOLD_S = 0.85 / 0.55, 20.0, 0.5   # recovery: "up" = pelvis above UP_Z x the fall line (tools/getup_probe.py)
+RELAX_S, RETRY_S = 1.0, 5.0                              # recovery: lie still, then the get-up brain; one cycle = RETRY_S
 
 
 def break_target(lane_y: float, inside_y: float) -> float:
@@ -82,6 +91,7 @@ class RaceLane:
     hang_s: float = 0.0              # steeple: total airborne time (flights >= MIN_FLIGHT)
     longest_ms: float = 0.0          # steeple: longest flight
     score_s: float | None = None     # steeple: ground time = finish time - hang time
+    falls: int = 0                   # recovery: falls the runner got up from (or is still down from)
 
 
 class FootGait:
@@ -117,7 +127,8 @@ class RaceResult:
 
 
 @AL.logged("event_track")
-def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = None, scene=None, layout_path=None, brains: dict | None = None) -> RaceResult:
+def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = None, scene=None, layout_path=None, brains: dict | None = None,
+             recover: dict | None = None) -> RaceResult:
     cfg = MODES[mode]
     m = mujoco.MjModel.from_xml_path(str(scene or SCENE))
     d = mujoco.MjData(m)
@@ -130,6 +141,8 @@ def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = Non
     gait = [FootGait(m, ln.prefix, m.opt.timestep) for ln in lanes] if mode == "steeple" else None
     nerve = [float(np.random.default_rng([seed, 2000 + i]).uniform(*BRAKE_NERVE)) for i in range(len(lanes))]
     braking = [False] * len(lanes)
+    getup = {} if mode == "brake" else {b: ort.InferenceSession(str(p), providers=["CPUExecutionProvider"]) for b, p in (recover or {}).items()}
+    down, up_ticks, down_ticks = [False] * len(lanes), [0] * len(lanes), [0] * len(lanes)
     speed_hist = [[] for _ in lanes]
     dt = m.opt.timestep * C.DECIMATION
     tick = 0
@@ -138,6 +151,14 @@ def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = Non
         t = tick * dt
         for i, ln in enumerate(lanes):
             r = res[i]
+            if down[i]:
+                if down_ticks[i] % round(RETRY_S / dt) < round(RELAX_S / dt):       # = Unity PolicyRunner relax
+                    ln.ctrl_prev, ln.ctrl_now = ln.ctrl_now, ln.ath.default_pos.copy()
+                    ln.last[:] = 0.0
+                else:
+                    ln.control(getup[ln.body], d, np.zeros(3))
+                down_ticks[i] += 1
+                continue
             if r.status and mode != "brake":
                 ln.control(ln.sess, d, np.zeros(3))
                 continue
@@ -176,7 +197,16 @@ def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = Non
             speed_hist[i].append(vx)
             if len(speed_hist[i]) >= 50:
                 r.peak_mps = max(r.peak_mps, float(np.mean(speed_hist[i][-50:])))
+            if down[i]:
+                tilt = math.degrees(math.acos(max(-1.0, min(1.0, d.xmat[ln.torso][8]))))
+                up_ticks[i] = up_ticks[i] + 1 if d.qpos[ra + 2] > UP_Z * ln.fall_z and tilt < UP_TILT_DEG else 0
+                down[i] = up_ticks[i] * dt < UP_HOLD_S
+                continue
             if ln.eliminated(m, d) == "FELL" or (ln.eliminated(m, d) and mode != "brake"):
+                if ln.body in getup:
+                    down[i], up_ticks[i], down_ticks[i] = True, 0, 0
+                    r.falls += 1
+                    continue
                 r.status = "FELL"
                 continue
             if mode == "inverted" and abs(d.qpos[ra + 1] - ln.origin[1]) > LANE_HALF:

@@ -614,3 +614,35 @@ tab). Before / after: `parity/ui/audit35_before_after.html`.
 - [ ] Not done: URP decal projectors (ground marks cover it without a renderer feature), an event base class (the
   trait draw is shared now; the rest differs per event), ScriptableObject tuning assets (values are already per-scene
   inspector fields), mattbio → MATT promotion (still the user's call; it ends the legs-only self-collision exception)
+
+## Spectacle features (2026-10-11) — picks 2, 3, 6, 7, 10 of the 10-option list
+
+UI before / after: `SCREENSHOTS/spectacle_features.html`. Python: `tests/test_events.py` (tactician rule, forced fall →
+get up → finish). Unity: `SpectacleTests`.
+
+- [x] **Fall, recover, continue** (2) — `PolicyRunner.recoverBrain` (wired by `BroadcastFx.Install` from
+  `getup_<body>.onnx`: **KIM** and **GRANDMA** — hers, `ggetup_roll_v4_it599`, was deleted in the brain clean-up and
+  is back from git history as `getup_grandma.onnx`; forced falls on CPU: 56 of 62 finish, the rest stay down) + `TrackRaceEvent.recoverFromFalls` (Dash, Terminal, Inverted,
+  Steeplechase; = `track.py recover`). A fallen runner lies still 1 s in the default joint pose (the pose the get-up
+  brain was trained from), then the get-up brain runs; still down after 5 s: lie still and retry. CPU, KIM shoved over at
+  2 / 3 / 4 m/s mid-race: without the lie-still cycle 17 of 41 fallers finished (the brain locked into a propped pose),
+  with it **41 of 41**. In unforced heats nobody falls in the track events (192 lanes × 4 events), so this shows when
+  something knocks a runner over. Todo: get-up brains for MATT / zombie (none trained), GRANDMA's stuck cases (the retry
+  repeats the same failed attempt), the other events (slalom, crab, turntable).
+- [x] **Race tactician** (3) — scripted, not trained: `slalom.py tactician` = `SlalomEvent.TacticSteer`. A racer with a
+  neighbour ≤ 1.2 m ahead and < 0.9 m across eases to 0.6 × pace and swings at most 0.45 m wide, so the two reach the
+  pole one after the other. 24 CPU heats (3 line-ups × 8 seeds, 192 runs): falls 14 → 3, finishers 174 → 186, mean time
+  23.55 → 24.29 s. Odds refitted for Event 11 (120 heats with tactics). The learned high-level policy (frozen locomotion
+  brain, neighbour observations) is not started: it needs a new task and a training block.
+- [x] **Real weather** (6) — `Weather.cs`, Settings › Game, **off by default** (nominal physics = gates and odds). Host
+  city by day of the year, Open-Meteo once per session; wind = drag on each torso (`xfrc_applied`, mean capped at
+  12 m/s, gusts to 1.4 ×), rain ≥ 1 mm/h = sliding friction × 0.85. CPU dash at 6 / 9 / 12 m/s head, tail and cross,
+  dry and wet: 1 fall in 576 runs — the brains lean into it, so it is mostly flavour. No Python mirror of weather in the
+  event loops (odds ignore it). Lighting does not follow the weather.
+- [x] **AI commentator** (7) — `AiCommentator.cs`, Settings › Game, off by default, needs the player's own Anthropic key
+  (`ANTHROPIC_API_KEY` or `<persistentDataPath>/anthropic_api_key.txt`). Each ticker line goes to `claude-haiku-5-5`
+  with the standings and comes back as one broadcast line; failures keep the plain line. **Not run against the API**
+  (no key on this machine): request / reply handling is unit-tested only. No voice yet.
+- [x] **Contact force** (10) — dust, shockwaves, sparks, scuffs and impact audio were already there; added phone
+  vibration scaled by slam / cube-hit force (`Haptics`, Settings › Display, not tried on a phone) and the real ground
+  reaction force in body weights in the debug readout (`AthleteTelemetry.GroundWeights`).

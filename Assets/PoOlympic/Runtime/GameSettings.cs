@@ -38,7 +38,15 @@ namespace PoOlympic
         /// <summary>Scuff marks where a body or a cube hits the ground.</summary>
         public static bool ImpactMarks { get => B("marks", true); set => Set("marks", value); }
 
+        /// <summary>Phone vibration on body slams and cube hits, scaled by the contact force.</summary>
+        public static bool Haptics { get => B("haptics", true); set => Set("haptics", value); }
+
         // ---- game
+        /// <summary>Today's real weather of the host city (Open-Meteo, one request per session): wind pushes the
+        /// athletes, rain makes the track slippery. Off = the nominal physics of the parity gates and the odds.</summary>
+        public static bool RealWeather { get => B("weather", false); set => Set("weather", value); }
+        /// <summary>Play-by-play lines rewritten by Claude (needs the player's own API key, see AiCommentator).</summary>
+        public static bool AiCommentary { get => B("aiPbp", false); set => Set("aiPbp", value); }
         public static bool OfferBets { get => B("bets", false); set => Set("bets", value); }
         /// <summary>Per-heat action log (PolicyRunner → persistentDataPath/actions): every control tick of every lane.</summary>
         public static bool LogActions { get => B("logActions", Application.isEditor); set => Set("logActions", value); }

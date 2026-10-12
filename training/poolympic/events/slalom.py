@@ -72,6 +72,26 @@ def slalom_command(quat: np.ndarray, x: float, y: float, a: float, vx: float = V
     return np.array([vx, 0.0, float(np.clip(HEADING_GAIN * err, -WZ_LIMIT, WZ_LIMIT))])
 
 
+def tactician(i: int, xs: list[float], yw: list[float], racing: list[bool], a: float, vx: float) -> tuple[float, float]:
+    """Race tactics of runner i (opt-in, = C# SlalomEvent.Tactician): the mirror slalom swings every runner into a
+    neighbour at every other pole, and a shoulder bump floors the brain. From the track positions of the two neighbouring
+    lanes (x along the course, yw across the track) -> (vx, line amplitude):
+      yield    a neighbour within YIELD_X ahead (level: the higher lane yields) and closer than YIELD_GAP across:
+               ease to YIELD_VX x the pace, so the two reach the pole one after the other instead of together
+      tighten  while yielding, swing only TIGHT_LINE wide (the narrowest line that still clears the pole)"""
+    for j in (i - 1, i + 1):
+        if not (0 <= j < len(xs)) or not racing[j]:
+            continue
+        dx = xs[j] - xs[i]
+        ahead = dx > LEVEL_X or (abs(dx) <= LEVEL_X and j < i)
+        if ahead and dx < YIELD_X and abs(yw[j] - yw[i]) < YIELD_GAP:
+            return vx * YIELD_VX, math.copysign(min(abs(a), TIGHT_LINE), a)
+    return vx, a
+
+
+YIELD_X, LEVEL_X, YIELD_GAP, YIELD_VX, TIGHT_LINE = 1.2, 0.15, 0.9, 0.6, 0.45   # m, m, m, x pace, m — tuned on CPU heats
+
+
 def runner_line(seed: int, i: int) -> float:
     return float(np.random.default_rng([seed, 4000 + i]).uniform(*LINE))
 
@@ -97,7 +117,8 @@ class SlalomResult:
 
 
 @AL.logged("event_slalom")
-def run_heat(onnx, seed: int, traits: list[Traits] | None = None, lines: list[float] | None = None, vx: float = VX, scene=None, layout_path=None, brains: dict | None = None) -> SlalomResult:
+def run_heat(onnx, seed: int, traits: list[Traits] | None = None, lines: list[float] | None = None, vx: float = VX, scene=None, layout_path=None, brains: dict | None = None,
+             tactics: bool = False) -> SlalomResult:
     m = mujoco.MjModel.from_xml_path(str(scene or SCENE))
     d = mujoco.MjData(m)
     layout = json.loads(Path(layout_path or LAYOUT).read_text())
@@ -117,13 +138,16 @@ def run_heat(onnx, seed: int, traits: list[Traits] | None = None, lines: list[fl
     dt = m.opt.timestep * C.DECIMATION
     tick = 0
     while tick * dt < MAX_S:
+        xs = [float(d.qpos[ln.ath.root_qposadr] - ln.origin[0]) for ln in lanes]       # positions at the tick start
+        yw = [float(d.qpos[ln.ath.root_qposadr + 1]) for ln in lanes]
+        racing = [not r.status for r in res]
         for i, ln in enumerate(lanes):
             ra = ln.ath.root_qposadr
             if res[i].status:
                 ln.control(ln.sess, d, np.zeros(3))
             else:
-                ln.control(ln.sess, d, slalom_command(d.qpos[ra + 3: ra + 7], d.qpos[ra] - ln.origin[0],
-                                                   d.qpos[ra + 1] - ln.origin[1], course_side(ln.k) * lines[i], vx))
+                v, a = tactician(i, xs, yw, racing, course_side(ln.k) * lines[i], vx) if tactics else (vx, course_side(ln.k) * lines[i])
+                ln.control(ln.sess, d, slalom_command(d.qpos[ra + 3: ra + 7], xs[i], yw[i] - ln.origin[1], a, v))
         for s in range(C.DECIMATION):
             for ln in lanes:
                 ln.write_ctrl(d, s)

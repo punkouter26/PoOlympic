@@ -170,3 +170,43 @@ def test_flamingo_heat():
     assert by_place[0].place == 1 and all(a.out_at_s >= b.out_at_s for a, b in zip(by_place, by_place[1:]))
     assert 15.0 < by_place[0].out_at_s < 60.0                        # heats last 23-38 s
     assert res.duration_s == pytest.approx(flamingo.START_S + by_place[0].out_at_s, abs=0.03)
+
+
+def test_slalom_tactician_yields_to_a_close_neighbour_ahead():
+    xs, yw, racing = [5.0, 5.5, 5.0], [1.4, 0.8, 0.0], [True, True, True]
+    assert slalom.tactician(0, xs, yw, racing, -0.5, slalom.VX) == (slalom.VX * slalom.YIELD_VX, -slalom.TIGHT_LINE)   # lane 1 is 0.5 m ahead, 0.6 m across
+    assert slalom.tactician(1, xs, yw, racing, 0.5, slalom.VX) == (slalom.VX, 0.5)       # nobody ahead of the leader
+    assert slalom.tactician(2, xs, yw, racing, -0.42, slalom.VX) == (slalom.VX * slalom.YIELD_VX, -0.42)   # an already tight line stays
+    assert slalom.tactician(0, xs, yw, [True, False, True], -0.5, slalom.VX) == (slalom.VX, -0.5)   # a runner who is out is not raced
+    assert slalom.tactician(1, [5.0, 5.0], [1.4, 0.8], [True, True], 0.5, slalom.VX)[0] < slalom.VX   # level: the higher lane yields
+    assert slalom.tactician(0, [5.0, 5.0], [1.4, 0.8], [True, True], -0.5, slalom.VX)[0] == slalom.VX
+
+
+def test_fallen_runner_with_a_getup_brain_gets_up_and_finishes(monkeypatch):
+    """Fall recovery (track.py `recover`): every KIM is knocked over 3 s into the dash, lies still, gets up, finishes."""
+    import json
+
+    import mujoco
+    import numpy as np
+
+    brains = C.ROOT.parent / "parity" / "brains"
+    scene, layout = C.ROOT / "assets" / "scene_track8_mzgkmzgk.xml", C.ROOT / "assets" / "track8_mzgkmzgk_layout.json"
+    if not (brains / "getup_kim.onnx").exists() or not scene.exists():
+        pytest.skip("getup_kim.onnx / the KIM line-up not in this clone")
+    r2 = {b: brains / f for b, f in (("matt", "rung2.onnx"), ("zombie", "zombie_rung2.onnx"), ("grandma", "grandma_rung2.onnx"), ("kim", "kim_rung2.onnx"))}
+    kims = [l["prefix"] for l in json.loads(layout.read_text())["lanes"] if l.get("body") == "kim"]
+    real, n = mujoco.mj_step, [0]
+
+    def step(m, d):
+        n[0] += 1
+        if n[0] == 600:
+            for p in kims:
+                da = m.jnt_dofadr[m.joint(p + "root").id]
+                d.qvel[da:da + 2] += np.array([0.0, 6.0])
+        real(m, d)
+
+    monkeypatch.setattr(mujoco, "mj_step", step)
+    res = track.run_race(r2["matt"], "dash", 9000, scene=scene, layout_path=layout, brains=r2, recover={"kim": brains / "getup_kim.onnx"})
+    kim = [l for l in res.lanes if l.body == "kim"]
+    assert kim and all(l.falls >= 1 for l in kim), "the shove must floor her (else the test checks nothing)"
+    assert all(l.status == "FINISHED" for l in kim)

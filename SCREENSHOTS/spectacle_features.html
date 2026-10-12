@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spectacle features — UI changes (2026-10-11)</title>
+<style>
+  body { font: 16px/1.5 "Segoe UI", system-ui, sans-serif; background: #10141f; color: #e6e8ef; margin: 0; padding: 24px 16px; }
+  main { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 24px; } h2 { font-size: 18px; margin-top: 36px; }
+  img { max-width: 100%; height: auto; border: 1px solid #2a3147; border-radius: 6px; }
+  .n { display: inline-block; width: 24px; height: 24px; line-height: 24px; text-align: center; border-radius: 50%; background: #ff2828; color: #fff; font-weight: 700; }
+  p, li { color: #c5cad8; } code { color: #9fd3ff; }
+</style>
+</head>
+<body>
+<main>
+<h1>Spectacle features — UI changes</h1>
+<p>Fall recovery, slalom tactics, real weather, AI commentator, haptics. Captured in the editor at 1440 × 3088 (shown at half size),
+Event 19 Terminal Velocity, line-up MATT / ZOMBIE / GRANDMA / KIM × 2. Red boxes mark what changed.</p>
+
+<h2>Settings › Game</h2>
+<img src="img/settings_game_before_after.jpg" alt="Settings sheet, Game tab, before and after">
+<p><span class="n">1</span> Two new rows. <b>Real weather (wind, rain)</b>, off by default: asks Open-Meteo for today's host city once per
+session; wind pushes the athletes, rain makes the track slippery. <b>AI commentator</b>, off by default: reads "No key" until an
+Anthropic API key is found (<code>ANTHROPIC_API_KEY</code>, or <code>anthropic_api_key.txt</code> in the app's data folder).</p>
+
+<h2>Settings › Display</h2>
+<img src="img/settings_display_before_after.jpg" alt="Settings sheet, Display tab, before and after">
+<p><span class="n">2</span> New row <b>Vibrate on impacts</b>, on by default: the phone buzzes on body slams and cube hits, longer and
+stronger with the contact force. Nothing happens on desktop.</p>
+
+<h2>Standings row of a fallen runner</h2>
+<img src="img/down_row_after.jpg" alt="KIM on the ground, her row reads DOWN, getting up" style="max-width: 420px">
+<p><span class="n">3</span> Before, this row read "FELL" and the runner was out. A runner with a get-up brain (KIM today) now reads
+<b>DOWN · getting up</b>, stays in the race, and her result ends with "· got up". Here K8 was shoved over by hand (6 m/s) to
+show it; she got up and finished.</p>
+
+<h2>Not pictured</h2>
+<ul>
+  <li>Weather line in the ticker at the start of a heat, e.g. "Beijing 17°C · calm" (the day of the capture). It scrolls out once the race calls start.</li>
+  <li>Debug readout (TAB): new "ground force N× weight" figure.</li>
+  <li>AI commentator lines: not captured, no API key on this machine.</li>
+</ul>
+</main>
+</body>
+</html>

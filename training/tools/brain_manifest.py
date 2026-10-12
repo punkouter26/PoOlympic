@@ -36,7 +36,8 @@ ROLES = {
     "crawl_grandma": ("crawl", [8, 23], "grandma"), "crawl_kim": ("crawl", [8, 23], "kim"),
     "r2f_v3_it100": ("flight", [13], "matt"),
     "rs_v8_it1199": ("stance", [3, 7], "matt"), "rs_v6_it2550": ("stance", [6], "matt"), "rs_v6_it3299": ("stance", [], "matt"),
-    "getup_kim": ("getup", [], "kim"),                    # no event uses it yet (Event 27)
+    "getup_kim": ("getup", [], "kim"),                    # fall recovery in the track races (track.py recover); Event 27 todo
+    "getup_grandma": ("getup", [], "grandma"),            # = ggetup_roll_v4_it599, back from git history (2026-10-11)
     "rung1": ("rung1", [], "matt"), "r0_v2_latest": ("rung0-old", [], "matt"),
     "random_brain": ("test", [], "matt"), "random_brain_v4": ("test", [], "matt"), "zero_brain": ("test", [], "matt"),
 }

@@ -203,11 +203,14 @@ namespace PoOlympic
         string _leader = "", _pending = "";
         float _pendingSince, _lastLeadCall = -99f;
         public float LeadCooldown = 4f;                  // s between lead-change calls (neck-and-neck races flip often)
+        /// <summary>What the AI commentator is told about the heat (event, standings); asked only when a line is sent.</summary>
+        public Func<string> Context;
 
         public void Add(string line)
         {
             Lines.Add(line);
             while (Lines.Count > MaxLines) Lines.RemoveAt(0);
+            AiCommentator.Colour(line, Context, Lines);
         }
 
         public void Update(IBroadcastBoard b, float time)

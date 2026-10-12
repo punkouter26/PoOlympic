@@ -83,6 +83,9 @@ namespace PoOlympic
         /// that part is a foot (scrape audio, scuff marks).</summary>
         public float SlideSpeed { get; private set; }
         public Vector3 SlidePoint { get; private set; }
+        /// <summary>Ground reaction force on the feet in body weights (mj_contactForce normals, summed): the peak of
+        /// the last ~0.5 s, so it reads as the force of each footstrike.</summary>
+        public float GroundWeights { get; private set; }
         /// <summary>This athlete's contacts with anything else at the last step.</summary>
         public int Contacts { get; private set; }
 
@@ -237,7 +240,7 @@ namespace PoOlympic
             bool footNowL = false, footNowR = false;
             var force = stackalloc double[6];
             var vel = stackalloc double[6];
-            float slide = 0f;
+            float slide = 0f, grf = 0f;
             int contacts = 0;
             for (int g = 0; g < _ngeom; g++) { _bodyOffSteps[g]++; _cubeOffSteps[g]++; }
             for (int i = 0; i < d->ncon; i++)
@@ -269,6 +272,8 @@ namespace PoOlympic
                     if (_foot[own])
                     {
                         if (_footIndex[own] < 2) footNowL = true; else footNowR = true;
+                        MujocoLib.mj_contactForce(m, d, i, force);
+                        grf += (float)Math.Abs(force[0]);
                         continue;
                     }
                 }
@@ -301,6 +306,7 @@ namespace PoOlympic
                 if (_cubeOffSteps[g] > 0) _bodyOnCube[g] = false;
             }
             Contacts = contacts;
+            GroundWeights = Mathf.Max(grf / Mathf.Max(1f, MassKg * G), GroundWeights * Mathf.Exp(-(float)_dt / 0.5f));
             SlideSpeed += (slide - SlideSpeed) * (1f - Mathf.Exp(-(float)_dt / 0.05f));
             if (_pending.Count > 0)
             {

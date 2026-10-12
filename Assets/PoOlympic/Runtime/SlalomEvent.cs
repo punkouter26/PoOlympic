@@ -53,6 +53,11 @@ namespace PoOlympic
         public float missPenalty = 2f, clipPenalty = 0.5f;
         public float maxSeconds = 30f;
         public float countdownSeconds = 3f, resultHoldSeconds = 6f;
+        [Header("Race tactics (= slalom.py tactician: YIELD_X, LEVEL_X, YIELD_GAP, YIELD_VX, TIGHT_LINE)")]
+        [Tooltip("A racer eases off and tightens its line when a neighbour is just ahead and close: they reach the pole " +
+                 "one after the other instead of bumping shoulders (CPU heats: 14 → 3 falls in 192 runs, +0.7 s).")]
+        public bool tactics = true;
+        public float yieldX = 1.2f, levelX = 0.15f, yieldGap = 0.9f, yieldPace = 0.6f, tightLine = 0.45f;
         public bool autoRestart = true, randomTraits = true;
         public int seed = 1;
 
@@ -82,7 +87,9 @@ namespace PoOlympic
         public int CourseSide(int lane) => !mirrorCourse || lane % 2 == 1 ? 1 : -1;
 
         /// <summary>= slalom.py slalom_command.</summary>
-        public Vector3 Steer(double x, double y, double yaw, double a)
+        public Vector3 Steer(double x, double y, double yaw, double a) => Steer(x, y, yaw, a, speed);
+
+        public Vector3 Steer(double x, double y, double yaw, double a, double vx)
         {
             var (ys, _) = Line(x, a);
             var (_, slope) = Line(x + lookahead, a);
@@ -90,7 +97,29 @@ namespace PoOlympic
             double err = target - yaw + Math.PI;
             err = err - 2 * Math.PI * Math.Floor(err / (2 * Math.PI)) - Math.PI;
             double lim = maxLateralAccel / speed;
-            return new Vector3(speed, 0f, (float)Math.Clamp(headingGain * err, -lim, lim));
+            return new Vector3((float)vx, 0f, (float)Math.Clamp(headingGain * err, -lim, lim));
+        }
+
+        /// <summary>= slalom.py tactician + slalom_command: racer i's command from its own state and the two
+        /// neighbouring lanes' track positions (mjData, the same control tick).</summary>
+        unsafe Vector3 TacticSteer(int i, double x, double y, double yaw, double a)
+        {
+            double vx = speed;
+            var d = MjScene.Instance.Data;
+            double yw = y + racers[i].runner.laneOriginY;
+            for (int j = i - 1; tactics && j <= i + 1; j += 2)
+            {
+                if (j < 0 || j >= racers.Count || !racers[j].Racing) continue;
+                var o = racers[j].runner;
+                int ra = o.Binding.RootQposAdr;
+                double dx = d->qpos[ra] - o.laneOriginX - x;
+                bool ahead = dx > levelX || (Math.Abs(dx) <= levelX && j < i);
+                if (!ahead || dx >= yieldX || Math.Abs(d->qpos[ra + 1] - yw) >= yieldGap) continue;
+                vx = speed * yieldPace;
+                a = Math.Sign(a) * Math.Min(Math.Abs(a), tightLine);
+                break;
+            }
+            return Steer(x, y, yaw, a, vx);
         }
 
         void BeginAttempt(bool first)
@@ -161,10 +190,12 @@ namespace PoOlympic
                         Current = Phase.Live;
                         PhaseTime = 0;
                         _liveStartTick = lead.ControlTick;
-                        foreach (var r in racers)
+                        for (int i = 0; i < racers.Count; i++)
                         {
+                            var r = racers[i];
+                            int k = i;
                             double a = CourseSide(r.lane) * r.line;
-                            r.runner.steer = (x, y, yaw, _) => Steer(x, y, yaw, a);
+                            r.runner.steer = (x, y, yaw, _) => TacticSteer(k, x, y, yaw, a);
                         }
                     }
                     break;

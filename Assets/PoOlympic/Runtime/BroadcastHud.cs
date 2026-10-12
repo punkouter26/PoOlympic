@@ -164,6 +164,8 @@ namespace PoOlympic
             _coins.style.display = Bets ? DisplayStyle.Flex : DisplayStyle.None;
             _anchors.DebugExtra = DebugLines;
             _ticker = AddLabel(_anchors.BottomCentre, "bh-ticker", "");
+            _pbp.Context = () => B == null ? subtitle : $"{subtitle} · {B.SubtitleExtra} · {B.ClockLine}\n" +
+                                 string.Join("\n", B.Rows.Select(r => $"{r.name} ({Odds.BodyOf(r.runner)}): {r.result}"));
             _primary = new Button(PrimaryAction) { text = "New heat" };
             _primary.AddToClassList("bh-btn-small");
             _primary.AddToClassList("bh-btn-primary");
@@ -248,7 +250,7 @@ namespace PoOlympic
                    $"{who.BrainMs:0.00} ms ({n} brains {brains:0.0} ms/tick) · speed {GameSettings.SpeedLabel}\n" +
                    $"balance {balance} · tilt {t.TiltDeg:0}° · effort {t.Effort * 100f:0}% (peak {t.StressJoint} {t.StressMax * 100f:0}%) · tired {t.Fatigue * 100f:0}%\n" +
                    $"steps {t.CadenceSpm:0}/min · foot down {t.GroundContactS:0.00} s · joints {t.JointSpeedMax:0.0} rad/s, {over} {AthleteTelemetry.JointSpeedBar:0} · " +
-                   $"slide {t.SlideSpeed:0.0} m/s · {t.Contacts} contacts" + (ActionLog.Active ? " · logging" : "");
+                   $"slide {t.SlideSpeed:0.0} m/s · ground force {t.GroundWeights:0.0}× weight · {t.Contacts} contacts" + (ActionLog.Active ? " · logging" : "");
         }
 
         void Restart()
@@ -386,6 +388,7 @@ namespace PoOlympic
             _replay.Clear();
             if (Director != null) { Director.FocusLock = null; Director.UserOrbitDeg = 0f; }
             ActionLog.BeginHeat(eventNumber, b.Heat);
+            if (Weather.Active) _pbp.Add(Weather.Headline);
             if (Bets && !DemoMode.Active) { b.HoldStart = true; _slipOpen = true; _slip.style.display = DisplayStyle.Flex; _slipBuilt = false; }
         }
 

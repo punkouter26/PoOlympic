@@ -89,6 +89,7 @@ namespace PoOlympic
                     float need = slamMinWeights * (e.runner != null && e.runner.crawlSteering ? crawlerSlamFactor : 1f);
                     if (e.weightRatio < need) return;
                     float s = Mathf.Clamp01((e.weightRatio - need) / (bigSlamWeights * 2f));
+                    Haptics.Pulse(s);
                     Burst(slamDust, ref _slam, e.position + Vector3.up * 0.03f, s);
                     Burst(shockwaves, ref _wave, new Vector3(e.position.x, e.position.y + 0.02f, e.position.z), s);
                     if (GameSettings.ImpactMarks) Burst(marks, ref _mark, e.position + Vector3.up * 0.012f, s);
@@ -97,6 +98,7 @@ namespace PoOlympic
                 case ImpactEvent.Kind.CubeHit:
                     if (e.weightRatio < cubeMinWeights) return;
                     float c = Mathf.Clamp01(e.weightRatio / (cubeHitStopWeights * 3f));
+                    Haptics.Pulse(c);
                     Sparks(e.position, e.normal, c);
                     if (e.weightRatio >= cubeHitStopWeights) Big(e, 0.3f + 0.5f * c);
                     break;
@@ -187,6 +189,42 @@ namespace PoOlympic
             if (!_stopping || Time.realtimeSinceStartup < _stopUntil) return;
             Time.timeScale = GameSettings.SimSpeed;       // the viewing speed chosen meanwhile, not the one before the stop
             _stopping = false;
+        }
+    }
+
+    /// <summary>Phone vibration scaled by an impact's strength (Android VibrationEffect: length and amplitude); no-op in
+    /// the editor and on desktop. Player option: GameSettings.Haptics.</summary>
+    public static class Haptics
+    {
+        static float _last = -1f;
+#if UNITY_ANDROID && !UNITY_EDITOR
+        static AndroidJavaObject _vibrator;
+        static AndroidJavaClass _effect;
+#endif
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() => _last = -1f;
+
+        /// <param name="strength">0 = a tick (15 ms, soft) … 1 = a thump (60 ms, full amplitude)</param>
+        public static void Pulse(float strength)
+        {
+            if (!GameSettings.Haptics || Time.unscaledTime - _last < 0.1f) return;
+            _last = Time.unscaledTime;
+#if UNITY_ANDROID && !UNITY_EDITOR
+            try
+            {
+                if (_vibrator == null)
+                {
+                    using var player = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+                    using var activity = player.GetStatic<AndroidJavaObject>("currentActivity");
+                    _vibrator = activity.Call<AndroidJavaObject>("getSystemService", "vibrator");
+                    _effect = new AndroidJavaClass("android.os.VibrationEffect");
+                }
+                using var fx = _effect.CallStatic<AndroidJavaObject>("createOneShot", (long)Mathf.Lerp(15f, 60f, strength), Mathf.RoundToInt(Mathf.Lerp(40f, 255f, strength)));
+                _vibrator.Call("vibrate", fx);
+            }
+            catch (System.Exception) { Handheld.Vibrate(); }   // old Android; also what makes Unity add the VIBRATE permission
+#endif
         }
     }
 }

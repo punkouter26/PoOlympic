@@ -78,10 +78,10 @@ def run_one(event: int, seed: int) -> dict:
     elif kind.startswith("track:"):
         mode = kind.split(":")[1]
         brains = {**R2, **deployed("flight")} if mode == "steeple" else R2
-        res = track.run_race(brains["matt"], mode, seed, scene=scene, layout_path=layout, brains=brains)
+        res = track.run_race(brains["matt"], mode, seed, scene=scene, layout_path=layout, brains=brains, recover=deployed("getup"))
     else:
         mod = {"gauntlet": gauntlet, "crab": crab, "slalom": slalom, "turntable": turntable}[kind]
-        res = mod.run_heat(R2["matt"], seed, scene=scene, layout_path=layout, brains=R2)
+        res = mod.run_heat(R2["matt"], seed, scene=scene, layout_path=layout, brains=R2, **({"tactics": True} if kind == "slalom" else {}))
     bodies = [l.get("body", "matt") for l in json.loads(layout.read_text())["lanes"]]
     return {"event": event, "seed": seed, "lanes": [
         {"lane": l.lane, "body": bodies[l.lane], "strength": l.traits.strength, "latency": l.traits.latency_substeps,

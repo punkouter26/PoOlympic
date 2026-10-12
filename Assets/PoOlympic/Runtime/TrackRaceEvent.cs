@@ -25,6 +25,9 @@ namespace PoOlympic
     ///                                      hang time (flights: both feet off the ground ≥ minFlight, counted per physics
     ///                                      substep like track.py FootGait); rank by ground time, then finish time
     /// Runners steer with the contract's lane keeping (PolicyRunner.laneKeeping). Traits + nerve are drawn per heat.
+    /// Fall recovery (recoverFromFalls, = track.py `recover`; not Brake / AllFours): a runner with a get-up brain
+    /// (PolicyRunner.recoverBrain) is not out when it falls — it lies still, gets up and runs on; it cannot finish
+    /// while down, and its falls show in its result.
     ///   Ready (countdown) → Live → Result → auto restart (new seed)
     /// </summary>
     public class TrackRaceEvent : MonoBehaviour, IBroadcastBoard, ILaneRoster
@@ -44,6 +47,9 @@ namespace PoOlympic
             [NonSerialized] public float standT, lambda = 1f;
             [NonSerialized] public bool wasOnFours;
             [NonSerialized] public FootGait gait;
+            [NonSerialized] public bool down;                  // recovery: fallen, the get-up brain is driving
+            [NonSerialized] public int falls;
+            [NonSerialized] public float upT;
             [NonSerialized] public float scoreS = float.NaN;   // steeplechase: ground time
             [NonSerialized] public readonly Queue<float> speedWindow = new();
             public bool Racing => status.Length == 0;
@@ -69,6 +75,9 @@ namespace PoOlympic
         [Header("All fours (= all_fours.py)")]
         public float standDqSeconds = 1f;
         public Vector2 crawlBand = new(0.25f, 0.8f);   // pelvis height band (m) × λ
+        [Header("Fall recovery (= track.py UP_Z, UP_TILT_DEG, UP_HOLD_S)")]
+        public bool recoverFromFalls = true;
+        public float upZ = 0.85f / 0.55f, upTiltDeg = 20f, upHoldSeconds = 0.5f;   // "up" = pelvis above upZ × the fall line
         public bool autoRestart = true, randomTraits = true;
         public int seed = 1;
 
@@ -106,6 +115,8 @@ namespace PoOlympic
             {
                 r.status = ""; r.finishS = -1; r.peakMps = 0; r.gapM = float.NaN; r.braking = false; r.place = 0;
                 r.tumbles = 0; r.standT = 0; r.wasOnFours = false;
+                r.down = false; r.falls = 0; r.upT = 0;
+                r.runner.SetRecovering(false);
                 r.gait?.Clear(); r.scoreS = float.NaN;
                 r.speedWindow.Clear();
                 r.runner.command = Vector3.zero;
@@ -168,12 +179,7 @@ namespace PoOlympic
                         Current = Phase.Live;
                         PhaseTime = 0;
                         _liveStartTick = _prevTick = lead.ControlTick;
-                        foreach (var r in runners)
-                        {
-                            r.runner.command = new Vector3(commandSpeed, 0f, 0f);
-                            r.runner.laneKeeping = true;
-                            if (mode == Mode.Terminal && laneBreak) { var rr = r; r.runner.steer = (x, y, yaw, c) => BreakSteer(rr, x, yaw, c); }
-                        }
+                        foreach (var r in runners) Go(r);
                     }
                     break;
                 case Phase.Live:
@@ -204,8 +210,26 @@ namespace PoOlympic
                             if (r.x >= distance) { r.status = "FINISHED"; r.finishS = LiveTime; Stand(r); }
                             continue;
                         }
+                        if (r.down)
+                        {
+                            float tilt = Mathf.Rad2Deg * Mathf.Acos(Mathf.Clamp((float)d->xmat[9 * r.torsoId + 8], -1f, 1f));
+                            bool up = r.runner.PelvisHeight(d) > upZ * r.runner.Contract.FallPelvisZ && tilt < upTiltDeg;
+                            r.upT = up ? r.upT + elapsed : 0f;
+                            if (r.upT >= upHoldSeconds) { r.down = false; r.runner.SetRecovering(false); Go(r); }
+                            continue;
+                        }
                         var why = r.judge.Eliminated(m, d);
-                        if (why == "FELL") { Out(r, "FELL"); continue; }
+                        if (why == "FELL")
+                        {
+                            if (recoverFromFalls && mode != Mode.Brake && r.runner.CanRecover)
+                            {
+                                r.down = true; r.upT = 0f; r.falls++;
+                                Stand(r);
+                                r.runner.SetRecovering(true);
+                                continue;
+                            }
+                            Out(r, "FELL"); continue;
+                        }
                         if (mode == Mode.Inverted && Mathf.Abs(r.y) > laneHalf) { Out(r, "DQ"); continue; }
                         if (mode != Mode.Brake && r.x >= distance) { r.status = "FINISHED"; r.finishS = LiveTime; Stand(r); }
                         if (mode == Mode.Brake)
@@ -256,6 +280,7 @@ namespace PoOlympic
         public IEnumerable<(int place, string name, string result, bool bad, PolicyRunner runner)> Rows =>
             Standings.Select(x => (x.place, x.name,
                 Current == Phase.Result || !x.Racing ? Describe(x)
+                    : x.down ? "DOWN · getting up"
                     : mode == Mode.Steeplechase ? $"{x.x:0.0} m · air {x.gait?.Hang ?? 0:0.0} s" : $"{x.x:0.0} m · {x.v:0.0} m/s",
                 x.status is "DQ" or "FELL", x.runner));
         public string Banner => Current switch
@@ -279,6 +304,13 @@ namespace PoOlympic
         }
 
         void Out(Runner r, string status) { r.status = status; Stand(r); }
+        /// <summary>Race command + steering (the start, and a fallen runner back on its feet).</summary>
+        void Go(Runner r)
+        {
+            r.runner.command = new Vector3(commandSpeed, 0f, 0f);
+            r.runner.laneKeeping = true;
+            if (mode == Mode.Terminal && laneBreak) r.runner.steer = (x, y, yaw, c) => BreakSteer(r, x, yaw, c);
+        }
         void Stand(Runner r) { r.runner.command = Vector3.zero; r.runner.laneKeeping = false; r.runner.steer = null; }
 
         /// <summary>Terminal lane break (PolicyRunner.steer, every control tick after lane keeping): past breakX, steer for
@@ -319,7 +351,9 @@ namespace PoOlympic
             Debug.Log($"[TrackRace] {mode} heat {Attempt} seed {seed + Attempt}: winner {w.name} ({Describe(w)}) after {LiveTime:F1} s");
         }
 
-        public string Describe(Runner r) => mode switch
+        public string Describe(Runner r) => Mark(r) + (r.falls == 0 ? "" : r.down ? " · still down" : r.falls == 1 ? " · got up" : $" · got up ×{r.falls}");
+
+        string Mark(Runner r) => mode switch
         {
             Mode.Dash => r.status == "FINISHED" ? $"{r.finishS:0.00} s" : r.status,
             Mode.Inverted => r.status == "FINISHED" ? $"{r.finishS:0.00} s" : r.status == "DQ" ? "DQ (left lane)" : r.status,

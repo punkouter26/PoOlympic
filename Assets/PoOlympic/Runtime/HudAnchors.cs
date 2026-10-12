@@ -131,10 +131,13 @@ namespace PoOlympic
                 ("Zoom in on trouble", () => OnOff(GameSettings.TensionZoom), () => GameSettings.TensionZoom = !GameSettings.TensionZoom),
                 ("Focus blur on close-ups", () => OnOff(GameSettings.FocusBlur), () => GameSettings.FocusBlur = !GameSettings.FocusBlur),
                 ("Impact marks", () => OnOff(GameSettings.ImpactMarks), () => GameSettings.ImpactMarks = !GameSettings.ImpactMarks),
+                ("Vibrate on impacts", () => OnOff(GameSettings.Haptics), () => GameSettings.Haptics = !GameSettings.Haptics),
             },
             _ => new (string, Func<string>, Action)[]
             {
                 ("Betting slip before heats", () => OnOff(GameSettings.OfferBets), () => GameSettings.OfferBets = !GameSettings.OfferBets),
+                ("Real weather (wind, rain)", () => OnOff(GameSettings.RealWeather), () => GameSettings.RealWeather = !GameSettings.RealWeather),
+                ("AI commentator", () => AiCommentator.HasKey ? OnOff(GameSettings.AiCommentary) : "No key", () => GameSettings.AiCommentary = !GameSettings.AiCommentary),
                 ("Debug readout (TAB)", () => OnOff(DebugOn), () => DebugOn = !DebugOn),
                 ("Log every action to file", () => OnOff(GameSettings.LogActions), () => GameSettings.LogActions = !GameSettings.LogActions),
                 ("Erase coins and records", () => _eraseArmed ? "Tap again" : "Erase", () =>

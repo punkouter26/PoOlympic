@@ -75,6 +75,14 @@ namespace PoOlympic
         [Tooltip("Critic rate: every N control ticks (5 = 10 Hz), staggered per lane.")]
         public int criticEvery = 5;
 
+        [Header("Fall recovery (events that let a fallen athlete get up; training/poolympic/events/track.py)")]
+        [Tooltip("This body's get-up brain (getup_<body>.onnx, same contract version as the brain). Optional.")]
+        public ModelAsset recoverBrain;
+        public TextAsset recoverSidecar;
+        /// <summary>One recovery cycle in control ticks (= track.py RELAX_S / RETRY_S): lie still in the default joint
+        /// pose for RelaxTicks, then the get-up brain; still down at RetryTicks: lie still and try again.</summary>
+        public const int RelaxTicks = 50, RetryTicks = 250;
+
         [Header("Recording (parity G5)")]
         public string recordName = "";
         public int recordTicks = 250;
@@ -89,6 +97,9 @@ namespace PoOlympic
         /// <summary>Latest critic value (NaN without a critic) and how many times it has been evaluated.</summary>
         public float CriticValue { get; private set; } = float.NaN;
         public int CriticEvaluations { get; private set; }
+        public bool CanRecover => _recover != null;
+        /// <summary>The get-up brain is driving (zero command expected), see <see cref="SetRecovering"/>.</summary>
+        public bool Recovering { get; private set; }
         /// <summary>Brain inference time per control tick (ms, smoothed over ~20 ticks): the debug readout.</summary>
         public float BrainMs { get; private set; }
 
@@ -107,7 +118,9 @@ namespace PoOlympic
             }
         }
 
-        PolicyBrain _brain;
+        PolicyBrain _brain, _recover;
+        int _downTicks, _torso = -1;
+        bool _windOn;
         PolicyCritic _critic;
         int _criticStagger;
         Dictionary<string, int> _jointIndex;
@@ -183,6 +196,15 @@ namespace PoOlympic
             }
             ApplyTraits(m);
             if (!holdDefaultPose) _brain = new PolicyBrain(brain, _obs.Length);
+            if (!holdDefaultPose && recoverBrain != null && recoverSidecar != null && _recover == null)
+            {
+                var sc = JsonUtility.FromJson<BrainSidecar>(recoverSidecar.text);
+                if (sc.fingerprint_sha256 == Contract.fingerprint_sha256 && int.Parse(sc.contract_version, CultureInfo.InvariantCulture) == BrainVersion)
+                    _recover = new PolicyBrain(recoverBrain, _obs.Length);
+                else Debug.LogWarning($"[PolicyRunner] get-up brain '{sc.name}' does not match {name}'s body / brain version — no fall recovery.");
+            }
+            _torso = ModelFingerprint.Id(m, (int)MujocoLib.mjtObj.mjOBJ_BODY, athletePrefix + "torso");
+            Weather.WetTrack(m);
             if (!holdDefaultPose && critic != null && _critic == null)
             {
                 _critic = new PolicyCritic(critic);
@@ -276,6 +298,10 @@ namespace PoOlympic
             foreach (var c in cubeSlots) Request(new Disturbance { kind = "park", target = $"cube{c}_free" });
         }
 
+        /// <summary>Fallen: hand over to the get-up brain (lie still first, see <see cref="RelaxTicks"/>); back on its
+        /// feet: back to the brain. The caller sets the command (zero while down). No-op without a get-up brain.</summary>
+        public void SetRecovering(bool on) { Recovering = on && _recover != null; _downTicks = 0; }
+
         public double PelvisHeight(MujocoLib.mjData_* d) => d->qpos[Binding.RootQposAdr + 2];
 
         void OnPreStep(object sender, MjStepArgs args)
@@ -286,6 +312,7 @@ namespace PoOlympic
             if (_substep % Contract.decimation == 0 && _resetRequested)
             {
                 _resetRequested = false;
+                Recovering = false;
                 ResetToDefault(m, d);
                 Array.Copy(Binding.DefaultPos, _ctrl, _ctrl.Length);
                 Array.Copy(Binding.DefaultPos, _ctrlPrev, _ctrlPrev.Length);
@@ -305,6 +332,15 @@ namespace PoOlympic
                     foreach (var dist in _pending) dist.Apply(m, d, _jointIndex);
                     _pending.Clear();
                 }
+            }
+            // real weather (opt-in, off = parity): wind drag on the torso, every physics step
+            if ((Weather.Active || _windOn) && _torso >= 0)
+            {
+                double k = Contract.SpeedScale;
+                var f = Weather.Active ? Weather.WindForce(d->time, k * k * k * k) : default;
+                d->xfrc_applied[6 * _torso] = f.x;
+                d->xfrc_applied[6 * _torso + 1] = f.y;
+                _windOn = Weather.Active;
             }
             _substep++;
             if (_substep % Contract.decimation == 0) ControlTick++;
@@ -344,12 +380,14 @@ namespace PoOlympic
             if (_skill != null) skill.ToArray(_skill);
             _phase = Contract.AdvancePhase(_phase, bodyCommand, _skill != null ? skill.marchHz : 0.0);
             ObservationBuilder.Build(Contract, Binding, d->qpos, d->qvel, bodyCommand, _phase, _lastAction, _obs, _skill);
-            if (obsNoise > 0f && Contract.obs_noise != null)
+            bool relax = Recovering && _downTicks % RetryTicks < RelaxTicks;
+            if (Recovering) _downTicks++;
+            if (!relax && obsNoise > 0f && Contract.obs_noise != null)
                 foreach (var t in Contract.obs_noise)
                     for (int i = 0; i < t.size; i++)
                         _obs[t.offset + i] += (float)((_noiseRng.NextDouble() * 2.0 - 1.0) * t.amplitude * obsNoise);
             Array.Copy(_ctrl, _ctrlPrev, _ctrl.Length);
-            if (holdDefaultPose)
+            if (holdDefaultPose || relax)
             {
                 Array.Copy(Binding.DefaultPos, _ctrl, _ctrl.Length);
                 Array.Clear(_actionRaw, 0, _actionRaw.Length);
@@ -357,7 +395,7 @@ namespace PoOlympic
             else
             {
                 long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
-                _brain.Run(_obs, _ctrlF, _actionRaw);
+                (Recovering ? _recover : _brain).Run(_obs, _ctrlF, _actionRaw);
                 float ms = (System.Diagnostics.Stopwatch.GetTimestamp() - t0) * 1000f / System.Diagnostics.Stopwatch.Frequency;
                 BrainMs += (ms - BrainMs) * 0.05f;
                 for (int i = 0; i < _ctrl.Length; i++) _ctrl[i] = _ctrlF[i];
@@ -368,7 +406,7 @@ namespace PoOlympic
                 int r = Binding.RootQposAdr;
                 ActionLog.Tick(ControlTick, athletePrefix, bodyCommand, d->qpos[r] - laneOriginX, d->qpos[r + 1] - laneOriginY, d->qpos[r + 2], _actionRaw, _ctrl);
             }
-            if (_critic != null && (ControlTick + _criticStagger) % Math.Max(1, criticEvery) == 0)
+            if (_critic != null && !Recovering && (ControlTick + _criticStagger) % Math.Max(1, criticEvery) == 0)
             {
                 CriticValue = _critic.Run(_obs);
                 CriticEvaluations++;
@@ -491,6 +529,7 @@ namespace PoOlympic
         {
             FlushRecording();
             _brain?.Dispose();
+            _recover?.Dispose();
             _critic?.Dispose();
             if (MjScene.InstanceExists)
             {

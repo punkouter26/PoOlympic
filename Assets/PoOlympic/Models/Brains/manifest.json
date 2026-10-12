@@ -88,6 +88,27 @@
    "gate": null
   },
   {
+   "file": "getup_grandma.onnx",
+   "body": "grandma",
+   "role": "getup",
+   "events": [],
+   "name": "ggetup_roll_v4_it599",
+   "experiment": "grandma_getup",
+   "run": "ggetup_roll_v4",
+   "iteration": 599,
+   "contract_version": 3,
+   "sha256": "66dc3fa4d4ca4d2747113c469bb2dbb0b153eba2d3a08fa80a33dfb0e91b2faa",
+   "sidecar_sha256_ok": true,
+   "fingerprint_sha256": "de971d498513174843349626535396adf747e55c09794bbabf4005e6b2dcfc38",
+   "fingerprint_current": true,
+   "critic": null,
+   "gate": {
+    "source": "watch_ggetup_roll_v4.jsonl",
+    "getup": "up 10/10, at end 10",
+    "getup_prone": "up 10/10, at end 10"
+   }
+  },
+  {
    "file": "getup_kim.onnx",
    "body": "kim",
    "role": "getup",

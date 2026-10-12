@@ -165,7 +165,7 @@ namespace PoOlympic.Tests
                 Assert.IsTrue(menu.Anchors.SettingsOpen && !menu.Anchors.SheetOpen);
                 AssertClean($"{phone} menu (settings tab {tab})", Audit());
                 var values = root.Query<Button>(className: "ha-set-value").ToList();
-                Assert.AreEqual(4, values.Count, $"{phone}: settings tab {tab} rows");
+                Assert.AreEqual(4 + tab, values.Count, $"{phone}: settings tab {tab} rows");   // Audio 4, Display 5, Game 6
                 foreach (var v in values) Assert.GreaterOrEqual(v.resolvedStyle.height, 71.5f, $"{phone}: settings value under the 72 chip height");
             }
         }
