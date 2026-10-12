@@ -14,8 +14,8 @@ namespace PoOlympic
     /// renders only into the gap between them (BroadcastCamera.SetViewport). Only the countdown / winner banner, the
     /// menu sheet, the debug readout and the optional betting slip sit over the game.
     /// Consolidated portrait layout (UI consolidation, 2026-09-29 — one viewport, nothing scrolls, no result card):
-    ///   top dock     HudAnchors frame: TL event title + subtitle · TC FPS · TR clock + info line, menu sheet (New heat,
-    ///                Main menu, all 8 / top 4, performance)
+    ///   top dock     HudAnchors frame: TL event title + subtitle · TC FPS · TR clock + info line, menu → the bottom
+    ///                sheet (Actions: New heat, Main menu, all 8 / top 4, speed, replay · Settings)
     ///                standings: place · lane (body chip) · live result · badge (WR / BET) · brain confidence sparkline
     ///                + % (only under 90 %) · odds (betting on) / the "8 ▾" expand hint; 4 rows (top 3 + the story:
     ///                athlete in trouble / your bet), tap for all 8
@@ -25,8 +25,9 @@ namespace PoOlympic
     ///                with speed · power · confidence, refreshed once a second (feature 7)
     ///                HudAnchors bottom bar: BL debug · play-by-play ticker (Commentary), which gives way to the primary
     ///                action at the result (Results, or Next event in a gauntlet) · BR version
-    ///   match card   single event (no gauntlet): one heat, the medal ceremony, then all 8 places + record + heat bests
-    ///                over the game; OK goes back to the main menu (user, 2026-10-01)
+    ///   match card   single event (no gauntlet): one heat, the medal ceremony, then one card over the game with the
+    ///                tabs Places (all 8 + record) · Telemetry (each athlete's peaks + heat bests) · Replay; OK goes
+    ///                back to the main menu (user, 2026-10-01)
     ///   betting slip (optional, offerBets; off by default) each new heat waits in Ready (IBroadcastBoard.HoldStart)
     ///                until a bet is placed / skipped, or betWindowSeconds pass; stake Wallet.Stake coins, paid at the odds
     /// Rules (UI/Tokens.uss): no text under 28 px at 1080 wide, 104 px primary buttons; HudLayoutAudit + the EditMode
@@ -100,6 +101,9 @@ namespace PoOlympic
         bool _matchOver;                       // single event: its one heat has been played
         PodiumCeremony _podium;
         const float DesignWidth = 1080f;
+        /// <summary>Wide screens (a foldable's inner screen, a tablet): the layout is widened until the frame is this
+        /// tall, so the docks leave the camera its share (1080 wide on a 1812 × 2176 foldable left it 58 %).</summary>
+        const float MinDesignHeight = 1440f;
 
         /// <summary>This scene's one heat is done: a gauntlet stage (waits for Next event) or a single event (waits
         /// for the medal ceremony, then the match card). The board is held in Ready meanwhile.</summary>
@@ -196,7 +200,6 @@ namespace PoOlympic
             yield return (_expanded ? "Standings: top 4" : "Standings: all 8", () => _expanded = !_expanded);
             if (!DemoMode.Active) yield return ($"Speed: {GameSettings.SpeedLabel}  (tap to change)", GameSettings.NextSpeed);
             if (CanReplay) yield return ("Replay the finish", StartReplay);
-            yield return ("Settings", _anchors.OpenSettings);
         }
 
         // ---------------------------------------------------------------- spectator: focus lock, replay
@@ -577,30 +580,55 @@ namespace PoOlympic
             _podium = FindAnyObjectByType<PodiumCeremony>();
         }
 
-        /// <summary>Single event: the match card — all places with their marks, the world record, the heat bests;
-        /// OK goes back to the main menu.</summary>
+        /// <summary>Single event: the match card — result, telemetry and replay in one place. Tabs: Places (all
+        /// places with their marks, the world record) · Telemetry (each athlete's peaks, the heat bests) · Replay
+        /// (plays the finish, the card comes back after it); OK goes back to the main menu.</summary>
         void BuildMatch(IBroadcastBoard b, List<(int place, string name, string result, bool bad, PolicyRunner runner)> rows)
         {
             _match.Clear();
             AddLabel(_match, "bh-overlay-title", title);
             AddLabel(_match, "bh-overlay-sub", $"{subtitle} · heat {b.Heat + 1} · final result");
+            var head = Add(_match, "bh-match-tabs");
+            var places = Add(_match, "bh-match-body");
+            var telemetry = Add(_match, "bh-match-body");
+            var tabs = new List<Button>();
+            void Show(int tab)
+            {
+                places.style.display = tab == 0 ? DisplayStyle.Flex : DisplayStyle.None;
+                telemetry.style.display = tab == 1 ? DisplayStyle.Flex : DisplayStyle.None;
+                for (int i = 0; i < tabs.Count; i++) tabs[i].EnableInClassList("ha-tab--on", i == tab);
+            }
+            tabs.Add(Button(head, "Places", () => Show(0), "ha-tab"));
+            tabs.Add(Button(head, "Telemetry", () => Show(1), "ha-tab"));
+            _replayButton = Button(head, "Replay", StartReplay, "ha-tab");
+
             string[] medal = { "gold", "silver", "bronze" };
             foreach (var r in rows)
             {
-                var row = Add(_match, "bh-row");
+                var row = Add(places, "bh-row");
                 AddLabel(row, "bh-c-place", r.place > 0 ? r.place.ToString() : "–");
                 Chip(AddLabel(row, "bh-c-chip", ""), r.runner);
                 AddLabel(row, "bh-c-name", r.name);
                 AddLabel(row, "bh-c-result", r.result);
                 if (r.place >= 1 && r.place <= 3) row.AddToClassList("bh-row-" + medal[r.place - 1]);
                 row.EnableInClassList("bh-row-bad", r.bad);
+
+                // the same athlete, by the numbers: top speed · peak power · lowest brain confidence · how tired
+                var t = Telemetry(r.runner);
+                var stats = Add(telemetry, "bh-row");
+                Chip(AddLabel(stats, "bh-c-chip", ""), r.runner);
+                AddLabel(stats, "bh-c-name", r.name);
+                AddLabel(stats, "bh-c-result", t == null || !t.Ready ? "no telemetry"
+                    : $"{t.PeakSpeedMps:0.0} m/s · {t.PeakPowerW:N0} W" +
+                      (float.IsNaN(t.Confidence) ? "" : $" · conf {t.MinConfidence * 100f:0}%") + $" · tired {t.Fatigue * 100f:0}%");
+                stats.EnableInClassList("bh-row-bad", r.bad);
             }
             if (eventNumber > 0 && Records.TryGet(eventNumber, out _, out var record))
-                AddLabel(_match, _recordHolder != null ? "bh-card-good" : "bh-card-line",
+                AddLabel(places, _recordHolder != null ? "bh-card-good" : "bh-card-line",
                          (_recordHolder != null ? "NEW WORLD RECORD · " : "World record · ") + record);
-            HeatBests(rows, _match);
+            HeatBests(rows, telemetry);
+            Show(0);
             var bar = Add(_match, "bh-match-bar");
-            _replayButton = Button(bar, "Replay", StartReplay, "bh-btn-small");
             Button(bar, "OK", LeaveMatch, "bh-btn-small").AddToClassList("bh-btn-primary");
         }
 
@@ -758,7 +786,7 @@ namespace PoOlympic
             ActionLog.End();
         }
 
-        /// <summary>Scale the 1080-wide layout onto the safe area (HudAnchors.SafeArea, normalised) and give the camera
+        /// <summary>Scale the 1080-wide (or wider, see MinDesignHeight) layout onto the safe area (HudAnchors.SafeArea, normalised) and give the camera
         /// the gap between the docks as its viewport.</summary>
         public void FitToScreen()
         {
@@ -767,13 +795,14 @@ namespace PoOlympic
             var full = panel.visualTree.layout;
             if (float.IsNaN(full.width) || full.width <= 1 || full.height <= 1) return;
             var safe = HudAnchors.SafeRectIn(full.size);
-            float s = safe.width / DesignWidth;
+            float design = Mathf.Max(DesignWidth, MinDesignHeight * safe.width / safe.height);
+            float s = safe.width / design;
             _safeTop.style.left = 0; _safeTop.style.right = 0; _safeTop.style.top = 0; _safeTop.style.height = Mathf.Max(0f, safe.yMin);
             _safeBottom.style.left = 0; _safeBottom.style.right = 0; _safeBottom.style.top = safe.yMax;
             _safeBottom.style.height = Mathf.Max(0f, full.height - safe.yMax);
             _frame.style.left = safe.xMin;
             _frame.style.top = safe.yMin;
-            _frame.style.width = DesignWidth;
+            _frame.style.width = design;
             _frame.style.height = safe.height / s;
             _frame.style.transformOrigin = new TransformOrigin(0, 0);
             _frame.style.scale = new Scale(new Vector3(s, s, 1));

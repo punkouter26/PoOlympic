@@ -1,7 +1,7 @@
 /* Shared design tokens (UI consolidation, 2026-09-29): one place for the portrait sizing rules.
    Layouts are authored at 1080 px wide (broadcast HUD) / 1920 units tall (menu).
    Rules: no text under --po-text (28 px ≈ 10 sp on a Pixel 9 Pro), primary buttons --po-btn tall,
-   chips / toggles --po-chip tall, spacing from --po-pad-s / --po-pad / --po-gap only.
+   chips / toggles --po-chip tall, every padding, margin, border width and radius a token (UiTokenTests).
    :root = themed panels; .po-tokens = roots that add the style sheet in code (BroadcastHud, menu). */
 :root, .po-tokens {
     --po-text: 28px;
@@ -22,6 +22,21 @@
     --po-radius: 10px;
     --po-radius-s: 4px;
     --po-radius-l: 14px;
+    --po-radius-pill: 24px;
+    /* spacing steps beside --po-pad-s (8) / --po-pad (12) / --po-gap (16), and the border widths
+       (2026-10-11 sweep: 18 → 16, 22 / 26 → 24, 30 / 34 → 32; radii 8 → 10, 12 → 14, 20 → 24) */
+    --po-s2: 2px;
+    --po-s4: 4px;
+    --po-s6: 6px;
+    --po-s10: 10px;
+    --po-s14: 14px;
+    --po-s24: 24px;
+    --po-s32: 32px;
+    --po-hair: 1px;
+    --po-line: 2px;
+    --po-rule: 3px;
+    --po-bold: 4px;
+    --po-bar: 8px;
 
     --po-dock: rgb(9, 13, 24);
     --po-panel: rgb(18, 25, 43);

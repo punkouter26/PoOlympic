@@ -1,5 +1,5 @@
 /* HudAnchors.cs — the fixed 5-slot frame of every portrait screen:
-   TL title · TC FPS · TR menu (sheet) · BL debug (performance) · BR version. */
+   TL title · TC FPS · TR menu · BL debug (performance) · BR version, and the one bottom sheet. */
 @import url("Tokens.uss");
 
 .ha-bar {
@@ -18,7 +18,7 @@
     flex-shrink: 1;
     min-width: 0;
     padding-left: var(--po-pad);
-    border-left-width: 8px;
+    border-left-width: var(--po-bar);
     border-left-color: var(--po-gold);
 }
 .ha-title {
@@ -51,7 +51,7 @@
     font-size: var(--po-text);
     color: var(--po-green);
     background-color: var(--po-shade-45);
-    border-radius: 24px;
+    border-radius: var(--po-radius-pill);
 }
 .ha-fps-mid { color: var(--po-gold); }
 .ha-fps-low { color: var(--po-red); }
@@ -72,13 +72,16 @@
 }
 .ha-icon-btn:hover { background-color: var(--po-card-hover); }
 .ha-icon-btn--on { background-color: var(--po-gold); }
-.ha-burger-bar { width: 44px; height: 6px; margin: 4px 0; border-radius: 3px; background-color: var(--po-fg); }
+.ha-burger-bar { width: 44px; height: 6px; margin: var(--po-s4) 0; border-radius: var(--po-radius-s); background-color: var(--po-fg); }
 .ha-icon-btn--on > .ha-burger-bar { background-color: var(--po-ink); }
 
 /* BL: debug button (a small bar chart = performance) */
-.ha-debug-btn { width: var(--po-chip); height: var(--po-chip); flex-direction: row; align-items: flex-end; padding-bottom: 18px; }
-.ha-dbg-bar { width: 9px; margin: 0 3px; border-radius: 2px; background-color: var(--po-cyan); }
+.ha-debug-btn { width: var(--po-chip); height: var(--po-chip); flex-direction: row; align-items: flex-end; padding-bottom: var(--po-gap); }
+.ha-dbg-bar { width: 9px; margin: 0 var(--po-s4); border-radius: var(--po-radius-s); background-color: var(--po-cyan); }
 .ha-debug-btn.ha-icon-btn--on > .ha-dbg-bar { background-color: var(--po-ink); }
+/* collision shapes on (hold the button): gold bars */
+.ha-debug-btn--shapes > .ha-dbg-bar { background-color: var(--po-gold); }
+.ha-debug-btn--shapes.ha-icon-btn--on > .ha-dbg-bar { background-color: var(--po-ink); }
 
 /* BR: version */
 .ha-version {
@@ -89,54 +92,29 @@
     white-space: nowrap;
 }
 
-/* menu sheet: drops from TR over the content */
+/* the one modal: a sheet docked above the bottom bar (thumb reach), tabs Actions | Settings | Close */
+.ha-scrim { position: absolute; left: 0; right: 0; top: 0; bottom: 0; background-color: var(--po-shade-45); display: none; }
+.ha-scrim--on { display: flex; }
 .ha-sheet {
-    position: absolute;
-    right: var(--po-gap);
-    min-width: 440px;
-    padding: var(--po-pad-s);
-    background-color: var(--po-sheet);
-    border-width: 2px;
-    border-color: var(--po-gold);
-    border-radius: var(--po-radius-l);
-    display: none;
-}
-.ha-sheet--open { display: flex; }
-.ha-sheet-item {
-    height: var(--po-btn);
-    margin: 4px 0;
-    padding: 0 26px;
-    -unity-text-align: middle-left;
-    -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
-    font-size: var(--po-text-m);
-    color: var(--po-fg);
-    background-color: var(--po-card);
-    border-width: 0;
-    border-radius: var(--po-radius);
-}
-.ha-sheet-item:hover { background-color: var(--po-card-hover); }
-
-/* settings: one tabbed sheet docked at the bottom (thumb reach), over the content */
-.ha-settings {
     position: absolute;
     left: var(--po-gap);
     right: var(--po-gap);
     bottom: var(--po-gap);
     padding: var(--po-pad);
     background-color: var(--po-dock);
-    border-width: 2px;
+    border-width: var(--po-line);
     border-color: var(--po-gold);
     border-radius: var(--po-radius-l);
     display: none;
 }
-.ha-settings--open { display: flex; }
-.ha-settings-head { flex-direction: row; margin-bottom: var(--po-pad-s); }
+.ha-sheet--open { display: flex; }
+.ha-sheet-head { flex-direction: row; margin-bottom: var(--po-pad-s); }
 .ha-tab {
     flex-grow: 1;
     flex-basis: 0;
     height: var(--po-btn);
     -unity-text-align: middle-center;
-    margin: 0 4px;
+    margin: 0 var(--po-s4);
     padding: 0;
     -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
     font-size: var(--po-text-m);
@@ -148,23 +126,49 @@
 .ha-tab:hover { background-color: var(--po-card-hover); }
 .ha-tab--on { color: var(--po-ink); background-color: var(--po-gold); }
 .ha-tab-done { color: var(--po-ink); background-color: var(--po-green); }
-.ha-set-row { flex-direction: row; align-items: center; height: 88px; padding: 0 var(--po-pad-s); }
-.ha-set-label { flex-grow: 1; flex-shrink: 1; font-size: var(--po-text-m); color: var(--po-fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ha-set-value {
-    width: 240px;
-    height: var(--po-chip);
-    -unity-text-align: middle-center;
-    margin: 0;
-    padding: 0;
-    flex-shrink: 0;
+.ha-tab:disabled { opacity: 0.4; }
+/* Actions tab */
+.ha-sheet-item {
+    height: var(--po-btn);
+    margin: var(--po-s4);
+    padding: 0 var(--po-s24);
+    -unity-text-align: middle-left;
     -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
     font-size: var(--po-text-m);
-    color: var(--po-ink);
+    color: var(--po-fg);
+    background-color: var(--po-card);
+    border-width: 0;
+    border-radius: var(--po-radius);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ha-sheet-item:hover { background-color: var(--po-card-hover); }
+/* Settings tab: 4 chips a row — caption over the value, tap = next value */
+.ha-set-row { flex-direction: row; }
+.ha-set {
+    flex-grow: 1;
+    flex-basis: 0;
+    min-width: 0;
+    height: var(--po-btn);
+    margin: var(--po-s4);
+    padding: 0;
+    justify-content: center;
+    align-items: center;
     background-color: var(--po-cyan);
     border-width: 0;
     border-radius: var(--po-radius);
+    overflow: hidden;
 }
-.ha-set-value--off { color: var(--po-soft); background-color: var(--po-card); }
+.ha-set--off { background-color: var(--po-card); }
+.ha-set-cap { font-size: var(--po-text); color: var(--po-ink); white-space: nowrap; }
+.ha-set-value { font-size: var(--po-text-m); color: var(--po-ink); white-space: nowrap; -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
+.ha-set--off > .ha-set-cap { color: var(--po-soft); }
+.ha-set--off > .ha-set-value { color: var(--po-fg); }
+
+/* loading veil: blocks input while MeetLineup loads a scene */
+.ha-veil { position: absolute; left: 0; right: 0; top: 0; bottom: 0; align-items: center; justify-content: center; background-color: var(--po-scrim); display: none; }
+.ha-veil--on { display: flex; }
+.ha-veil-text { font-size: var(--po-text-xl); color: var(--po-gold); -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
 
 /* debug panel: grows up from BL */
 .ha-debug {
@@ -172,13 +176,13 @@
     left: var(--po-gap);
     right: var(--po-gap);
     bottom: var(--po-gap);
-    padding: 6px 14px;
+    padding: var(--po-s6) var(--po-s14);
     font-size: var(--po-text);
     -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
     white-space: normal;
     color: var(--po-debug);
     background-color: var(--po-shade-70);
-    border-radius: 8px;
+    border-radius: var(--po-radius);
     display: none;
 }
 .ha-debug--on { display: flex; }

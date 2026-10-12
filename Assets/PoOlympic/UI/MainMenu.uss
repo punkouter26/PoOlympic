@@ -15,12 +15,12 @@
     flex-grow: 1;
     width: 100%;
     max-width: 1080px;
-    padding: 12px 16px 8px 16px;
+    padding: var(--po-pad) var(--po-gap) var(--po-pad-s) var(--po-gap);
 }
 .menu-anchor { flex-shrink: 0; }
 .menu-overlay { position: absolute; left: 0; right: 0; top: 0; bottom: 0; }
 #anchorTop, .roster, .slots, .event-grid, .detail, .action-row { margin-bottom: var(--po-pad); }
-.slots { margin-bottom: 4px; }
+.slots { margin-bottom: var(--po-s4); }
 
 /* ---------- roster: tap a card = all 8 lanes ---------- */
 .roster { flex-direction: row; flex-shrink: 0; }
@@ -29,12 +29,12 @@
     flex-basis: 0;
     height: var(--po-btn);
     margin: 0;
-    padding: 0 12px;
+    padding: 0 var(--po-pad);
     flex-direction: column;
     justify-content: center;
     align-items: stretch;
     background-color: var(--po-card);
-    border-width: 2px;
+    border-width: var(--po-line);
     border-color: var(--po-gold);
     border-radius: var(--po-radius-l);
     color: var(--po-fg);
@@ -42,21 +42,21 @@
 .athlete-card:hover { background-color: var(--po-card-hover); }
 /* four roster cards share the row since KIM (2026-10-11): text stays at the 28 px minimum (PortraitLayoutTests), so the
    cards get tighter padding and lose the "×8" label (the tooltip and the header line "8× NAME" still say it) */
-.athlete-card { padding: 0 4px; }
+.athlete-card { padding: 0 var(--po-s4); }
 .athlete-card .athlete-fill { display: none; }
-.athlete-head > .menu-chip { width: 34px; margin-right: 4px; }
+.athlete-head > .menu-chip { width: 34px; margin-right: var(--po-s4); }
 .athlete-card--gap { margin-right: var(--po-pad); }
 .athlete-head { flex-direction: row; align-items: center; }
-.athlete-head > .menu-chip { margin-right: 6px; }
+.athlete-head > .menu-chip { margin-right: var(--po-s6); }
 .athlete-name { flex-grow: 1; flex-shrink: 1; min-width: 0; white-space: nowrap; overflow: hidden; -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); font-size: var(--po-text-name); color: var(--po-gold); }
 .athlete-stats { font-size: var(--po-text); color: var(--po-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.athlete-fill { flex-shrink: 0; white-space: nowrap; margin-left: 2px; font-size: var(--po-text); color: var(--po-cyan); -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
+.athlete-fill { flex-shrink: 0; white-space: nowrap; margin-left: var(--po-s2); font-size: var(--po-text); color: var(--po-cyan); -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
 
 /* body chips (same colours as the broadcast HUD) */
 .menu-chip {
     width: 42px;
     height: 38px;
-    margin-right: 10px;
+    margin-right: var(--po-s10);
     flex-shrink: 0;
     -unity-text-align: middle-center;
     font-size: var(--po-text);
@@ -76,15 +76,15 @@
     height: var(--po-btn);
     margin: 0;
     margin-bottom: var(--po-pad-s);
-    padding: 0 10px;
+    padding: 0 var(--po-s10);
     justify-content: center;
     align-items: flex-start;
     background-color: var(--po-tile);
-    border-width: 2px;
+    border-width: var(--po-line);
     border-color: var(--po-tile);
-    border-left-width: 8px;
+    border-left-width: var(--po-bar);
     border-left-color: var(--po-matt);
-    border-radius: 12px;
+    border-radius: var(--po-radius-l);
     color: var(--po-fg);
 }
 .slot:hover { background-color: var(--po-card); }
@@ -105,15 +105,15 @@
     flex-basis: 0;
     min-width: 0;
     margin: 0;
-    padding: 10px 12px;
+    padding: var(--po-s10) var(--po-pad);
     flex-direction: column;
     align-items: flex-start;
     justify-content: flex-start;
     overflow: hidden;
     background-color: var(--po-card);
-    border-width: 2px;
+    border-width: var(--po-line);
     border-color: var(--po-card);
-    border-radius: 12px;
+    border-radius: var(--po-radius-l);
     color: var(--po-fg);
 }
 .event-button--gap { margin-right: var(--po-pad-s); }
@@ -123,7 +123,7 @@
 .event-button--empty { visibility: hidden; }
 .event-number { font-size: var(--po-text-h); color: var(--po-gold); -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
 .event-name { font-size: var(--po-text); white-space: normal; }
-.event-mark { font-size: var(--po-text); margin-top: 4px; color: var(--po-green); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
+.event-mark { font-size: var(--po-text); margin-top: var(--po-s4); color: var(--po-green); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
 .event-mark--none { color: var(--po-muted); }
 .event-order {
     position: absolute;
@@ -136,7 +136,7 @@
     -unity-text-align: middle-center;
     color: var(--po-ink);
     background-color: var(--po-cyan);
-    border-radius: 24px;
+    border-radius: var(--po-radius-pill);
 }
 
 /* ---------- selected event: rules + world record, or its all-time top 5 (★) ---------- */
@@ -144,21 +144,21 @@
     height: 300px;
     flex-shrink: 0;
     overflow: hidden;
-    padding: 10px 16px;
+    padding: var(--po-s10) var(--po-gap);
     background-color: var(--po-tile);
     border-radius: var(--po-radius-l);
 }
 .detail-head { flex-direction: row; align-items: center; height: 44px; }
 .detail-title { flex-grow: 1; flex-shrink: 1; font-size: var(--po-text-m); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
-.detail-brain { font-size: var(--po-text); padding: 0 10px; border-radius: var(--po-radius-s); color: var(--po-soft); background-color: var(--po-card); }
-.event-rules { font-size: var(--po-text); color: var(--po-body); white-space: normal; flex-grow: 1; flex-shrink: 1; overflow: hidden; margin-top: 4px; }
+.detail-brain { font-size: var(--po-text); padding: 0 var(--po-s10); border-radius: var(--po-radius-s); color: var(--po-soft); background-color: var(--po-card); }
+.event-rules { font-size: var(--po-text); color: var(--po-body); white-space: normal; flex-grow: 1; flex-shrink: 1; overflow: hidden; margin-top: var(--po-s4); }
 .event-record { font-size: var(--po-text); color: var(--po-gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
-.record-top { flex-grow: 1; margin-top: 4px; display: none; }
+.record-top { flex-grow: 1; margin-top: var(--po-s4); display: none; }
 .record-top-row { flex-direction: row; height: 44px; align-items: center; }
 .record-top-rank { width: 44px; font-size: var(--po-text); color: var(--po-gold); -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
 .record-top-mark { flex-grow: 1; flex-shrink: 1; font-size: var(--po-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf"); }
-.record-top-who { flex-shrink: 1; margin-left: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: var(--po-text); color: var(--po-body-hi); }
-.record-top-date { margin-left: 12px; white-space: nowrap; font-size: var(--po-text); color: var(--po-muted); }
+.record-top-who { flex-shrink: 1; margin-left: var(--po-pad); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: var(--po-text); color: var(--po-body-hi); }
+.record-top-date { margin-left: var(--po-pad); white-space: nowrap; font-size: var(--po-text); color: var(--po-muted); }
 .record-top-none { font-size: var(--po-text); color: var(--po-muted); }
 .detail--records > .event-rules, .detail--records > .event-record { display: none; }
 .detail--records > .record-top { display: flex; }
@@ -169,7 +169,7 @@
     height: var(--po-btn);
     margin: 0;
     margin-right: var(--po-pad-s);
-    padding: 0 22px;
+    padding: 0 var(--po-s24);
     flex-shrink: 0;
     -unity-text-align: middle-center;
     -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
@@ -196,7 +196,7 @@
     color: var(--po-ink);
     background-color: var(--po-gold);
     border-width: 0;
-    border-radius: 20px;
+    border-radius: var(--po-radius-pill);
 }
 .play-button:hover { background-color: var(--po-gold-hover); }
 .play-button:disabled { opacity: 0.4; }

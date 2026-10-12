@@ -11,7 +11,7 @@ namespace PoOlympic.Tests
 {
     /// <summary>
     /// UI consolidation idea 9 — the zero-scroll guard. Lays out the main menu and the broadcast HUD (every phase,
-    /// collapsed and expanded standings, the menu sheet open) on off-screen panels at several phone sizes and checks,
+    /// collapsed and expanded standings, the bottom sheet on both tabs) on off-screen panels at several screens and checks,
     /// with HudLayoutAudit: no ScrollView, nothing outside the safe area, no text under 28 units, the 5 anchors in
     /// their corners, and the camera gap of the HUD large enough to watch the event.
     /// </summary>
@@ -21,9 +21,12 @@ namespace PoOlympic.Tests
         const string MenuUxml = "Assets/PoOlympic/UI/MainMenu.uxml";
         const string HudUss = "Assets/PoOlympic/UI/BroadcastHud.uss";
         const int TestEvent = 97;                     // records written by the result are cleared in TearDown
+        /// <summary>104 less one device pixel: stacked buttons snap to the pixel grid (103.1 at 2048 px / 1920 units).</summary>
+        const float MinButton = 103f;
 
         /// <summary>name, pixels, safe area (normalised, y up): a 16:9 phone, the Pixel 9 Pro (status bar + camera
-        /// cut-out on top, gesture bar below), a small 16:9 phone, a tall 20:9 phone.</summary>
+        /// cut-out on top, gesture bar below), a small 16:9 phone, tall 20:9 to 22:9 phones, and the wide ones: a
+        /// foldable's inner screen and a 4:3 tablet held upright.</summary>
         public static readonly object[] Phones =
         {
             new object[] { "1080x1920", 1080, 1920, new Rect(0f, 0f, 1f, 1f) },
@@ -32,6 +35,9 @@ namespace PoOlympic.Tests
             new object[] { "1080x2400", 1080, 2400, new Rect(0f, 48f / 2400f, 1f, (2400f - 48f - 110f) / 2400f) },
             // tall 21:9 with a dynamic-island style cut-out (deep top inset) and a gesture bar
             new object[] { "1080x2520", 1080, 2520, new Rect(0f, 60f / 2520f, 1f, (2520f - 60f - 150f) / 2520f) },
+            new object[] { "1080x2640", 1080, 2640, new Rect(0f, 70f / 2640f, 1f, (2640f - 70f - 150f) / 2640f) },
+            new object[] { "Fold1812x2176", 1812, 2176, new Rect(0f, 48f / 2176f, 1f, (2176f - 48f - 96f) / 2176f) },
+            new object[] { "Tablet1536x2048", 1536, 2048, new Rect(0f, 0f, 1f, 1f) },
         };
 
         readonly List<UnityEngine.Object> _trash = new();
@@ -153,21 +159,41 @@ namespace PoOlympic.Tests
             Layout(doc);
             AssertClean($"{phone} menu (records + gauntlet)", Audit());
 
-            Call(menu.Anchors, "ToggleSheet");                      // the TR sheet
+            Call(menu.Anchors, "ToggleSheet");                      // TR button: the bottom sheet, Actions tab
             Layout(doc);
             Assert.IsTrue(menu.Anchors.SheetOpen);
-            AssertClean($"{phone} menu (sheet open)", Audit());
+            AssertClean($"{phone} menu (sheet: actions)", Audit());
+            AssertSheet($"{phone} menu", menu.Anchors, root, bounds);
 
-            for (int tab = 0; tab < 3; tab++)                       // the settings bottom sheet, every tab
+            menu.Anchors.ShowTab(HudAnchors.SettingsTab);           // every option on one page
+            Layout(doc);
+            AssertClean($"{phone} menu (sheet: settings)", Audit());
+            AssertSheet($"{phone} menu", menu.Anchors, root, bounds);
+            var chips = root.Query<Button>(className: "ha-set").ToList();
+            Assert.AreEqual(16, chips.Count, $"{phone}: settings chips");
+            foreach (var c in chips)
             {
-                menu.Anchors.ShowSettingsTab(tab);
-                Layout(doc);
-                Assert.IsTrue(menu.Anchors.SettingsOpen && !menu.Anchors.SheetOpen);
-                AssertClean($"{phone} menu (settings tab {tab})", Audit());
-                var values = root.Query<Button>(className: "ha-set-value").ToList();
-                Assert.AreEqual(4 + tab, values.Count, $"{phone}: settings tab {tab} rows");   // Audio 4, Display 5, Game 6
-                foreach (var v in values) Assert.GreaterOrEqual(v.resolvedStyle.height, 71.5f, $"{phone}: settings value under the 72 chip height");
+                Assert.GreaterOrEqual(c.resolvedStyle.height, MinButton, $"{phone}: settings chip under 104");
+                foreach (var l in c.Query<Label>().ToList())      // caption and value fit their chip (no clipped text)
+                    Assert.LessOrEqual(l.worldBound.width, c.worldBound.width + 1f, $"{phone}: '{l.text}' wider than its chip");
             }
+
+            menu.Anchors.CloseSheet();
+            Layout(doc);
+            Assert.IsFalse(menu.Anchors.SheetOpen);
+            Assert.IsFalse(HudLayoutAudit.Shown(root.Q(className: "ha-scrim")), $"{phone}: scrim left on after Close");
+        }
+
+        /// <summary>The sheet is in thumb reach (the lower half of the screen), sits above the
+        /// bottom bar, and its scrim is up behind it.</summary>
+        static void AssertSheet(string what, HudAnchors a, VisualElement root, Rect bounds)
+        {
+            var sheet = root.Q(className: "ha-sheet");
+            Assert.IsTrue(HudLayoutAudit.Shown(root.Q(className: "ha-scrim")), $"{what}: no scrim behind the sheet");
+            Assert.LessOrEqual(sheet.worldBound.yMax, a.BottomBar.worldBound.yMin + 1f, $"{what}: sheet over the bottom bar");
+            Assert.Greater(sheet.worldBound.center.y, bounds.center.y, $"{what}: sheet not in the lower half");
+            foreach (var b in sheet.Query<Button>().ToList())
+                Assert.GreaterOrEqual(b.resolvedStyle.height, MinButton, $"{what}: sheet button '{b.text}' under 104");
         }
 
         // ------------------------------------------------------------------------------------------ broadcast HUD
@@ -249,20 +275,37 @@ namespace PoOlympic.Tests
             Settle(hud, doc);
             Assert.IsTrue(board.HoldStart, "the heat after a single event's heat is not held");
             Assert.IsTrue(HudLayoutAudit.Shown(match), "no match card after a single event's heat");
-            Assert.AreEqual(8, match.Query(className: "bh-row").ToList().Count, "match card places");
-            Assert.GreaterOrEqual(match.Q<Button>().resolvedStyle.height, 103.5f, "match card OK button under 104");
+            int ShownRows() => match.Query(className: "bh-row").ToList().Count(HudLayoutAudit.Shown);
+            Assert.AreEqual(8, ShownRows(), "match card places");
+            foreach (var b in match.Query<Button>().ToList())
+                Assert.GreaterOrEqual(b.resolvedStyle.height, MinButton, $"match card button '{b.text}' under 104");
             AssertClean($"{phone} HUD match card", HudLayoutAudit.Check(hud.Frame, bounds, 28f));
-
-            Call(hud.Anchors, "ToggleSheet");
+            // result, telemetry and replay are one card: the Telemetry tab swaps the 8 rows in place
+            Click(match.Query<Button>().ToList().First(b => b.text == "Telemetry"));
             Settle(hud, doc);
-            AssertClean($"{phone} HUD sheet open", HudLayoutAudit.Check(hud.Frame, bounds, 28f));
+            Assert.AreEqual(8, ShownRows(), "match card telemetry rows");
+            Assert.IsTrue(match.Query<Label>().ToList().Any(l => HudLayoutAudit.Shown(l) && l.text.Contains("no telemetry")), "telemetry tab not shown");
+            AssertClean($"{phone} HUD match card (telemetry)", HudLayoutAudit.Check(hud.Frame, bounds, 28f));
+            Assert.IsNotNull(match.Query<Button>().ToList().FirstOrDefault(b => b.text == "Replay"), "no Replay on the match card");
 
-            for (int tab = 0; tab < 3; tab++)
-            {
-                hud.Anchors.ShowSettingsTab(tab);
-                Settle(hud, doc);
-                AssertClean($"{phone} HUD settings tab {tab}", HudLayoutAudit.Check(hud.Frame, bounds, 28f));
-            }
+            Call(hud.Anchors, "ToggleSheet");                       // the one sheet comes up over the card
+            Settle(hud, doc);
+            AssertClean($"{phone} HUD sheet: actions", HudLayoutAudit.Check(hud.Frame, bounds, 28f));
+            AssertSheet($"{phone} HUD", hud.Anchors, hud.Frame, bounds);
+            var scrim = hud.Frame.Q(className: "ha-scrim");
+            Assert.Greater(hud.Frame.IndexOf(scrim), hud.Frame.IndexOf(match), $"{phone}: the scrim is under the match card");
+            hud.Anchors.ShowTab(HudAnchors.SettingsTab);
+            Settle(hud, doc);
+            AssertClean($"{phone} HUD sheet: settings", HudLayoutAudit.Check(hud.Frame, bounds, 28f));
+            AssertSheet($"{phone} HUD", hud.Anchors, hud.Frame, bounds);
+        }
+
+        /// <summary>A tap, as the UI sees it (edit mode has no pointer): the button's own submit.</summary>
+        static void Click(Button b)
+        {
+            using var e = NavigationSubmitEvent.GetPooled();
+            e.target = b;
+            b.SendEvent(e);
         }
     }
 }

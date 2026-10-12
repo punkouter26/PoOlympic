@@ -794,14 +794,14 @@ namespace PoOlympic.Editor
             return $"{HubScene}: {venues.Count} event venues, {venues.Count(x => x.Playable)} playable; build scenes {built}";
         }
 
-        /// <summary>Build Settings: main menu (first = start scene, if built) → stadium hub → every built event scene.</summary>
+        /// <summary>Build Settings: main menu (first = start scene, if built) → every built event scene. The stadium
+        /// hub and the solo Iron Pedestal stay out (2026-10-11): nothing in a build loads them and their HUDs are
+        /// IMGUI dev screens (SceneIntegrityTests keeps OnGUI out of the build scenes); open them in the editor.</summary>
         static int SetBuildScenes()
         {
             var list = new System.Collections.Generic.List<EditorBuildSettingsScene>();
             if (File.Exists(MainMenuScene)) list.Add(new EditorBuildSettingsScene(MainMenuScene, true));
-            list.Add(new EditorBuildSettingsScene(HubScene, true));
             foreach (var path in EventScenePaths.Values) list.Add(new EditorBuildSettingsScene(path, true));
-            list.Add(new EditorBuildSettingsScene(IronPedestalScene, true));
             EditorBuildSettings.scenes = list.ToArray();
             return list.Count;
         }

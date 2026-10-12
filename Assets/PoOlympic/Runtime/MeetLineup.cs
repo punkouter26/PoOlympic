@@ -41,18 +41,23 @@ namespace PoOlympic
             Load(MenuScene);
         }
 
-        static int _loadFrame = -1;
-        /// <summary>A scene load was requested this frame (callers that change state before Load check this first).</summary>
-        public static bool Loading => _loadFrame == Time.frameCount;
+        static AsyncOperation _load;
+        static float _loadAt;
+        /// <summary>A load that has not finished after this long no longer blocks the next request (no dead end).</summary>
+        public const float LoadTimeoutSeconds = 20f;
+        /// <summary>A scene is on its way (callers that change state before Load check this first; HudAnchors shows
+        /// its veil and takes no input meanwhile).</summary>
+        public static bool Loading => _load != null && !_load.isDone && Time.unscaledTime - _loadAt < LoadTimeoutSeconds;
 
-        /// <summary>The one place a scene is loaded. LoadScene switches at the next frame, so a second request in the
-        /// same frame (a double tap, the demo watchdog and the HUD countdown together) is dropped: false.</summary>
+        /// <summary>The one place a scene is loaded, in the background (the old scene keeps drawing under the veil).
+        /// A second request while one is running (a double tap, the demo watchdog and the HUD countdown together) is
+        /// dropped: false.</summary>
         public static bool Load(string scene)
         {
-            if (_loadFrame == Time.frameCount) return false;
-            _loadFrame = Time.frameCount;
-            SceneManager.LoadScene(scene);
-            return true;
+            if (Loading) return false;
+            _load = SceneManager.LoadSceneAsync(scene);      // null (and an error in the log) for a scene not in the build
+            _loadAt = Time.unscaledTime;
+            return _load != null;
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -60,7 +65,7 @@ namespace PoOlympic
         {
             Athletes = Enumerable.Repeat(Roster[0], 8).ToArray();
             EventNumber = 1;
-            _loadFrame = -1;
+            _load = null;
         }
     }
 

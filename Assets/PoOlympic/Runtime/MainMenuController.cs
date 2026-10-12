@@ -10,8 +10,8 @@ namespace PoOlympic
     /// <summary>
     /// Main menu (UI Toolkit, Assets/PoOlympic/UI/MainMenu.uxml) — one viewport, nothing scrolls (UI consolidation
     /// 2026-09-29):
-    ///   HudAnchors frame  TL POOLYMPICS + the lineup / gauntlet status · TC FPS · TR menu sheet (lineup presets,
-    ///                     performance) · BL debug · BR version; bottom centre: the last gauntlet result
+    ///   HudAnchors frame  TL POOLYMPICS + the lineup / gauntlet status · TC FPS · TR menu → the bottom sheet (Actions:
+    ///                     lineup presets, demo · Settings) · BL debug · BR version; bottom centre: the last gauntlet result
     ///   roster            one card per athlete (MeetLineup.Roster): tap = that athlete in all 8 lanes
     ///   lanes             4 × 2 tiles: tap a lane = the next athlete in it
     ///   events            fixed grid of the playable events (filled in by EventScenes.BuildMainMenu from the catalogue)
@@ -221,7 +221,6 @@ namespace PoOlympic
                     for (int k = 0; k < _lineup.Length; k++) _lineup[k] = MeetLineup.Roster[k % MeetLineup.Roster.Length];
                     RefreshSlots();
                 });
-            yield return ("Settings", _anchors.OpenSettings);
             yield return ($"Demo mode (starts by itself after {idleDemoSeconds:0} s idle)", StartDemo);
             if (DemoSeason.SeriesPlayed > 0) yield return ("Demo season: reset", () => { DemoSeason.Reset(); UpdateStatus(); });
         }

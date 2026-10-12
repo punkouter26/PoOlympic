@@ -7,11 +7,11 @@
     left: var(--po-gap);
     bottom: var(--po-gap);
     max-width: 78%;
-    padding: 6px 12px;
+    padding: var(--po-s6) var(--po-pad);
     font-size: var(--po-text);
     -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
     white-space: normal;
     color: var(--po-debug);
     background-color: var(--po-shade-62);
-    border-radius: 8px;
+    border-radius: var(--po-radius);
 }
