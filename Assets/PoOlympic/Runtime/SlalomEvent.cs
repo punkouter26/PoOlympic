@@ -32,7 +32,9 @@ namespace PoOlympic
             [NonSerialized] public string status = "";
             [NonSerialized] public float finishS = -1, score, x, y, line;
             [NonSerialized] public int misses, clips, nextPole, place;
-            [NonSerialized] public bool touching;
+            [NonSerialized] public bool touching, down;      // down: fallen, the get-up brain is driving
+            [NonSerialized] public int falls;
+            [NonSerialized] public float upT;
             [NonSerialized] public int pelvis;
             [NonSerialized] public readonly HashSet<int> poles = new();
             public bool Racing => status.Length == 0;
@@ -57,6 +59,8 @@ namespace PoOlympic
         [Tooltip("A racer eases off and tightens its line when a neighbour is just ahead and close: they reach the pole " +
                  "one after the other instead of bumping shoulders (CPU heats: 14 → 3 falls in 192 runs, +0.7 s).")]
         public bool tactics = true;
+        [Tooltip("A racer with a get-up brain is not out when it falls: it gets up and races on (= slalom.py recover).")]
+        public bool recoverFromFalls = true;
         public float yieldX = 1.2f, levelX = 0.15f, yieldGap = 0.9f, yieldPace = 0.6f, tightLine = 0.45f;
         public bool autoRestart = true, randomTraits = true;
         public int seed = 1;
@@ -68,7 +72,7 @@ namespace PoOlympic
         public IEnumerable<Racer> Standings => Current == Phase.Result ? racers.OrderBy(r => r.place) : racers.OrderByDescending(r => r.x);
 
         System.Random _rng;
-        int _liveStartTick;
+        int _liveStartTick, _prevTick;
         bool _traitsPending = true, _bound;
 
         void Start() => BeginAttempt(first: true);
@@ -100,6 +104,13 @@ namespace PoOlympic
             return new Vector3((float)vx, 0f, (float)Math.Clamp(headingGain * err, -lim, lim));
         }
 
+        /// <summary>Racing-line steering of racer i (the start, and a fallen racer back on its feet).</summary>
+        void Go(int i)
+        {
+            double a = CourseSide(racers[i].lane) * racers[i].line;
+            racers[i].runner.steer = (x, y, yaw, _) => TacticSteer(i, x, y, yaw, a);
+        }
+
         /// <summary>= slalom.py tactician + slalom_command: racer i's command from its own state and the two
         /// neighbouring lanes' track positions (mjData, the same control tick).</summary>
         unsafe Vector3 TacticSteer(int i, double x, double y, double yaw, double a)
@@ -129,7 +140,8 @@ namespace PoOlympic
             foreach (var r in racers)
             {
                 r.status = ""; r.finishS = -1; r.score = r.x = r.y = 0; r.misses = r.clips = r.nextPole = r.place = 0;
-                r.touching = false;
+                r.touching = r.down = false; r.falls = 0; r.upT = 0;
+                r.runner.SetRecovering(false);
                 r.runner.command = Vector3.zero;
                 r.runner.steer = null;
                 if (!first) r.runner.RequestReset();
@@ -189,21 +201,34 @@ namespace PoOlympic
                     {
                         Current = Phase.Live;
                         PhaseTime = 0;
-                        _liveStartTick = lead.ControlTick;
-                        for (int i = 0; i < racers.Count; i++)
-                        {
-                            var r = racers[i];
-                            int k = i;
-                            double a = CourseSide(r.lane) * r.line;
-                            r.runner.steer = (x, y, yaw, _) => TacticSteer(k, x, y, yaw, a);
-                        }
+                        _liveStartTick = _prevTick = lead.ControlTick;
+                        for (int i = 0; i < racers.Count; i++) Go(i);
                     }
                     break;
                 case Phase.Live:
                     LiveTime = (lead.ControlTick - _liveStartTick) * tick;
+                    float elapsed = (lead.ControlTick - _prevTick) * tick;     // control time since the last frame
+                    _prevTick = lead.ControlTick;
                     foreach (var r in racers.Where(r => r.Racing))
                     {
-                        if (r.judge.Eliminated(m, d) == "FELL") { Out(r, "FELL"); continue; }
+                        if (r.down)
+                        {
+                            r.upT = r.runner.Upright(d) ? r.upT + elapsed : 0f;
+                            if (r.upT >= PolicyRunner.UpHoldSeconds) { r.down = false; r.runner.SetRecovering(false); Go(racers.IndexOf(r)); }
+                            continue;
+                        }
+                        if (r.judge.Eliminated(m, d) == "FELL")
+                        {
+                            if (recoverFromFalls && r.runner.CanRecover)
+                            {
+                                r.down = true; r.upT = 0f; r.falls++;
+                                r.runner.command = Vector3.zero;
+                                r.runner.steer = null;
+                                r.runner.SetRecovering(true);
+                                continue;
+                            }
+                            Out(r, "FELL"); continue;
+                        }
                         bool touching = false;
                         for (int i = 0; i < d->ncon && !touching; i++)
                         {
@@ -275,7 +300,9 @@ namespace PoOlympic
         public string ClockLine => $"{LiveTime:0.00} s";
         public string InfoLine => $"+{clipPenalty:0.#} s clip · +{missPenalty:0.#} s miss";
         public IEnumerable<(int place, string name, string result, bool bad, PolicyRunner runner)> Rows =>
-            Standings.Select(r => (r.place, r.name, Describe(r), r.status is "FELL" or "DNF", r.runner));
+            Standings.Select(r => (r.place, r.name,
+                r.down && r.Racing ? "DOWN · getting up" : Describe(r) + (r.falls == 0 ? "" : r.down ? " · still down" : " · got up"),
+                r.status is "FELL" or "DNF", r.runner));
         public string Banner => Current switch
         {
             Phase.Ready => Mathf.CeilToInt(countdownSeconds - PhaseTime).ToString(),

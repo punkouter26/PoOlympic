@@ -250,6 +250,16 @@ if bodies.current().name == "matt":
                         play_env_cfg=matt_rung2_ramp_env_cfg(play=True),
                         rl_cfg=matt_ppo_cfg("matt_rung2", max_iterations=600), runner_cls=SymmetricRunner)
 
+if bodies.current().name == "matt":
+    # Get-up for the roster MATT (2026-10-11: fall recovery + Event 27 need it; the 2026-09-29 Matt-Getup..5 tasks never
+    # stood up). The ladder recipe that solved mattbio / GRANDMA / KIM, on MATT's own model and contract v3.
+    from .getup_env import matt_getup_ladder_e_env_cfg, matt_getup_prone_env_cfg
+
+    for _tid, _fn, _its in (("PoOlympic-Matt-Getup-Ladder", matt_getup_ladder_e_env_cfg, 1500),
+                            ("PoOlympic-Matt-Getup-Prone", matt_getup_prone_env_cfg, 800)):
+        register_mjlab_task(task_id=_tid, env_cfg=_fn(), play_env_cfg=_fn(play=True),
+                            rl_cfg=matt_ppo_cfg("matt_getup", max_iterations=_its), runner_cls=MjlabOnPolicyRunner)
+
 if bodies.current().name == "mattbio":
     # STAGED (not trained; needs the user's OK — DESIGN §2 body change): MATT with full self-collision + bio torque caps
     # (bodies.BIO_TORQUE_CAPS). Same contract, so every MATT checkpoint warm-starts directly. POOLYMPIC_BODY=mattbio.

@@ -58,6 +58,7 @@ EVENTS = {
     19: ("Terminal Velocity Sprint", "track:terminal", "track8"),
     22: ("Emergency Brake", "track:brake", "track8"),
     23: ("The Trench Crawl", "trench", "trench8"),
+    27: ("The Resurrection Dash", "track:resurrection", "track8"),
 }
 
 
@@ -81,7 +82,7 @@ def run_one(event: int, seed: int) -> dict:
         res = track.run_race(brains["matt"], mode, seed, scene=scene, layout_path=layout, brains=brains, recover=deployed("getup"))
     else:
         mod = {"gauntlet": gauntlet, "crab": crab, "slalom": slalom, "turntable": turntable}[kind]
-        res = mod.run_heat(R2["matt"], seed, scene=scene, layout_path=layout, brains=R2, **({"tactics": True} if kind == "slalom" else {}))
+        res = mod.run_heat(R2["matt"], seed, scene=scene, layout_path=layout, brains=R2, **({"tactics": True, "recover": deployed("getup")} if kind == "slalom" else {}))
     bodies = [l.get("body", "matt") for l in json.loads(layout.read_text())["lanes"]]
     return {"event": event, "seed": seed, "lanes": [
         {"lane": l.lane, "body": bodies[l.lane], "strength": l.traits.strength, "latency": l.traits.latency_substeps,

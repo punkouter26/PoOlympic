@@ -37,7 +37,7 @@ def run_one(job: tuple) -> dict:
         res = track.run_race(brains["matt"], mode, seed, scene=scene, layout_path=layout, brains=brains, recover=F.deployed("getup"))
     else:
         mod = {"gauntlet": gauntlet, "crab": crab, "slalom": slalom, "turntable": turntable}[kind]
-        res = mod.run_heat(brains["matt"], seed, scene=scene, layout_path=layout, brains=brains, **({"tactics": True} if kind == "slalom" else {}))
+        res = mod.run_heat(brains["matt"], seed, scene=scene, layout_path=layout, brains=brains, **({"tactics": True, "recover": F.deployed("getup")} if kind == "slalom" else {}))
     bodies = [l.get("body", "matt") for l in json.loads(layout.read_text())["lanes"]]
     rows = []
     for l in res.lanes:

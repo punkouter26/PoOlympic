@@ -225,9 +225,16 @@ namespace PoOlympic.Editor
             (22, TrackRaceEvent.Mode.Brake, "EMERGENCY BRAKE", "Assets/PoOlympic/Scenes/Event_EmergencyBrake.unity"),
             (9, TrackRaceEvent.Mode.Inverted, "INVERTED SPRINT", "Assets/PoOlympic/Scenes/Event_InvertedSprint.unity"),
             (13, TrackRaceEvent.Mode.Steeplechase, "STEEPLECHASE JOG", SteepleScene),
+            (27, TrackRaceEvent.Mode.Resurrection, "RESURRECTION DASH", ResurrectionScene),
         };
+        // Event 27 (The Resurrection Dash): Rung 2 brains + each body's get-up brain (BroadcastFx.Install wires them)
+        public const string ResurrectionScene = "Assets/PoOlympic/Scenes/Event_ResurrectionDash.unity";
 
-        [MenuItem("PoOlympic/Events/Build Track Races (8, 9, 13, 19, 22)")]
+        [MenuItem("PoOlympic/Events/Build Event 27 — The Resurrection Dash")]
+        public static string BuildResurrectionDash() =>
+            BuildTrackRace(27, TrackRaceEvent.Mode.Resurrection, "RESURRECTION DASH", ResurrectionScene, DefaultRung2Brain);
+
+        [MenuItem("PoOlympic/Events/Build Track Races (8, 9, 13, 19, 22, 27)")]
         public static string BuildTrackRaces()
         {
             var sb = new System.Text.StringBuilder();
@@ -260,7 +267,9 @@ namespace PoOlympic.Editor
                        : null;
             if (crawl) brainFile = CrawlMattBrain;
             if (steeple) brainFile = FlightMattBrain;
-            var meet = BuildMeetScene(source, layout, eventNum, reversed ? 7 - AthleteLane : AthleteLane, reversed ? 180f : 0f, brainFile, brains);
+            // Event 27 runs on the Terminal Velocity straight: its own venue (the mats) is laid out for 8 mats, not 8 track lanes
+            int venue = mode == TrackRaceEvent.Mode.Resurrection ? 19 : eventNum;
+            var meet = BuildMeetScene(source, layout, venue, reversed ? 7 - AthleteLane : AthleteLane, reversed ? 180f : 0f, brainFile, brains);
             var race = new GameObject("TrackRaceEvent").AddComponent<TrackRaceEvent>();
             race.mode = mode;
             (race.distance, race.commandSpeed, race.maxSeconds) = TrackRaceEvent.Defaults(mode);
@@ -277,6 +286,13 @@ namespace PoOlympic.Editor
                     r.crawlSteering = true;
                     EditorUtility.SetDirty(r);
                 }
+                if (mode == TrackRaceEvent.Mode.Resurrection)
+                {
+                    // track.py resurrection: on the back, pelvis at SUPINE_Z × the body's height scale (fall line / MATT's)
+                    r.startSupine = true;
+                    r.supineHeight = 0.22 * Contract.Parse(r.contractJson.text).FallPelvisZ / 0.55;
+                    EditorUtility.SetDirty(r);
+                }
             }
             meet.Pool.runner = race.runners[0].runner;
 
@@ -285,6 +301,7 @@ namespace PoOlympic.Editor
             bc.focusOffset = new Vector3(reversed ? -1.0f : 1.0f, 0f, -0.6f);   // centre of the 8 lanes (Unity z = +3.66 .. -4.88), a bit ahead
             bc.offset = new Vector3(reversed ? 3.5f : -3.5f, 3.2f, -13f);      // trackside, slightly behind the pack (backward runners face it)
             if (crawl) { bc.offset = new Vector3(-3.0f, 2.0f, -9f); bc.lookHeight = 0.4f; }   // crawlers are ~0.5 m tall
+            if (mode == TrackRaceEvent.Mode.Resurrection) bc.lookHeight = 0.6f;   // they start lying down
             AddBroadcast(race, title, $"Event {eventNum}", eventNum, BrainsLabel(brainFile), meet.Camera, BroadcastDirector.Kind.Race,
                          reversed ? Vector3.left : Vector3.right);
             EditorSceneManager.SaveScene(meet.Scene, scenePath);
@@ -710,6 +727,7 @@ namespace PoOlympic.Editor
             { 19, "Assets/PoOlympic/Scenes/Event_TerminalVelocity.unity" },
             { 22, "Assets/PoOlympic/Scenes/Event_EmergencyBrake.unity" },
             { 23, TrenchScene },
+            { 27, ResurrectionScene },
         };
 
         /// <summary>

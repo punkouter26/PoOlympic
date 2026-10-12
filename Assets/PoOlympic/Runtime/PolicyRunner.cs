@@ -49,6 +49,13 @@ namespace PoOlympic
         [Tooltip("Lane keeping on the crawl heading (Contract.CrawlSteerYawRate) instead of the standing heading.")]
         public bool crawlSteering;
 
+        [Header("Get-up events (27 The Resurrection Dash)")]
+        [Tooltip("Reset flat on the back, feet towards +x (the finish), pelvis at supineHeight — track.py resurrection.")]
+        public bool startSupine;
+        public double supineHeight = 0.22;
+        /// <summary>Runtime: hold the default joint pose instead of running a brain (lying at the start line).</summary>
+        [NonSerialized] public bool lieStill;
+
         [Header("Lane (meet scenes; solo = no prefix, origin 0, cube slots 0..3)")]
         [Tooltip("MuJoCo world x/y of this lane's origin: root position = contract default + origin.")]
         public double laneOriginX, laneOriginY;
@@ -79,9 +86,15 @@ namespace PoOlympic
         [Tooltip("This body's get-up brain (getup_<body>.onnx, same contract version as the brain). Optional.")]
         public ModelAsset recoverBrain;
         public TextAsset recoverSidecar;
-        /// <summary>One recovery cycle in control ticks (= track.py RELAX_S / RETRY_S): lie still in the default joint
-        /// pose for RelaxTicks, then the get-up brain; still down at RetryTicks: lie still and try again.</summary>
-        public const int RelaxTicks = 50, RetryTicks = 250;
+        /// <summary>One recovery cycle in control ticks (= track.py Recovery: RELAX_S, RETRY_S, RELAX_STEP_S,
+        /// RELAX_MAX_STEPS): lie still in the default joint pose for RelaxTicks, then the get-up brain for
+        /// RetryTicks − RelaxTicks; still down: lie still again, RelaxStepTicks longer each time (a retry from the same
+        /// pose repeats the same failure), up to RelaxMaxSteps steps.</summary>
+        public const int RelaxTicks = 50, RetryTicks = 250, RelaxStepTicks = 25, RelaxMaxSteps = 4;
+        /// <summary>"Up" again (= track.py UP_Z, UP_TILT_DEG, UP_HOLD_S): pelvis above UpZ × the fall line and the torso
+        /// within UpTiltDeg of vertical, held for UpHoldSeconds.</summary>
+        public const double UpZ = 0.85 / 0.55, UpTiltDeg = 20.0;
+        public const float UpHoldSeconds = 0.5f;
 
         [Header("Recording (parity G5)")]
         public string recordName = "";
@@ -119,7 +132,7 @@ namespace PoOlympic
         }
 
         PolicyBrain _brain, _recover;
-        int _downTicks, _torso = -1;
+        int _cycleTick, _attempt, _torso = -1;
         bool _windOn;
         PolicyCritic _critic;
         int _criticStagger;
@@ -242,6 +255,13 @@ namespace PoOlympic
                 d->qpos[r] = laneOriginX; d->qpos[r + 1] = laneOriginY; d->qpos[r + 2] = proneHeight;
                 d->qpos[r + 3] = Math.Cos(Math.PI / 4); d->qpos[r + 4] = 0.0; d->qpos[r + 5] = Math.Sin(Math.PI / 4); d->qpos[r + 6] = 0.0;
             }
+            if (startSupine)
+            {
+                // pitch −90°: on the back, head away from the finish (rising turns the face towards +x)
+                int r = Binding.RootQposAdr;
+                d->qpos[r] = laneOriginX; d->qpos[r + 1] = laneOriginY; d->qpos[r + 2] = supineHeight;
+                d->qpos[r + 3] = Math.Cos(Math.PI / 4); d->qpos[r + 4] = 0.0; d->qpos[r + 5] = -Math.Sin(Math.PI / 4); d->qpos[r + 6] = 0.0;
+            }
             foreach (var j in Binding.OwnJoints)
             {
                 int da = m->jnt_dofadr[j];
@@ -300,7 +320,17 @@ namespace PoOlympic
 
         /// <summary>Fallen: hand over to the get-up brain (lie still first, see <see cref="RelaxTicks"/>); back on its
         /// feet: back to the brain. The caller sets the command (zero while down). No-op without a get-up brain.</summary>
-        public void SetRecovering(bool on) { Recovering = on && _recover != null; _downTicks = 0; }
+        public void SetRecovering(bool on, bool skipRelax = false)
+        {
+            Recovering = on && _recover != null;
+            _attempt = 0;
+            _cycleTick = skipRelax ? RelaxTicks : 0;
+        }
+
+        /// <summary>Back on its feet right now (hold it for <see cref="UpHoldSeconds"/> before racing on).</summary>
+        public bool Upright(MujocoLib.mjData_* d) =>
+            PelvisHeight(d) > UpZ * Contract.FallPelvisZ &&
+            Math.Acos(Math.Clamp(d->xmat[9 * _torso + 8], -1.0, 1.0)) * 180.0 / Math.PI < UpTiltDeg;
 
         public double PelvisHeight(MujocoLib.mjData_* d) => d->qpos[Binding.RootQposAdr + 2];
 
@@ -380,8 +410,9 @@ namespace PoOlympic
             if (_skill != null) skill.ToArray(_skill);
             _phase = Contract.AdvancePhase(_phase, bodyCommand, _skill != null ? skill.marchHz : 0.0);
             ObservationBuilder.Build(Contract, Binding, d->qpos, d->qvel, bodyCommand, _phase, _lastAction, _obs, _skill);
-            bool relax = Recovering && _downTicks % RetryTicks < RelaxTicks;
-            if (Recovering) _downTicks++;
+            int relaxFor = RelaxTicks + RelaxStepTicks * Math.Min(_attempt, RelaxMaxSteps);
+            bool relax = lieStill || (Recovering && _cycleTick < relaxFor);
+            if (Recovering && ++_cycleTick >= relaxFor + RetryTicks - RelaxTicks) { _cycleTick = 0; _attempt++; }
             if (!relax && obsNoise > 0f && Contract.obs_noise != null)
                 foreach (var t in Contract.obs_noise)
                     for (int i = 0; i < t.size; i++)

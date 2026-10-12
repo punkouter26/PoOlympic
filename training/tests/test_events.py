@@ -210,3 +210,17 @@ def test_fallen_runner_with_a_getup_brain_gets_up_and_finishes(monkeypatch):
     kim = [l for l in res.lanes if l.body == "kim"]
     assert kim and all(l.falls >= 1 for l in kim), "the shove must floor her (else the test checks nothing)"
     assert all(l.status == "FINISHED" for l in kim)
+
+
+def test_resurrection_dash_rises_and_sprints():
+    """Event 27: everyone starts on the back; bodies with a get-up brain rise and run 5 m, the others stay down (DNF)."""
+    brains = C.ROOT.parent / "parity" / "brains"
+    scene, layout = C.ROOT / "assets" / "scene_track8_mzgkmzgk.xml", C.ROOT / "assets" / "track8_mzgkmzgk_layout.json"
+    if not (brains / "getup_kim.onnx").exists() or not scene.exists():
+        pytest.skip("getup_kim.onnx / the KIM line-up not in this clone")
+    r2 = {b: brains / f for b, f in (("matt", "rung2.onnx"), ("zombie", "zombie_rung2.onnx"), ("grandma", "grandma_rung2.onnx"), ("kim", "kim_rung2.onnx"))}
+    res = track.run_race(r2["matt"], "resurrection", 9000, scene=scene, layout_path=layout, brains=r2, recover={"kim": brains / "getup_kim.onnx"})
+    kim = [l for l in res.lanes if l.body == "kim"]
+    assert kim and all(l.status == "FINISHED" and 2.0 < l.finish_s < 15.0 for l in kim)
+    assert all(l.status == "DNF" for l in res.lanes if l.body != "kim")
+    assert sorted(l.place for l in kim) == [1, 2]

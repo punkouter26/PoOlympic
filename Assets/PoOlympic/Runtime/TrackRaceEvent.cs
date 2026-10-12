@@ -21,6 +21,9 @@ namespace PoOlympic
     ///                                      the countdown, crawl 30 m; falls never eliminate (tumbles are counted), standing
     ///                                      up for more than standDqSeconds = DQ; rank by finish time, then (stuck in a
     ///                                      tangle when the clock runs out) by distance covered
+    ///   Resurrection (27 The Resurrection Dash) start flat on the back (PolicyRunner.startSupine), rise and sprint 5 m:
+    ///                                      the get-up brain drives from the gun; a body without one stays down (DNF);
+    ///                                      falling again = down again, not out; rank by finish time
     ///   Steeplechase (13 Steeplechase Jog) 50 m at 3.5 m/s with the flight brain; scored on ground time = finish time −
     ///                                      hang time (flights: both feet off the ground ≥ minFlight, counted per physics
     ///                                      substep like track.py FootGait); rank by ground time, then finish time
@@ -32,7 +35,7 @@ namespace PoOlympic
     /// </summary>
     public class TrackRaceEvent : MonoBehaviour, IBroadcastBoard, ILaneRoster
     {
-        public enum Mode { Dash, Terminal, Brake, Inverted, AllFours, Steeplechase }
+        public enum Mode { Dash, Terminal, Brake, Inverted, AllFours, Steeplechase, Resurrection }
         public enum Phase { Ready, Live, Result }
 
         [Serializable]
@@ -75,9 +78,8 @@ namespace PoOlympic
         [Header("All fours (= all_fours.py)")]
         public float standDqSeconds = 1f;
         public Vector2 crawlBand = new(0.25f, 0.8f);   // pelvis height band (m) × λ
-        [Header("Fall recovery (= track.py UP_Z, UP_TILT_DEG, UP_HOLD_S)")]
+        [Header("Fall recovery (= track.py recover)")]
         public bool recoverFromFalls = true;
-        public float upZ = 0.85f / 0.55f, upTiltDeg = 20f, upHoldSeconds = 0.5f;   // "up" = pelvis above upZ × the fall line
         public bool autoRestart = true, randomTraits = true;
         public int seed = 1;
 
@@ -101,6 +103,7 @@ namespace PoOlympic
             Mode.Inverted => (20f, -1.5f, 30f),
             Mode.AllFours => (30f, 1.2f, 60f),
             Mode.Steeplechase => (50f, 3.5f, 30f),
+            Mode.Resurrection => (5f, 3.8f, 20f),
             _ => (30f, 3.0f, 25f),
         };
 
@@ -117,6 +120,7 @@ namespace PoOlympic
                 r.tumbles = 0; r.standT = 0; r.wasOnFours = false;
                 r.down = false; r.falls = 0; r.upT = 0;
                 r.runner.SetRecovering(false);
+                r.runner.lieStill = mode == Mode.Resurrection;
                 r.gait?.Clear(); r.scoreS = float.NaN;
                 r.speedWindow.Clear();
                 r.runner.command = Vector3.zero;
@@ -179,7 +183,14 @@ namespace PoOlympic
                         Current = Phase.Live;
                         PhaseTime = 0;
                         _liveStartTick = _prevTick = lead.ControlTick;
-                        foreach (var r in runners) Go(r);
+                        foreach (var r in runners)
+                        {
+                            if (mode != Mode.Resurrection) { Go(r); continue; }
+                            if (!r.runner.CanRecover) { r.status = "DNF"; continue; }      // no get-up brain: lies there
+                            r.runner.lieStill = false;
+                            r.down = true; r.upT = 0f;
+                            r.runner.SetRecovering(true, skipRelax: true);
+                        }
                     }
                     break;
                 case Phase.Live:
@@ -212,10 +223,8 @@ namespace PoOlympic
                         }
                         if (r.down)
                         {
-                            float tilt = Mathf.Rad2Deg * Mathf.Acos(Mathf.Clamp((float)d->xmat[9 * r.torsoId + 8], -1f, 1f));
-                            bool up = r.runner.PelvisHeight(d) > upZ * r.runner.Contract.FallPelvisZ && tilt < upTiltDeg;
-                            r.upT = up ? r.upT + elapsed : 0f;
-                            if (r.upT >= upHoldSeconds) { r.down = false; r.runner.SetRecovering(false); Go(r); }
+                            r.upT = r.runner.Upright(d) ? r.upT + elapsed : 0f;
+                            if (r.upT >= PolicyRunner.UpHoldSeconds) { r.down = false; r.runner.SetRecovering(false); Go(r); }
                             continue;
                         }
                         var why = r.judge.Eliminated(m, d);
@@ -273,6 +282,7 @@ namespace PoOlympic
             Mode.Inverted => $"{distance:0} m backwards",
             Mode.AllFours => $"{distance:0} m on hands and feet",
             Mode.Steeplechase => $"{distance:0} m · ground time = finish − air",
+            Mode.Resurrection => $"get up, sprint {distance:0} m",
             _ => $"{distance:0} m",
         };
         public string ClockLine => $"{LiveTime:0.00} s";
@@ -336,7 +346,7 @@ namespace PoOlympic
                 foreach (var r in runners.Where(r => r.status == "FINISHED")) r.scoreS = r.finishS - (float)r.gait.Hang;
             IEnumerable<Runner> order = mode switch
             {
-                Mode.Dash or Mode.Inverted => runners.OrderBy(r => r.status == "FINISHED" ? 0 : 1).ThenBy(r => r.finishS),
+                Mode.Dash or Mode.Inverted or Mode.Resurrection => runners.OrderBy(r => r.status == "FINISHED" ? 0 : 1).ThenBy(r => r.finishS),
                 Mode.AllFours => runners.OrderBy(r => r.status == "FINISHED" ? 0 : r.status == "DNF" ? 1 : 2).ThenBy(r => r.finishS)
                                         .ThenByDescending(r => r.status == "DNF" ? Mathf.Min(r.x, distance) : 0f),
                 Mode.Steeplechase => runners.OrderBy(r => r.status == "FINISHED" ? 0 : 1).ThenBy(r => r.status == "FINISHED" ? r.scoreS : 0f).ThenBy(r => r.finishS),
@@ -355,7 +365,7 @@ namespace PoOlympic
 
         string Mark(Runner r) => mode switch
         {
-            Mode.Dash => r.status == "FINISHED" ? $"{r.finishS:0.00} s" : r.status,
+            Mode.Dash or Mode.Resurrection => r.status == "FINISHED" ? $"{r.finishS:0.00} s" : r.status,
             Mode.Inverted => r.status == "FINISHED" ? $"{r.finishS:0.00} s" : r.status == "DQ" ? "DQ (left lane)" : r.status,
             Mode.AllFours => (r.status == "FINISHED" ? $"{r.finishS:0.00} s" : r.status == "DQ" ? "DQ (stood up)"
                               : r.status == "DNF" ? $"DNF · {Mathf.Min(r.x, distance):0.0} m" : r.status)

@@ -11,7 +11,8 @@ the last one (0 outside): A is the runner's seeded "line" (how wide it swings ro
 Command every control tick (slalom_command, = C# SlalomEvent.Steer): vx = VX; heading towards the line —
     psi* = atan(y*'(x + LOOKAHEAD)) + atan(-Y_GAIN (y - y*(x)));  wz = clip(HEADING_GAIN wrap(psi* - yaw), +-WZ_LIMIT)
 Penalties: a pole passed on the wrong side = MISS_PENALTY s; every new contact with a pole = CLIP_PENALTY s; a fall =
-out. Rank by time + penalties.
+out — unless the body has a get-up brain (`recover`, track.Recovery): it gets up and races on, falls counted.
+Rank by time + penalties.
 """
 
 from __future__ import annotations
@@ -106,6 +107,7 @@ class SlalomLane:
     clips: int = 0
     score: float | None = None
     status: str = ""                 # FINISHED / FELL / DNF
+    falls: int = 0                   # recovery: falls the racer got up from (or is still down from)
     place: int = 0
 
 
@@ -118,7 +120,7 @@ class SlalomResult:
 
 @AL.logged("event_slalom")
 def run_heat(onnx, seed: int, traits: list[Traits] | None = None, lines: list[float] | None = None, vx: float = VX, scene=None, layout_path=None, brains: dict | None = None,
-             tactics: bool = False) -> SlalomResult:
+             tactics: bool = False, recover: dict | None = None) -> SlalomResult:
     m = mujoco.MjModel.from_xml_path(str(scene or SCENE))
     d = mujoco.MjData(m)
     layout = json.loads(Path(layout_path or LAYOUT).read_text())
@@ -136,6 +138,8 @@ def run_heat(onnx, seed: int, traits: list[Traits] | None = None, lines: list[fl
     next_pole = [0] * len(lanes)
     touching = [False] * len(lanes)
     dt = m.opt.timestep * C.DECIMATION
+    from .track import Recovery
+    rec = Recovery(lanes, recover, dt)
     tick = 0
     while tick * dt < MAX_S:
         xs = [float(d.qpos[ln.ath.root_qposadr] - ln.origin[0]) for ln in lanes]       # positions at the tick start
@@ -143,6 +147,8 @@ def run_heat(onnx, seed: int, traits: list[Traits] | None = None, lines: list[fl
         racing = [not r.status for r in res]
         for i, ln in enumerate(lanes):
             ra = ln.ath.root_qposadr
+            if rec.control(i, d):
+                continue
             if res[i].status:
                 ln.control(ln.sess, d, np.zeros(3))
             else:
@@ -168,7 +174,13 @@ def run_heat(onnx, seed: int, traits: list[Traits] | None = None, lines: list[fl
                 continue
             ra = ln.ath.root_qposadr
             x, y = d.qpos[ra] - ln.origin[0], d.qpos[ra + 1] - ln.origin[1]
+            if rec.down[i]:
+                rec.still_down(i, d)
+                continue
             if ln.eliminated(m, d) == "FELL":
+                if rec.fall(i):
+                    r.falls += 1
+                    continue
                 r.status = "FELL"
                 continue
             now = i in clipped

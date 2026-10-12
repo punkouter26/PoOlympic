@@ -646,3 +646,15 @@ get up → finish). Unity: `SpectacleTests`.
 - [x] **Contact force** (10) — dust, shockwaves, sparks, scuffs and impact audio were already there; added phone
   vibration scaled by slam / cube-hit force (`Haptics`, Settings › Display, not tried on a phone) and the real ground
   reaction force in body weights in the debug readout (`AthleteTelemetry.GroundWeights`).
+- [x] **Second batch (2026-10-11 evening)** — recovery moved into `track.Recovery` (shared with the slalom) and
+  `PolicyRunner` (`Upright`, `SetRecovering(on, skipRelax)`, `lieStill`, `startSupine`). Each retry lies still 0.5 s
+  longer (max +2 s): GRANDMA's forced falls 56 → 58 of 62 finish, KIM 41 of 41. **Slalom** recovery (`slalom.py recover`
+  = `SlalomEvent.recoverFromFalls`): in 16 CPU heats the 2 GRANDMA fallers now finish. **Event 27 The Resurrection Dash**
+  built (`TrackRaceEvent.Mode.Resurrection`, `track.py resurrection`, scene on the Terminal Velocity straight because
+  the mats venue is laid out for mats, not 8 track lanes; menu = 15 events, hub linked, odds fitted on 120 heats): KIM
+  rises and runs 5 m in 4.2-4.5 s, GRANDMA ~5.3 s; **MATT and ZOMBIE lie there (DNF) until they have a get-up brain**.
+  New tasks `PoOlympic-Matt-Getup-Ladder` / `-Prone` (ladder-e recipe on the roster MATT, contract v3; no existing task
+  cfg moved). Queued: `mgetup_v1` → `mgetup_prone_v1` (warm start: KIM's get-up brain, cross-body — this clone has no
+  MATT checkpoints), `zgetup_v3` (Zombie-Getup2 from KIM's supine brain; zgetup_v1 / v2 sat at 0 %). PoOlympic.Tests
+  91/91, pytest test_events 15/15.
+

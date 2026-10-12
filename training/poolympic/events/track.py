@@ -12,6 +12,9 @@
   inverted  (9  The Inverted Sprint)   20 m backwards (runners face away from the finish: the finish is at x = -20 in the
                                        runner's frame; Unity turns the stadium 180 deg); leaving the lane (|y| > half a
                                        lane) = DQ, a fall = out; rank by finish time
+  resurrection (27 The Resurrection Dash) start flat on the back (feet towards the finish), rise and sprint 5 m; the
+                                       get-up brain drives from the gun (`recover`: a body without one stays down = DNF);
+                                       falling again = down again, not out; rank by finish time
   steeple   (13 Steeplechase Jog)      50 m at 3.5 m/s with the flight brain (MATT: r2f_v3_it100); scored on GROUND
                                        TIME = finish time - hang time (total of the flights, both feet off the ground
                                        for >= MIN_FLIGHT): the clock only runs while a foot touches the track; a fall =
@@ -22,8 +25,9 @@ Fall recovery (opt-in, `recover` = body -> get-up brain; Unity TrackRaceEvent.re
 a get-up brain is not out when it falls. It first lies still in the default joint pose for RELAX_S (the tumble ends
 and the body is in the pose the get-up brain was trained from), then the get-up brain runs (zero command) until the
 pelvis is back above UP_Z x its standing height with the torso within UP_TILT_DEG for UP_HOLD_S, then the race brain
-runs on. Still down RETRY_S after lying still: lie still and try again (the brain can lock into a propped pose).
-Falls are counted (RaceLane.falls); a runner cannot finish while down. Not in the brake event.
+runs on. Still down RETRY_S after lying still: lie still and try again (the brain can lock into a propped pose), each
+time RELAX_STEP_S longer (a retry from the same pose repeats the same failure), up to RELAX_MAX_STEPS steps.
+Falls are counted (RaceLane.falls); a runner cannot finish while down. Not in the brake event. Shared with the slalom.
 """
 
 from __future__ import annotations
@@ -39,7 +43,7 @@ import onnxruntime as ort
 
 from .. import action_log as AL
 from .. import contract as C
-from .iron_pedestal import Traits, _Lane, make_lanes
+from .iron_pedestal import FALL_Z, Traits, _Lane, make_lanes
 
 SCENE = C.ROOT / "assets" / "scene_track8.xml"
 LAYOUT = C.ROOT / "assets" / "track8_layout.json"
@@ -49,7 +53,9 @@ MODES = {
     "brake": {"distance": 30.0, "vx": 3.0, "max_s": 25.0},
     "inverted": {"distance": 20.0, "vx": -1.5, "max_s": 30.0},   # vx = the Rung 2 envelope's backward limit
     "steeple": {"distance": 50.0, "vx": 3.5, "max_s": 30.0},
+    "resurrection": {"distance": 5.0, "vx": 3.8, "max_s": 20.0},
 }
+SUPINE_Z = 0.22       # m x the body's height scale — resurrection: pelvis height lying on the back (tools/getup_probe.py)
 BREAK_X = 15.0        # m — terminal: the green lane-break line
 MERGE_DEG = 12.0      # terminal: largest heading off straight while merging (lateral ~0.8 m/s at 4 m/s)
 SQUEEZE = 0.5         # terminal: lines after the break = inside + SQUEEZE x (lane line - inside). Tuned on CPU: one
@@ -62,7 +68,57 @@ BRAKE_NERVE = (1.4, 2.2)   # m before the line at which a runner hits the brakes
 TOE_AHEAD = 0.25      # m — the toe tip is ahead of the pelvis while standing
 STOPPED = 0.1         # m/s
 UP_Z, UP_TILT_DEG, UP_HOLD_S = 0.85 / 0.55, 20.0, 0.5   # recovery: "up" = pelvis above UP_Z x the fall line (tools/getup_probe.py)
-RELAX_S, RETRY_S = 1.0, 5.0                              # recovery: lie still, then the get-up brain; one cycle = RETRY_S
+RELAX_S, RETRY_S = 1.0, 5.0                              # recovery: lie still, then the get-up brain for RETRY_S - RELAX_S
+RELAX_STEP_S, RELAX_MAX_STEPS = 0.5, 4                   # recovery: every retry lies still this much longer
+
+
+class Recovery:
+    """Fall recovery of the lanes whose body has a get-up brain (module docstring). Mirror of Unity PolicyRunner
+    (SetRecovering / relax) + the events' "up" check. Per control tick: control(i) drives a downed lane and returns
+    True; after the physics: fall(i) when the judge says FELL (False = no get-up brain, the runner is out), and
+    still_down(i) for a downed lane."""
+
+    def __init__(self, lanes, recover: dict | None, dt: float):
+        self.lanes, self.dt = lanes, dt
+        self.sess = {b: ort.InferenceSession(str(p), providers=["CPUExecutionProvider"]) for b, p in (recover or {}).items()}
+        n = len(lanes)
+        self.down, self.up_ticks, self.cycle_tick, self.attempt = [False] * n, [0] * n, [0] * n, [0] * n
+        self.relax, self.retry, self.step = round(RELAX_S / dt), round(RETRY_S / dt), round(RELAX_STEP_S / dt)
+
+    def can(self, i: int) -> bool:
+        return self.lanes[i].body in self.sess
+
+    def relax_ticks(self, i: int) -> int:
+        return self.relax + self.step * min(self.attempt[i], RELAX_MAX_STEPS)
+
+    def fall(self, i: int, skip_relax: bool = False) -> bool:
+        if not self.can(i):
+            return False
+        self.down[i], self.up_ticks[i], self.attempt[i] = True, 0, 0
+        self.cycle_tick[i] = self.relax if skip_relax else 0
+        return True
+
+    def control(self, i: int, d) -> bool:
+        if not self.down[i]:
+            return False
+        ln = self.lanes[i]
+        if self.cycle_tick[i] < self.relax_ticks(i):          # lie still = Unity PolicyRunner relax
+            ln.ctrl_prev, ln.ctrl_now = ln.ctrl_now, ln.ath.default_pos.copy()
+            ln.last[:] = 0.0
+        else:
+            ln.control(self.sess[ln.body], d, np.zeros(3))
+        self.cycle_tick[i] += 1
+        if self.cycle_tick[i] >= self.relax_ticks(i) + self.retry - self.relax:
+            self.cycle_tick[i], self.attempt[i] = 0, self.attempt[i] + 1
+        return True
+
+    def still_down(self, i: int, d) -> bool:
+        ln = self.lanes[i]
+        tilt = math.degrees(math.acos(max(-1.0, min(1.0, d.xmat[ln.torso][8]))))
+        up = d.qpos[ln.ath.root_qposadr + 2] > UP_Z * ln.fall_z and tilt < UP_TILT_DEG
+        self.up_ticks[i] = self.up_ticks[i] + 1 if up else 0
+        self.down[i] = self.up_ticks[i] * self.dt < UP_HOLD_S
+        return self.down[i]
 
 
 def break_target(lane_y: float, inside_y: float) -> float:
@@ -141,23 +197,26 @@ def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = Non
     gait = [FootGait(m, ln.prefix, m.opt.timestep) for ln in lanes] if mode == "steeple" else None
     nerve = [float(np.random.default_rng([seed, 2000 + i]).uniform(*BRAKE_NERVE)) for i in range(len(lanes))]
     braking = [False] * len(lanes)
-    getup = {} if mode == "brake" else {b: ort.InferenceSession(str(p), providers=["CPUExecutionProvider"]) for b, p in (recover or {}).items()}
-    down, up_ticks, down_ticks = [False] * len(lanes), [0] * len(lanes), [0] * len(lanes)
     speed_hist = [[] for _ in lanes]
     dt = m.opt.timestep * C.DECIMATION
+    rec = Recovery(lanes, None if mode == "brake" else recover, dt)
+    if mode == "resurrection":
+        for i, ln in enumerate(lanes):      # on the back, head away from the finish: pitch -90 deg (PolicyRunner.startSupine)
+            ra = ln.ath.root_qposadr
+            d.qpos[ra + 2] = SUPINE_Z * ln.fall_z / FALL_Z
+            d.qpos[ra + 3: ra + 7] = [math.cos(math.pi / 4), 0.0, -math.sin(math.pi / 4), 0.0]
+            rec.fall(i, skip_relax=True)
+        mujoco.mj_forward(m, d)
     tick = 0
     inside_y = max(float(ln.origin[1]) for ln in lanes)        # lane 1 (the runner's left) = the inside
     while tick * dt < cfg["max_s"]:
         t = tick * dt
         for i, ln in enumerate(lanes):
             r = res[i]
-            if down[i]:
-                if down_ticks[i] % round(RETRY_S / dt) < round(RELAX_S / dt):       # = Unity PolicyRunner relax
-                    ln.ctrl_prev, ln.ctrl_now = ln.ctrl_now, ln.ath.default_pos.copy()
-                    ln.last[:] = 0.0
-                else:
-                    ln.control(getup[ln.body], d, np.zeros(3))
-                down_ticks[i] += 1
+            if rec.control(i, d):
+                continue
+            if mode == "resurrection" and not rec.can(i) and not r.status:     # no get-up brain: lies there
+                ln.ctrl_prev, ln.ctrl_now = ln.ctrl_now, ln.ath.default_pos.copy()
                 continue
             if r.status and mode != "brake":
                 ln.control(ln.sess, d, np.zeros(3))
@@ -197,14 +256,13 @@ def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = Non
             speed_hist[i].append(vx)
             if len(speed_hist[i]) >= 50:
                 r.peak_mps = max(r.peak_mps, float(np.mean(speed_hist[i][-50:])))
-            if down[i]:
-                tilt = math.degrees(math.acos(max(-1.0, min(1.0, d.xmat[ln.torso][8]))))
-                up_ticks[i] = up_ticks[i] + 1 if d.qpos[ra + 2] > UP_Z * ln.fall_z and tilt < UP_TILT_DEG else 0
-                down[i] = up_ticks[i] * dt < UP_HOLD_S
+            if rec.down[i]:
+                rec.still_down(i, d)
+                continue
+            if mode == "resurrection" and not rec.can(i):
                 continue
             if ln.eliminated(m, d) == "FELL" or (ln.eliminated(m, d) and mode != "brake"):
-                if ln.body in getup:
-                    down[i], up_ticks[i], down_ticks[i] = True, 0, 0
+                if rec.fall(i):
                     r.falls += 1
                     continue
                 r.status = "FELL"
@@ -212,7 +270,7 @@ def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = Non
             if mode == "inverted" and abs(d.qpos[ra + 1] - ln.origin[1]) > LANE_HALF:
                 r.status = "DQ"
                 continue
-            if mode in ("dash", "terminal", "inverted", "steeple") and x >= cfg["distance"]:
+            if mode in ("dash", "terminal", "inverted", "steeple", "resurrection") and x >= cfg["distance"]:
                 r.status, r.finish_s = "FINISHED", t
             if mode == "brake":
                 toe = x + TOE_AHEAD
@@ -232,7 +290,7 @@ def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = Non
             if r.status == "FINISHED":
                 r.score_s = round(r.finish_s - g.hang, 3)
     # ranking
-    if mode in ("dash", "inverted"):
+    if mode in ("dash", "inverted", "resurrection"):
         key = lambda r: (0, r.finish_s) if r.status == "FINISHED" else (1, 0)
     elif mode == "steeple":
         key = lambda r: (0, r.score_s, r.finish_s) if r.status == "FINISHED" else (1, 0)
