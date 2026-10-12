@@ -7,6 +7,13 @@
     --po-text: 28px;
     --po-text-m: 32px;
     --po-text-l: 40px;
+    /* the other sizes in use (2026-10-11 sweep: values unchanged, now named) */
+    --po-text-name: 29px;
+    --po-text-em: 30px;
+    --po-text-h: 34px;
+    --po-text-xl: 44px;
+    --po-text-xxl: 56px;
+    --po-text-hero: 150px;
     --po-btn: 104px;
     --po-chip: 72px;
     --po-pad-s: 8px;
@@ -42,4 +49,34 @@
     --po-zombie: rgb(92, 170, 70);
     --po-grandma: rgb(206, 96, 160);
     --po-kim: rgb(236, 138, 44);
+    /* text on the light athlete chips */
+    --po-on-zombie: rgb(12, 24, 8);
+    --po-on-kim: rgb(28, 14, 0);
+    /* body text, states */
+    --po-body: rgb(190, 199, 216);
+    --po-body-hi: rgb(200, 210, 228);
+    --po-card-selected: rgb(46, 52, 44);
+    --po-gold-hover: rgb(255, 228, 128);
+    --po-gold-soft: rgb(255, 230, 130);
+    --po-green-soft: rgb(160, 240, 170);
+    --po-gold-veil: rgba(255, 216, 74, 0.94);
+    /* medals and their row tints */
+    --po-medal-gold: rgb(255, 205, 60);
+    --po-medal-silver: rgb(200, 206, 216);
+    --po-medal-bronze: rgb(205, 127, 60);
+    --po-medal-gold-tint: rgba(255, 216, 74, 0.2);
+    --po-medal-silver-tint: rgba(200, 206, 216, 0.1);
+    --po-medal-bronze-tint: rgba(205, 127, 60, 0.12);
+    /* row highlights, hairlines, shadows */
+    --po-tint-red: rgba(255, 90, 70, 0.16);
+    --po-tint-gold: rgba(255, 216, 74, 0.18);
+    --po-tint-gold-hi: rgba(255, 216, 74, 0.22);
+    --po-tint-cyan: rgba(120, 220, 255, 0.14);
+    --po-hairline: rgba(255, 255, 255, 0.15);
+    --po-shade-45: rgba(0, 0, 0, 0.45);
+    --po-shade-62: rgba(0, 0, 0, 0.62);
+    --po-shade-70: rgba(0, 0, 0, 0.7);
+    --po-shade-80: rgba(0, 0, 0, 0.8);
+    --po-screen-70: rgba(6, 10, 22, 0.7);
+    --po-screen-80: rgba(6, 10, 22, 0.8);
 }

@@ -13,7 +13,9 @@ namespace PoOlympic
     ///   crowd            2D bed + four 3D crowd sectors on the stands (AudioAnchor_Crowd_*): camera cuts change the mix;
     ///                    volume and pitch rise with TensionMeter.Tension, a rhythmic tension layer fades in
     ///   reactions        crowd reaction on a near fall / fall / save; a big cheer for the winner and a new record
-    ///   impacts          3D body slams / cube hits at the contact (MuJoCo contact force), the hot athlete's footsteps
+    ///   impacts          3D body slams / cube hits at the contact (MuJoCo contact force), the hot athlete's footsteps;
+    ///                    steel rings and glass knocks under them; scrapes per sliding athlete, a whoosh on a cube
+    ///                    in flight, the most tired athlete's breathing
     ///   event cues       countdown ticks, starter's gun (races) or whistle (arenas) at GO, buzzer when an athlete is
     ///                    out, air horn at the result, fanfare for the medal ceremony, camera shutters with the flashes
     ///   announcer        PA voice (AudioAnchor_PA_Centre, slap-back echo + the arena reverb zone), chime before the big
@@ -32,14 +34,23 @@ namespace PoOlympic
         public AudioSource[] voices;                   // 3D pool
         public AudioSource[] crowdSectors;             // 3D crowd loops on the stands
         public AudioSource pa, eventSfx;
-        [Tooltip("3D loop that follows the fastest-sliding body part (AthleteTelemetry.SlideSpeed): scrape / foot drag.")]
-        public AudioSource scrape;
+        [Tooltip("3D loops, one per sliding athlete, fastest first (AthleteTelemetry.SlideSpeed): scrape / foot drag.")]
+        public AudioSource[] scrapes;
         [Tooltip("Slide speed (m/s) where the scrape starts and where it is at full volume.")]
         public float scrapeFrom = 1.2f, scrapeFull = 4.5f, scrapeMax = 0.45f;
+        [Tooltip("3D loop on the fastest pool cube in flight (Doppler on): speed (m/s) where it starts / is at full volume.")]
+        public AudioSource whoosh;
+        public MjCubePool cubes;
+        public float whooshFrom = 2f, whooshFull = 8f, whooshMax = 0.5f;
+        [Tooltip("3D breathing loop on the most tired athlete (AthleteTelemetry.Fatigue from breathFrom up).")]
+        public AudioSource breath;
+        public float breathFrom = 0.35f, breathMax = 0.3f;
         public AudioLowPassFilter listenerLowPass;
 
         [Header("Clips")]
         public AudioClip[] cheers, reactions, bodySlams, cubeHits, thuds, footsteps;
+        [Tooltip("Layered over a footstep / slam on that surface (AthleteTelemetry Surface): steel ring, glass knock.")]
+        public AudioClip[] metalHits, glassHits;
         public AudioClip recordChime, goBong, countTick;
         public AudioClip starterGun, whistle, airHorn, buzzer, paChime, fanfare, cameraFlash;
 
@@ -129,6 +140,8 @@ namespace PoOlympic
             HitStopFilter();
             Shutters(now);
             Scrape();
+            Whoosh();
+            Breath();
 
             var b = B;
             if (b != null)
@@ -320,24 +333,64 @@ namespace PoOlympic
             _nextClick = now + Random(0.05f, 0.3f) / Mathf.Max(0.3f, crowd.FlashLevel);
         }
 
-        /// <summary>Surface drag: one looping 3D voice on the body part that slides fastest over what it touches
-        /// (crawlers' knees, a fall that skids, a braking foot); volume and pitch follow the slide speed.</summary>
-        void Scrape()
+        /// <summary>A looping 3D voice whose volume follows `u` (0 = fade out and stop).</summary>
+        void Loop(AudioSource s, float u, float max, Vector3 at, float pitch)
         {
-            if (scrape == null || scrape.clip == null) return;
-            AthleteTelemetry worst = null;
-            foreach (var t in AthleteTelemetry.All)
-                if (t != null && t.Ready && t.Contacts > 0 && (worst == null || t.SlideSpeed > worst.SlideSpeed)) worst = t;
-            float u = worst != null && Time.timeScale > 0.01f ? Mathf.InverseLerp(scrapeFrom, scrapeFull, worst.SlideSpeed) : 0f;
-            scrape.volume = Mathf.Lerp(scrape.volume, u * scrapeMax * SfxVol, 1f - Mathf.Exp(-12f * Time.unscaledDeltaTime));
+            if (s == null || s.clip == null) return;
+            if (Time.timeScale < 0.01f) u = 0f;
+            s.volume = Mathf.Lerp(s.volume, u * max * SfxVol, 1f - Mathf.Exp(-12f * Time.unscaledDeltaTime));
             if (u > 0f)
             {
-                scrape.transform.position = worst.SlidePoint;
-                scrape.pitch = Mathf.Lerp(0.7f, 1.35f, u);
-                if (!scrape.isPlaying) scrape.Play();
+                s.transform.position = at;
+                s.pitch = pitch;
+                if (!s.isPlaying) s.Play();
             }
-            else if (scrape.isPlaying && scrape.volume < 0.005f) scrape.Stop();
+            else if (s.isPlaying && s.volume < 0.005f) s.Stop();
         }
+
+        readonly List<AthleteTelemetry> _sliders = new();
+
+        /// <summary>Surface drag: a looping 3D voice on each of the fastest-sliding athletes (crawlers' knees, a fall
+        /// that skids, a braking foot); volume and pitch follow the slide speed, steel and glass sound higher.</summary>
+        void Scrape()
+        {
+            if (scrapes == null || scrapes.Length == 0) return;
+            _sliders.Clear();
+            foreach (var t in AthleteTelemetry.All)
+                if (t != null && t.Ready && t.Contacts > 0 && t.SlideSpeed > scrapeFrom) _sliders.Add(t);
+            _sliders.Sort((a, b) => b.SlideSpeed.CompareTo(a.SlideSpeed));
+            // ponytail: voices go by rank, so one can hop athletes when two swap places; pin voice to athlete if that is ever heard
+            for (int i = 0; i < scrapes.Length; i++)
+            {
+                var t = i < _sliders.Count ? _sliders[i] : null;
+                float u = t != null ? Mathf.InverseLerp(scrapeFrom, scrapeFull, t.SlideSpeed) : 0f;
+                float surface = t == null || t.SlideSurface == Surface.Track ? 1f : t.SlideSurface == Surface.Metal ? 1.35f : 1.6f;
+                Loop(scrapes[i], u, scrapeMax, t != null ? t.SlidePoint : default, Mathf.Lerp(0.7f, 1.35f, u) * surface);
+            }
+        }
+
+        /// <summary>A thrown cube is heard coming: one loop on the fastest cube in flight.</summary>
+        void Whoosh()
+        {
+            if (whoosh == null || cubes == null) return;
+            float u = cubes.Fastest(out var at, out float speed) ? Mathf.InverseLerp(whooshFrom, whooshFull, speed) : 0f;
+            Loop(whoosh, u, whooshMax, at, Mathf.Lerp(0.8f, 1.3f, u));
+        }
+
+        /// <summary>The most tired athlete is heard breathing, harder and faster as the fatigue fills.</summary>
+        void Breath()
+        {
+            if (breath == null) return;
+            AthleteTelemetry worst = null;
+            foreach (var t in AthleteTelemetry.All)
+                if (t != null && t.Ready && (worst == null || t.Fatigue > worst.Fatigue)) worst = t;
+            float u = worst != null ? Mathf.InverseLerp(breathFrom, 1f, worst.Fatigue) : 0f;
+            Loop(breath, u, breathMax, worst != null ? worst.PelvisPosition + Vector3.up * 0.5f : default, Mathf.Lerp(0.9f, 1.3f, u));
+        }
+
+        /// <summary>What the surface adds to a hit on it: a steel ring, a glass knock; nothing on the track.</summary>
+        void SurfaceLayer(ImpactEvent e, float volume) =>
+            Voice(Pick(e.surface == Surface.Metal ? metalHits : e.surface == Surface.Glass ? glassHits : null), e.position, volume, Random(0.92f, 1.08f));
 
         /// <summary>How a hit of `ratio` body weights sounds: loudness grows with the log of the force (as hearing does),
         /// and big hits and heavy bodies sound lower (22 kg ZOMBIE ≈ +19 %, 80 kg MATT = 1).</summary>
@@ -358,12 +411,14 @@ namespace PoOlympic
                     _lastStep[e.runner] = Time.time;
                     var (stepVol, stepPitch) = HitSound(e, e.weightRatio, 0f);
                     Voice(Pick(footsteps), e.position, Mathf.Clamp(stepVol, 0.2f, 0.7f), stepPitch * Random(0.95f, 1.05f));
+                    SurfaceLayer(e, Mathf.Clamp(stepVol, 0.2f, 0.7f) * 0.5f);
                     break;
                 case ImpactEvent.Kind.BodySlam:
                     float need = e.runner != null && e.runner.crawlSteering ? 2.5f : 1.0f;
                     if (e.weightRatio < need) return;
                     var (slamVol, slamPitch) = HitSound(e, e.weightRatio / need, 0.15f);
                     Voice(e.weightRatio > 3f * need ? Pick(bodySlams) : Pick(thuds), e.position, slamVol, slamPitch * Random(0.96f, 1.04f));
+                    SurfaceLayer(e, slamVol * 0.8f);
                     break;
                 case ImpactEvent.Kind.CubeHit:
                     if (e.weightRatio < 0.1f) return;

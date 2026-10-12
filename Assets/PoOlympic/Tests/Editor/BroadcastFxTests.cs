@@ -61,6 +61,15 @@ namespace PoOlympic.Tests
         }
 
         [Test]
+        public void SurfaceComesFromTheGeomName()
+        {
+            Assert.AreEqual(Surface.Track, Surfaces.Of("ground"));
+            Assert.AreEqual(Surface.Glass, Surfaces.Of("trench_ceiling"));
+            foreach (var steel in new[] { "pedestal", "shaker", "pole0_3", "rail7", "trench_post1_2" })
+                Assert.AreEqual(Surface.Metal, Surfaces.Of(steel), steel);
+        }
+
+        [Test]
         public void EveryEventBrainHasACalibratedCritic()
         {
             var json = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/PoOlympic/Models/confidence_model.json");
@@ -91,12 +100,22 @@ namespace PoOlympic.Tests
                     Assert.IsNotNull(director, path);
                     Assert.IsTrue(director.wide && director.headOn && director.high && director.hot && director.winner, $"{path}: Cinemachine rig");
                     Assert.IsNotNull(director.tension, $"{path}: TensionMeter");
-                    Assert.IsNotNull(Object.FindAnyObjectByType<ImpactFx>(FindObjectsInactive.Include), $"{path}: ImpactFx");
+                    var fx = Object.FindAnyObjectByType<ImpactFx>(FindObjectsInactive.Include);
+                    Assert.IsNotNull(fx, $"{path}: ImpactFx");
+                    Assert.IsTrue(fx.decals.Length > 0 && fx.decals.All(d => d != null && d.material != null && !d.enabled), $"{path}: scuff decal pool (parked)");
+                    Assert.IsTrue(fx.pulseVolume != null && fx.pulseVolume.sharedProfile != null && fx.pulseVolume.weight == 0f, $"{path}: impact pulse volume");
+                    var xray = Object.FindAnyObjectByType<ColliderXray>(FindObjectsInactive.Include);
+                    Assert.IsTrue(xray != null && xray.sphere && xray.cylinder && xray.cube && xray.material, $"{path}: collision-shape view");
                     var audio = Object.FindAnyObjectByType<ArenaAudio>(FindObjectsInactive.Include);
                     Assert.IsTrue(audio != null && audio.bed != null && audio.bed.clip != null && audio.voices.Length > 0, $"{path}: ArenaAudio");
+                    Assert.IsTrue(audio.scrapes.Length == 3 && audio.scrapes.All(s => s != null && s.clip != null), $"{path}: scrape voices");
+                    Assert.IsTrue(audio.breath != null && audio.breath.clip != null && audio.whoosh != null && audio.whoosh.clip != null, $"{path}: breath / whoosh loops");
+                    Assert.IsTrue(audio.metalHits.Length > 0 && audio.glassHits.Length > 0, $"{path}: surface clips");
                     foreach (var r in Object.FindObjectsByType<PolicyRunner>(FindObjectsInactive.Include))
                     {
                         Assert.IsNotNull(r.GetComponent<AthleteTelemetry>(), $"{path}: {r.name} telemetry");
+                        var look = r.GetComponent<FatigueLook>();
+                        Assert.IsTrue(look != null && look.skins.Length > 0, $"{path}: {r.name} fatigue look");
                         Assert.IsNotNull(r.critic, $"{path}: {r.name} critic");
                     }
                     // athlete fill lights: on the athletes' rendering layer only, and every athlete mesh carries it

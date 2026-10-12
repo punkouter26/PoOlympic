@@ -132,6 +132,7 @@ namespace PoOlympic
                 ("Focus blur on close-ups", () => OnOff(GameSettings.FocusBlur), () => GameSettings.FocusBlur = !GameSettings.FocusBlur),
                 ("Impact marks", () => OnOff(GameSettings.ImpactMarks), () => GameSettings.ImpactMarks = !GameSettings.ImpactMarks),
                 ("Vibrate on impacts", () => OnOff(GameSettings.Haptics), () => GameSettings.Haptics = !GameSettings.Haptics),
+                ("Show collision shapes", () => OnOff(GameSettings.ColliderView), () => GameSettings.ColliderView = !GameSettings.ColliderView),
             },
             _ => new (string, Func<string>, Action)[]
             {

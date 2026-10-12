@@ -6,6 +6,8 @@ using Unity.InferenceEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.VFX;
 
 namespace PoOlympic.Editor
@@ -170,6 +172,21 @@ namespace PoOlympic.Editor
             fx.sparks = Pool<VisualEffect>(fxGo, FxPrefabs + "/SparksVfx.prefab", 3);
             fx.sparksFallback = Pool<ParticleSystem>(fxGo, FxPrefabs + "/SparksFallback.prefab", 3);
             fx.marks = Pool<ParticleSystem>(fxGo, FxPrefabs + "/ScuffMark.prefab", 12);
+            fx.decals = Pool<DecalProjector>(fxGo, FxPrefabs + "/ScuffDecal.prefab", 16);
+            foreach (var d in fx.decals) d.enabled = false;
+            var pulse = Child(fxGo, "ImpactPulse").AddComponent<Volume>();
+            pulse.isGlobal = true;
+            pulse.priority = 10f;
+            pulse.weight = 0f;
+            pulse.sharedProfile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(PulseProfile);
+            fx.pulseVolume = pulse;
+
+            // collision-shape view (GameSettings.ColliderView): draws from mjData, needs only meshes and a material
+            var xray = Child(root, "ColliderXray").AddComponent<ColliderXray>();
+            xray.sphere = Resources.GetBuiltinResource<Mesh>("Sphere.fbx");
+            xray.cylinder = Resources.GetBuiltinResource<Mesh>("Cylinder.fbx");
+            xray.cube = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+            xray.material = AssetDatabase.LoadAssetAtPath<Material>(FxFolder + "/FxXray.mat");
 
             // follow spot on the athlete the shot is about (BroadcastDirector.UpdateLook aims and dims it; off at rest)
             var spot = Child(root, "FocusSpot").AddComponent<Light>();
@@ -194,22 +211,24 @@ namespace PoOlympic.Editor
             audio.tensionLayer = Source(audioGo, "CrowdTension", Clip("Crowd/crowd_tension_loop.ogg"), true, 0f);
             audio.stinger = Source(audioGo, "Stingers", null, false, 1f);
             audio.ui = Source(audioGo, "UiStings", null, false, 1f);
-            audio.voices = Enumerable.Range(0, 6).Select(i =>
+            AudioSource Source3D(string name, AudioClip clip, bool loop, float min, float max, float doppler = 0f)
             {
-                var s = Source(audioGo, $"Voice3D_{i}", null, false, 1f);
+                var s = Source(audioGo, name, clip, loop, loop ? 0f : 1f);
                 s.spatialBlend = 1f;
                 s.rolloffMode = AudioRolloffMode.Linear;
-                s.minDistance = 4f;
-                s.maxDistance = 70f;
-                s.dopplerLevel = 0f;
+                s.minDistance = min;
+                s.maxDistance = max;
+                s.dopplerLevel = doppler;
                 return s;
-            }).ToArray();
-            audio.scrape = Source(audioGo, "Scrape3D", Clip("Sfx/Scrape/scrape_loop.wav"), true, 0f);
-            audio.scrape.spatialBlend = 1f;
-            audio.scrape.rolloffMode = AudioRolloffMode.Linear;
-            audio.scrape.minDistance = 3f;
-            audio.scrape.maxDistance = 50f;
-            audio.scrape.dopplerLevel = 0f;
+            }
+            // 8 voices: a hit on steel or glass plays two (the body + the surface)
+            audio.voices = Enumerable.Range(0, 8).Select(i => Source3D($"Voice3D_{i}", null, false, 4f, 70f)).ToArray();
+            audio.scrapes = Enumerable.Range(0, 3).Select(i => Source3D($"Scrape3D_{i}", Clip("Sfx/Scrape/scrape_loop.wav"), true, 3f, 50f)).ToArray();
+            audio.whoosh = Source3D("CubeWhoosh3D", Clip("Sfx/Whoosh/whoosh_loop.wav"), true, 2f, 40f, 1f);
+            audio.breath = Source3D("Breath3D", Clip("Sfx/Breath/breath_loop.wav"), true, 2f, 25f);
+            audio.cubes = UnityEngine.Object.FindAnyObjectByType<MjCubePool>(FindObjectsInactive.Include);
+            audio.metalHits = Clips("Sfx/Metal", "");
+            audio.glassHits = Clips("Sfx/Glass", "");
             audio.cheers = Clips("Crowd", "crowd_cheer_big_");
             audio.reactions = Clips("Crowd", "crowd_react_");
             audio.bodySlams = Clips("Sfx/BodySlam", "");
@@ -226,6 +245,9 @@ namespace PoOlympic.Editor
             {
                 var tel = r.GetComponent<AthleteTelemetry>() ?? r.gameObject.AddComponent<AthleteTelemetry>();
                 tel.confidenceModel = conf;
+                var look = r.GetComponent<FatigueLook>();
+                if (look == null) look = r.gameObject.AddComponent<FatigueLook>();
+                look.skins = r.GetComponentsInChildren<SkinnedMeshRenderer>(true).Cast<Renderer>().ToArray();
                 if (r.brain != null)
                 {
                     var brainPath = AssetDatabase.GetAssetPath(r.brain);
@@ -246,6 +268,43 @@ namespace PoOlympic.Editor
             // showcase: crowd director, stadium screens, medal ceremony, mixer + PA + crowd sectors, perf overlay
             StadiumShowcase.InstallBroadcast(hud, director, root, tension, audio, rig);
             StadiumLook.AthleteFill(scene);           // after InstallBroadcast: it creates the podium statues
+            DressProps(scene);
+        }
+
+        public const string PropsAsset = "Assets/PoOlympic/Art/Props/EventProps.glb";
+
+        /// <summary>Blender-built visuals (SourceArt/Props/build_props.py) for the small MuJoCo props a scene draws
+        /// as bare boxes: pool cubes, slalom poles, trench posts, crab rails. The mesh hangs under its MjGeom as a
+        /// child "Prop" (it moves with the geom) and the box renderer is switched off; the collision box is untouched.
+        /// Only geoms that are drawn today and have the size the prop was modelled for (1 mm) are dressed.</summary>
+        public static int DressProps(UnityEngine.SceneManagement.Scene scene)
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<GameObject>(PropsAsset);
+            if (asset == null) return 0;
+            // geom name prefix → prop, half extents in Unity axes (MuJoCo x, z, y)
+            var props = new (string prefix, string prop, Vector3 half)[]
+            {
+                ("cube", "PoolCube", new Vector3(0.1f, 0.1f, 0.1f)), ("pole", "SlalomPole", new Vector3(0.02f, 0.6f, 0.02f)),
+                ("trench_post", "TrenchPost", new Vector3(0.025f, 0.36f, 0.025f)), ("rail", "CrabRail", new Vector3(0.02f, 0.02f, 10f)),
+            };
+            int dressed = 0;
+            foreach (var geom in scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<Mujoco.MjGeom>(true)))
+            {
+                var p = props.FirstOrDefault(x => geom.name.StartsWith(x.prefix));
+                if (p.prop == null || geom.ShapeType != Mujoco.MjShapeComponent.ShapeTypes.Box || (geom.Box.Extents - p.half).magnitude > 0.001f) continue;
+                var source = asset.GetComponentsInChildren<MeshFilter>(true).FirstOrDefault(f => f.name == p.prop);
+                var old = geom.transform.Find("Prop");
+                if (source == null || !geom.TryGetComponent<MeshRenderer>(out var box) || (!box.enabled && old == null)) continue;
+                var go = old != null ? old.gameObject : Child(geom.gameObject, "Prop");
+                // (no ??: GetComponent returns a fake null in the editor)
+                if (!go.TryGetComponent<MeshFilter>(out var filter)) filter = go.AddComponent<MeshFilter>();
+                if (!go.TryGetComponent<MeshRenderer>(out var rend)) rend = go.AddComponent<MeshRenderer>();
+                filter.sharedMesh = source.sharedMesh;
+                rend.sharedMaterials = source.GetComponent<MeshRenderer>().sharedMaterials;
+                box.enabled = false;
+                dressed++;
+            }
+            return dressed;
         }
 
         static GameObject Child(GameObject parent, string name)
@@ -307,7 +366,31 @@ namespace PoOlympic.Editor
                 Mathf.Pow(Mathf.Clamp01(1f - Mathf.Sqrt(x * x * 0.6f + y * y * 2.2f)), 0.8f) * (0.55f + 0.45f * Mathf.Sin(y * 23f) * Mathf.Sin(x * 5f + y * 9f)));
             var scuff = ParticleMaterial("FxScuff", scuffTex, false);
             ScrapeClip();
+            SurfaceClips();
             AudioImport();
+            EnsureDecalFeature();
+            EnsurePulseProfile();
+
+            // projected scuff: the same blot, dark in the texture itself (the decal shader has no tint)
+            var decalTex = Texture(FxFolder + "/fx_scuff_decal.png", 128, (x, y) =>
+                0.55f * Mathf.Pow(Mathf.Clamp01(1f - Mathf.Sqrt(x * x * 0.6f + y * y * 2.2f)), 0.8f) * (0.55f + 0.45f * Mathf.Sin(y * 23f) * Mathf.Sin(x * 5f + y * 9f)),
+                new Color(0.07f, 0.06f, 0.05f));
+            var decalMat = ShaderMaterial("FxScuffDecal", "Shader Graphs/Decal");
+            decalMat.SetTexture("Base_Map", decalTex);
+            decalMat.SetFloat("Normal_Blend", 0f);
+            EditorUtility.SetDirty(decalMat);
+            MakePrefab("ScuffDecal", go =>
+            {
+                var d = go.AddComponent<DecalProjector>();
+                d.material = decalMat;
+                d.scaleMode = DecalScaleMode.InheritFromHierarchy;       // ImpactFx sizes a mark by the transform
+                d.size = new Vector3(0.5f, 0.5f, 0.1f);
+                d.pivot = Vector3.zero;                                   // ± 5 cm round the contact point
+                d.drawDistance = 60f;
+                d.startAngleFade = 60f;
+                d.endAngleFade = 85f;
+            });
+            ShaderMaterial("FxXray", "PoOlympic/Xray");
 
             MakePrefab("FootDust", go =>
             {
@@ -373,7 +456,59 @@ namespace PoOlympic.Editor
             AssetDatabase.SaveAssets();
         }
 
-        static Texture2D Texture(string path, int size, Func<float, float, float> alpha)
+        static Material ShaderMaterial(string name, string shader)
+        {
+            var path = $"{FxFolder}/{name}.mat";
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (mat != null) return mat;
+            mat = new Material(Shader.Find(shader) ?? throw new InvalidOperationException($"shader '{shader}' not found")) { name = name };
+            AssetDatabase.CreateAsset(mat, path);
+            return mat;
+        }
+
+        /// <summary>The URP Decal renderer feature on both renderers (PC, Mobile): DecalProjectors draw nothing without it.</summary>
+        static void EnsureDecalFeature()
+        {
+            foreach (var path in new[] { "Assets/Settings/PC_Renderer.asset", "Assets/Settings/Mobile_Renderer.asset" })
+            {
+                var data = AssetDatabase.LoadAssetAtPath<ScriptableRendererData>(path);
+                if (data == null || data.rendererFeatures.Any(f => f is DecalRendererFeature)) continue;
+                var feature = ScriptableObject.CreateInstance<DecalRendererFeature>();
+                feature.name = "Decal";
+                AssetDatabase.AddObjectToAsset(feature, data);
+                AssetDatabase.TryGetGUIDAndLocalFileIdentifier(feature, out _, out long id);
+                // the renderer keeps the list and a parallel map of local file ids (what its own inspector writes)
+                var so = new SerializedObject(data);
+                var list = so.FindProperty("m_RendererFeatures");
+                var map = so.FindProperty("m_RendererFeatureMap");
+                list.arraySize++;
+                list.GetArrayElementAtIndex(list.arraySize - 1).objectReferenceValue = feature;
+                map.arraySize++;
+                map.GetArrayElementAtIndex(map.arraySize - 1).longValue = id;
+                so.ApplyModifiedProperties();
+                EditorUtility.SetDirty(data);
+            }
+        }
+
+        public const string PulseProfile = "Assets/PoOlympic/Settings/ImpactPulse_Volume.asset";
+
+        /// <summary>What a big slam flashes (ImpactFx.pulseVolume, weight 0 → 1 → 0): colour fringe and darker corners.
+        /// No lens distortion: the picture must not move (user, 2026-09-30: "fast movements hurt my eyes").</summary>
+        static void EnsurePulseProfile()
+        {
+            if (AssetDatabase.LoadAssetAtPath<VolumeProfile>(PulseProfile) != null) return;
+            var p = ScriptableObject.CreateInstance<VolumeProfile>();
+            AssetDatabase.CreateAsset(p, PulseProfile);
+            var ca = p.Add<ChromaticAberration>(true);
+            ca.intensity.Override(0.7f);
+            var vig = p.Add<Vignette>(true);
+            vig.intensity.Override(0.45f);
+            vig.smoothness.Override(0.4f);
+            foreach (var c in p.components) AssetDatabase.AddObjectToAsset(c, p);
+            EditorUtility.SetDirty(p);
+        }
+
+        static Texture2D Texture(string path, int size, Func<float, float, float> alpha, Color? rgb = null)
         {
             var existing = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
             if (existing != null) return existing;
@@ -382,7 +517,9 @@ namespace PoOlympic.Editor
                 for (int x = 0; x < size; x++)
                 {
                     float u = (x + 0.5f) / size * 2f - 1f, v = (y + 0.5f) / size * 2f - 1f;
-                    t.SetPixel(x, y, new Color(1f, 1f, 1f, alpha(u, v)));
+                    var c = rgb ?? Color.white;
+                    c.a = alpha(u, v);
+                    t.SetPixel(x, y, c);
                 }
             File.WriteAllBytes(path, t.EncodeToPNG());
             UnityEngine.Object.DestroyImmediate(t);
@@ -508,6 +645,74 @@ namespace PoOlympic.Editor
                 w.Write((short)Mathf.Clamp(v * 2.2f * 32767f, -32767f, 32767f));
             }
             w.Close();
+            AssetDatabase.ImportAsset(path);
+        }
+
+        /// <summary>The generated surface and effort sounds (22 kHz mono, written once; docs/LICENSING.md "generated"):
+        ///   Sfx/Metal   steel ring: four bar-mode partials decaying over ~0.4 s, three pitches
+        ///   Sfx/Glass   glass knock: the same, higher and much shorter
+        ///   Sfx/Whoosh  air past a thrown cube: smooth band noise loop
+        ///   Sfx/Breath  one in-and-out breath (1.2 s) as a loop: noise shaped by the two phases</summary>
+        static void SurfaceClips()
+        {
+            const int rate = 22050;
+            float[] Ring(float f0, float seconds, float decay)
+            {
+                var s = new float[(int)(rate * seconds)];
+                float[] ratio = { 1f, 2.76f, 5.4f, 8.93f }, gain = { 1f, 0.6f, 0.35f, 0.2f };       // free bar modes
+                for (int i = 0; i < s.Length; i++)
+                {
+                    float t = (float)i / rate, v = 0f;
+                    for (int k = 0; k < ratio.Length; k++)
+                        v += gain[k] * Mathf.Sin(2f * Mathf.PI * f0 * ratio[k] * t) * Mathf.Exp(-t * decay * (1f + k));
+                    s[i] = v * 0.4f * Mathf.Min(1f, i / 30f);                                        // 1.4 ms attack: no click
+                }
+                return s;
+            }
+            float[] Noise(float seconds, int seed, float hiss, float rumble, Func<float, float> envelope)
+            {
+                int n = (int)(rate * seconds), fade = rate / 10;
+                var rng = new System.Random(seed);
+                var raw = new float[n + fade];
+                float lp = 0f, slow = 0f;
+                for (int i = 0; i < raw.Length; i++)
+                {
+                    lp += hiss * ((float)rng.NextDouble() * 2f - 1f - lp);
+                    slow += rumble * (lp - slow);
+                    raw[i] = (lp - slow) * envelope((float)(i % n) / n);
+                }
+                var s = new float[n];                                                                // end cross-faded into the start
+                for (int i = 0; i < n; i++)
+                {
+                    float u = i < fade ? (float)i / fade : 1f;
+                    s[i] = Mathf.Clamp(2.2f * (raw[i] * u + (i < fade ? raw[n + i] * (1f - u) : 0f)), -1f, 1f);
+                }
+                return s;
+            }
+            for (int i = 0; i < 3; i++)
+            {
+                Wav($"{AudioFolder}/Sfx/Metal/metal_ring_{i}.wav", rate, () => Ring(430f + 90f * i, 0.45f, 9f));
+                Wav($"{AudioFolder}/Sfx/Glass/glass_knock_{i}.wav", rate, () => Ring(1250f + 240f * i, 0.16f, 34f));
+            }
+            Wav($"{AudioFolder}/Sfx/Whoosh/whoosh_loop.wav", rate, () => Noise(1f, 23, 0.12f, 0.02f, _ => 1f));
+            // in (0 – 40 % of the loop, thinner) … pause … out (50 – 90 %, fuller)
+            Wav($"{AudioFolder}/Sfx/Breath/breath_loop.wav", rate, () => Noise(1.2f, 31, 0.2f, 0.03f, u =>
+                u < 0.4f ? 0.6f * Mathf.Sin(Mathf.PI * u / 0.4f) : u > 0.5f && u < 0.9f ? Mathf.Sin(Mathf.PI * (u - 0.5f) / 0.4f) : 0f));
+        }
+
+        /// <summary>16-bit mono WAV, written only if the file is not there yet.</summary>
+        static void Wav(string path, int rate, Func<float[]> samples)
+        {
+            if (File.Exists(path)) return;
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            var s = samples();
+            using (var w = new BinaryWriter(File.Create(path)))
+            {
+                w.Write(System.Text.Encoding.ASCII.GetBytes("RIFF")); w.Write(36 + s.Length * 2); w.Write(System.Text.Encoding.ASCII.GetBytes("WAVEfmt "));
+                w.Write(16); w.Write((short)1); w.Write((short)1); w.Write(rate); w.Write(rate * 2); w.Write((short)2); w.Write((short)16);
+                w.Write(System.Text.Encoding.ASCII.GetBytes("data")); w.Write(s.Length * 2);
+                foreach (var v in s) w.Write((short)Mathf.Clamp(v * 32767f, -32767f, 32767f));
+            }
             AssetDatabase.ImportAsset(path);
         }
 

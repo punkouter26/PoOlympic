@@ -52,6 +52,40 @@ namespace PoOlympic
             Fire(athlete, p, Vector3.zero);
         }
 
+        int[] _qposAdr, _dofAdr;
+
+        /// <summary>The fastest cube right now (Unity world position, m/s); parked cubes rest at 0. Read only.</summary>
+        public unsafe bool Fastest(out Vector3 position, out float speed)
+        {
+            position = default;
+            speed = 0f;
+            if (!MjScene.InstanceExists || MjScene.Instance.Model == null) return false;
+            var m = MjScene.Instance.Model;
+            var d = MjScene.Instance.Data;
+            if (_qposAdr == null)
+            {
+                var joints = AthleteBinding.NameIndex(m, (int)MujocoLib.mjtObj.mjOBJ_JOINT, (int)m->njnt);
+                _qposAdr = new int[poolSize];
+                _dofAdr = new int[poolSize];
+                for (int i = 0; i < poolSize; i++)
+                {
+                    bool found = joints.TryGetValue(JointName(i), out int j);
+                    _qposAdr[i] = found ? m->jnt_qposadr[j] : -1;
+                    _dofAdr[i] = found ? m->jnt_dofadr[j] : -1;
+                }
+            }
+            for (int i = 0; i < poolSize; i++)
+            {
+                int v = _dofAdr[i], q = _qposAdr[i];
+                if (v < 0) continue;
+                float s = Mathf.Sqrt((float)(d->qvel[v] * d->qvel[v] + d->qvel[v + 1] * d->qvel[v + 1] + d->qvel[v + 2] * d->qvel[v + 2]));
+                if (s <= speed) continue;
+                speed = s;
+                position = new Vector3((float)d->qpos[q], (float)d->qpos[q + 2], (float)d->qpos[q + 1]);
+            }
+            return speed > 0f;
+        }
+
         /// <summary>Horizontal shove: instantaneous Δv on the pelvis free joint (MuJoCo world frame).</summary>
         public void Shove(Vector2 dvXY) => Shove(runner, dvXY);
 

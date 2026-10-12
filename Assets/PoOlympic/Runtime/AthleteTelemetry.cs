@@ -10,12 +10,24 @@ namespace PoOlympic
     {
         public enum Kind { FootStrike, BodySlam, CubeHit }
         public Kind kind;
+        public Surface surface;         // what was hit (cube hits: Track)
         public PolicyRunner runner;
         public Vector3 position;        // Unity world
         public Vector3 normal;          // Unity world, pointing away from the surface that was hit
         public float forceN;            // contact normal force at the first step of the contact
         public float weightRatio;       // forceN / (athlete mass × g): 1 = one body weight
         public float speedMps;          // pelvis horizontal speed at the impact
+    }
+
+    /// <summary>What a static MuJoCo geom is made of, from its name (the MJCF has no materials): the clay track
+    /// ("ground"), the glass trench roof, and steel for everything else (pedestal, shaker, poles, rails, posts).
+    /// Picks the contact sound and the dust (ArenaAudio, ImpactFx).</summary>
+    public enum Surface { Track, Metal, Glass }
+
+    public static class Surfaces
+    {
+        public static Surface Of(string geomName) =>
+            geomName == "ground" ? Surface.Track : geomName.Contains("ceiling") ? Surface.Glass : Surface.Metal;
     }
 
     /// <summary>
@@ -83,6 +95,7 @@ namespace PoOlympic
         /// that part is a foot (scrape audio, scuff marks).</summary>
         public float SlideSpeed { get; private set; }
         public Vector3 SlidePoint { get; private set; }
+        public Surface SlideSurface { get; private set; }
         /// <summary>Ground reaction force on the feet in body weights (mj_contactForce normals, summed): the peak of
         /// the last ~0.5 s, so it reads as the force of each footstrike.</summary>
         public float GroundWeights { get; private set; }
@@ -100,6 +113,8 @@ namespace PoOlympic
         int _criticSeen;
         int _pelvis, _torso, _ngeom;
         bool[] _own, _foot, _cube;
+        Surface[] _surface;
+        readonly Surface[] _footSurface = new Surface[2];
         int[] _footIndex;                  // geom → 0..3 (foot_l, toe_l, foot_r, toe_r) or -1
         string[] _jointNames;
         readonly bool[] _footOn = new bool[2];
@@ -115,7 +130,7 @@ namespace PoOlympic
         const int DebounceSteps = 12;        // 60 ms off before a contact counts as new
         const int PeakSteps = 6;             // impact force = peak over the first 30 ms of a contact
 
-        struct Pending { public ImpactEvent.Kind kind; public Vector3 pos, normal; public float peak; public int steps; public bool touched; }
+        struct Pending { public ImpactEvent.Kind kind; public Surface surface; public Vector3 pos, normal; public float peak; public int steps; public bool touched; }
         readonly Dictionary<int, Pending> _pending = new(), _pendingNext = new();
         readonly List<int> _done = new();
 
@@ -149,10 +164,13 @@ namespace PoOlympic
             _foot = new bool[_ngeom];
             _cube = new bool[_ngeom];
             _footIndex = new int[_ngeom];
+            _surface = new Surface[_ngeom];
             for (int g = 0; g < _ngeom; g++)
             {
                 _own[g] = m->body_rootid[m->geom_bodyid[g]] == _pelvis;
-                _cube[g] = ModelFingerprint.Name(m, (int)MujocoLib.mjtObj.mjOBJ_GEOM, g).StartsWith("cube");
+                string name = ModelFingerprint.Name(m, (int)MujocoLib.mjtObj.mjOBJ_GEOM, g);
+                _cube[g] = name.StartsWith("cube");
+                _surface[g] = Surfaces.Of(name);
                 _footIndex[g] = -1;
             }
             string[] feet = { "foot_l_geom0", "toe_l_geom0", "foot_r_geom0", "toe_r_geom0" };
@@ -265,13 +283,14 @@ namespace PoOlympic
                         double vn = vel[3] * c.frame[0] + vel[4] * c.frame[1] + vel[5] * c.frame[2];
                         double tx = vel[3] - vn * c.frame[0], ty = vel[4] - vn * c.frame[1], tz = vel[5] - vn * c.frame[2];
                         float along = (float)Math.Sqrt(tx * tx + ty * ty + tz * tz);
-                        if (along > slide) { slide = along; SlidePoint = new Vector3((float)px, (float)pz, (float)py); }
+                        if (along > slide) { slide = along; SlidePoint = new Vector3((float)px, (float)pz, (float)py); SlideSurface = _surface[other]; }
                     }
                     _pts.Add(new Vector2((float)px, (float)py));
                     _ptsZ.Add((float)pz);
                     if (_foot[own])
                     {
                         if (_footIndex[own] < 2) footNowL = true; else footNowR = true;
+                        _footSurface[_footIndex[own] < 2 ? 0 : 1] = _surface[other];
                         MujocoLib.mj_contactForce(m, d, i, force);
                         grf += (float)Math.Abs(force[0]);
                         continue;
@@ -292,6 +311,8 @@ namespace PoOlympic
                     pend = new Pending
                     {
                         kind = cube ? ImpactEvent.Kind.CubeHit : ImpactEvent.Kind.BodySlam,
+                        // another athlete is not steel: only static geoms carry a surface
+                        surface = !cube && m->body_weldid[m->geom_bodyid[other]] == 0 ? _surface[other] : Surface.Track,
                         pos = new Vector3((float)px, (float)pz, (float)py),
                         normal = new Vector3((float)c.frame[0], (float)c.frame[2], (float)c.frame[1]) * sign,
                     };
@@ -327,7 +348,7 @@ namespace PoOlympic
                     _pending.Remove(g);
                     Impact?.Invoke(new ImpactEvent
                     {
-                        kind = pend.kind, runner = Runner, position = pend.pos, normal = pend.normal, forceN = pend.peak,
+                        kind = pend.kind, surface = pend.surface, runner = Runner, position = pend.pos, normal = pend.normal, forceN = pend.peak,
                         weightRatio = pend.peak / Mathf.Max(1f, MassKg * G), speedMps = SpeedMps,
                     });
                 }
@@ -356,7 +377,7 @@ namespace PoOlympic
                     if (_pts.Count > 0) { var q = _pts[_pts.Count - 1]; pos = new Vector3(q.x, _ptsZ[_ptsZ.Count - 1], q.y); }
                     Impact?.Invoke(new ImpactEvent
                     {
-                        kind = ImpactEvent.Kind.FootStrike, runner = Runner, position = pos, normal = Vector3.up,
+                        kind = ImpactEvent.Kind.FootStrike, surface = _footSurface[side], runner = Runner, position = pos, normal = Vector3.up,
                         forceN = MassKg * G * (1f + SpeedMps * 0.35f), weightRatio = 1f + SpeedMps * 0.35f, speedMps = SpeedMps,
                     });
                 }

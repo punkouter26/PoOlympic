@@ -110,6 +110,10 @@ namespace PoOlympic
                  "tension, and its height / offset behind the athlete (m).")]
         public Light focusSpot;
         public float spotIntensity = 40f, spotHeight = 9f, spotBack = 3f;
+        [Tooltip("The spot flares on a body slam of this many body weights (for spotFlareSeconds, on the impact point), " +
+                 "and opens up by spotSweepDeg while a record glows.")]
+        public float spotFlareWeights = 3f;
+        public float spotFlareSeconds = 1.2f, spotSweepDeg = 14f;
 
         public Shot Current => _shotNow;
         /// <summary>Spectator focus lock (BroadcastHud: tap a standings row): while the heat is live the close-up stays
@@ -202,9 +206,23 @@ namespace PoOlympic
             ApplyCalm();
             InitLook();
             GameSettings.Changed += ApplyShake;
+            AthleteTelemetry.Impact += OnImpact;
         }
 
-        void OnDestroy() => GameSettings.Changed -= ApplyShake;
+        void OnDestroy()
+        {
+            GameSettings.Changed -= ApplyShake;
+            AthleteTelemetry.Impact -= OnImpact;
+        }
+
+        /// <summary>A heavy body slam: the follow spot snaps to where it happened and flares.</summary>
+        void OnImpact(ImpactEvent e)
+        {
+            if (e.kind != ImpactEvent.Kind.BodySlam || e.weightRatio < spotFlareWeights) return;
+            if (e.runner != null && e.runner.crawlSteering) return;       // crawlers put hands and knees down all the time
+            _flare = 1f;
+            _flareAt = e.position;
+        }
 
         void ApplyShake()
         {
@@ -217,7 +235,8 @@ namespace PoOlympic
         Volume _volume;
         DepthOfField _dof;
         Bloom _bloom;
-        float _bloomBase, _pulse, _zoom, _closeFov, _hotFov;
+        float _bloomBase, _pulse, _zoom, _closeFov, _hotFov, _flare, _spotAngle;
+        Vector3 _flareAt;
 
         /// <summary>The scene's global volume gets a runtime copy of its profile (Volume.profile), so nothing here is
         /// written back to Settings/StadiumLook_Volume.asset.</summary>
@@ -264,13 +283,18 @@ namespace PoOlympic
             if (_bloom != null) _bloom.intensity.Override(_bloomBase * (1f + (cinematic ? 2.5f * _pulse : 0f)));
 
             if (focusSpot == null) return;
+            _flare = Mathf.Max(0f, _flare - dt / Mathf.Max(0.05f, spotFlareSeconds));
             float level = Mathf.Max(_pulse, tension != null ? Mathf.InverseLerp(0.45f, 0.9f, tension.Tension) : 0f);
-            focusSpot.enabled = target != null && level > 0.01f;
+            focusSpot.enabled = (target != null && level > 0.01f) || _flare > 0.01f;
             if (!focusSpot.enabled) return;
-            focusSpot.intensity = spotIntensity * level;
+            if (_spotAngle <= 0f) _spotAngle = focusSpot.spotAngle;
+            focusSpot.intensity = spotIntensity * Mathf.Max(level, 1.5f * _flare);
+            focusSpot.spotAngle = _spotAngle + spotSweepDeg * _pulse;        // a record: the cone opens and closes again
+            // on the athlete; while a slam flares, on where it landed
+            var at = target == null ? _flareAt : Vector3.Lerp(target.position, _flareAt, Mathf.Clamp01(_flare * 2f));
             var f = new Vector3(forward.x, 0, forward.z).normalized;
-            var from = target.position + Vector3.up * spotHeight - f * spotBack;
-            focusSpot.transform.SetPositionAndRotation(from, Quaternion.LookRotation(target.position - from));
+            var from = at + Vector3.up * spotHeight - f * spotBack;
+            focusSpot.transform.SetPositionAndRotation(from, Quaternion.LookRotation(at - from));
         }
 
         static void SetFov(CinemachineCamera cam, float fov)

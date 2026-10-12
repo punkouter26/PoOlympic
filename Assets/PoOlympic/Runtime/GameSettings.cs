@@ -33,10 +33,14 @@ namespace PoOlympic
         public static float CameraShake { get => F("shake", 0f); set => Set("shake", Mathf.Clamp01(value)); }
         /// <summary>Close-ups ease in a little as the athlete on camera gets into trouble.</summary>
         public static bool TensionZoom { get => B("tensionZoom", true); set => Set("tensionZoom", value); }
-        /// <summary>Depth of field on close-ups + the bloom pulse on a record (off by default on phones).</summary>
+        /// <summary>Depth of field on close-ups, the bloom pulse on a record and the colour-fringe flash on a big slam
+        /// (off by default on phones).</summary>
         public static bool FocusBlur { get => B("focusBlur", !Application.isMobilePlatform); set => Set("focusBlur", value); }
         /// <summary>Scuff marks where a body or a cube hits the ground.</summary>
         public static bool ImpactMarks { get => B("marks", true); set => Set("marks", value); }
+
+        /// <summary>Draw the MuJoCo collision shapes and contact forces over the athletes (ColliderXray).</summary>
+        public static bool ColliderView { get => B("colliders", false); set => Set("colliders", value); }
 
         /// <summary>Phone vibration on body slams and cube hits, scaled by the contact force.</summary>
         public static bool Haptics { get => B("haptics", true); set => Set("haptics", value); }

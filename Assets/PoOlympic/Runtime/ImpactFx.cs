@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Cinemachine;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.VFX;
 
 namespace PoOlympic
@@ -28,7 +30,21 @@ namespace PoOlympic
         public ParticleSystem[] sparksFallback;
         [Tooltip("Ground marks (flat, long-lived): a scuff where a body slams down, a trail under a body part that slides.")]
         public ParticleSystem[] marks;
+        [Tooltip("Projected scuffs (URP decals: they wrap the pedestal edge and slopes). Used instead of `marks` when present.")]
+        public DecalProjector[] decals;
+        public float decalSeconds = 18f;
+        [Tooltip("Global volume (weight 0 at rest) flashed by big slams: colour fringe + darker corners, no lens warp. " +
+                 "Player option: GameSettings.FocusBlur (off by default on phones).")]
+        public Volume pulseVolume;
+        public float pulseSeconds = 0.18f;
         public CinemachineImpulseSource impulse;
+
+        [Header("Force scaling")]
+        [Tooltip("A full-strength hit emits this many times the particles of the prefab's burst, this much faster.")]
+        public float emitBoost = 2.5f;
+        public float speedBoost = 1.8f;
+        [Tooltip("Dust colour per surface (multiplies the prefab's colour): track, metal, glass.")]
+        public Color[] surfaceTint = { Color.white, new Color(0.75f, 0.8f, 0.9f, 0.45f), new Color(0.9f, 0.97f, 1f, 0.35f) };
 
         [Header("Thresholds")]
         public float footDustMinSpeed = 1.2f;
@@ -53,7 +69,11 @@ namespace PoOlympic
 
         public int Emitted { get; private set; }
 
-        int _dust, _slam, _wave, _spark, _mark;
+        int _dust, _slam, _wave, _spark, _mark, _decal;
+        float[] _decalBorn;
+        float _pulse;
+        struct Base { public float speedMin, speedMax; public int count; public Color color; }
+        readonly Dictionary<ParticleSystem, Base> _base = new();
         readonly Dictionary<AthleteTelemetry, Vector3> _lastMark = new();
         float _lastStop = -99f;
         bool _stopping;
@@ -83,16 +103,16 @@ namespace PoOlympic
                     if (e.speedMps < footDustMinSpeed || footDust == null || footDust.Length == 0) return;
                     if (_lastPuff.TryGetValue(e.runner, out var t) && Time.time - t < 0.2f) return;
                     _lastPuff[e.runner] = Time.time;
-                    Burst(footDust, ref _dust, e.position + Vector3.up * 0.02f, Mathf.Clamp01((e.speedMps - footDustMinSpeed) / 3f));
+                    Burst(footDust, ref _dust, e.position + Vector3.up * 0.02f, Mathf.Clamp01((e.speedMps - footDustMinSpeed) / 3f), e.surface, true);
                     break;
                 case ImpactEvent.Kind.BodySlam:
                     float need = slamMinWeights * (e.runner != null && e.runner.crawlSteering ? crawlerSlamFactor : 1f);
                     if (e.weightRatio < need) return;
                     float s = Mathf.Clamp01((e.weightRatio - need) / (bigSlamWeights * 2f));
                     Haptics.Pulse(s);
-                    Burst(slamDust, ref _slam, e.position + Vector3.up * 0.03f, s);
+                    Burst(slamDust, ref _slam, e.position + Vector3.up * 0.03f, s, e.surface, true);
                     Burst(shockwaves, ref _wave, new Vector3(e.position.x, e.position.y + 0.02f, e.position.z), s);
-                    if (GameSettings.ImpactMarks) Burst(marks, ref _mark, e.position + Vector3.up * 0.012f, s);
+                    Mark(e.position, e.normal, s);
                     if (e.weightRatio >= bigSlamWeights * (need / slamMinWeights)) Big(e, 0.25f + 0.5f * s);
                     break;
                 case ImpactEvent.Kind.CubeHit:
@@ -105,7 +125,9 @@ namespace PoOlympic
             }
         }
 
-        void Burst(ParticleSystem[] pool, ref int next, Vector3 at, float strength)
+        /// <param name="scaled">dust: the contact force also sets how many particles fly and how fast, and the
+        /// surface tints them (rings and marks are one particle each: size only)</param>
+        void Burst(ParticleSystem[] pool, ref int next, Vector3 at, float strength, Surface surface = Surface.Track, bool scaled = false)
         {
             if (pool == null || pool.Length == 0) return;
             var ps = pool[next];
@@ -113,8 +135,59 @@ namespace PoOlympic
             if (ps == null) return;
             ps.transform.position = at;
             ps.transform.localScale = Vector3.one * Mathf.Lerp(0.8f, 1.6f, strength);
+            if (!scaled) { ps.Play(true); Emitted++; return; }
+            var main = ps.main;
+            if (!_base.TryGetValue(ps, out var b))
+            {
+                var em = ps.emission;
+                b = new Base
+                {
+                    speedMin = main.startSpeed.constantMin, speedMax = main.startSpeed.constantMax, color = main.startColor.color,
+                    count = em.burstCount > 0 ? (int)em.GetBurst(0).count.constant : 0,
+                };
+                _base[ps] = b;
+            }
+            float k = Mathf.Lerp(1f, speedBoost, strength);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(b.speedMin * k, b.speedMax * k);
+            main.startColor = b.color * surfaceTint[Mathf.Min((int)surface, surfaceTint.Length - 1)];
             ps.Play(true);
+            ps.Emit(Mathf.RoundToInt(b.count * (emitBoost - 1f) * strength));      // on top of the prefab's own burst
             Emitted++;
+        }
+
+        /// <summary>Ground mark where a body lands or drags: a projected decal (wraps edges and slopes), else the flat
+        /// particle of the older scenes.</summary>
+        void Mark(Vector3 at, Vector3 normal, float strength)
+        {
+            if (!GameSettings.ImpactMarks) return;
+            if (decals == null || decals.Length == 0) { Burst(marks, ref _mark, at + Vector3.up * 0.012f, strength); return; }
+            var d = decals[_decal];
+            if (d == null) return;
+            _decalBorn ??= new float[decals.Length];
+            _decalBorn[_decal] = Time.time;
+            _decal = (_decal + 1) % decals.Length;
+            if (normal.sqrMagnitude < 0.01f) normal = Vector3.up;
+            // projects along its +z, into the surface; a random roll so no two scuffs line up
+            d.transform.SetPositionAndRotation(at, Quaternion.LookRotation(-normal, Vector3.forward) * Quaternion.Euler(0f, 0f, Random.value * 360f));
+            float w = Mathf.Lerp(0.8f, 1.6f, strength);
+            d.transform.localScale = new Vector3(w, w, 1f);
+            d.fadeFactor = 1f;
+            d.enabled = true;
+            Emitted++;
+        }
+
+        /// <summary>Decals fade over the last 30 % of their life and switch off (a disabled projector costs nothing).</summary>
+        void FadeDecals()
+        {
+            if (_decalBorn == null) return;
+            for (int i = 0; i < decals.Length; i++)
+            {
+                var d = decals[i];
+                if (d == null || !d.enabled) continue;
+                float age = (Time.time - _decalBorn[i]) / Mathf.Max(0.1f, decalSeconds);
+                if (age >= 1f || !GameSettings.ImpactMarks) d.enabled = false;
+                else d.fadeFactor = Mathf.Clamp01((1f - age) / 0.3f);
+            }
         }
 
         void Sparks(Vector3 at, Vector3 normal, float strength)
@@ -148,6 +221,7 @@ namespace PoOlympic
         void Big(ImpactEvent e, float shake)
         {
             if (impulse != null) impulse.GenerateImpulseAt(e.position, (Vector3.down + e.normal * 0.3f) * shake);
+            _pulse = Mathf.Max(_pulse, shake);
             if (!hitStop || _stopping || Time.unscaledTime - _lastStop < hitStopCooldown) return;
             if (!hitStopWhileLive && HeatLive()) return;                // no slow motion during the race
             _stopping = true;
@@ -173,19 +247,23 @@ namespace PoOlympic
         /// <summary>Scuff trail: a body part dragged along the ground (a fall that slides, a crawler's knees).</summary>
         void SlideMarks()
         {
-            if (marks == null || marks.Length == 0 || !GameSettings.ImpactMarks) return;
+            if (!GameSettings.ImpactMarks) return;
             foreach (var t in AthleteTelemetry.All)
             {
                 if (t == null || !t.Ready || t.SlideSpeed < slideMarkSpeed) continue;
                 if (_lastMark.TryGetValue(t, out var last) && (t.SlidePoint - last).sqrMagnitude < slideMarkGap * slideMarkGap) continue;
                 _lastMark[t] = t.SlidePoint;
-                Burst(marks, ref _mark, t.SlidePoint + Vector3.up * 0.012f, 0f);
+                Mark(t.SlidePoint, Vector3.up, 0f);
             }
         }
 
         void Update()
         {
             SlideMarks();
+            FadeDecals();
+            // real time: the flash runs through a hit-stop
+            _pulse = Mathf.Max(0f, _pulse - Time.unscaledDeltaTime / Mathf.Max(0.02f, pulseSeconds));
+            if (pulseVolume != null) pulseVolume.weight = GameSettings.FocusBlur ? Mathf.Clamp01(_pulse) : 0f;
             if (!_stopping || Time.realtimeSinceStartup < _stopUntil) return;
             Time.timeScale = GameSettings.SimSpeed;       // the viewing speed chosen meanwhile, not the one before the stop
             _stopping = false;

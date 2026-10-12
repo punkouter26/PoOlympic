@@ -23,7 +23,7 @@
 }
 .ha-title {
     -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
-    font-size: 34px;
+    font-size: var(--po-text-h);
     color: var(--po-fg);
     white-space: nowrap;
     overflow: hidden;
@@ -50,7 +50,7 @@
     -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
     font-size: var(--po-text);
     color: var(--po-green);
-    background-color: rgba(0, 0, 0, 0.45);
+    background-color: var(--po-shade-45);
     border-radius: 24px;
 }
 .ha-fps-mid { color: var(--po-gold); }
@@ -177,7 +177,7 @@
     -unity-font: url("project://database/Assets/PoOlympic/UI/Fonts/Inter-SemiBold.ttf");
     white-space: normal;
     color: var(--po-debug);
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: var(--po-shade-70);
     border-radius: 8px;
     display: none;
 }
