@@ -1,0 +1,16 @@
+# STAGED training runs (2026-10-11 audit). NOT read by tools/train_queue.ps1: to run one, copy its line to the end of
+# runs/queue.txt (same format: body | task id | run name | init | max iterations | watch_gate args | prep).
+# All are the "-Fast" task IDs: 8192 envs, one pool cube, nconmax 64 / njmax 256, 8 mini-batches, checkpoints every 50
+# (smoke-tested at 16 envs; no PPO iteration has run on any of them). An iteration carries twice the samples of a
+# 4096-env run, so the iteration counts are half of the 4096-env plan. Before a long block: Windows power plan off
+# "Balanced" + Cooler Boost on (measured +30-40 %), other Unity editors closed.
+#
+# Only KIM's source checkpoints are on this machine. The MATT / zombie / GRANDMA tasks are registered
+# (PoOlympic-{Matt,Zombie,Grandma}-{Rung0-Full,Rung2-Ramp}-Fast) and wait for their production checkpoints.
+#
+# 1. Robustness fine-tune of her Rung 2 brain: success-driven shove ramp + contact solref DR + privileged critic
+kim | PoOlympic-Kim-Rung2-Ramp-Fast | k2ramp_v1 | kim_rung2/k2ramp_init | 300 | --gates 2 --seeds 30 --its 100,200,299 | run python tools/expand_obs.py {run:kim_rung2/k2_v3}/model_600.pt runs/kim_rung2/k2ramp_init --critic-zeros 8 --min-std 0
+# 2. Rung 0 with DESIGN §5's foot-slip and CoM-over-support terms
+kim | PoOlympic-Kim-Rung0-Full-Fast | k0full_v1 | kim_rung0/k0full_init | 200 | --gates 0 --seeds 30 --its 100,199 | run python tools/plain_init.py {run:kim_rung0/k0_v2}/model_400.pt runs/kim_rung0/k0full_init
+# 3. NEEDS THE USER'S GO on contract v5 (docs/CONTRACT_V5_FATIGUE_PROPOSAL.md): fatigue + torque-speed limits in the physics
+kim | PoOlympic-Kim-Rung2-Bio-Fast | k2bio_v1 | kim_rung2/k2bio_init | 400 | --gates 2 --its 100,200,300,399 | run python tools/expand_obs.py {run:kim_rung2/k2_v3}/model_600.pt runs/kim_rung2/k2bio_init --actor-zeros 6 --critic-zeros 14 --min-std 0

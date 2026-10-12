@@ -157,6 +157,29 @@
    }
   },
   {
+   "file": "getup_zombie.onnx",
+   "body": "zombie",
+   "role": "getup",
+   "events": [
+    27
+   ],
+   "name": "zgetup_prone_v1_it600",
+   "experiment": "zombie_getup",
+   "run": "zgetup_prone_v1",
+   "iteration": 600,
+   "contract_version": 3,
+   "sha256": "e7dca6beb42eaaa93a73d1d416956e22a70a5fd332b9554867a5db1a8fd74997",
+   "sidecar_sha256_ok": true,
+   "fingerprint_sha256": "5521551798c3942cb235d40a8daab9ef10151ef407fa1815d9c9f9cc80a2b379",
+   "fingerprint_current": true,
+   "critic": null,
+   "gate": {
+    "source": "watch_zgetup_prone_v1.jsonl",
+    "getup": "up 10/10, at end 10",
+    "getup_prone": "up 10/10, at end 10"
+   }
+  },
+  {
    "file": "grandma_rung0.onnx",
    "body": "grandma",
    "role": "pedestal",

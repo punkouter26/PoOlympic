@@ -40,6 +40,20 @@ def _low_entropy(rl, coef: float = 0.001):
     return rl
 
 
+def _register_fast(task_id: str, fn, exp: str, its: int, runner, entropy: float | None = None) -> None:
+    """`<task_id>-Fast` (STAGED 2026-10-11, not trained): the same recipe on the fast training sim (matt_env.fast_sim:
+    8192 envs, one pool cube, nconmax 64 / njmax 256) with the 8-mini-batch PPO cfg; `its` = half the 4096-env run's
+    (twice the samples per iteration), checkpoints every 50. The buffers hold for the self-colliding bodies too: CPU
+    MuJoCo peaks of the deployed Rung 0 / Rung 2 brains in the G1 drills, 4-cube scene, are 30-34 contacts / 120-136
+    rows per world on MATT, zombie, GRANDMA and KIM alike (12 contacts / 48 rows of that are the 3 parked cubes)."""
+    from .matt_env import fast_sim, matt_ppo_v5_cfg
+    rl = matt_ppo_v5_cfg(exp, max_iterations=its)
+    if entropy is not None:
+        rl.algorithm.entropy_coef = entropy
+    register_mjlab_task(task_id=task_id + "-Fast", env_cfg=fast_sim(fn()), play_env_cfg=fn(play=True), rl_cfg=rl,
+                        runner_cls=runner)
+
+
 if bodies.current().name == "matt":
 
     from .matt_env import (matt_getup2_env_cfg, matt_getup3_env_cfg, matt_getup4_env_cfg, matt_getup5_env_cfg, matt_getup_env_cfg, matt_pedestal2_env_cfg, matt_pedestal_env_cfg, matt_ppo_cfg, matt_rung0_env_cfg, matt_rung1_env_cfg,
@@ -249,6 +263,8 @@ if bodies.current().name == "matt":
     register_mjlab_task(task_id="PoOlympic-Matt-Rung2-Ramp", env_cfg=matt_rung2_ramp_env_cfg(),
                         play_env_cfg=matt_rung2_ramp_env_cfg(play=True),
                         rl_cfg=matt_ppo_cfg("matt_rung2", max_iterations=600), runner_cls=SymmetricRunner)
+    _register_fast("PoOlympic-Matt-Rung0-Full", matt_rung0_full_env_cfg, "matt_rung0", 200, MjlabOnPolicyRunner)
+    _register_fast("PoOlympic-Matt-Rung2-Ramp", matt_rung2_ramp_env_cfg, "matt_rung2", 300, SymmetricRunner)
 
 if bodies.current().name == "matt":
     # Get-up for the roster MATT (2026-10-11: fall recovery + Event 27 need it; the 2026-09-29 Matt-Getup..5 tasks never
@@ -351,6 +367,9 @@ if bodies.current().name == "kim":
     register_mjlab_task(task_id="PoOlympic-Kim-Rung2-Bio", env_cfg=kim_rung2_bio_env_cfg(),
                         play_env_cfg=kim_rung2_bio_env_cfg(play=True),
                         rl_cfg=_low_entropy(matt_ppo_cfg("kim_rung2", max_iterations=800)), runner_cls=SymmetricRunner)
+    _register_fast("PoOlympic-Kim-Rung0-Full", kim_rung0_full_env_cfg, "kim_rung0", 200, MjlabOnPolicyRunner, 0.001)
+    _register_fast("PoOlympic-Kim-Rung2-Ramp", kim_rung2_ramp_env_cfg, "kim_rung2", 300, SymmetricRunner, 0.001)
+    _register_fast("PoOlympic-Kim-Rung2-Bio", kim_rung2_bio_env_cfg, "kim_rung2", 400, SymmetricRunner, 0.001)
 
 if bodies.current().name == "grandma":
     from .grandma_env import (grandma_rung0_env_cfg, grandma_rung1_env_cfg, grandma_rung2_base_env_cfg,
@@ -456,6 +475,8 @@ if bodies.current().name == "grandma":
     register_mjlab_task(task_id="PoOlympic-Grandma-Rung2-Ramp", env_cfg=grandma_rung2_ramp_env_cfg(),
                         play_env_cfg=grandma_rung2_ramp_env_cfg(play=True),
                         rl_cfg=_low_entropy(matt_ppo_cfg("grandma_rung2", max_iterations=600)), runner_cls=SymmetricRunner)
+    _register_fast("PoOlympic-Grandma-Rung0-Full", grandma_rung0_full_env_cfg, "grandma_rung0", 200, MjlabOnPolicyRunner)
+    _register_fast("PoOlympic-Grandma-Rung2-Ramp", grandma_rung2_ramp_env_cfg, "grandma_rung2", 300, SymmetricRunner, 0.001)
 
 if bodies.current().name == "zombie":
     from .matt_env import matt_ppo_cfg
@@ -648,6 +669,8 @@ if bodies.current().name == "zombie":
     register_mjlab_task(task_id="PoOlympic-Zombie-Rung2-Ramp", env_cfg=zombie_rung2_ramp_env_cfg(),
                         play_env_cfg=zombie_rung2_ramp_env_cfg(play=True),
                         rl_cfg=matt_ppo_cfg("zombie_rung2", max_iterations=600), runner_cls=SymmetricRunner)
+    _register_fast("PoOlympic-Zombie-Rung0-Full", zombie_rung0_full_env_cfg, "zombie_rung0", 200, MjlabOnPolicyRunner)
+    _register_fast("PoOlympic-Zombie-Rung2-Ramp", zombie_rung2_ramp_env_cfg, "zombie_rung2", 300, SymmetricRunner)
 
 
 # ---- registry hygiene -------------------------------------------------------------------------------------------------

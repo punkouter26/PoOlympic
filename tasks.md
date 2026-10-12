@@ -553,6 +553,28 @@ short legs (hip joints at 0.44 of her height).
     work (`parity/ui/consolidate/android/`). Found there: the game runs at Unity's 30 fps phone cap, but PerfOverlay's
     auto quality compared against 60 → "throttling" on a cool phone walked it to tier 3 (render scale −0.1, beams off,
     critics 5 Hz, shadows ½). `PerfOverlay.TargetFps` (targetFrameRate, else 30 on phones / 60 elsewhere) → Q0 at 33 °C
+- [ ] **UI integrity pass — portrait, second top 10** (2026-10-11, user: "do all"). Code done; headless (editor closed
+  for training): EditMode 44/44, PlayMode loop 1/1. Open: the before / after screenshot page (`SCREENSHOTS/`) needs the
+  editor; Event 27 with 8× MATT ends both heats at 0.0 s (DNF) — seen in the loop, not a UI fault
+  - **1 flow soak** `Tests/Play/StateFlowTests` (new PlayMode assembly): menu → PLAY → heat → result → match card → OK →
+    menu → another event → sheet: New heat → sheet: Main menu, through the real buttons; fails on dead ends, dropped
+    loads, console errors and warnings. Found: `LoadSceneAsync` crashed Unity natively on event → menu (GPU Resident
+    Drawer job `ParallelFilterChangedInstances…`, 2 of 2 runs; 0 of 2 with `LoadScene`)
+  - **2 scene scan** `Tests/Editor/SceneIntegrityTests`: every build scene — no missing script, no broken reference,
+    HUD → board + style, menu → UXML + loadable events, no `OnGUI` screen. 16 scenes clean
+  - **3 + 4 + 7 one sheet** `HudAnchors`: the TR drop-down and the 3-tab settings sheet → one bottom sheet above the
+    bottom bar, tabs Actions | Settings | Close; settings = 16 chips on one page (short caption + value); scrim (tap
+    outside closes, covers the match card / slip); opens from the TR button or a swipe up from the bottom bar.
+    `ShowTab(0|1)` replaces `OpenSettings` / `ShowSettingsTab`
+  - **5 match card** tabs Places · Telemetry (per athlete: top speed, peak power, lowest confidence, tired) · Replay
+  - **6 debug** hold the BL button = collision shapes (tap = readout as before; gold bars while shapes are on)
+  - **8 tokens** every padding, margin, border width and radius is a `--po-*` token (`UiTokenTests`); 18 → 16,
+    22 / 26 → 24, 30 / 34 → 32, radii 8 → 10, 12 → 14, 20 → 24. `ScreenBoard.uss` keeps its own scale
+  - **9 IMGUI** `Stadium_Hub` and `Event_IronPedestal` (the two IMGUI screens in the build, loaded by nothing) are out
+    of Build Settings (18 → 16 scenes); the testbed HUDs were never in it. Still playable in the editor
+  - **10 loads + screens** `MeetLineup.Load` stays `LoadScene` (see 1); `Loading` now spans the whole load, not one
+    frame (20 s timeout), and a "Loading…" veil blocks input; layout tests add 1080×2640, a foldable (1812×2176) and a 4:3 tablet. Found there: the HUD left
+    the camera 58 % on the foldable → `BroadcastHud.MinDesignHeight` 1440 (the design widens on wide screens)
 - [x] Licensing review (Avaturn, Hunyuan3D) before any commercial release → `docs/LICENSING.md` (2026-09-29). Blockers
   to act on before a store release: Olympic rings / name, Hunyuan3D territory (EU / UK / KR), Avaturn notification +
   attribution; checklist in the doc
@@ -579,6 +601,12 @@ Log: `rl_optimization_log.md` 2026-10-11 "Training audit". Existing task IDs, bo
   proposed limits untrained
   - [ ] if go: train `PoOlympic-Kim-Rung2-Bio` (800 its, gates 200 / 400 / 600 / 799), Unity `BioLimits` + parity refs
 - [ ] The three stance brains carry mattbio's fingerprint (manifest) — confirm that is intended for MATT lanes
+- [x] Third pass (log 2026-10-11 23:30): servo calibration + observation-normaliser audit (no change needed; trunk is
+  soft / under-damped on every body, zero-variance inputs are fed zeros by every caller), contact buffers measured for
+  the self-colliding bodies, `-Fast` IDs (8192 envs, one cube, sized buffers) for the nine tasks above
+- [ ] Run the staged lines in `training/staged_queue.txt` (KIM: Rung2-Ramp-Fast, Rung0-Full-Fast; Rung2-Bio-Fast only
+  after the contract v5 decision) — first run doubles as the 8192-env benchmark on a self-colliding body
+- [ ] New Rung 0 / get-up / crawl exports: `export_brain.py --clip-obs 5`
 
 ## App audit (2026-10-11) — Unity, UI and clean-up (35-item list, "do all")
 
@@ -657,4 +685,25 @@ get up → finish). Unity: `SpectacleTests`.
   cfg moved). Queued: `mgetup_v1` → `mgetup_prone_v1` (warm start: KIM's get-up brain, cross-body — this clone has no
   MATT checkpoints), `zgetup_v3` (Zombie-Getup2 from KIM's supine brain; zgetup_v1 / v2 sat at 0 %). PoOlympic.Tests
   91/91, pytest test_events 15/15.
+
+## Get-up brains for the whole roster (2026-10-11 night, poolympic-c8)
+
+- [x] **MATT** — `getup_matt.onnx` = mgetup_prone_v1 it 600 (tasks `PoOlympic-Matt-Getup-Ladder` → `-Prone`, warm start
+  KIM's kgetup_prone_v1 it 599 across bodies: the ladder was done after ~60 its, KIM's own run needed ~680). CPU 30
+  seeds: supine 30/30 (0.64-0.66 s), face down 30/30 (0.88-0.92 s), 0 falls after; joints 0.1 % / 0.0 % of substeps over
+  18 rad/s. Forced race falls: 25 of 26 fallen MATTs finish (the supine-only mgetup_v1: 4 of 26 — runners land face
+  down). Review `parity/tb/mgetup_v1/review.html`.
+- [x] **ZOMBIE** — `getup_zombie.onnx` = zgetup_prone_v1 it 600 (`PoOlympic-Zombie-Getup2` from KIM's kgetup_v1 it 900,
+  then `-Getup-Prone`). zgetup_v3 sat at stage 2 for ~356 its (as zgetup_v1 / v2 did for good), then climbed to stage 6
+  in ~45. 30 seeds: supine 30/30 (0.66-0.70 s), face down 30/30 (0.26-0.40 s); joints 0.0 % / 0.9 % over its 22.9 rad/s
+  bar, peak 46 rad/s face down (a flick: inside the 5 % allowance, worth slowing). Forced falls: 75 of 76 finish.
+- [x] Scenes re-upgraded (32 runners per roster scene carry a get-up brain; a brain is wired only where its
+  fingerprint matches the athlete's contract, so the mattbio scenes get none). Event 27 with the mixed line-up: all 8
+  finish (MATT 3.88 s, KIM 4.50 s, GRANDMA 5.24 s, ZOMBIE 5.44 s); odds refitted. PoOlympic.Tests 114/116 in the
+  full run, the 2 failures (PhysXGuardTests) were an exception of the editor's own Project window and pass 3/3 after an
+  editor restart.
+- [ ] GRANDMA still stays down in ~4 of 62 forced falls; her face-down get-up is over her joint-speed bar (5.3 %).
+- [ ] Recovery is not in Crab Shuffle / Turntable (a fall is still out there); Gust Gauntlet and Iron Pedestal stay
+  elimination events by design.
+- [ ] A heat in which nobody finishes still announces a winner ("L1 WINS · DNF").
 

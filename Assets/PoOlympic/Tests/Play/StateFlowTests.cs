@@ -26,7 +26,8 @@ namespace PoOlympic.Tests
 
         void OnLog(string message, string stack, LogType type)
         {
-            if (type == LogType.Warning) _warnings.Add(message);
+            // the inference package's own Burst notice in the editor is not ours to fix
+            if (type == LogType.Warning && !message.StartsWith("Compilation was requested for method")) _warnings.Add(message);
         }
 
         [SetUp]

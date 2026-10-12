@@ -1393,3 +1393,47 @@ MJCFs by content) — **91 task IDs before, the same 91 hashes after**, 9 new ID
   gate logs; the Unity files share the folder but not yet the report.
 - Brain clean-up: `parity/brains` 644 → 98 files, `Models/Brains` 262 → 33 MB; `tools/brain_manifest.py --check`: 22
   deployed brains, 0 problems. Checkpoints in `training/runs` were not pruned (script: `tools/prune_checkpoints.ps1`).
+
+## 2026-10-11 23:30 · Training audit, third pass: servo calibration, observation normalisers, fast sim for the staged tasks
+
+No training run, no GPU benchmark (the queue was training `mgetup_prone_v1`), no MJCF / contract / brain / existing
+task changed (`dump_task_cfgs.py --diff`: 0 existing cfgs moved, 9 new IDs; pytest 90/90). The 2026-09-29 and
+2026-10-11 14:16 audits already cover rewards, curriculum, DR, bio limits and the registry; this pass looked at what
+they left out.
+
+- **Servo calibration (CPU, default stance, each joint against its distal inertia; all five bodies).** Same picture on
+  every body, as the Froude scaling intends: natural frequency 1.2-2.2 Hz at trunk / hip / shoulder, 3.5-4.5 Hz at
+  knee / elbow, 7-19 Hz at hip rotation / ankle (their own segment is light; in stance the ankle carries the body).
+  Damping ratio 0.5-1.3 for hips, knees, shoulders, elbows. Two things stand out:
+  the **trunk is soft and under-damped** (abdomen flex / lateral: 1.1-1.3 Hz, damping ratio 0.32-0.41; zombie lowest),
+  and mattbio's hip rotation / trunk twist / ankle inversion reach their torque cap at a 15-17° position error (one
+  action unit is 14°), so those three joints are effectively torque-limited, as the bio caps intend.
+  **Decision: no gain change.** kp / kv live in the MJCFs (fingerprint), every deployed brain has learned these servos
+  and passes its gates; retuning means a new body version and retraining all 22 brains. If trunk sway ever becomes
+  the complaint, the candidate is abdomen kv 30 → ~45 (damping ratio ~0.6) on a new body ID.
+- **Actions.** Continuous position targets (default + 0.25 rad × action, clipped to the joint range in training and
+  inside the ONNX graph alike) — nothing discrete to map; the clip is the mask. Action std of the deployed KIM brains
+  0.22 (≈ 3° of target noise). No change.
+- **Observation normalisers (16 newest checkpoints on disk).** Inputs that never vary in a task have std 0 and are
+  divided by the 0.01 floor: command (3) + gait clock (2) in Rung 0 and get-up, lateral command in Rung 1 / crawl. A
+  non-zero value there at run time would enter the network 100× amplified. Checked the callers: Python `Recovery` feeds
+  zeros; Unity `TrackRaceEvent.Stand` / `SlalomEvent` zero the command and switch lane keeping off before
+  `SetRecovering(true)` — **no live bug**. Pelvis height is the most amplified real input in the Rung 2 brains (std
+  0.018 m against ±0.02 m training noise). Recommendation for every new export of a Rung 0 / get-up / crawl brain:
+  `export_brain.py --clip-obs 5` (exists since this morning, default off).
+- **Buffers of the self-colliding bodies.** `scale_to_body` gives them nconmax 160 / njmax 800 on a guess. Measured on
+  CPU MuJoCo (deployed Rung 0 + Rung 2 brains, G1 drills, 4 seeds, 4-cube scene): peaks 30-34 contacts / 120-136 rows
+  per world on MATT, zombie, GRANDMA and KIM alike — self-collision adds nothing measurable when the athlete is on its
+  feet. With one pool cube that is ≤ 22 / 88, so `fast_sim`'s 64 / 256 holds for all four bodies (not for lying tasks).
+- **Throughput gap closed (staged).** The nine tasks added this morning (Rung0-Full × 4, Rung2-Ramp × 4, Kim-Rung2-Bio)
+  ran the slow sim: 4096 envs, 4 cubes, 160 / 800 buffers — the live run does 1.95 s / iteration (1.6 s collection +
+  0.3 s learning ≈ 50k steps/s) where recipe v5 measured 105-137k. New IDs `<task>-Fast` (`tasks._register_fast`:
+  `fast_sim` + `matt_ppo_v5_cfg`, half the iterations, checkpoints every 50). Smoke-tested at 16 envs (KIM Full / Ramp
+  / Bio, zombie Ramp: finite, mirror exact); not benchmarked at 8192 envs on these bodies and no PPO iteration run.
+  Decision rate stays 50 Hz (decimation 4 at 5 ms is in the contract).
+- **Host.** While training: GPU 40-65 % busy at 86 °C / 79 W, Windows power plan "Balanced", three Unity processes
+  open. The earlier measurement stands (Extreme Performance + Cooler Boost: +30-40 %).
+- **Staged, not started:** `training/staged_queue.txt` (three KIM lines in queue format with their warm-start prep;
+  the queue does not read that file). `runs/queue.txt` was not touched.
+- **Noted, not changed:** `biomech.HILL_W_MAX` is in MATT units for every body while the joint-speed bar is scaled
+  (18 rad/s ÷ √λ) — settle it with the contract v5 constants.

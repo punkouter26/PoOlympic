@@ -255,8 +255,12 @@ namespace PoOlympic.Editor
                     r.critic = AssetDatabase.LoadAssetAtPath<ModelAsset>(criticPath);
                     // fall recovery: this body's get-up brain, where one is deployed (role "getup" in the brain manifest)
                     var getup = $"{Path.GetDirectoryName(brainPath)}/getup_{Odds.BodyOf(r).ToLowerInvariant()}.onnx".Replace('\\', '/');
-                    r.recoverBrain = AssetDatabase.LoadAssetAtPath<ModelAsset>(getup);
-                    r.recoverSidecar = r.recoverBrain != null ? AssetDatabase.LoadAssetAtPath<TextAsset>(getup + ".json") : null;
+                    // … and only for the model it was trained on (mattbio plays as MATT but is another fingerprint)
+                    var getupSidecar = AssetDatabase.LoadAssetAtPath<TextAsset>(getup + ".json");
+                    bool sameModel = getupSidecar != null && r.contractJson != null &&
+                                     JsonUtility.FromJson<BrainSidecar>(getupSidecar.text).fingerprint_sha256 == Contract.Parse(r.contractJson.text).fingerprint_sha256;
+                    r.recoverBrain = sameModel ? AssetDatabase.LoadAssetAtPath<ModelAsset>(getup) : null;
+                    r.recoverSidecar = r.recoverBrain != null ? getupSidecar : null;
                 }
                 EditorUtility.SetDirty(r);
             }
@@ -500,7 +504,7 @@ namespace PoOlympic.Editor
             var p = ScriptableObject.CreateInstance<VolumeProfile>();
             AssetDatabase.CreateAsset(p, PulseProfile);
             var ca = p.Add<ChromaticAberration>(true);
-            ca.intensity.Override(0.7f);
+            ca.intensity.Override(0.25f);       // 0.7 fringed every line in the frame (play-through 2026-10-11)
             var vig = p.Add<Vignette>(true);
             vig.intensity.Override(0.45f);
             vig.smoothness.Override(0.4f);

@@ -41,31 +41,38 @@ namespace PoOlympic
             Load(MenuScene);
         }
 
-        static AsyncOperation _load;
+        static bool _loading;
         static float _loadAt;
         /// <summary>A load that has not finished after this long no longer blocks the next request (no dead end).</summary>
         public const float LoadTimeoutSeconds = 20f;
         /// <summary>A scene is on its way (callers that change state before Load check this first; HudAnchors shows
         /// its veil and takes no input meanwhile).</summary>
-        public static bool Loading => _load != null && !_load.isDone && Time.unscaledTime - _loadAt < LoadTimeoutSeconds;
+        public static bool Loading => _loading && Time.unscaledTime - _loadAt < LoadTimeoutSeconds;
 
-        /// <summary>The one place a scene is loaded, in the background (the old scene keeps drawing under the veil).
-        /// A second request while one is running (a double tap, the demo watchdog and the HUD countdown together) is
-        /// dropped: false.</summary>
+        /// <summary>The one place a scene is loaded. LoadScene switches at the next frame; until the new scene is in,
+        /// a second request (a double tap, the demo watchdog and the HUD countdown together) is dropped: false.
+        /// Not LoadSceneAsync: unloading an event scene in the background crashed Unity 6000.6 natively (GPU Resident
+        /// Drawer job, twice out of twice in StateFlowTests, 2026-10-11).</summary>
         public static bool Load(string scene)
         {
             if (Loading) return false;
-            _load = SceneManager.LoadSceneAsync(scene);      // null (and an error in the log) for a scene not in the build
+            if (!Application.CanStreamedLevelBeLoaded(scene)) { Debug.LogError($"[MeetLineup] scene '{scene}' is not in Build Settings"); return false; }
+            _loading = true;
             _loadAt = Time.unscaledTime;
-            return _load != null;
+            SceneManager.sceneLoaded -= OnLoaded;
+            SceneManager.sceneLoaded += OnLoaded;
+            SceneManager.LoadScene(scene);
+            return true;
         }
+
+        static void OnLoaded(Scene scene, LoadSceneMode mode) => _loading = false;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
         {
             Athletes = Enumerable.Repeat(Roster[0], 8).ToArray();
             EventNumber = 1;
-            _load = null;
+            _loading = false;
         }
     }
 

@@ -15,12 +15,12 @@ namespace PoOlympic
     [DefaultExecutionOrder(200)]
     public unsafe class ColliderXray : MonoBehaviour
     {
-        [Header("Unity primitives (sphere ⌀1, cylinder ⌀1 × 2, cube 1)")]
+        [Header("Unity primitives (any size: scaled by their bounds)")]
         public Mesh sphere;
         public Mesh cylinder, cube;
         [Tooltip("PoOlympic/Xray: drawn over everything.")]
         public Material material;
-        public Color rest = new(0.35f, 0.9f, 1f, 0.35f), loaded = new(1f, 0.25f, 0.15f, 0.75f), arrow = new(1f, 0.85f, 0.2f, 0.9f);
+        public Color rest = new(0.35f, 0.9f, 1f, 0.16f), loaded = new(1f, 0.25f, 0.15f, 0.75f), arrow = new(1f, 0.85f, 0.2f, 0.9f);
         [Tooltip("Contact force (N) at which a geom is fully `loaded`.")]
         public float fullForceN = 1500f;
         public float arrowMinN = 30f, arrowMetresPerKn = 0.5f, arrowMaxM = 1.5f;
@@ -60,7 +60,7 @@ namespace PoOlympic
                     if (m->body_weldid[m->geom_bodyid[c.geom2]] == 0) dir = -dir;
                     float len = Mathf.Min(arrowMaxM, fn * 0.001f * arrowMetresPerKn);
                     var at = new Vector3((float)c.pos[0], (float)c.pos[2], (float)c.pos[1]);
-                    Draw(cylinder, at + dir * (len * 0.5f), Quaternion.FromToRotation(Vector3.up, dir), new Vector3(0.024f, len * 0.5f, 0.024f), arrow);
+                    Draw(cylinder, at + dir * (len * 0.5f), Quaternion.FromToRotation(Vector3.up, dir), new Vector3(0.012f, len * 0.5f, 0.012f), arrow);
                 }
             }
 
@@ -74,7 +74,7 @@ namespace PoOlympic
                 var up = new Vector3((float)r[2], (float)r[8], (float)r[5]);
                 var rot = Quaternion.LookRotation(new Vector3((float)r[1], (float)r[7], (float)r[4]), up);
                 var color = Color.Lerp(rest, loaded, Mathf.Clamp01(_force[g] / fullForceN));
-                float rad = (float)s[0] * 2f, half = (float)s[1];
+                float rad = (float)s[0], half = (float)s[1];
                 switch (m->geom_type[g])
                 {
                     case Sphere: Draw(sphere, pos, rot, Vector3.one * rad, color); break;
@@ -84,15 +84,19 @@ namespace PoOlympic
                         Draw(sphere, pos - up * half, rot, Vector3.one * rad, color);
                         break;
                     case Cylinder: Draw(cylinder, pos, rot, new Vector3(rad, half, rad), color); break;
-                    case Ellipsoid: Draw(sphere, pos, rot, new Vector3(rad, (float)s[2] * 2f, half * 2f), color); break;
-                    case Box: Draw(cube, pos, rot, new Vector3(rad, (float)s[2] * 2f, half * 2f), color); break;
+                    case Ellipsoid: Draw(sphere, pos, rot, new Vector3(rad, (float)s[2], half), color); break;
+                    case Box: Draw(cube, pos, rot, new Vector3(rad, (float)s[2], half), color); break;
                 }
             }
         }
 
-        void Draw(Mesh mesh, Vector3 pos, Quaternion rot, Vector3 scale, Color color)
+        /// <param name="half">half extents wanted along the mesh's own axes (the mesh may be any size: the built-in
+        /// sphere and cylinder come at radius 1 here, not Unity's usual 0.5)</param>
+        void Draw(Mesh mesh, Vector3 pos, Quaternion rot, Vector3 half, Color color)
         {
             if (mesh == null) return;
+            var e = mesh.bounds.extents;
+            var scale = new Vector3(half.x / e.x, half.y / e.y, half.z / e.z);
             _block.SetColor(BaseColor, color);
             Graphics.DrawMesh(mesh, Matrix4x4.TRS(pos, rot, scale), material, 0, null, 0, _block, false, false);
             Drawn++;

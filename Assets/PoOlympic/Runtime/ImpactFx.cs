@@ -160,6 +160,7 @@ namespace PoOlympic
         void Mark(Vector3 at, Vector3 normal, float strength)
         {
             if (!GameSettings.ImpactMarks) return;
+            if (normal.sqrMagnitude > 0.01f && normal.y < 0.5f) return;      // a hit against a pole or a wall: nothing to mark
             if (decals == null || decals.Length == 0) { Burst(marks, ref _mark, at + Vector3.up * 0.012f, strength); return; }
             var d = decals[_decal];
             if (d == null) return;
