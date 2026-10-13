@@ -1574,4 +1574,7 @@ All on 4096 envs, 0 falls at every gate. G1 Rung 2, 10 seeds (bar 0.157 m/s = 0.
   shadow-free light on the athlete rendering layer, pointing up from the front (pitch -50, 0.5); menu "Update athlete
   fill lights (all scenes)" added it to the 15 event scenes (bakes untouched). Before / after on the phone:
   `SCREENSHOTS/android_lighting_2026-10-12/report.html`.
+- **More light (2026-10-13, user: "fix more").** `AthleteFill`: fourth athlete fill (`Fill_30`, 0.7), `Fill_300` 0.6 ->
+  0.9, `Fill_Up` 0.5 -> 0.7, and two shadow-free directional lights on the default layer (`Arena_45` / `Arena_225`,
+  0.35 each) in the 15 event scenes; realtime, bakes untouched. Phone: faces lit on both sides, 60 fps (report image 4).
 

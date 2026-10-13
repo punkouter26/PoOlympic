@@ -187,9 +187,24 @@ namespace PoOlympic.Editor
             // Fill_Up (user 2026-10-12, on the phone: "shadows are very dark, under the chin for example"): the two side
             // fills point 30 deg down, so everything that faces down or sits in a fold got only the dim probes. A third,
             // weaker one shines UP from the front. Added to a rig that lacks it; lights already there are left as tuned.
-            foreach (var (name, pitch, yaw, intensity) in new[] { ("Fill_120", 30f, 120f, 0.9f), ("Fill_300", 30f, 300f, 0.6f), ("Fill_Up", -50f, 210f, 0.5f) })
+            // 2026-10-13 ("fix more"): the far side of the faces and the stands were still near black on the phone. A
+            // fourth athlete fill closes the last quadrant (Fill_30), the weaker ones come up, and two soft shadow-free
+            // lights on the default layer (Arena_*) lift the whole arena — realtime, so nothing to rebake. `was` = the
+            // intensity this code gave before: a light still at that value is raised, one tuned by hand in a scene is kept.
+            foreach (var (name, pitch, yaw, intensity, was, layer) in new[]
+                     {
+                         ("Fill_120", 30f, 120f, 0.9f, 0.9f, AthleteLayer), ("Fill_300", 30f, 300f, 0.9f, 0.6f, AthleteLayer),
+                         ("Fill_Up", -50f, 210f, 0.7f, 0.5f, AthleteLayer), ("Fill_30", 20f, 30f, 0.7f, 0.7f, AthleteLayer),
+                         ("Arena_45", 55f, 45f, 0.35f, 0.35f, 1u), ("Arena_225", 55f, 225f, 0.35f, 0.35f, 1u),
+                     })
             {
-                if (rig.transform.Find(name) != null) continue;
+                var have = rig.transform.Find(name);
+                if (have != null)
+                {
+                    var hl = have.GetComponent<Light>();
+                    if (Mathf.Approximately(hl.intensity, was)) { hl.intensity = intensity; EditorUtility.SetDirty(hl); }
+                    continue;
+                }
                 var l = new GameObject(name).AddComponent<Light>();
                 l.transform.SetParent(rig.transform, false);
                 l.transform.rotation = Quaternion.Euler(pitch, yaw, 0f);
@@ -198,8 +213,8 @@ namespace PoOlympic.Editor
                 l.color = new Color(1f, 0.97f, 0.93f);
                 l.shadows = LightShadows.None;
                 l.lightmapBakeType = LightmapBakeType.Realtime;
-                l.renderingLayerMask = (int)AthleteLayer;
-                l.GetUniversalAdditionalLightData().renderingLayers = AthleteLayer;
+                l.renderingLayerMask = (int)layer;
+                l.GetUniversalAdditionalLightData().renderingLayers = layer;
             }
             var athletes = scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<SkinnedMeshRenderer>(true)).Cast<Renderer>()
                 .Concat(scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<PodiumCeremony>(true))
