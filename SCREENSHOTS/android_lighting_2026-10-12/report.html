@@ -1,0 +1,6 @@
+<!doctype html><meta charset="utf-8"><title>Android lighting, 12 Oct 2026</title>
+<style>body{font:15px system-ui;background:#111;color:#eee;margin:24px}figure{display:inline-block;width:30%;margin:0 1% 0 0;vertical-align:top}img{width:100%;border:1px solid #444}figcaption{padding:8px 0}b{color:#ffd23f}</style>
+<h1>Pixel 9 Pro: Event 1, same moment of the heat</h1>
+<figure><img src="1_black.png"><figcaption><b>1 Before.</b> Every lit surface is black (athletes, beam, floor). Only unlit things show: crowd, hair, sparks. Cause: the decal renderer feature on "Automatic" on the mobile renderer.</figcaption></figure>
+<figure><img src="2_decal_fixed.png"><figcaption><b>2 Mobile decals = Screen Space.</b> Lit surfaces render. Changed: athletes, beam, floor, stands visible. Still wrong: under the chin, the neck and the folds of the suit are black.</figcaption></figure>
+<figure><img src="3_fill_up.png"><figcaption><b>3 Third athlete fill light, shining up from the front (0.5).</b> Changed: chin, neck and the undersides of arms and folds are lit; the suits read lighter. The stadium is not affected by this light.</figcaption></figure>

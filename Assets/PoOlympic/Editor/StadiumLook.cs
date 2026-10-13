@@ -178,29 +178,53 @@ namespace PoOlympic.Editor
         /// </summary>
         public static int AthleteFill(UnityEngine.SceneManagement.Scene scene)
         {
-            if (!scene.GetRootGameObjects().Any(g => g.name == "AthleteFill"))
+            var rig = scene.GetRootGameObjects().FirstOrDefault(g => g.name == "AthleteFill");
+            if (rig == null)
             {
-                var rig = new GameObject("AthleteFill");
+                rig = new GameObject("AthleteFill");
                 UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(rig, scene);
-                foreach (var (yaw, intensity) in new[] { (120f, 0.9f), (300f, 0.6f) })
-                {
-                    var l = new GameObject($"Fill_{yaw:0}").AddComponent<Light>();
-                    l.transform.SetParent(rig.transform, false);
-                    l.transform.rotation = Quaternion.Euler(30f, yaw, 0f);
-                    l.type = LightType.Directional;
-                    l.intensity = intensity;
-                    l.color = new Color(1f, 0.97f, 0.93f);
-                    l.shadows = LightShadows.None;
-                    l.lightmapBakeType = LightmapBakeType.Realtime;
-                    l.renderingLayerMask = (int)AthleteLayer;
-                    l.GetUniversalAdditionalLightData().renderingLayers = AthleteLayer;
-                }
+            }
+            // Fill_Up (user 2026-10-12, on the phone: "shadows are very dark, under the chin for example"): the two side
+            // fills point 30 deg down, so everything that faces down or sits in a fold got only the dim probes. A third,
+            // weaker one shines UP from the front. Added to a rig that lacks it; lights already there are left as tuned.
+            foreach (var (name, pitch, yaw, intensity) in new[] { ("Fill_120", 30f, 120f, 0.9f), ("Fill_300", 30f, 300f, 0.6f), ("Fill_Up", -50f, 210f, 0.5f) })
+            {
+                if (rig.transform.Find(name) != null) continue;
+                var l = new GameObject(name).AddComponent<Light>();
+                l.transform.SetParent(rig.transform, false);
+                l.transform.rotation = Quaternion.Euler(pitch, yaw, 0f);
+                l.type = LightType.Directional;
+                l.intensity = intensity;
+                l.color = new Color(1f, 0.97f, 0.93f);
+                l.shadows = LightShadows.None;
+                l.lightmapBakeType = LightmapBakeType.Realtime;
+                l.renderingLayerMask = (int)AthleteLayer;
+                l.GetUniversalAdditionalLightData().renderingLayers = AthleteLayer;
             }
             var athletes = scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<SkinnedMeshRenderer>(true)).Cast<Renderer>()
                 .Concat(scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<PodiumCeremony>(true))
                     .SelectMany(p => p.statueSlots).SelectMany(s => s.GetComponentsInChildren<MeshRenderer>(true))).ToArray();
             foreach (var r in athletes) { r.renderingLayerMask |= AthleteLayer; EditorUtility.SetDirty(r); }
             return athletes.Length;
+        }
+
+        /// <summary>Athlete fill rig of every built scene brought up to date (adds missing lights; baked lighting untouched).</summary>
+        [MenuItem("PoOlympic/Stadium/Update athlete fill lights (all scenes)")]
+        public static string AthleteFillAllScenes()
+        {
+            var report = new System.Text.StringBuilder();
+            foreach (var guid in AssetDatabase.FindAssets("t:Scene", new[] { "Assets/PoOlympic/Scenes" }))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(path, UnityEditor.SceneManagement.OpenSceneMode.Single);
+                if (!scene.GetRootGameObjects().Any(g => g.name == "AthleteFill")) continue;
+                int n = AthleteFill(scene);
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+                UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
+                report.Append($"{Path.GetFileNameWithoutExtension(path)}: {n}; ");
+            }
+            Debug.Log("[AthleteFill] " + report);
+            return report.ToString();
         }
 
         /// <summary>Re-light every built scene that holds a placed stadium (indoor arena), without rebuilding it.</summary>

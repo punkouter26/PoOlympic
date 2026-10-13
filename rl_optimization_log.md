@@ -1560,4 +1560,18 @@ All on 4096 envs, 0 falls at every gate. G1 Rung 2, 10 seeds (bar 0.157 m/s = 0.
   - **Zombie z2c_v1, MATT r2c_v2 (second stage):** queued, not run (`#stop`).
 - **Not deployed.** Open (user): MATT r2c_v1 it 350 trades ~4 % top speed for 4-5x fewer contact falls; KIM / GRANDMA
   need a gentler bump (their gate degrades after 100 its) or true multi-athlete envs.
+- **Android deploy (23:50, Pixel 9 Pro): lit surfaces black, fixed.** Two causes. (1) `UberPost` "stripped from the
+  build": the committed `UniversalRenderPipelineGlobalSettings.asset` had an EMPTY `m_RuntimeSettings` list (left by a
+  `git checkout` of that file after an earlier build); the build repopulates it, and the next build from the populated
+  file ships the post-processing shaders — WRONG, see the correction below. (2) The decal renderer feature (BroadcastFx scuff
+  marks, 2026-10-12) on technique Automatic takes the DBuffer path on the phone and every lit material renders black
+  (crowd / hair / particles still show). `Mobile_Renderer` decal technique = Screen Space (`EnsureDecalFeature` sets
+  it). Verified on device: Event 1 renders, 60 fps.
+  Correction (00:10): the stripped `UberPost` came back on the 4th build with the populated file. What the two bad
+  builds share: they were started with the editor on the Windows target (the build switched platform itself); the
+  three good ones started on Android. `AndroidBuild.BuildScenes` now switches first and asks for a second call.
+- **Athlete under-light (user, phone: "shadows very dark, under the chin").** `StadiumLook.AthleteFill` adds a third
+  shadow-free light on the athlete rendering layer, pointing up from the front (pitch -50, 0.5); menu "Update athlete
+  fill lights (all scenes)" added it to the 15 event scenes (bakes untouched). Before / after on the phone:
+  `SCREENSHOTS/android_lighting_2026-10-12/report.html`.
 

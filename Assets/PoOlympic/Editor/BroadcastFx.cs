@@ -476,7 +476,16 @@ namespace PoOlympic.Editor
             foreach (var path in new[] { "Assets/Settings/PC_Renderer.asset", "Assets/Settings/Mobile_Renderer.asset" })
             {
                 var data = AssetDatabase.LoadAssetAtPath<ScriptableRendererData>(path);
-                if (data == null || data.rendererFeatures.Any(f => f is DecalRendererFeature)) continue;
+                if (data == null) continue;
+                // Phone (2026-10-12, Pixel 9 Pro, Vulkan): technique Automatic picks the DBuffer path and every lit
+                // surface renders black. Mobile = Screen Space (2), which leaves the lit shaders alone.
+                if (path.Contains("Mobile") && data.rendererFeatures.FirstOrDefault(f => f is DecalRendererFeature) is { } have)
+                {
+                    var fso = new SerializedObject(have);
+                    fso.FindProperty("m_Settings.technique").intValue = 2;
+                    fso.ApplyModifiedProperties();
+                }
+                if (data.rendererFeatures.Any(f => f is DecalRendererFeature)) continue;
                 var feature = ScriptableObject.CreateInstance<DecalRendererFeature>();
                 feature.name = "Decal";
                 AssetDatabase.AddObjectToAsset(feature, data);

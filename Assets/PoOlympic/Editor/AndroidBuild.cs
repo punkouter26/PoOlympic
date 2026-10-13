@@ -94,6 +94,17 @@ namespace PoOlympic.Editor
 
         static string BuildScenes(string[] scenes, string apkPath)
         {
+            // A build started from another platform (the editor on Windows) ships without URP's post-processing shaders
+            // ("UberPost ... has been stripped": blank 3D view on the phone, 2026-10-12, twice; builds started on the
+            // Android target were fine). So: switch first and let the caller build again once the editor has reloaded.
+            if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
+            {
+                EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
+                const string again = "SWITCHED the editor to Android — run the build again";
+                Directory.CreateDirectory("Builds/Android");
+                File.WriteAllText("Builds/Android/last_build.txt", again);
+                return again;
+            }
             ConfigurePlugins();
             PlayerSettings.SetScriptingBackend(UnityEditor.Build.NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
