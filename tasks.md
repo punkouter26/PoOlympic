@@ -148,8 +148,12 @@ Rules: every surface an athlete can touch is a MuJoCo geom generated into the MJ
   8 crawl lanes 1.1 m (`scene_crawl8`, DNF by distance) · 11 mirror slalom (1.4 m lanes, 1.6 m/s) · 12 spin ring 0.75 m
   (DQ 0.75 m) · 19 lane break at 15 m (field squeezes to 0.61 m). Verified: `tools/check_crowd_contacts.py` (16,184/16,184
   part pairs per scene, all-MATT + mixed) + Unity `CrowdContactTests` 11/11; odds refitted; tuning in rl_optimization_log.md.
-  - [ ] optional crowd training run (2-4 colliding athletes per env) if contact falls feel too frequent (19, 11)
-  - [ ] mixed lineups: the zombie is narrower, so 11 and 19 see little MATT↔zombie contact
+  - [ ] crowd training (2026-10-12, partly): bump fine-tune (`add_crowd_bumps`, `*-Rung2-Crowd` tasks) instead of
+    2-4 athletes per env. MATT r2c_v1 it 350: all-MATT sprint falls 3.2 -> 0.7 / heat, G1 10/10, ~4 % slower — NOT
+    deployed (user decision). KIM / GRANDMA lose G1 after 100 its with no gain; zombie not run. See the log.
+  - [x] mixed lineups (2026-10-12): Event 19 pack rule (`track.pack_target` ≡ `TrackRaceEvent.BreakSteer`) — runners
+    line up beside whoever is alongside; mixed lineups 0.1-0.4 -> 10-27 pair-s of contact per heat
+    (`tools/crowd_heats.py`). Slalom left alone (tactician keeps contact < 1 pair-s by design).
 
 ## Phase E — The 30 Olympic Events (catalogue, added 2026-09-27)
 

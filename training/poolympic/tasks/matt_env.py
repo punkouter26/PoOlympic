@@ -773,3 +773,21 @@ def add_bio_limits(cfg: ManagerBasedRlEnvCfg, init_level_max: float = 0.8) -> Ma
     for group in ("actor", "critic"):
         cfg.observations[group].terms["fatigue"] = ObservationTermCfg(func=mdp.obs_fatigue, params={})
     return cfg
+
+
+def add_crowd_bumps(cfg: ManagerBasedRlEnvCfg, mass_scale: float = 1.0) -> ManagerBasedRlEnvCfg:
+    """Crowd fine-tune (2026-10-12): the bumps of a race in a pack. The brains were trained alone (root velocity kicks
+    + a dropped cube); in the 8-athlete sprint a shoulder-to-shoulder runner floors them (tools/crowd_heats.py: 1.5-3.2
+    falls per heat with contact, 0 without). Measured athlete-athlete contacts in those heats (MATT): peak 170-500 N
+    (quartiles; 90 % under 1200 N) for 0.03-0.25 s, 3-36 N s, on the forearms (35 %), upper arms and chest. Here: a
+    constant force of up to +-300 N x mass_scale per axis for 0.03-0.25 s on each forearm and on the chest, each on its
+    own timer every 1.5-4 s (mjlab apply_body_impulse). No new observation or reward; play configs (no shoves) get none."""
+    if "push_robot" not in cfg.events:
+        return cfg
+    f = 300.0 * mass_scale
+    for body in ("forearm_l", "forearm_r", "chest"):
+        cfg.events[f"bump_{body}"] = EventTermCfg(
+            func=envs_mdp.apply_body_impulse, mode="step",
+            params={"force_range": (-f, f), "torque_range": (0.0, 0.0), "duration_s": (0.03, 0.25), "cooldown_s": (1.5, 4.0),
+                    "asset_cfg": SceneEntityCfg("robot", body_names=(body,))})
+    return cfg

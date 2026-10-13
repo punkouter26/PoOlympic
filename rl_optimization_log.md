@@ -1527,3 +1527,37 @@ All on 4096 envs, 0 falls at every gate. G1 Rung 2, 10 seeds (bar 0.157 m/s = 0.
   the reach radius (open since 2026-10-02).
 - **Per-event stance brains today:** squat 10/10 (rs_v6 it 2550 / rs_v8 it 1199), flamingo 10/10 (rs_v6 it 2550),
   march 10/10 (rs_v8 it 1199), torso 7/10 (range), reach 0-1/10 (radius). Nothing new deployed.
+
+## 2026-10-12 (evening) · Crowd contact: collision re-check, pack rule for Event 19, crowd fine-tune (nothing deployed)
+- **Collision re-check (user: "verify players collide and cannot intersect each other's mesh").** Detection: audit
+  32/32 scene lineups, Unity `CrowdContactTests` 15/15, roster / mattbio scenes 100 % of cross-lane part pairs.
+  Depth (new, scratch measurement): the colliders sit inside the skin (38-49 % of skin vertices outside; median 8-19
+  mm, p95 26-55 mm, worst 51-115 mm at shoulders / GRANDMA's hands) and contacts are MuJoCo-default soft: a standing
+  athlete thrown sideways into another overlaps 17 / 24 / 34 mm (median) at 1 / 2 / 6 m/s, worst 59-72 mm (forearm on
+  forearm), no part fully through another below 12 m/s. Left as is (a fix = new model version).
+- **`tools/crowd_heats.py` (new):** CPU heats of 19 and 11 per lineup, each seed with crowd contact on and off; falls,
+  finishers, pair-seconds by body pair. Old lane break (lines at half their distance to lane 1), 6 heats: all-MATT 2.3
+  falls / heat with contact, 0 without; mixed lineups 0 falls and 0.1-0.4 pair-s. The cause is speed, not width: the
+  field splits into same-body pairs (MATT 4.0, KIM 3.7, zombie 2.9, GRANDMA 2.8 m/s) that run 4 lanes = 2.4 m apart.
+  Slalom: 0-0.2 falls / heat and < 1 pair-s in every lineup (the tactician yields) — left alone.
+- **Pack rule (Event 19, `track.pack_target` = C# `TrackRaceEvent.BreakSteer`):** past the break a runner lines up
+  outside every racing runner of a lower lane within 1.5 m of it along the track, 0.953 x the two half-widths apart
+  (half-width = widest collider at the start pose; two MATTs 0.61 m as before). Falls / heat and pair-s, deployed
+  brains: all-MATT 3.2 (11.5), MATT / zombie 2.0 (10.4), + GRANDMA 2.3 (27), + KIM 1.5 (11); 0 with contact off. Every
+  body is floored by a bump; they get up (7.2-8 of 8 finish). Unity: plays, half-width 0.320 m = Python, leaders pack
+  ~0.6 m apart. Pre-existing, seen in both: a runner that falls strays 10-24 m off the track after getting up.
+- **Crowd fine-tune (`matt_env.add_crowd_bumps`, tasks `PoOlympic-<Body>-Rung2-Crowd`):** the deployed Rung 2 recipe +
+  mjlab `apply_body_impulse` on each forearm and the chest (up to +-300 N x mass scale per axis, 0.03-0.25 s, every
+  1.5-4 s each; measured race bumps: peak 170-500 N, 0.03-0.25 s, 35 % on forearms), KL 0.004, entropy 0.001, 400 its.
+  This is a proxy for 2-4 colliding athletes per env, judged on real 8-athlete heats.
+  - **MATT r2c_v1** (from rung2.onnx via onnx_to_checkpoint): G1 10/10 at every checkpoint but it 300 (9/10). All-MATT
+    sprint falls / heat 3.2 -> 2.5 (it 100) -> 1.7 (it 200) -> **0.7 (it 350)**. Cost at it 350 (event heats vs the
+    deployed brain): peak 4.04 -> 3.89 m/s, inverted sprint 14.9 -> 15.5 s, crab 18.3 -> 21.2 s, slalom 24.8 -> 27.4 s.
+  - **KIM k2c_v1:** G1 10/10 at it 50 / 100, then 8 -> 3/10 by it 399 (no falls, speed tracking). it 100 in the mixed
+    sprint: 1 -> 0 falls in 6 heats (noise level).
+  - **GRANDMA g2c_v1:** G1 10/10 at it 100, 4/10 by it 300 (stopped at the user's request at it ~340). it 100: 6 -> 7
+    falls, no gain.
+  - **Zombie z2c_v1, MATT r2c_v2 (second stage):** queued, not run (`#stop`).
+- **Not deployed.** Open (user): MATT r2c_v1 it 350 trades ~4 % top speed for 4-5x fewer contact falls; KIM / GRANDMA
+  need a gentler bump (their gate degrades after 100 its) or true multi-athlete envs.
+

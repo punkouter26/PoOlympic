@@ -2,10 +2,10 @@
 
   dash      (8  The 30m Dash)          sprint 30 m from standstill; rank by finish time
   terminal  (19 Terminal Velocity)     open 84.39 m sprint (back straight) at the maximum trained command; rank by peak 1 s speed.
-                                       Lane break (crowd rule, 2026-09-30): past BREAK_X the field squeezes to the
-                                       inside (lane 1 = the runner's left): every runner's line moves to SQUEEZE x its
-                                       distance from the inside lane (1.22 -> 0.61 m apart: shoulder to shoulder),
-                                       merging at most MERGE_DEG off straight (break_target)
+                                       Lane break (crowd rule, 2026-09-30; pack rule 2026-10-12): past BREAK_X the
+                                       field squeezes to the inside (lane 1 = the runner's left): every runner lines up
+                                       shoulder to shoulder with the runners alongside it (pack_target; two MATTs
+                                       0.61 m apart), merging at most MERGE_DEG off straight
   brake     (22 Emergency Brake)       run in at BRAKE_VX, each runner brakes (command 0) when its pelvis is BRAKE_TRIGGER
                                        metres before the red line; must stop without crossing it (toe past the line =
                                        DQ); rank by the gap left to the line
@@ -58,9 +58,6 @@ MODES = {
 SUPINE_Z = 0.22       # m x the body's height scale — resurrection: pelvis height lying on the back (tools/getup_probe.py)
 BREAK_X = 15.0        # m — terminal: the green lane-break line
 MERGE_DEG = 12.0      # terminal: largest heading off straight while merging (lateral ~0.8 m/s at 4 m/s)
-SQUEEZE = 0.5         # terminal: lines after the break = inside + SQUEEZE x (lane line - inside). Tuned on CPU: one
-                      # shared inside line gave rear-end pile-ups (2-6 of 8 down, slower zombies run over); 0.5 = steady
-                      # shoulder contact, 1-3 MATTs down; 0.45 = 2-5 down
 MIN_FLIGHT = 0.02     # s — steeple: both feet off the ground at least this long = a flight (contact chatter ignored)
 LANE_HALF = 0.61      # m — inverted sprint: pelvis further than this from the lane centre line = DQ (lane drift)
 BRAKE_NERVE = (1.4, 2.2)   # m before the line at which a runner hits the brakes — per-runner "nerve" (seeded); the
@@ -121,9 +118,34 @@ class Recovery:
         return self.down[i]
 
 
-def break_target(lane_y: float, inside_y: float) -> float:
-    """Terminal lane break: the line a runner steers for after BREAK_X (race frame y, +y = inside)."""
-    return inside_y - SQUEEZE * (inside_y - lane_y)
+PACK = 0.61 / 0.64    # terminal, pack rule: lines of two runners side by side = PACK x the sum of their half-widths apart
+                      # (two MATTs, 0.32 m each: 0.61 m = half a 1.22 m lane. Tuned on CPU 2026-09-30 as fixed
+                      # lines: one shared inside line gave rear-end pile-ups, 2-6 of 8 down; 0.61 m = steady
+                      # shoulder contact, 1-3 MATTs down; 0.55 m = 2-5 down)
+PACK_X = 1.5          # m — "side by side": within this distance along the track
+
+
+def half_width(m, d, ln) -> float:
+    """Half the width of a standing athlete: its widest collider (the forearms) from the pelvis line, at the start pose."""
+    y0 = d.qpos[ln.ath.root_qposadr + 1]
+    return max(abs(d.geom_xpos[g][1] - y0) + (m.geom_size[g][1] if m.geom_type[g] == mujoco.mjtGeom.mjGEOM_BOX else m.geom_size[g][0])
+               for g in range(m.ngeom) if m.body_rootid[m.geom_bodyid[g]] == ln.pelvis)
+
+
+def pack_target(i: int, xs: list[float], racing: list[bool], hw: list[float], inside_y: float) -> float:
+    """Terminal lane break, pack rule (2026-10-12; = C# TrackRaceEvent.PackTarget): the field closes up on the inside
+    line shoulder to shoulder — but only with the runners actually alongside. Runner i lines up outside every racing
+    runner of a lower lane (lane 0 = the inside) within PACK_X of it along the track, PACK x their half-widths apart.
+    A level field of 8 MATTs gets lines 0.61 m apart (the rule before: every line at half its distance to lane 1); a
+    mixed field, which splits up by speed (MATT 4.0, KIM 3.7, zombie 2.9, GRANDMA 2.8 m/s) and ran 2.4 m apart under
+    that rule, runs in shoulder-to-shoulder groups."""
+    y, prev = inside_y, None
+    for j in range(i + 1):
+        if j == i or (racing[j] and abs(xs[j] - xs[i]) < PACK_X):
+            if prev is not None:
+                y -= PACK * (hw[prev] + hw[j])
+            prev = j
+    return y
 
 
 def merge_offset(y: float, target: float) -> float:
@@ -209,8 +231,12 @@ def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = Non
         mujoco.mj_forward(m, d)
     tick = 0
     inside_y = max(float(ln.origin[1]) for ln in lanes)        # lane 1 (the runner's left) = the inside
+    assert [ln.k for ln in lanes] == sorted(ln.k for ln in lanes) and inside_y == float(lanes[0].origin[1])
+    hw = [half_width(m, d, ln) for ln in lanes]
     while tick * dt < cfg["max_s"]:
         t = tick * dt
+        xs = [float(d.qpos[ln.ath.root_qposadr] - ln.origin[0]) for ln in lanes]       # positions at the tick start
+        alongside = [not res[i].status and not rec.down[i] for i in range(len(lanes))]
         for i, ln in enumerate(lanes):
             r = res[i]
             if rec.control(i, d):
@@ -231,7 +257,8 @@ def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = Non
                 q = d.qpos[ra + 3: ra + 7]
                 off = d.qpos[ra + 1] - ln.origin[1]
                 if mode == "terminal" and x >= BREAK_X:
-                    off = merge_offset(d.qpos[ra + 1], break_target(float(ln.origin[1]), inside_y))
+                    target = pack_target(i, xs, alongside, hw, inside_y)
+                    off = merge_offset(d.qpos[ra + 1], target)
                 cmd = np.array([cfg["vx"], 0.0, C.steer_yaw_rate(q, off, cfg["vx"])])
             ln.control(ln.sess, d, cmd)
         for s in range(C.DECIMATION):

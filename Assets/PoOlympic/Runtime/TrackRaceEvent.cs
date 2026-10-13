@@ -10,9 +10,9 @@ namespace PoOlympic
     /// Straight-track races for 8 runners (Rung 2 brain) — mirror of training/poolympic/events/track.py:
     ///   Dash      (8  The 30m Dash)        sprint `distance` from standstill; rank by finish time
     ///   Terminal  (19 Terminal Velocity)   open sprint of the back straight at the max trained command; rank by peak 1 s speed.
-    ///                                      Lane break (track.py break_target): past breakX the field squeezes to the
-    ///                                      inside (the runner's left): each line moves to `squeeze` × its distance from
-    ///                                      lane 1 (1.22 → 0.61 m apart), at most mergeDeg off straight — shoulder to shoulder
+    ///                                      Lane break (track.py pack_target): past breakX the field squeezes to the
+    ///                                      inside (the runner's left): each runner lines up next to the runners alongside
+    ///                                      it (two MATTs 0.61 m apart), at most mergeDeg off straight — shoulder to shoulder
     ///   Brake     (22 Emergency Brake)     run in at 3 m/s; each runner brakes (command 0) at its seeded "nerve" distance
     ///                                      before the red line; toe past the line = DQ; rank by the gap left
     ///   Inverted  (9  The Inverted Sprint)  20 m backwards (command vx &lt; 0; runners face away from the finish, the scene
@@ -47,7 +47,7 @@ namespace PoOlympic
             [NonSerialized] public string status = "";
             [NonSerialized] public float finishS = -1, peakMps, gapM = float.NaN, nerveM, x, v, y;            [NonSerialized] public bool braking;
             [NonSerialized] public int place, tumbles, torsoId = -1;
-            [NonSerialized] public float standT, lambda = 1f;
+            [NonSerialized] public float standT, lambda = 1f, halfWidth;   // halfWidth: lane break (track.py half_width)
             [NonSerialized] public bool wasOnFours;
             [NonSerialized] public FootGait gait;
             [NonSerialized] public bool down;                  // recovery: fallen, the get-up brain is driving
@@ -70,9 +70,9 @@ namespace PoOlympic
         public Vector2 brakeNerve = new(1.4f, 2.2f);
         public float toeAhead = 0.25f, stoppedSpeed = 0.1f, laneHalf = 0.61f;
         public float countdownSeconds = 3f, resultHoldSeconds = 6f;
-        [Header("Terminal lane break (= track.py BREAK_X, MERGE_DEG, SQUEEZE)")]
+        [Header("Terminal lane break (= track.py BREAK_X, MERGE_DEG, PACK, PACK_X)")]
         public bool laneBreak = true;
-        public float breakX = 15f, mergeDeg = 12f, squeeze = 0.5f;
+        public float breakX = 15f, mergeDeg = 12f, pack = 0.61f / 0.64f, packX = 1.5f;
         [Header("Steeplechase (= track.py steeple)")]
         public float minFlight = 0.02f;
         [Header("All fours (= all_fours.py)")]
@@ -159,6 +159,7 @@ namespace PoOlympic
                     r.torsoId = ModelFingerprint.Id(m, (int)MujocoLib.mjtObj.mjOBJ_BODY, r.runner.athletePrefix + "torso");
                     double k = r.runner.Contract.SpeedScale;
                     r.lambda = (float)(k * k);
+                    r.halfWidth = HalfWidth(r);     // first frame: still in the contract's default pose, as track.py measures it
                 }
             }
             if (_traitsPending) { DrawTraits(); _traitsPending = false; }
@@ -324,16 +325,43 @@ namespace PoOlympic
         }
         void Stand(Runner r) { r.runner.command = Vector3.zero; r.runner.laneKeeping = false; r.runner.steer = null; }
 
+        /// <summary>Half the width of a standing athlete: its widest collider (the forearms) from the pelvis line
+        /// (= track.py half_width).</summary>
+        unsafe float HalfWidth(Runner r)
+        {
+            var m = MjScene.Instance.Model;
+            var d = MjScene.Instance.Data;
+            int pelvis = AthleteBinding.NameIndex(m, (int)MujocoLib.mjtObj.mjOBJ_BODY, (int)m->nbody)[r.runner.Binding.Prefix + "pelvis"];
+            double y0 = d->qpos[r.runner.Binding.RootQposAdr + 1], w = 0;
+            for (int g = 0; g < (int)m->ngeom; g++)
+            {
+                if (m->body_rootid[m->geom_bodyid[g]] != pelvis) continue;
+                double size = m->geom_size[3 * g + (m->geom_type[g] == (int)MujocoLib.mjtGeom.mjGEOM_BOX ? 1 : 0)];
+                w = Math.Max(w, Math.Abs(d->geom_xpos[3 * g + 1] - y0) + size);
+            }
+            return (float)w;
+        }
+
         /// <summary>Terminal lane break (PolicyRunner.steer, every control tick after lane keeping): past breakX, steer for
-        /// the squeezed line (track.py break_target) through the contract law with the offset capped at mergeDeg (track.py
-        /// merge_offset). x = progress from this runner's lane origin.</summary>
+        /// the pack line (track.py pack_target) through the contract law with the offset capped at mergeDeg (track.py
+        /// merge_offset). Pack rule: the runner lines up outside every racing runner of a lower lane (the inside) that is
+        /// within packX of it along the track, pack × their half-widths apart — the field closes up shoulder to shoulder
+        /// with whoever is alongside (`runners` is in lane order). x = progress from this runner's lane origin.</summary>
         unsafe Vector3 BreakSteer(Runner me, double x, double yaw, Vector3 cmd)
         {
             if (x < breakX) return cmd;
             var d = MjScene.Instance.Data;
             double myY = d->qpos[me.runner.Binding.RootQposAdr + 1];
-            double inside = runners.Max(o => o.runner.laneOriginY);
-            double target = inside - squeeze * (inside - me.runner.laneOriginY);
+            double target = runners[0].runner.laneOriginY;
+            Runner prev = null;
+            foreach (var o in runners)
+            {
+                bool alongside = o.Racing && !o.down && Math.Abs(d->qpos[o.runner.Binding.RootQposAdr] - o.runner.laneOriginX - x) < packX;
+                if (o != me && !alongside) continue;
+                if (prev != null) target -= pack * (prev.halfWidth + o.halfWidth);
+                prev = o;
+                if (o == me) break;
+            }
             double cap = Math.Tan(mergeDeg * Math.PI / 180.0) / me.runner.Contract.steering.lane_gain;
             double off = Math.Clamp(myY - target, -cap, cap);
             cmd.z = (float)me.runner.Contract.SteerYawRateFromYaw(yaw, off, cmd.x);

@@ -224,3 +224,16 @@ def test_resurrection_dash_rises_and_sprints():
     assert kim and all(l.status == "FINISHED" and 2.0 < l.finish_s < 15.0 for l in kim)
     assert all(l.status == "DNF" for l in res.lanes if l.body != "kim")
     assert sorted(l.place for l in kim) == [1, 2]
+
+
+def test_terminal_pack_lines():
+    from poolympic.events import track
+    hw, level = [0.32] * 8, [10.0] * 8
+    lines = [track.pack_target(i, level, [True] * 8, hw, 3.66) for i in range(8)]
+    assert lines == pytest.approx([3.66 - 0.61 * i for i in range(8)])       # level MATTs: 0.61 m apart
+    # lanes 0 and 4 level, the rest far behind or down: the two run shoulder to shoulder on the inside
+    xs = [40.0, 30.0, 30.0, 30.0, 40.5, 30.0, 30.0, 40.2]
+    racing = [True] * 7 + [False]
+    assert track.pack_target(0, xs, racing, hw, 3.66) == pytest.approx(3.66)
+    assert track.pack_target(4, xs, racing, hw, 3.66) == pytest.approx(3.05)
+    assert track.pack_target(3, xs, racing, hw, 3.66) == pytest.approx(3.66 - 2 * 0.61)   # third in its own group

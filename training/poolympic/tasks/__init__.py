@@ -729,6 +729,29 @@ if bodies.current().name == "zombie":
     _register_fast("PoOlympic-Zombie-Rung2-Ramp", zombie_rung2_ramp_env_cfg, "zombie_rung2", 300, SymmetricRunner)
 
 
+if bodies.current().name in ("matt", "zombie", "grandma", "kim"):
+    # 2026-10-12 crowd fine-tune: each roster body's DEPLOYED Rung 2 recipe + the bumps of a race in a pack
+    # (matt_env.add_crowd_bumps). Small steps as the zombie polish (KL 0.004, entropy 0.001), a checkpoint every 50.
+    def _crowd():
+        from .matt_env import add_crowd_bumps, matt_ppo_cfg
+        from .symmetry import SymmetricRunner
+        body = bodies.current()
+        if body.name == "matt":
+            from .matt_env import matt_rung2_sym5_env_cfg as base
+        elif body.name == "zombie":
+            from .zombie_env import zombie_rung2_polish_env_cfg as base
+        elif body.name == "grandma":
+            from .grandma_env import grandma_rung2_bands_env_cfg as base
+        else:
+            from .kim_env import kim_rung2_bands2_env_cfg as base
+        rl = matt_ppo_cfg(f"{body.name}_rung2", max_iterations=400)
+        rl.algorithm.entropy_coef, rl.algorithm.desired_kl, rl.save_interval = 0.001, 0.004, 50
+        cfg = add_crowd_bumps(base(), body.mass_scale)
+        cfg.scene.num_envs = 4096              # MATT's September recipe builds one env unless the CLI says otherwise
+        register_mjlab_task(task_id=f"PoOlympic-{body.name.capitalize()}-Rung2-Crowd", env_cfg=cfg,
+                            play_env_cfg=base(play=True), rl_cfg=rl, runner_cls=SymmetricRunner)
+    _crowd()
+
 # ---- registry hygiene -------------------------------------------------------------------------------------------------
 # Task IDs whose recipe a later ID of the same body and skill replaced, or that were tried and dropped. They stay
 # registered (old runs, the queue and the log refer to them) and build exactly what they always built; do not start new
