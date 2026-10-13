@@ -776,7 +776,7 @@ def add_bio_limits(cfg: ManagerBasedRlEnvCfg, init_level_max: float = 0.8) -> Ma
 
 
 def add_crowd_bumps(cfg: ManagerBasedRlEnvCfg, mass_scale: float = 1.0, force: float = 300.0,
-                    play: bool | None = None) -> ManagerBasedRlEnvCfg:
+                    play: bool | None = None, cooldown_s: tuple[float, float] = (1.5, 4.0)) -> ManagerBasedRlEnvCfg:
     """Crowd fine-tune (2026-10-12): the bumps of a race in a pack. The brains were trained alone (root velocity kicks
     + a dropped cube); in the 8-athlete sprint a shoulder-to-shoulder runner floors them (tools/crowd_heats.py: 1.5-3.2
     falls per heat with contact, 0 without). Measured athlete-athlete contacts in those heats (MATT): peak 170-500 N
@@ -789,6 +789,6 @@ def add_crowd_bumps(cfg: ManagerBasedRlEnvCfg, mass_scale: float = 1.0, force: f
     for body in ("forearm_l", "forearm_r", "chest"):
         cfg.events[f"bump_{body}"] = EventTermCfg(
             func=envs_mdp.apply_body_impulse, mode="step",
-            params={"force_range": (-f, f), "torque_range": (0.0, 0.0), "duration_s": (0.03, 0.25), "cooldown_s": (1.5, 4.0),
+            params={"force_range": (-f, f), "torque_range": (0.0, 0.0), "duration_s": (0.03, 0.25), "cooldown_s": cooldown_s,
                     "asset_cfg": SceneEntityCfg("robot", body_names=(body,))})
     return cfg

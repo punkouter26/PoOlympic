@@ -758,6 +758,13 @@ if bodies.current().name in ("matt", "zombie", "grandma", "kim"):
         rl.algorithm.entropy_coef, rl.algorithm.desired_kl, rl.save_interval = 0.001, 0.004, 50
         cfg = add_crowd_bumps(base(), body.mass_scale)
         cfg.scene.num_envs = 4096              # MATT's September recipe builds one env unless the CLI says otherwise
+        # Crowd2 (2026-10-13): r2c_v1 made MATT robust (sprint falls 3.2 -> 0.7 per heat) but ~4 % slower, and KIM's /
+        # GRANDMA's G1 fell from 10/10 to 3-4/10 after 100 its: a bump on one of three sites every ~1 s is far more than
+        # a race gives (a runner is bumped a few times per heat). Same recipe, 2/3 of the force, each site every 4-10 s.
+        cfg2 = add_crowd_bumps(base(), body.mass_scale, force=200.0, cooldown_s=(4.0, 10.0))
+        cfg2.scene.num_envs = 4096
+        register_mjlab_task(task_id=f"PoOlympic-{body.name.capitalize()}-Rung2-Crowd2", env_cfg=cfg2,
+                            play_env_cfg=base(play=True), rl_cfg=rl, runner_cls=SymmetricRunner)
         register_mjlab_task(task_id=f"PoOlympic-{body.name.capitalize()}-Rung2-Crowd", env_cfg=cfg,
                             play_env_cfg=base(play=True), rl_cfg=rl, runner_cls=SymmetricRunner)
     _crowd()
