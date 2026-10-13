@@ -135,7 +135,7 @@ def test_trench_crawl_heat():
     assert all(12.0 < l.finish_s < 30.0 for l in finished)
 
 
-SQUAT_BRAIN = C.ROOT.parent / "parity" / "brains" / "rs_v6_it3299.onnx"
+SQUAT_BRAIN = C.ROOT.parent / "parity" / "brains" / "rsq_v2_it500.onnx"
 
 
 @pytest.mark.skipif(not SQUAT_BRAIN.exists(), reason="Rung S brain not exported")
@@ -144,6 +144,7 @@ def test_deep_squat_heat():
     res = squat.run_heat(SQUAT_BRAIN, seed=1)
     assert sorted(l.place for l in res.lanes) == list(range(1, 9))
     assert res.duration_s == pytest.approx(squat.START_S + squat.total_s(), abs=0.03)
+    assert [l.status for l in res.lanes] == ["DONE"] * 8          # rs_v6 it 3299: feet slid apart, most out STEPPED
     for l in res.lanes:
         assert l.status in ("DONE", "FELL", "STEPPED")
         assert len(l.reps) >= 8                                   # nobody is out before the 9th rep (~27 s)
@@ -237,3 +238,15 @@ def test_terminal_pack_lines():
     assert track.pack_target(0, xs, racing, hw, 3.66) == pytest.approx(3.66)
     assert track.pack_target(4, xs, racing, hw, 3.66) == pytest.approx(3.05)
     assert track.pack_target(3, xs, racing, hw, 3.66) == pytest.approx(3.66 - 2 * 0.61)   # third in its own group
+
+
+MARCH_BRAIN = C.ROOT.parent / "parity" / "brains" / "rs_v8_it1199.onnx"
+
+
+@pytest.mark.skipif(not MARCH_BRAIN.exists(), reason="Rung S brain not exported")
+def test_cadence_march_holds_the_spot():
+    from poolympic.events import march
+    res = march.run_heat(MARCH_BRAIN, seed=9000)
+    assert [l.status for l in res.lanes] == ["DONE"] * 8          # without the spot hold: 6 of 8 WANDERED in this heat
+    assert max(l.max_drift_m for l in res.lanes) < 0.4
+

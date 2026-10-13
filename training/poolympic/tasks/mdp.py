@@ -348,6 +348,20 @@ def crawl_heading(qp: torch.Tensor) -> torch.Tensor:
     return h / torch.clamp(torch.linalg.norm(h, dim=-1, keepdim=True), min=1e-6)
 
 
+def crawl_square(env) -> torch.Tensor:
+    """Crawl with the body along the direction of travel: (1 + cos) / 2 of the angle between the spine (pelvis z axis,
+    horizontal part) and crawl_heading; 0 while the spine is near vertical (standing / sitting). crawl_heading adds the
+    pelvis x axis, so a pelvis rolled about the spine turns it away from the spine — and the Crawl3 brains of MATT,
+    GRANDMA and KIM use that: they travel along crawl_heading with the spine 100 / 65 / 100 deg off it (a crab crawl,
+    1.5 m wide in a 1.1 m lane; the zombie's is straight)."""
+    _, qp, _ = _root(env)
+    w, x, y, z = qp[:, 3], qp[:, 4], qp[:, 5], qp[:, 6]
+    za = torch.stack([2 * (x * z + w * y), 2 * (y * z - w * x)], -1)
+    n = torch.linalg.norm(za, dim=-1)
+    cos = (za * crawl_heading(qp)).sum(-1) / torch.clamp(n, min=1e-6)
+    return 0.5 * (1.0 + cos) * (n > 0.5)
+
+
 def _crawl_vel(env):
     _, qp, qv = _root(env)
     h = crawl_heading(qp)

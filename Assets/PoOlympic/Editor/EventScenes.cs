@@ -395,7 +395,7 @@ namespace PoOlympic.Editor
         // Event 3: the Rung S brain (contract v4 pelvis-height command), trained on the mattbio body -> all-mattbio scene
         // Per-event stance brains (user decision 2026-10-01). Event 3 keeps rs_v6 it 3299: in CPU heats of the event (12 reps
         // to 45 cm, feet may slide 20 cm) it has 1-4 finishers per heat; rs_v8 it 1199 (G1 squat drill also 10/10) has none.
-        public const string SquatBrain = "rs_v6_it3299.onnx";   // squat 10/10, worst depth error 1.5 cm
+        public const string SquatBrain = "rsq_v2_it500.onnx";   // squat specialist: 80 of 80 finish the event's 12 reps (rs_v6 it 3299: 7 of 24)
 
         /// <summary>Event 3: 8 mattbio athletes on the venue's 2 x 4 station grid (3 m x 4 m apart, scene_squat8_mattbio.xml),
         /// DeepSquatEvent + HUD.</summary>

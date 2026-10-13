@@ -16,6 +16,7 @@ namespace PoOlympic
     ///                  rhythm = clamp(1 − |lifts − expected| / (rhythmTol × expected)), expected = 2 × cadence × stageSeconds
     ///                  height = clamp(mean peak knee rise / lift)
     ///   out          = a fall (FELL) or the pelvis drifting more than `driftOut` from its spot (WANDERED)
+    ///   spot hold    = every control tick the velocity command points back to the spot (HoldCommand)
     /// Finishing every stage on the spot earns `finishBonus`. Rank by points; ties: the later exit first.
     ///   Ready (countdown) → Live → Result → auto restart (new seed)
     /// </summary>
@@ -63,6 +64,8 @@ namespace PoOlympic
         public float hzStart = 1f, hzStep = 0.125f;
         public float lift = 0.25f;
         public float rhythmTol = 0.25f, stagePoints = 10f, finishBonus = 10f, driftOut = 0.60f;
+        [Header("Spot hold (= march.py HOLD_GAIN, HOLD_CAP)")]
+        public float holdGain = 1.0f, holdCap = 0.2f;
         public float countdownSeconds = 3f, resultHoldSeconds = 6f;
         public bool autoRestart = true, randomTraits = true;
         public int seed = 1;
@@ -106,6 +109,7 @@ namespace PoOlympic
                 s.left.Reset(); s.right.Reset();
                 s.runner.command = Vector3.zero;
                 s.runner.laneKeeping = false;
+                s.runner.steer = null;
                 s.runner.skill = default;
                 if (!first) s.runner.RequestReset();
             }
@@ -159,6 +163,8 @@ namespace PoOlympic
                             int r = s.runner.Binding.RootQposAdr;
                             s.spotX = d->qpos[r];
                             s.spotY = d->qpos[r + 1];
+                            var me = s;
+                            s.runner.steer = (x, y, yaw, c) => HoldCommand(me, x, y, yaw);
                         }
                     }
                     break;
@@ -188,6 +194,20 @@ namespace PoOlympic
                     if (autoRestart && PhaseTime >= resultHoldSeconds) Restart();
                     break;
             }
+        }
+
+        /// <summary>Spot hold (march.py hold_command; PolicyRunner.steer, every control tick): the brain sees no position
+        /// and drifts off its spot within the 36 s, so the velocity command points back to the spot — holdGain × the
+        /// offset in the athlete's heading frame, at most holdCap m/s. x, y = position from the lane origin.</summary>
+        Vector3 HoldCommand(Marcher s, double x, double y, double yaw)
+        {
+            if (!s.In) return Vector3.zero;
+            double ex = s.spotX - s.runner.laneOriginX - x, ey = s.spotY - s.runner.laneOriginY - y;
+            double c = Math.Cos(yaw), sn = Math.Sin(yaw);
+            double vx = holdGain * (c * ex + sn * ey), vy = holdGain * (-sn * ex + c * ey);
+            double n = Math.Sqrt(vx * vx + vy * vy);
+            if (n > holdCap) { vx *= holdCap / n; vy *= holdCap / n; }
+            return new Vector3((float)vx, (float)vy, 0f);
         }
 
         void ScoreStage(int stage)

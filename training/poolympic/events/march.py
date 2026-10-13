@@ -13,6 +13,7 @@ second (one stride = one lift of each knee) with the knees called LIFT metres ab
                  rhythm = clamp(1 − |lifts − expected| / (RHYTHM_TOL x expected), 0, 1), expected = 2 x cadence x STAGE_S
                  height = clamp(mean peak knee rise of the stage's lifts / LIFT, 0, 1)
   out          = a fall (FELL: DESIGN §1 fall rule) or the pelvis drifting more than DRIFT_OUT from its spot (WANDERED)
+  spot hold    = every control tick the velocity command points back to the spot (hold_command; = C# HoldCommand)
 Finishing every stage on the spot earns FINISH_BONUS. Rank by total points; ties: the later exit first. Traits as in the
 Iron Pedestal heat.
 """
@@ -41,6 +42,11 @@ STAGE_POINTS = 10.0
 FINISH_BONUS = 10.0
 DRIFT_OUT = 0.60                      # m from the spot = WANDERED
 START_S = 1.0                         # settle before the first stage (Unity countdown hand-off)
+# Spot hold (2026-10-13): the brain sees no position, only velocities, so over 36 s it drifts (3 heats: 19 of 24
+# WANDERED past 0.6 m, 5 DONE). The event steers it back like the races keep a lane: a velocity command towards the
+# spot, HOLD_GAIN x the offset, at most HOLD_CAP m/s — the march brain follows small velocity commands while it marches.
+# With it: 24 of 24 DONE, max drift 0.10 m (median), 74.6 -> 93.3 points. Gains 0.5-2.0 all finish 24 of 24.
+HOLD_GAIN, HOLD_CAP = 1.0, 0.2        # 1/s, m/s
 
 
 def cadence(s: int) -> float:
@@ -126,7 +132,21 @@ class _MarchJudge:
 
 
 @AL.logged("event_march")
-def run_heat(onnx, seed: int, traits: list[Traits] | None = None, scene=None, layout_path=None) -> MarchResult:
+def hold_command(d, ln: _Lane, spot: np.ndarray, gain: float, cap: float) -> np.ndarray:
+    """Spot hold: a velocity command (athlete heading frame) back towards the spot, gain x the offset, at most cap m/s."""
+    r = ln.ath.root_qposadr
+    e = spot - d.qpos[r: r + 2]
+    yaw = C.yaw_of(d.qpos[r + 3: r + 7])
+    c, s = np.cos(yaw), np.sin(yaw)
+    v = gain * np.array([c * e[0] + s * e[1], -s * e[0] + c * e[1]])
+    n = float(np.linalg.norm(v))
+    if n > cap:
+        v *= cap / n
+    return np.array([v[0], v[1], 0.0])
+
+
+def run_heat(onnx, seed: int, traits: list[Traits] | None = None, scene=None, layout_path=None,
+             hold_gain: float = HOLD_GAIN, hold_cap: float = HOLD_CAP) -> MarchResult:
     m = mujoco.MjModel.from_xml_path(str(scene or SCENE))
     d = mujoco.MjData(m)
     layout = json.loads(Path(layout_path or LAYOUT).read_text())
@@ -154,7 +174,8 @@ def run_heat(onnx, seed: int, traits: list[Traits] | None = None, scene=None, la
         for i, ln in enumerate(lanes):
             if stage >= 0 and not res[i].status:
                 ln.skill[3], ln.skill[4] = cadence(stage), LIFT
-            ln.control(ln.sess, d, np.zeros(3))
+            hold = hold_gain > 0 and stage >= 0 and not res[i].status
+            ln.control(ln.sess, d, hold_command(d, ln, judges[i].spot, hold_gain, hold_cap) if hold else np.zeros(3))
         for s in range(C.DECIMATION):
             for ln in lanes:
                 ln.write_ctrl(d, s)

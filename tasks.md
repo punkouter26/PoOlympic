@@ -151,6 +151,8 @@ Rules: every surface an athlete can touch is a MuJoCo geom generated into the MJ
   - [ ] crowd training (2026-10-12, partly): bump fine-tune (`add_crowd_bumps`, `*-Rung2-Crowd` tasks) instead of
     2-4 athletes per env. MATT r2c_v1 it 350: all-MATT sprint falls 3.2 -> 0.7 / heat, G1 10/10, ~4 % slower — NOT
     deployed (user decision). KIM / GRANDMA lose G1 after 100 its with no gain; zombie not run. See the log.
+  - [x] event completion pass (2026-10-13): every athlete now completes 3, 7, 8, 23 — march spot hold (no training),
+    squat brain rsq_v2 it 500 (80 of 80), straight-crawl brains for MATT / KIM / GRANDMA (512 of 512 with contact). Log.
   - [x] mixed lineups (2026-10-12): Event 19 pack rule (`track.pack_target` ≡ `TrackRaceEvent.BreakSteer`) — runners
     line up beside whoever is alongside; mixed lineups 0.1-0.4 -> 10-27 pair-s of contact per heat
     (`tools/crowd_heats.py`). Slalom left alone (tactician keeps contact < 1 pair-s by design).

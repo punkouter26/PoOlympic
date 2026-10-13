@@ -1578,3 +1578,47 @@ All on 4096 envs, 0 falls at every gate. G1 Rung 2, 10 seeds (bar 0.157 m/s = 0.
   0.9, `Fill_Up` 0.5 -> 0.7, and two shadow-free directional lights on the default layer (`Arena_45` / `Arena_225`,
   0.35 each) in the 15 event scenes; realtime, bakes untouched. Phone: faces lit on both sides, 60 fps (report image 4).
 
+## 2026-10-13 · Goal "every behaviour works 100 %": event completion by the deployed brains
+- **Survey (3 CPU heats of each of the 15 events, deployed brains):** 100 % of the athletes finish 9, 10, 11, 12, 13,
+  19, 27; elimination events 1 / 5 / 6 end by design; short of 100 %: 7 Cadence March 5 of 24 DONE, 3 Deep Squat 7 of
+  24 DONE, 8 / 23 crawls (MATT 11 of 72 DNF, GRANDMA 3 of 20 in the trench), 22 one MATT DQ (its seeded late brake:
+  the rule, not a failure).
+- **7 Cadence March -> 24 of 24, no training.** The brain sees velocities, never a position, so over 36 s it drifts
+  past the 0.6 m rule. Spot hold in the event (`march.hold_command` = C# `CadenceMarchEvent.HoldCommand`): velocity
+  command towards the spot, gain 1.0 /s, cap 0.2 m/s; the march brain follows it while marching. DONE 5 -> 24 of 24,
+  drift 0.60 -> 0.10 m (median max), points 74.6 -> 93.3; gains 0.5-2.0 all 24 of 24. The same command makes a
+  squatting athlete step (0-14 of 24): not used there.
+- **3 Deep Squat -> 80 of 80, new brain `rsq_v2_it500`.** rs_v6 it 3299 does not step: its feet slide apart ~1-2 cm
+  per rep (stance 0.18 -> 0.43 m over the 12 reps) until one is 20 cm from its mark. rsq_v1 (`RungS-Squat`: 65 % squat
+  commands, 80 % of them metronome reps in the event's depth / tempo range, foot-speed penalty): depth error 19 -> 4
+  mm but stance 0.72 m, 24 of 24 STEPPED — a speed penalty does not see a centimetre per second. rsq_v2
+  (`RungS-Squat2`: + stance-width reward, 0.18 m, std 0.06, from rsq_v1 it 400): it 300 / 400 / 500 / 599 all 24 of 24;
+  10 heats: **it 300 80 of 80, it 500 80 of 80**, 114.9 points (rs_v6: 86.0), squat drill 10/10. Event 3 = rsq_v2 it
+  500 (critic exported, manifest, `EventScenes.SquatBrain`, test asserts 8 of 8 DONE).
+- **Crawls: not bumps.** `*-Crawl-Crowd` (Crawl3 + pack bumps at half force; mcc_v1, gcc_v1): 80 heats, 7.10 -> 7.20
+  of 8 finish = no change. Contact off: 100 % finish. Traces: MATT, GRANDMA and KIM crawl SIDEWAYS. `crawl_heading`
+  (pelvis x + z axes) turns away from the spine when the pelvis rolls, and the Crawl3 brains travel along it with the
+  spine 92 / 65 / 100 deg off (zombie: straight). They fill 1.5 m of a 1.1 m lane and swing 1.3 / 0.9 / 1.7 m sideways
+  when they set off. Start-rule tweaks in the event (slow until straight, turn during the countdown) halve the swing
+  alone but not the DNFs: discarded. `*-Crawl-Square` = Crawl3 + `mdp.crawl_square` (spine along the travel direction,
+  w 2). mcs_v1 (from the deployed brain): spine -92 -> -81 / -76 / -70 deg at it 200 / 400 / 600 — too slow; mcs_v2
+  starts from the ZOMBIE's straight crawl instead (cross-body warm start).
+- **Crawls -> 512 of 512, new crawl brains for MATT, KIM, GRANDMA.** Cross-body start from the zombie's straight crawl:
+  mcs_v2 (`Matt-Crawl-Square`, 1000 its) crawls with the spine 19 deg off travel and 30 m in 26.5 s, but no longer
+  steers (+-0.4 rad/s command -> +-0.03; lane error 10 m). `*-Crawl-Square2` = Square + yaw-rate reward w 1 -> 3, kernel
+  halved: **mcs_v3 it 999** (from mcs_v2): steering +0.41 / -0.33, start swing 1.31 -> 0.18 m, 30 m in 24.6 s (26.1);
+  **kcs_v2 it 1499** (KIM, from the zombie brain): spine -80 -> -18 deg, swing 1.73 -> 0.11 m, +-0.41, 27.3 s (28.6);
+  **gcs_v2 it 1200** (GRANDMA, same): spine 65 -> 0 deg, swing 0.93 -> 0.08 m, +0.43 / -0.40, 27.1 s. Own-brain starts
+  (kcs_v1, gcs_v1) did not move the gait. Heats with crowd contact, 8 per event and lineup (4 lineups, events 8 + 23):
+  **8.00 of 8 finish in all 64 heats, 0 tumbles** (before: 6.9-7.9); the trench takes GRANDMA 14.9 s (30.6) and KIM 14.6
+  s (31.2). Deployed as `crawl_matt / crawl_kim / crawl_grandma.onnx` + critics; odds refitted for 8 / 23, confidence
+  for the crawl groups (GRANDMA / KIM: no "danger" tick left in the fit data -> uncalibrated, as before for stance).
+- **Unity:** brains synced, `Event_DeepSquat` rewired to rsq_v2 it 500. Play-throughs: squat 8 of 8 DONE (113-116 pts),
+  march 8 of 8 DONE (drift 0.05-0.28 m), All Fours 8 of 8 in 25 s, Trench 8 of 8 in 13 s, 0 tumbles. ParityGateTests
+  39/39, pytest 92/92.
+- **Survey after (3 heats per event):** every athlete completes 3, 7, 8, 9, 10, 11, 12, 13, 19, 23, 27. Left as they
+  are: 1 / 5 / 6 end by elimination (the event), 22 one MATT over the line (its seeded late brake). Not event
+  completion, still open: contact falls in the 19 sprint (they get up and finish; MATT candidate r2c_v1), the fallen
+  sprinter's 10-24 m detour, stance events MATT-only, zombie G1 8/10, torso 7/10 and reach 0-1/10 (joint range / reach
+  radius: user decisions).
+

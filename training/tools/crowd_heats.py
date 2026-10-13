@@ -1,5 +1,5 @@
-"""How much does athlete-athlete contact cost? CPU heats of the two contact-heavy races (19 Terminal Velocity with the
-lane break, 11 mirror Slalom) per lineup, each seed run twice: crowd contact on (the event scene) and off (the same
+"""How much does athlete-athlete contact cost? CPU heats of the contact-heavy races (19 Terminal Velocity with the
+lane break, 11 mirror Slalom; 8 / 23 the crawls, where "falls" = tumbles and --brain sets the crawl brain) per lineup, each seed run twice: crowd contact on (the event scene) and off (the same
 scene with the crowd bits cleared = every athlete alone in its lane). Reports falls, finishers and "pair-s" (seconds of
 athlete-athlete contact summed over athlete pairs, split by the two bodies).
 
@@ -62,7 +62,13 @@ def run_one(job: tuple) -> dict:
 
     mujoco.MjModel.from_xml_path, mujoco.mj_step = load_scene, counted_step      # the events load and step through these
     brains = dict(F.R2, **{b: Path(p) for b, p in brains_over})
-    if event == 19:
+    if event in (8, 23):          # crawls: --brain overrides the body's crawl brain
+        from poolympic.events import all_fours
+        crawl = dict(F.deployed("crawl"), **{b: Path(p) for b, p in brains_over})
+        res = all_fours.run_race(crawl, seed, scene=scene, layout_path=layout, distance=all_fours.TRENCH_DISTANCE if event == 23 else None)
+        for l in res.lanes:
+            l.falls = l.tumbles
+    elif event == 19:
         res = track.run_race(brains["matt"], "terminal", seed, scene=scene, layout_path=layout, brains=brains, recover=F.deployed("getup"))
     else:
         res = slalom.run_heat(brains["matt"], seed, scene=scene, layout_path=layout, brains=brains, tactics=True, recover=F.deployed("getup"))

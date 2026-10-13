@@ -327,6 +327,16 @@ if bodies.current().name == "mattbio":
             return cfg
         return make
 
+    # 2026-10-13: Event 3 specialist on event-like squat reps (stance_env.matt_stance_squat_env_cfg)
+    from .stance_env import matt_stance_squat_env_cfg
+    _rq = matt_ppo_v5_cfg("mattbio_stance", max_iterations=600)
+    _rq.algorithm.entropy_coef = 0.001
+    register_mjlab_task(task_id="PoOlympic-MattBio-RungS-Squat", env_cfg=matt_stance_squat_env_cfg(),
+                        play_env_cfg=matt_stance_squat_env_cfg(play=True), rl_cfg=_rq, runner_cls=SymmetricRunner)
+    from .stance_env import matt_stance_squat2_env_cfg
+    register_mjlab_task(task_id="PoOlympic-MattBio-RungS-Squat2", env_cfg=matt_stance_squat2_env_cfg(),
+                        play_env_cfg=matt_stance_squat2_env_cfg(play=True), rl_cfg=_rq, runner_cls=SymmetricRunner)
+
     for task_id, mode in (("PoOlympic-MattBio-RungS-March", 3), ("PoOlympic-MattBio-RungS-Torso", 4)):
         fn = _specialist(mode)
         rl = matt_ppo_v5_cfg("mattbio_stance", max_iterations=600)
@@ -751,6 +761,64 @@ if bodies.current().name in ("matt", "zombie", "grandma", "kim"):
         register_mjlab_task(task_id=f"PoOlympic-{body.name.capitalize()}-Rung2-Crowd", env_cfg=cfg,
                             play_env_cfg=base(play=True), rl_cfg=rl, runner_cls=SymmetricRunner)
     _crowd()
+
+if bodies.current().name in ("matt", "grandma"):
+    # 2026-10-13 crawl in a pack. Events 8 / 23 (12 heats each, mixed lineups): MATT does not finish 11 of 72 crawls and
+    # GRANDMA 3 of 20 trench crawls — they tumble against the neighbour (lanes 1.1 m) and do not come back; with
+    # athlete-athlete contact off everyone finishes. The crawl recipes have no disturbance at all. The deployed Crawl3
+    # recipe + the pack bumps at half the running force (crawlers meet at ~1 m/s), small steps, 4096 envs.
+    def _crawl_crowd():
+        from .matt_env import add_crowd_bumps, matt_ppo_cfg
+        body = bodies.current()
+        if body.name == "matt":
+            from .crawl_env import matt_crawl3_env_cfg as base
+        else:
+            from .crawl_env import grandma_crawl3_env_cfg as base
+        cfg = add_crowd_bumps(base(), body.mass_scale, force=150.0, play=False)
+        cfg.scene.num_envs = 4096
+        rl = matt_ppo_cfg(f"{body.name}_crawl", max_iterations=400)
+        rl.algorithm.entropy_coef, rl.algorithm.desired_kl, rl.save_interval = 0.001, 0.004, 50
+        register_mjlab_task(task_id=f"PoOlympic-{body.name.capitalize()}-Crawl-Crowd", env_cfg=cfg,
+                            play_env_cfg=base(play=True), rl_cfg=rl, runner_cls=MjlabOnPolicyRunner)
+    _crawl_crowd()
+
+if bodies.current().name in ("matt", "grandma", "kim"):
+    # 2026-10-13 straight crawl. The bump fine-tune above changed nothing (10 heats x 2 lineups x 2 events: 7.1 -> 7.2
+    # of 8 finish): the tangles are not bumps. MATT, GRANDMA and KIM crawl SIDEWAYS — the spine 100 / 65 / 100 deg off
+    # the direction of travel (mdp.crawl_square) — so each fills 1.5 m of a 1.1 m lane and swings 0.8-1.7 m into the
+    # neighbours when it sets off. Crawl3 + a reward for the spine along the travel direction (w 2), 4096 envs.
+    def _crawl_square():
+        from mjlab.managers.reward_manager import RewardTermCfg
+        from . import mdp
+        from .matt_env import matt_ppo_cfg
+        body = bodies.current()
+        if body.name == "matt":
+            from .crawl_env import matt_crawl3_env_cfg as base
+        else:
+            from .crawl_env import grandma_crawl3_env_cfg as base      # KIM trains GRANDMA's crawl recipe on her body
+
+        def make(play: bool = False):
+            cfg = base(play=play)
+            cfg.rewards["crawl_square"] = RewardTermCfg(func=mdp.crawl_square, weight=2.0)
+            cfg.scene.num_envs = 4096 if not play else cfg.scene.num_envs
+            return cfg
+        register_mjlab_task(task_id=f"PoOlympic-{body.name.capitalize()}-Crawl-Square", env_cfg=make(),
+                            play_env_cfg=make(play=True), rl_cfg=matt_ppo_cfg(f"{body.name}_crawl", max_iterations=800),
+                            runner_cls=MjlabOnPolicyRunner)
+
+        # Square2: started from the zombie's straight crawl (cross-body), MATT's mcs_v2 crawls with the spine 19 deg off
+        # the travel direction (own-brain starts stayed at 70-80 deg) and finishes 30 m in 26.5 s — but it no longer
+        # steers: a +-0.4 rad/s command turns it +-0.03 rad/s (deployed MATT +0.25 / -0.37, zombie +-0.46), lane error
+        # 10 m. The yaw-rate reward is 1 of ~12 reward points with a 0.5 rad/s kernel: here weight 3, kernel halved.
+        def make2(play: bool = False):
+            cfg = make(play)
+            cfg.rewards["track_yaw"].weight = 3.0
+            cfg.rewards["track_yaw"].params["std"] *= 0.5
+            return cfg
+        register_mjlab_task(task_id=f"PoOlympic-{body.name.capitalize()}-Crawl-Square2", env_cfg=make2(),
+                            play_env_cfg=make2(play=True), rl_cfg=matt_ppo_cfg(f"{body.name}_crawl", max_iterations=1500),
+                            runner_cls=MjlabOnPolicyRunner)
+    _crawl_square()
 
 # ---- registry hygiene -------------------------------------------------------------------------------------------------
 # Task IDs whose recipe a later ID of the same body and skill replaced, or that were tried and dropped. They stay

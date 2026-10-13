@@ -35,7 +35,8 @@ ROLES = {
     "crawl_matt": ("crawl", [8, 23], "matt"), "crawl_zombie": ("crawl", [8, 23], "zombie"),
     "crawl_grandma": ("crawl", [8, 23], "grandma"), "crawl_kim": ("crawl", [8, 23], "kim"),
     "r2f_v3_it100": ("flight", [13], "matt"),
-    "rs_v8_it1199": ("stance", [3, 7], "matt"), "rs_v6_it2550": ("stance", [6], "matt"), "rs_v6_it3299": ("stance", [], "matt"),
+    "rs_v8_it1199": ("stance", [7], "matt"), "rs_v6_it2550": ("stance", [6], "matt"), "rs_v6_it3299": ("stance", [], "matt"),
+    "rsq_v2_it500": ("stance", [3], "matt"),               # Deep Squat specialist (2026-10-13): 80 of 80 finish the 12 reps
     "getup_kim": ("getup", [27], "kim"),                  # + fall recovery in the track races and the slalom
     "getup_matt": ("getup", [27], "matt"),                  # = mgetup_prone_v1 it 600 (2026-10-11), supine + face down 30/30
     "getup_zombie": ("getup", [27], "zombie"),            # = zgetup_prone_v1 it 600 (2026-10-11), supine + face down 30/30

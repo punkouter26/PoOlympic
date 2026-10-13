@@ -124,6 +124,10 @@ class AthleteSkillCommand(AthleteCommand):
         self.mode = torch.zeros(self.num_envs, dtype=torch.long, device=self.device)
         self.resample_id = torch.zeros(self.num_envs, dtype=torch.long, device=self.device)   # +1 per command resample
         self._shoulder = torch.as_tensor(np.stack(SKILL_GEOM["shoulder"]), device=self.device, dtype=torch.float32)
+        # squat reps (cfg.squat_rep_fraction): per env depth / down s / up s, time into the rep cycle, on-flag
+        self.rep = torch.zeros(self.num_envs, 3, device=self.device)
+        self.rep_t = torch.zeros(self.num_envs, device=self.device)
+        self.rep_on = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
 
     def compute(self, dt, env_ids=None):
         prev = self.phase.clone()
@@ -132,6 +136,10 @@ class AthleteSkillCommand(AthleteCommand):
             cad = self.skill[:, 3]
             adv = torch.remainder(prev + cad * C.DECIMATION * 0.005, 1.0)
             self.phase = torch.where(cad > 0.0, adv, self.phase)
+            if self.cfg.squat_rep_fraction > 0.0:      # metronome reps: down to the depth, back up to standing, repeat
+                self.rep_t += dt
+                down = torch.remainder(self.rep_t, self.rep[:, 1] + self.rep[:, 2]) < self.rep[:, 1]
+                self.skill[:, 0] = torch.where(self.rep_on, torch.where(down, -self.rep[:, 0], 0.0), self.skill[:, 0])
 
     def _resample_command(self, env_ids):
         super()._resample_command(env_ids)
@@ -167,6 +175,11 @@ class AthleteSkillCommand(AthleteCommand):
         target = self._shoulder[(arm > 0).long()] + dirn * rad[:, None]
         sk[:, 7:10] = torch.where(is_["reach"][:, None], target, 0.0)
         sk[:, 10] = torch.where(is_["reach"], arm, 0.0)
+        if self.cfg.squat_rep_fraction > 0.0:
+            # the Deep Squat event's reps: 0.25-0.45 m deep, 2.5 -> 1.2 s down and 2.0 -> 1.0 s up (events/squat.py)
+            self.rep_on[env_ids] = is_["squat"] & (torch.rand(n, device=dev) < self.cfg.squat_rep_fraction)
+            self.rep[env_ids] = torch.stack([U(0.25, 0.45), U(1.1, 2.5), U(0.9, 2.0)], -1)
+            self.rep_t[env_ids] = 0.0
         self.skill[env_ids] = sk
         still = mode != MODE["locomotion"]
         self.is_standing_env[env_ids] = self.is_standing_env[env_ids] | still
@@ -177,6 +190,7 @@ class AthleteSkillCommandCfg(AthleteCommandCfg):
     # locomotion, squat, flamingo, march, torso, reach (approved: 20 % locomotion, the rest shared by the skills)
     mode_probs: tuple[float, ...] = (0.20, 0.16, 0.16, 0.16, 0.16, 0.16)
     reach_far_fraction: float = 0.0     # share of reach commands drawn from 80-95 % of the reach radius
+    squat_rep_fraction: float = 0.0     # share of squat commands that are metronome reps instead of one held depth
 
     def build(self, env):
         return AthleteSkillCommand(self, env)
@@ -388,6 +402,27 @@ def skill_flamingo_slip(env, command_name: str = "athlete") -> torch.Tensor:
     v = torch.linalg.norm(s.ent.data.body_link_lin_vel_w[:, [s.b["foot_l"], s.b["foot_r"]], :2], dim=-1)
     slip = (v * (1 - term.skill[:, 1:3])).sum(-1).clamp(max=1.0)
     return slip * (term.mode == MODE["flamingo"])
+
+
+def skill_squat_slip(env, command_name: str = "athlete") -> torch.Tensor:
+    """Penalty: xy speed of both feet (m/s, summed, capped at 1) in squat mode. The Deep Squat event puts an athlete
+    out when a foot ends 20 cm from its start spot; rs_v6 it 3299 shuffles its feet in the deep, fast reps."""
+    s = _sidx(env)
+    term = _term(env, command_name)
+    v = torch.linalg.norm(s.ent.data.body_link_lin_vel_w[:, [s.b["foot_l"], s.b["foot_r"]], :2], dim=-1)
+    return v.sum(-1).clamp(max=1.0) * (term.mode == MODE["squat"])
+
+
+def skill_squat_stance(env, target: float, std: float, command_name: str = "athlete") -> torch.Tensor:
+    """Squat mode: keep the feet their standing distance apart — exp(−((|foot_l − foot_r| − target) / std)²). The squat
+    brains let the feet slide outwards a centimetre or two per rep (stance 0.18 -> 0.43 m over the event's 12 reps,
+    rsq_v1 0.72 m: a wide stance makes the deep squat easy) until a foot is 20 cm from its start = STEPPED. The stance
+    width is visible to the brain (hip joints), unlike a position."""
+    s = _sidx(env)
+    term = _term(env, command_name)
+    p = s.ent.data.body_link_pos_w[:, [s.b["foot_l"], s.b["foot_r"]], :2]
+    w = torch.linalg.norm(p[:, 0] - p[:, 1], dim=-1)
+    return torch.exp(-((w - target) / std) ** 2) * (term.mode == MODE["squat"])
 
 
 def skill_spot(env, std: float, command_name: str = "athlete") -> torch.Tensor:

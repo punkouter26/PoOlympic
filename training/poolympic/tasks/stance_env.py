@@ -140,3 +140,30 @@ def matt_stance_reach2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     cfg = matt_stance_reach_env_cfg(play=play)
     cfg.commands["athlete"].reach_far_fraction = 0.5
     return cfg
+
+
+def matt_stance_squat_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """rs_squat_v1 — an Event 3 brain (per-event stance brains), from rs_v6 it 3299 (the deployed squat brain, rebuilt
+    with tools/onnx_to_checkpoint.py). In the event heats (3 seeds, 24 athletes) 7 finish the 12 reps and 17 are out
+    STEPPED, almost all in reps 9-12 (0.43-0.45 m deep, 1.2-1.4 s down / 1.0-1.2 s up): training held one random depth
+    for 3-8 s, the event changes the target every second. Changes: 65 % of the commands are squats and 80 % of those
+    are metronome reps in the event's depth and tempo range (AthleteSkillCommand squat reps), plus a foot-slip penalty
+    in squat mode. Everything else as rs_v7."""
+    cfg = matt_stance_v7_env_cfg(play=play)
+    cmd = cfg.commands["athlete"]
+    cmd.mode_probs = (0.15, 0.65, 0.05, 0.05, 0.05, 0.05)
+    cmd.squat_rep_fraction = 0.8
+    cfg.rewards["skill_squat_slip"] = RewardTermCfg(func=S.skill_squat_slip, weight=-2.0)
+    return cfg
+
+
+def matt_stance_squat2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+    """rsq_v2 (from rsq_v1 it 400: depth error 4 mm on the event's reps, but 24 of 24 STEPPED in the heats). A trace of a
+    heat shows why: no step, the feet slide apart a little every rep — stance 0.18 -> 0.72 m by rep 12 (the deployed
+    rs_v6: 0.43 m), and the foot-speed penalty of rsq_v1 does not see a centimetre per second. Adds a stance-width
+    reward in squat mode (standing width 0.18 m, std 0.06 m, full skill weight)."""
+    cfg = matt_stance_squat_env_cfg(play=play)
+    cfg.rewards["skill_squat_stance"] = RewardTermCfg(func=S.skill_squat_stance, weight=SKILL_REWARD_WEIGHT,
+                                                      params={"target": 0.18 * LS, "std": 0.06 * LS})
+    return cfg
+
