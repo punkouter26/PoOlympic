@@ -53,6 +53,7 @@ namespace PoOlympic
         }
 
         int[] _qposAdr, _dofAdr;
+        System.IntPtr _cachedFor;   // the model the addresses belong to: play starts without a scene reload, so a new model (lineup) must re-read them
 
         /// <summary>The fastest cube right now (Unity world position, m/s); parked cubes rest at 0. Read only.</summary>
         public unsafe bool Fastest(out Vector3 position, out float speed)
@@ -62,11 +63,12 @@ namespace PoOlympic
             if (!MjScene.InstanceExists || MjScene.Instance.Model == null) return false;
             var m = MjScene.Instance.Model;
             var d = MjScene.Instance.Data;
-            if (_qposAdr == null)
+            if (_qposAdr == null || _qposAdr.Length != poolSize || _cachedFor != (System.IntPtr)m)
             {
                 var joints = AthleteBinding.NameIndex(m, (int)MujocoLib.mjtObj.mjOBJ_JOINT, (int)m->njnt);
                 _qposAdr = new int[poolSize];
                 _dofAdr = new int[poolSize];
+                _cachedFor = (System.IntPtr)m;
                 for (int i = 0; i < poolSize; i++)
                 {
                     bool found = joints.TryGetValue(JointName(i), out int j);

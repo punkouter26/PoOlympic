@@ -198,7 +198,7 @@ namespace PoOlympic.Editor
             bc.focusOffset = new Vector3(0f, 0f, 0.35f);     // centre of the row (lanes 1..8 at Unity z = -2.1 .. +2.8)
             bc.offset = new Vector3(4.6f, 2.4f, -6.4f);      // front-left end of the beam: the row recedes in a 9:16 frame
             AddBroadcast(heat, "IRON PEDESTAL", "Event 1 · last one standing", 1, version, cam, BroadcastDirector.Kind.Arena, Vector3.right);
-            EditorSceneManager.SaveScene(scene, IronPedestalHeatScene);
+            HandTunedSave.SaveBuilt(scene, IronPedestalHeatScene);
             return $"{IronPedestalHeatScene}: {heat.runners.Count} athletes ({string.Join(",", lineup.Distinct())} in every lane), brains {string.Join(" / ", brains.Values)}";
         }
 
@@ -331,7 +331,7 @@ namespace PoOlympic.Editor
                 var view = meet.Camera.AddComponent<RampView>();
                 view.slopeDeg = race.slopeDeg;
             }
-            EditorSceneManager.SaveScene(meet.Scene, scenePath);
+            HandTunedSave.SaveBuilt(meet.Scene, scenePath);
             return $"{scenePath}: {mode}, {race.runners.Count} runners, {race.distance} m, brain {brainFile}";
         }
 
@@ -412,7 +412,7 @@ namespace PoOlympic.Editor
             bc.focusOffset = new Vector3(-0.69f, 0f, 0.69f); // centre of the ring (spot S4 is the origin)
             bc.offset = new Vector3(5.2f, 3.6f, -5.2f);      // front three-quarter: the athletes start facing +x
             AddBroadcast(ev, "THE 360 TURNTABLE", "Event 12", 12, BrainsLabel(brainFile), meet.Camera, BroadcastDirector.Kind.Arena, Vector3.right);
-            EditorSceneManager.SaveScene(meet.Scene, TurntableScene);
+            HandTunedSave.SaveBuilt(meet.Scene, TurntableScene);
             return $"{TurntableScene}: {ev.spinners.Count} athletes, {ev.turns} turns at {ev.spinRate} rad/s, brain {brainFile}";
         }
 
@@ -443,7 +443,7 @@ namespace PoOlympic.Editor
             bc.offset = new Vector3(8.5f, 4.0f, -5.0f);      // front three-quarter: the athletes face +x
             AddBroadcast(ev, "DEEP SQUAT", "Event 3", 3, $"v0 · {Path.GetFileNameWithoutExtension(brainFile)}", meet.Camera,
                          BroadcastDirector.Kind.Arena, Vector3.right);
-            EditorSceneManager.SaveScene(meet.Scene, SquatScene);
+            HandTunedSave.SaveBuilt(meet.Scene, SquatScene);
             return $"{SquatScene}: {ev.squatters.Count} athletes, {ev.reps} reps, brain {brainFile}";
         }
 
@@ -504,7 +504,7 @@ namespace PoOlympic.Editor
             var standIn = AssetDatabase.LoadAssetAtPath<ModelAsset>($"{ParityHarness.ModelsFolder}/Brains/{Path.ChangeExtension(ArcherBrain, null)}.critic.onnx");
             foreach (var a in ev.aimers)
                 if (a.runner.critic == null) { a.runner.critic = standIn; EditorUtility.SetDirty(a.runner); }
-            EditorSceneManager.SaveScene(meet.Scene, scenePath);
+            HandTunedSave.SaveBuilt(meet.Scene, scenePath);
             return $"{scenePath}: {ev.aimers.Count} athletes, {ev.rounds} rounds, brain {brainFile}";
         }
 
@@ -534,7 +534,7 @@ namespace PoOlympic.Editor
             bc.offset = new Vector3(8.5f, 4.0f, -5.0f);      // front three-quarter: the athletes face +x
             AddBroadcast(ev, "THE FLAMINGO CLASSIC", "Event 6", 6, $"v0 · {Path.GetFileNameWithoutExtension(brainFile)}", meet.Camera,
                          BroadcastDirector.Kind.Arena, Vector3.right);
-            EditorSceneManager.SaveScene(meet.Scene, FlamingoScene);
+            HandTunedSave.SaveBuilt(meet.Scene, FlamingoScene);
             return $"{FlamingoScene}: {ev.flamingos.Count} athletes, gust {ev.gustStart} + {ev.gustStep} m/s every {ev.roundSeconds} s, brain {brainFile}";
         }
 
@@ -564,7 +564,7 @@ namespace PoOlympic.Editor
             bc.offset = new Vector3(8.5f, 4.0f, -5.0f);      // front three-quarter: the athletes face +x
             AddBroadcast(ev, "CADENCE MARCH", "Event 7", 7, $"v0 · {Path.GetFileNameWithoutExtension(brainFile)}", meet.Camera,
                          BroadcastDirector.Kind.Arena, Vector3.right);
-            EditorSceneManager.SaveScene(meet.Scene, MarchScene);
+            HandTunedSave.SaveBuilt(meet.Scene, MarchScene);
             return $"{MarchScene}: {ev.marchers.Count} athletes, {ev.stages} stages {ev.hzStart}-{ev.Cadence(ev.stages - 1)} Hz, brain {brainFile}";
         }
 
@@ -591,7 +591,7 @@ namespace PoOlympic.Editor
             bc.focusOffset = new Vector3(-0.6f, 0f, -1.5f);  // centre of the 8 lanes (Unity x = +3.66 .. -4.88), a bit down the course
             bc.offset = new Vector3(9.5f, 4f, -5.5f);        // in front of lane 1, down the course: the row recedes, faces + rails
             AddBroadcast(ev, "CRAB SHUFFLE", "Event 10", 10, BrainsLabel(brainFile), meet.Camera, BroadcastDirector.Kind.Race, Vector3.right);
-            EditorSceneManager.SaveScene(meet.Scene, CrabScene);
+            HandTunedSave.SaveBuilt(meet.Scene, CrabScene);
             return $"{CrabScene}: {ev.racers.Count} athletes, {ev.distance} m at {ev.sideSpeed} m/s, {ev.railGeoms.Length} rails, brain {brainFile}";
         }
 
@@ -616,7 +616,7 @@ namespace PoOlympic.Editor
             bc.focusOffset = new Vector3(1.5f, 0f, -0.7f);   // centre of the 8 lanes (Unity z = +4.2 .. -5.6), ahead of the pack
             bc.offset = new Vector3(-4f, 3.4f, -12f);        // trackside, outside lane 8, slightly behind the pack
             AddBroadcast(ev, "SLALOM SPRINT", "Event 11", 11, BrainsLabel(brainFile), meet.Camera, BroadcastDirector.Kind.Race, Vector3.right);
-            EditorSceneManager.SaveScene(meet.Scene, SlalomScene);
+            HandTunedSave.SaveBuilt(meet.Scene, SlalomScene);
             return $"{SlalomScene}: {ev.racers.Count} runners, {ev.nPoles} poles, {ev.speed} m/s, brain {brainFile}";
         }
 
@@ -656,7 +656,7 @@ namespace PoOlympic.Editor
             bc.focusOffset = new Vector3(-1.2f, 0f, -0.4f);  // centre of the 2 x 4 grid (spot S4 is the origin)
             bc.offset = new Vector3(5.6f, 3.8f, -5.6f);      // front three-quarter, as the turntable
             AddBroadcast(ev, "THE GUST GAUNTLET", "Event 5", 5, BrainsLabel(brainFile), meet.Camera, BroadcastDirector.Kind.Arena, Vector3.right);
-            EditorSceneManager.SaveScene(meet.Scene, GauntletScene);
+            HandTunedSave.SaveBuilt(meet.Scene, GauntletScene);
             return $"{GauntletScene}: {ev.athletes.Count} athletes, {ev.rounds} rounds, brain {brainFile}";
         }
 
@@ -1051,7 +1051,7 @@ namespace PoOlympic.Editor
             bc.target = Array.Find(physics.GetComponentsInChildren<MjBody>(true), b => b.name == "pelvis");
             bc.offset = new Vector3(4.4f, 0.9f, -2.2f); // front three-quarter: the athlete faces +x, the empty pedestals run along +z
 
-            EditorSceneManager.SaveScene(scene, IronPedestalScene);
+            HandTunedSave.SaveBuilt(scene, IronPedestalScene);
             var (p, rot) = binder.BindError();
             return $"{IronPedestalScene}: brain {brainFile}, bind error {p * 1000f:F2} mm / {rot:F3}°";
         }
