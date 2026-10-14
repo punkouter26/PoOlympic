@@ -79,7 +79,7 @@ namespace PoOlympic
         public float standDqSeconds = 1f;
         public Vector2 crawlBand = new(0.25f, 0.8f);   // pelvis height band (m) × λ
         [Header("Ramp (= track.py ramp): the flat track with gravity tilted by the slope, uphill = +x")]
-        public float slopeDeg = 15f;
+        public float slopeDeg = 15f, holdGain = 1f, holdCap = 0.2f;
         [Header("Fall recovery (= track.py recover)")]
         public bool recoverFromFalls = true;
         public bool autoRestart = true, randomTraits = true;
@@ -106,7 +106,7 @@ namespace PoOlympic
             Mode.AllFours => (30f, 1.2f, 60f),
             Mode.Steeplechase => (50f, 3.5f, 30f),
             Mode.Resurrection => (5f, 3.8f, 20f),
-            Mode.Ramp => (10f, 2.0f, 30f),
+            Mode.Ramp => (9f, 2.0f, 30f),
             _ => (30f, 3.0f, 25f),
         };
 
@@ -186,6 +186,10 @@ namespace PoOlympic
             switch (Current)
             {
                 case Phase.Ready:
+                    // ramp: a standing slope brain creeps downhill (0.6-0.9 m in a 3 s countdown): walk back to the start
+                    // spot at holdGain /s, at most holdCap m/s (= march.py hold_command); the race clock starts at GO
+                    if (mode == Mode.Ramp)
+                        foreach (var r in runners) r.runner.command = new Vector3(Mathf.Clamp(-r.x * holdGain, -holdCap, holdCap), 0f, 0f);
                     if (HoldStart) { PhaseTime = 0; break; }   // betting window (BroadcastHud)
                     if (PhaseTime >= countdownSeconds)
                     {

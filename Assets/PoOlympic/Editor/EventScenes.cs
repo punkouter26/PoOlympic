@@ -227,6 +227,17 @@ namespace PoOlympic.Editor
             (13, TrackRaceEvent.Mode.Steeplechase, "STEEPLECHASE JOG", SteepleScene),
             (27, TrackRaceEvent.Mode.Resurrection, "RESURRECTION DASH", ResurrectionScene),
         };
+        // Event 14 (The Alpine Ramp): each body's slope brain (tasks PoOlympic-<Body>-Rung4-Slope15) on the track scene with
+        // gravity tilted by 15 deg (TrackRaceEvent.Mode.Ramp); the stadium is turned so its ramp lies on the flat track
+        public const string RampScene = "Assets/PoOlympic/Scenes/Event_AlpineRamp.unity";
+        public const string RampMattBrain = "slope_matt.onnx", RampZombieBrain = "slope_zombie.onnx", RampGrandmaBrain = "slope_grandma.onnx", RampKimBrain = "slope_kim.onnx";
+        public const float RampFootX = 2.0f + 0.2f;   // m to shift the stadium back: its ramp foot is 2 m past the venue lane anchor (build_venues.py E14) and goes 0.2 m behind the start line (the athletes start 0.2 m up it)
+
+        [MenuItem("PoOlympic/Events/Build Event 14 — The Alpine Ramp")]
+        public static string BuildAlpineRamp() => BuildTrackRace(14, TrackRaceEvent.Mode.Ramp, "ALPINE RAMP", RampScene, RampOr(RampMattBrain, DefaultRung2Brain));
+
+        /// <summary>A body without a slope brain races with its flat-ground Rung 2 brain (it does not get far up a 15° ramp).</summary>
+        static string RampOr(string slopeBrain, string fallback) => File.Exists(Path.Combine("parity/brains", slopeBrain)) ? slopeBrain : fallback;
         // Event 27 (The Resurrection Dash): Rung 2 brains + each body's get-up brain (BroadcastFx.Install wires them)
         public const string ResurrectionScene = "Assets/PoOlympic/Scenes/Event_ResurrectionDash.unity";
 
@@ -264,6 +275,9 @@ namespace PoOlympic.Editor
                                                                                              { "grandma", CrawlGrandmaBrain }, { "kim", CrawlKimBrain } }
                        : steeple ? new System.Collections.Generic.Dictionary<string, string> { { "matt", FlightMattBrain }, { "zombie", DefaultZombieRung2Brain },
                                                                                                { "grandma", DefaultGrandmaRung2Brain }, { "kim", DefaultKimRung2Brain } }
+                       : mode == TrackRaceEvent.Mode.Ramp ? new System.Collections.Generic.Dictionary<string, string> { { "matt", RampOr(RampMattBrain, DefaultRung2Brain) },
+                                                                                               { "zombie", RampOr(RampZombieBrain, DefaultZombieRung2Brain) },
+                                                                                               { "grandma", RampOr(RampGrandmaBrain, DefaultGrandmaRung2Brain) }, { "kim", RampOr(RampKimBrain, DefaultKimRung2Brain) } }
                        : null;
             if (crawl) brainFile = CrawlMattBrain;
             if (steeple) brainFile = FlightMattBrain;
@@ -304,6 +318,20 @@ namespace PoOlympic.Editor
             if (mode == TrackRaceEvent.Mode.Resurrection) bc.lookHeight = 0.6f;   // they start lying down
             AddBroadcast(race, title, $"Event {eventNum}", eventNum, BrainsLabel(brainFile), meet.Camera, BroadcastDirector.Kind.Race,
                          reversed ? Vector3.left : Vector3.right);
+            if (mode == TrackRaceEvent.Mode.Ramp)
+            {
+                // the stadium's ramp onto the flat track: its foot under the start line, then everything static (stadium, sun,
+                // fill lights, probes) turned by -slope about the foot; RampView turns the camera the same way
+                foreach (var g in meet.Scene.GetRootGameObjects())
+                {
+                    if (g.name is not ("Stadium" or "Sun" or "AthleteFill" or "ArenaProbes")) continue;
+                    if (g.name == "Stadium") g.transform.position += Vector3.left * RampFootX;
+                    g.transform.RotateAround(new Vector3(-0.2f, 0f, 0f), Vector3.forward, -race.slopeDeg);
+                }
+                var view = meet.Camera.AddComponent<RampView>();
+                view.slopeDeg = race.slopeDeg;
+                view.pivot = meet.FocusPelvis.transform;
+            }
             EditorSceneManager.SaveScene(meet.Scene, scenePath);
             return $"{scenePath}: {mode}, {race.runners.Count} runners, {race.distance} m, brain {brainFile}";
         }
@@ -787,6 +815,7 @@ namespace PoOlympic.Editor
             { 11, SlalomScene },
             { 12, TurntableScene },
             { 13, SteepleScene },
+            { 14, RampScene },
             { 19, "Assets/PoOlympic/Scenes/Event_TerminalVelocity.unity" },
             { 22, "Assets/PoOlympic/Scenes/Event_EmergencyBrake.unity" },
             { 23, TrenchScene },

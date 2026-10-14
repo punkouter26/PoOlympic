@@ -34,6 +34,8 @@ ROLES = {
     "grandma_rung0": ("pedestal", [1], "grandma"), "kim_rung0": ("pedestal", [1], "kim"),
     "crawl_matt": ("crawl", [8, 23], "matt"), "crawl_zombie": ("crawl", [8, 23], "zombie"),
     "crawl_grandma": ("crawl", [8, 23], "grandma"), "crawl_kim": ("crawl", [8, 23], "kim"),
+    "slope_matt": ("slope", [14], "matt"), "slope_zombie": ("slope", [14], "zombie"),
+    "slope_grandma": ("slope", [14], "grandma"), "slope_kim": ("slope", [14], "kim"),
     "r2f_v3_it100": ("flight", [13], "matt"),
     "rs_v8_it1199": ("stance", [7], "matt"), "rs_v6_it2550": ("stance", [6], "matt"), "rs_v6_it3299": ("stance", [], "matt"),
     "rsq_v2_it500": ("stance", [3], "matt"),               # Deep Squat specialist (2026-10-13): 80 of 80 finish the 12 reps
