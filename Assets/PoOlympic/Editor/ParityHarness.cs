@@ -61,8 +61,22 @@ namespace PoOlympic.Editor
             File.Copy(Path.Combine(ProjectRoot, "parity", "contract.json"), Path.Combine(models, "contract.json"), true);
             foreach (var f in Directory.GetFiles(Path.Combine(ProjectRoot, "parity"), "contract_*.json"))   // other bodies
                 File.Copy(f, Path.Combine(models, Path.GetFileName(f)), true);
-            foreach (var f in Directory.GetFiles(Path.Combine(ProjectRoot, "parity", "brains")))
-                File.Copy(f, Path.Combine(models, "Brains", Path.GetFileName(f)), true);
+            // only the brains Unity runs: deployed ones (manifest), ones named in the project's C# (scene builders, tests) and
+            // ones already imported; training candidates (<run>_itNNN) stay in parity/brains (2026-10-14: 181 of 213 unused)
+            var brains = Path.Combine(ProjectRoot, "parity", "brains");
+            var want = new HashSet<string>();
+            foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(File.ReadAllText(Path.Combine(brains, "manifest.json")), "\"file\": \"([^\"]+)\\.onnx\""))
+                want.Add(m.Groups[1].Value);
+            foreach (var cs in Directory.GetFiles(Path.Combine(Application.dataPath, "PoOlympic"), "*.cs", SearchOption.AllDirectories))
+                foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(File.ReadAllText(cs), "\"([A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)*)\\.onnx\""))
+                    want.Add(m.Groups[1].Value);
+            foreach (var f in Directory.GetFiles(Path.Combine(models, "Brains"), "*.onnx"))
+                want.Add(Path.GetFileNameWithoutExtension(f));
+            foreach (var f in Directory.GetFiles(brains))
+            {
+                var stem = Path.GetFileName(f).Split(new[] { ".critic.onnx", ".onnx" }, StringSplitOptions.None)[0];
+                if (want.Contains(stem)) File.Copy(f, Path.Combine(models, "Brains", Path.GetFileName(f)), true);
+            }
             AssetDatabase.Refresh();
         }
 
