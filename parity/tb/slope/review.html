@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slope Training Review</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --card: #ffffff; --text: #1d1d1f; --muted: #5d5d66; --line: #e2e0da;
+    --good: #1f8a4c; --warn: #b8660b; --bad: #c2372b;
+    --t1: #fff4d6; --t2: #e3f3ff; --t3: #eeeaf8; --verdict: #e8f6ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+      --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+      --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b;
+    --t1: #3a3220; --t2: #1d2f3d; --t3: #2a2538; --verdict: #1b3326;
+    --good: #4fc17f; --warn: #e3a14a; --bad: #ef6b5f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.8rem; margin: 0 0 4px; }
+  h2 { margin: 0 0 4px; font-size: 1.3rem; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 28px; }
+  .verdict { background: var(--verdict); }
+  .verdict p { margin: 6px 0 0; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 10px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+  .up { color: var(--good); font-weight: 600; } .fail { color: var(--bad); font-weight: 600; } .same { color: var(--muted); font-weight: 600; }
+  .tag { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--muted); }
+  img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); margin: 12px 0 16px; background: #fff; }
+  .levels { display: grid; gap: 12px; }
+  .lvl { border-radius: 10px; padding: 12px 16px; }
+  .lvl h3 { margin: 0 0 4px; font-size: .95rem; }
+  .lvl p { margin: 0; }
+  .l1 { background: var(--t1); } .l2 { background: var(--t2); } .l3 { background: var(--t3); }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+  footer { color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Slope training review: Event 14, The Alpine Ramp</h1>
+  <p class="sub">2026-10-14 night block · 4 athletes · a 15° ramp simulated as the flat track with gravity tilted by 15° ·
+    charts compare MATT's first 15° run (purple) with KIM's first 15° run (orange, resumed after a GPU error = dark grey)
+    and KIM's slow-command 15° run (yellow)</p>
+
+  <div class="box verdict">
+    <h2>Verdict: all four athletes now climb the ramp; the slow-command recipe was the fix</h2>
+    <p><strong>In one sentence:</strong> with their old walking brains nobody got up a 15° ramp (0 of 24); after the
+      slope ladder every athlete finishes the 9 m climb in CPU heats, but they climb slowly (0.4-0.8 m/s).</p>
+    <p><strong>What went wrong first:</strong> KIM learned to stand still on the ramp. She never fell, so the training looked
+      healthy, but she ignored the speed command. Asking for slower climbing (at most 15 % of her flat top speed) fixed it.</p>
+    <div class="scroll">
+    <table>
+      <tr><th>9 m up 15° (CPU heats, 45 s limit)</th><th>Flat walking brain</th><th>Ladder</th><th>Deployed slope brain</th><th>Finish</th><th>Mean time</th></tr>
+      <tr><td>MATT</td><td class="fail">0 of 6 (all fell)</td><td>8° → 15° → 15° climb</td><td>ms15c_v1 it 200</td><td class="up">12 of 12</td><td>20.7 s</td></tr>
+      <tr><td>KIM</td><td class="fail">0 of 6 (all fell)</td><td>8° → 11.5° → 15° → 15° slow</td><td>ks15s_v1 it 799</td><td class="up">12 of 12</td><td>28.0 s</td></tr>
+      <tr><td>GRANDMA</td><td class="fail">0 of 6 (all fell)</td><td>8° → 11.5° → 15° slow</td><td>gs15s_v1 it 200</td><td class="up">12 of 12</td><td>26.8 s</td></tr>
+      <tr><td>Zombie</td><td class="fail">0 of 6 (stood still)</td><td>8° → 11.5° → 15° slow</td><td>zs15s_v1 it 799</td><td class="up">12 of 12</td><td>34.4 s</td></tr>
+    </table>
+    </div>
+    <p>Mixed field (2 of each body, 6 heats, all slope brains, race command 0.6 m/s in MATT units): 48 of 48 finish, no falls; Unity play-through of the same lineup: the race ends at 34 s with all 8 home (MATT 18.6 s first). KIM's first try at 15° (fast commands, 1000 iterations) and a second with "climb" commands (800 iterations) both
+      finished 0 of 4: she crept up at 0.1-0.2 m/s. The race now asks every athlete for 15 % of its flat top speed.</p>
+  </div>
+
+  <section class="box">
+    <h2>1 · Following the speed command</h2>
+    <div class="tag">Episode_Reward/track_lin (how well the athlete walks at the speed it is asked for; higher is better)</div>
+    <img src="1_track_lin.png" alt="Speed tracking reward: KIM fast-command run rises slowly to 0.5; MATT to 0.66; KIM slow-command run jumps to 0.73 and ends at 0.76">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>The yellow line is highest. When we asked KIM to walk slowly up the hill, she did what we asked.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This line shows how well the athlete walks at the speed we ask for. On the steep ramp, KIM (orange) only got
+        about half of the points, even after a long practice. MATT (purple) did better. When we asked KIM for slower speeds she could
+        actually manage (yellow), she got most of the points almost at once.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>ks15_v1 (fast range 0-1.84 m/s): 0.30 → 0.51 over 764 iterations, 0.54 after the resume (the GPU fault
+        at it 764 shows as the dark grey restart from it 700). ms15_v1: 0.45 → 0.67. ks15s_v1 (0.18-0.55 m/s, from ks15c it 799): 0.71 within
+        30 iterations, 0.76 at it 799. The reward is an exponential kernel of the velocity error, so a smaller command range
+        raises it by itself; the event heats are the real check, and there KIM went from 0 of 4 (creeping at 0.1-0.2 m/s)
+        to 6 of 6 in 26 s.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>2 · Speed error</h2>
+    <div class="tag">Metrics/athlete/error_vel_xy (difference between asked and actual speed; lower is better)</div>
+    <img src="2_error_vel_xy.png" alt="Velocity error: MATT stays near 2.0; KIM fast run falls from 2.2 to 1.6; KIM slow run flat near 1.15">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>Lower is better. The yellow line is lowest: KIM walks closest to the speed we want.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>This is how far off the athlete's speed is. MATT is the most off, because we asked him for fast speeds
+        that nobody can run up such a steep hill. KIM's mistake got smaller with practice, and smallest when the speeds were gentle.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>MATT ms15_v1 ends at 2.0, KIM ks15_v1 at 1.6, ks15s_v1 flat at 1.15. The metric sums the error over the
+        episode and scales with the command range, so the runs are not directly comparable; within a run it shows whether the
+        athlete keeps learning. MATT's stays high because his range (0-2 m/s) is beyond what he climbs (0.55-0.8 m/s in the heats):
+        his brain is fastest when asked for 1.0-1.5 m/s (17.5 s) and stalls when asked for 3 m/s.</p></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>3 · Staying on their feet</h2>
+    <div class="tag">Train/mean_episode_length (how long a practice attempt lasts before a fall; 1000 = never fell)</div>
+    <img src="3_episode_length.png" alt="Episode length: all runs near 1000 from the start">
+    <div class="levels">
+      <div class="lvl l1"><h3>🧸 Toddler</h3><p>All the lines are at the top. Nobody falls over on the hill.</p></div>
+      <div class="lvl l2"><h3>🎒 Child</h3><p>Every practice try lasts the full time, so falling was never the problem. The problem was that KIM
+        stood still: standing is safe, and she still got points for staying up.</p></div>
+      <div class="lvl l3"><h3>🎓 Adult</h3><p>All runs reach 990-1000 steps within 50 iterations of the warm start from the 8° / 11.5° brains, so
+        terminations carry no signal here. The failure mode was a local optimum: survival and posture rewards are earned
+        standing still, and a speed command the body cannot reach pays nearly the same tracking reward standing as creeping.
+        The useful levers were the command range and the intermediate 11.5° step, not the termination terms.</p></div>
+    </div>
+  </section>
+
+  <footer>Charts: TensorBoard at localhost:6006 (<code>matt_slope/*ms15_v1</code>, <code>kim_slope/*ks15_v1</code>, <code>kim_slope/*ks15s_v1</code>),
+    captured with <code>training/tools/tb_shots.py</code>. Heats: <code>training/tools/ramp_heats.py</code> (mixed lineup, 2 lanes per body).</footer>
+</main>
+</body>
+</html>

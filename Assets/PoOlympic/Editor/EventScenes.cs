@@ -330,7 +330,6 @@ namespace PoOlympic.Editor
                 }
                 var view = meet.Camera.AddComponent<RampView>();
                 view.slopeDeg = race.slopeDeg;
-                view.pivot = meet.FocusPelvis.transform;
             }
             EditorSceneManager.SaveScene(meet.Scene, scenePath);
             return $"{scenePath}: {mode}, {race.runners.Count} runners, {race.distance} m, brain {brainFile}";

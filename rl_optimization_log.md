@@ -1658,3 +1658,29 @@ All on 4096 envs, 0 falls at every gate. G1 Rung 2, 10 seeds (bar 0.157 m/s = 0.
   flat envelope, start facing uphill). Same physics in the ramp's frame, no terrain, no observation change; the event
   (`track.py` mode `ramp`, 10 m = the venue's ramp, `tools/ramp_heats.py`) and Unity use the same tilted gravity.
   Baseline, deployed flat-ground brains on 15 deg: 0 of 24 finish (MATT / KIM / GRANDMA fall, the zombie stands still).
+
+## 2026-10-14 (night) · Event 14 The Alpine Ramp: slope brains for all four bodies, scene playable
+
+- **Recipe (`matt_env.add_slope`):** each body's deployed Rung 2 recipe on the flat plane with gravity tilted by the slope
+  (uphill = +x), start facing uphill, staged command curriculum dropped, 4096 envs, entropy 0.001. `climb=True`: forward
+  commands 5 % .. `top` x the flat top speed, half the stand-still commands. Tasks `-Rung4-Slope8` (fast range 0-50 %),
+  `-Slope15` (same), `-Slope11c` / `-Slope15c` (climb, top 30 %), `-Slope15s` (climb, top 15 %).
+- **Heats (`tools/ramp_heats.py`, 9 m up 15 deg, mixed lineup, 2 per body):** flat brains 0 of 24 (MATT / KIM / GRANDMA
+  fall at once, the zombie stands). MATT: Slope8 400 its -> 8 deg 10 m in 8.4 s; Slope15 1000 its -> 15 deg 4 of 4, 21 s;
+  his brain climbs fastest when asked for 1.0-1.5 m/s (17.5 s), stalls at 3. KIM: Slope8 ok, **Slope15 stood still** (0 of
+  4 at it 200-999; no falls, episode length 1000, track_lin 0.5: survival paid, a speed she cannot reach paid the same
+  standing as creeping); Slope11c 4 of 4 on 11.5 deg; Slope15c still 0 of 4 (0.1-0.2 m/s); **Slope15s** 6 of 6, 26 s.
+  GRANDMA and the zombie went 8 -> 11.5c -> 15s directly: 12 of 12 each. MATT Slope15c (from Slope15 it 999): 20.7 s.
+  GRANDMA's Slope15s gets slower with training (it 200 26.8 s, it 799 28.8 s; picked by heats).
+- **Deployed (`slope_<body>.onnx` + critics, manifest role "slope"):** MATT ms15c_v1 it 200, KIM ks15s_v1 it 799,
+  GRANDMA gs15s_v1 it 200, zombie zs15s_v1 it 799. Race command 0.6 (MATT units = 15 % of each body's top speed), 45 s
+  limit. Mixed field, 6 heats: **48 of 48 finish, 0 falls** (MATT 20.7 s, GRANDMA 26.8, KIM 28.0, zombie 34.4).
+- **Unity:** `TrackRaceEvent.Mode.Ramp` tilts the model gravity after the fingerprint check; runners hold the start spot
+  during the countdown (a standing slope brain creeps 0.6-0.9 m downhill) and the top after the finish.
+  `EventScenes.BuildAlpineRamp`: stadium, sun, fill lights, probes turned -15 deg about the ramp foot (shifted 2.2 m so the
+  foot is 0.2 m behind the start line; at 1.8 m the athletes floated 10 cm above it); `RampView` keeps the broadcast
+  camera's position and aim and turns its up vector by -15 deg (turning the whole camera about the focus athlete put the
+  head-on shots inside the ramp). Mixed play-through: 8 of 8 home by 34 s. Menu 18 events, hub venue 14 set.
+- One CUDA "unspecified launch failure" killed ks15_v1 at it 764; the queue resumed it from it 700.
+- Review page: `parity/tb/slope/review.html`. Open: the athletes climb at 0.3-0.6 m/s (a person walks up 15 deg at about
+  1 m/s); MATT's brain does 0.8 m/s when asked for more, the others stall above their 15 %.

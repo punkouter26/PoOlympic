@@ -58,8 +58,9 @@ MODES = {
     "steeple": {"distance": 50.0, "vx": 3.5, "max_s": 30.0},
     "resurrection": {"distance": 5.0, "vx": 3.8, "max_s": 20.0},
     # the stadium's ramp (venue E14) is 10 m of run = 10.35 m of slope: start 0.2 m up it, finish at 9 m, room to stop;
-    # vx = the slope brains' top command (half the flat envelope)
-    "ramp": {"distance": 9.0, "vx": 2.0, "max_s": 30.0, "slope_deg": 15.0},
+    # vx 0.6 (MATT units = 15 % of each body's flat top speed, the Slope15s range): MATT climbs fastest at 1.0-1.5 but KIM
+    # stalls above her 15 % (2026-10-14)
+    "ramp": {"distance": 9.0, "vx": 0.6, "max_s": 45.0, "slope_deg": 15.0},
 }
 SUPINE_Z = 0.22       # m x the body's height scale — resurrection: pelvis height lying on the back (tools/getup_probe.py)
 BREAK_X = 15.0        # m — terminal: the green lane-break line

@@ -106,7 +106,7 @@ namespace PoOlympic
             Mode.AllFours => (30f, 1.2f, 60f),
             Mode.Steeplechase => (50f, 3.5f, 30f),
             Mode.Resurrection => (5f, 3.8f, 20f),
-            Mode.Ramp => (9f, 2.0f, 30f),
+            Mode.Ramp => (9f, 0.6f, 45f),
             _ => (30f, 3.0f, 25f),
         };
 
@@ -183,6 +183,10 @@ namespace PoOlympic
                 r.v = sign * (float)d->qvel[da];
                 r.y = (float)(d->qpos[ra + 1] - r.runner.laneOriginY);
             }
+            // ramp: finishers hold the top (standing still, a slope brain creeps back down the ramp)
+            if (mode == Mode.Ramp && Current != Phase.Ready)
+                foreach (var r in runners.Where(r => r.status == "FINISHED"))
+                    r.runner.command = new Vector3(Mathf.Clamp((distance - r.x) * holdGain, -holdCap, holdCap), 0f, 0f);
             switch (Current)
             {
                 case Phase.Ready:

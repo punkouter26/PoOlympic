@@ -187,6 +187,20 @@ def test_target_schedules_stay_reachable():
     assert [a for a, *_ in dirs[:2]] in ([-1, 1], [1, -1]) and dirs[-1][3] == pytest.approx(targets.REACH_FRAC[1])
 
 
+SLOPE_BRAINS = {b: C.ROOT.parent / "parity" / "brains" / f"slope_{b}.onnx" for b in ("matt", "zombie", "grandma", "kim")}
+
+
+@pytest.mark.skipif(not all(p.exists() for p in SLOPE_BRAINS.values()), reason="slope brains not deployed")
+def test_alpine_ramp_mixed_field_climbs():
+    """Event 14: every body's slope brain gets up the 15 deg ramp (tilted gravity) in time; the flat brains do not."""
+    res = track.run_race(SLOPE_BRAINS["matt"], "ramp", 14000, scene=C.ROOT / "assets" / "scene_track8_mzgkmzgk.xml",
+                         layout_path=C.ROOT / "assets" / "track8_mzgkmzgk_layout.json", brains=SLOPE_BRAINS)
+    assert [l.status for l in res.lanes] == ["FINISHED"] * 8
+    assert all(10.0 < l.finish_s < track.MODES["ramp"]["max_s"] for l in res.lanes)
+    by_place = sorted(res.lanes, key=lambda l: l.place)
+    assert all(a.finish_s <= b.finish_s for a, b in zip(by_place, by_place[1:]))
+
+
 FLAMINGO_BRAIN = C.ROOT.parent / "parity" / "brains" / "rs_v6_it2550.onnx"
 
 

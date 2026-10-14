@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &592829735
+--- !u!1 &488525061
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,9 +127,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 592829738}
-  - component: {fileID: 592829737}
-  - component: {fileID: 592829736}
+  - component: {fileID: 488525064}
+  - component: {fileID: 488525063}
+  - component: {fileID: 488525062}
   m_Layer: 0
   m_Name: MainMenu
   m_TagString: Untagged
@@ -137,13 +137,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &592829736
+--- !u!114 &488525062
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 592829735}
+  m_GameObject: {fileID: 488525061}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 213e7403b4b52c348978b1782a2866f3, type: 3}
@@ -278,6 +278,17 @@ MonoBehaviour:
     - ZOMBIE
     - GRANDMA
     - KIM
+  - number: 14
+    name: The Alpine Ramp
+    rules: Ascending a 15-degree ramp straight into a finish sensor.
+    brain: rung4
+    scene: Event_AlpineRamp
+    lineup: []
+    bodies:
+    - MATT
+    - ZOMBIE
+    - GRANDMA
+    - KIM
   - number: 19
     name: Terminal Velocity Sprint
     rules: Open sprint at top speed; past the green break line the field squeezes to the inside, shoulder to shoulder. Ranked by peak speed; a fall ranks last.
@@ -324,13 +335,13 @@ MonoBehaviour:
     - KIM
   columns: 3
   idleDemoSeconds: 45
---- !u!114 &592829737
+--- !u!114 &488525063
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 592829735}
+  m_GameObject: {fileID: 488525061}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
@@ -347,13 +358,13 @@ MonoBehaviour:
   m_PivotReferenceSize: 0
   m_Pivot: 0
   m_WorldSpaceCollider: {fileID: 0}
---- !u!4 &592829738
+--- !u!4 &488525064
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 592829735}
+  m_GameObject: {fileID: 488525061}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -362,7 +373,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1158603792
+--- !u!1 &1559407070
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -370,8 +381,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1158603794}
-  - component: {fileID: 1158603793}
+  - component: {fileID: 1559407072}
+  - component: {fileID: 1559407071}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -379,13 +390,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!20 &1158603793
+--- !u!20 &1559407071
 Camera:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1158603792}
+  m_GameObject: {fileID: 1559407070}
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
@@ -430,13 +441,13 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!4 &1158603794
+--- !u!4 &1559407072
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1158603792}
+  m_GameObject: {fileID: 1559407070}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -449,5 +460,5 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1158603794}
-  - {fileID: 592829738}
+  - {fileID: 1559407072}
+  - {fileID: 488525064}

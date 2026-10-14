@@ -790,6 +790,14 @@ if bodies.current().name in ("matt", "zombie", "grandma", "kim"):
             cfg.scene.num_envs = 4096
             register_mjlab_task(task_id=f"PoOlympic-{body.name.capitalize()}-Rung4-Slope{deg}", env_cfg=cfg,
                                 play_env_cfg=add_slope(base(play=True), deg), rl_cfg=rl, runner_cls=SymmetricRunner)
+        # 2026-10-14 climb ladder (KIM's Slope15 learned to stand still): 11.5 deg between, climb commands
+        for name, deg, its, top in (("Slope11c", 11.5, 400, 0.3), ("Slope15c", 15, 800, 0.3), ("Slope15s", 15, 800, 0.15)):
+            rl = matt_ppo_cfg(f"{body.name}_slope", max_iterations=its)
+            rl.algorithm.entropy_coef, rl.save_interval = 0.001, 100
+            cfg = add_slope(base(), deg, climb=True, top=top)
+            cfg.scene.num_envs = 4096
+            register_mjlab_task(task_id=f"PoOlympic-{body.name.capitalize()}-Rung4-{name}", env_cfg=cfg,
+                                play_env_cfg=add_slope(base(play=True), deg, climb=True, top=top), rl_cfg=rl, runner_cls=SymmetricRunner)
     _slope()
 
 if bodies.current().name in ("matt", "grandma"):

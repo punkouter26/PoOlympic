@@ -794,13 +794,18 @@ def add_crowd_bumps(cfg: ManagerBasedRlEnvCfg, mass_scale: float = 1.0, force: f
     return cfg
 
 
-def add_slope(cfg: ManagerBasedRlEnvCfg, slope_deg: float) -> ManagerBasedRlEnvCfg:
+def add_slope(cfg: ManagerBasedRlEnvCfg, slope_deg: float, climb: bool = False, top: float = 0.3) -> ManagerBasedRlEnvCfg:
     """Rung 4 slope (event 14 The Alpine Ramp): a Rung 2 recipe on an endless ramp of `slope_deg`, uphill = +x. The ramp
     is the flat training plane with gravity tilted by the slope angle — the same physics in the ramp's own frame, so
     the terrain, the contact bits and every observation (height above the surface, tilt against its normal) stay as
     they are and the event scene uses the same tilted gravity (Unity draws it tilted). Athletes start facing uphill
     (±0.5 rad) and are asked for forward speeds up to half the flat envelope, small side steps and turns; the staged
-    command curriculum of the base recipe is dropped (it would restore the flat envelope)."""
+    command curriculum of the base recipe is dropped (it would restore the flat envelope).
+    climb (2026-10-14): KIM's Slope15 stood still on the ramp (no falls, 0 m/s at every command): forward commands
+    only 5-30 % of the flat top speed (MATT 0.2-1.2 m/s, about what he manages up 15 deg) and half the stand-still
+    commands, so that climbing pays. top: the climb's fastest forward command as a fraction of the flat top speed
+    (KIM's Slope15c still stalls at 15 deg for commands over ~0.5 m/s and creeps up at 0.26 m/s when asked for 0.5:
+    the slow variant Slope15s asks for 5-15 %)."""
     a = math.radians(slope_deg)
     cfg.sim.mujoco.gravity = (-9.81 * math.sin(a), 0.0, -9.81 * math.cos(a))
     cfg.events["reset_base"].params["pose_range"]["yaw"] = (-0.5, 0.5)
@@ -808,6 +813,9 @@ def add_slope(cfg: ManagerBasedRlEnvCfg, slope_deg: float) -> ManagerBasedRlEnvC
     r = cmd.ranges
     cmd.ranges = mdp.AthleteCommandCfg.Ranges(lin_vel_x=(0.0, 0.5 * r.lin_vel_x[1]), lin_vel_y=(0.4 * r.lin_vel_y[0], 0.4 * r.lin_vel_y[1]),
                                               ang_vel_z=(0.4 * r.ang_vel_z[0], 0.4 * r.ang_vel_z[1]), heading=None)
+    if climb:
+        cmd.ranges.lin_vel_x = (0.05 * r.lin_vel_x[1], top * r.lin_vel_x[1])
+        cmd.rel_standing_envs *= 0.5
     if cfg.curriculum:
         cfg.curriculum.pop("command_vel", None)
     return cfg

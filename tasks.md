@@ -181,7 +181,7 @@ Skill gaps: events marked **S** need behaviours the current contract cannot comm
 | 11 | Slalom Sprint | weave through gates; penalties for missed gates / clipped flags | Agility | gate poles + flags | R2 + gate-following steering | **playable** (7 physical poles on each lane's centre line, weave at 2.2 m/s on a seeded racing line; +0.5 s per clip, +2 s per wrong side, `Event_SlalomSprint.unity`) |
 | 12 | The 360 Turntable | rapid in-place turns on a marked spot; rotational speed, zero drift | Agility (turntable pads) | — | R2 | **playable** (8 spots, 3 turns at 3 rad/s, seeded direction, score = time + 2 s/m drift, `Event_360Turntable.unity`) |
 | 13 | Steeplechase Jog | 50 m run with sustained aerial flight phases between strikes | HomeStraight | — | R2 flight (`r2f_v3_it100.onnx`) | **playable** (8 runners, 50 m at 3.5 m/s, ranked by ground time = finish − air, `Event_SteeplechaseJog.unity`) |
-| 14 | The Alpine Ramp | ascend a 15° ramp into a finish sensor | Terrain | 15° ramp | R4 | todo |
+| 14 | The Alpine Ramp | ascend a 15° ramp into a finish sensor | Terrain | 15° ramp | R4 | **playable 2026-10-14**: tilted-gravity ramp (`matt_env.add_slope`, tasks `-Rung4-Slope*`), `slope_<body>.onnx` for all four bodies, `track.py` mode ramp = `TrackRaceEvent.Mode.Ramp`, `Event_AlpineRamp` (stadium turned, `RampView`); 9 m, 48 of 48 finish in CPU heats; slow (0.3-0.6 m/s) |
 | 15 | Cross-Country Rubble | traverse randomized mounds and ruts | Terrain | heightfield / box rubble (seeded) | R4 | todo |
 | **Phase 4 — High Impact & Jumping** |
 | 16 | The Platform Drop | rapid stair descent; descent speed + soft landing | Terrain | stairs (down) | R4 | todo |

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Menu New Events</title>
+<style>
+  :root { --bg: #f6f5f2; --card: #fff; --text: #1d1d1f; --muted: #5d5d66; --line: #e2e0da; --mark: #e8340a; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b; --mark: #ff6a3d; }
+  }
+  :root[data-theme="dark"] { --bg: #141417; --card: #1e1e23; --text: #ececf0; --muted: #a2a2ad; --line: #33333b; --mark: #ff6a3d; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1000px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { margin: 0 0 4px; font-size: 1.7rem; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 700px) { .pair { grid-template-columns: 1fr; } }
+  figure { margin: 0; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+  figcaption { font-weight: 600; margin-bottom: 8px; }
+  .shot { position: relative; }
+  .shot img { width: 100%; height: auto; display: block; border-radius: 6px; }
+  .box { position: absolute; border: 3px solid var(--mark); border-radius: 8px; }
+  .box span { position: absolute; top: -12px; right: -10px; background: var(--mark); color: #fff; font-weight: 700;
+              font-size: .8rem; border-radius: 10px; padding: 0 7px; }
+  ul { padding-left: 20px; }
+  .note { color: var(--muted); font-size: .9rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Main menu: three new events</h1>
+  <p class="sub">2026-10-14 · the event grid now lists 18 playable events instead of 15</p>
+  <div class="pair">
+    <figure>
+      <figcaption>Before (your screenshot, Unity game view)</figcaption>
+      <div class="shot"><img src="menu_events_before.png" alt="Old event grid: 01, 03, 05 … no 02, 04 or 14"></div>
+    </figure>
+    <figure>
+      <figcaption>After (Play mode, phone size 1440 × 3088)</figcaption>
+      <div class="shot">
+        <img src="menu_events_after.png" alt="New event grid with 02 Torso Archer, 04 Precision Javelin Reach and 14 The Alpine Ramp">
+        <div class="box" style="left:34.3%;top:27.4%;width:31.4%;height:7.2%"><span>new</span></div>
+        <div class="box" style="left:1.9%;top:35.1%;width:31.4%;height:7.2%"><span>new</span></div>
+        <div class="box" style="left:34.3%;top:58.1%;width:31.4%;height:7.2%"><span>new</span></div>
+      </div>
+    </figure>
+  </div>
+  <h2>What changed</h2>
+  <ul>
+    <li><strong>02 Torso Archer</strong>: 8 athletes track a flying target with the upper body (12 flights, getting faster).</li>
+    <li><strong>04 Precision Javelin Reach</strong>: 8 athletes touch targets with alternating arms, farther out every round.</li>
+    <li><strong>14 The Alpine Ramp</strong>: a 9 m race up the stadium's 15° ramp, all four athletes, with new slope brains.</li>
+  </ul>
+  <p class="note">No layout or style change: the grid is built from the playable events (EventScenes.EventScenePaths), so the new
+    tiles appear in number order. Events 2 and 4 are MATT-only (stance brains), like 3, 6 and 7.</p>
+</main>
+</body>
+</html>

@@ -526,6 +526,98 @@
    }
   },
   {
+   "file": "slope_grandma.onnx",
+   "body": "grandma",
+   "role": "slope",
+   "events": [
+    14
+   ],
+   "name": "slope_grandma",
+   "experiment": "grandma_slope",
+   "run": "gs15s_v1",
+   "iteration": 200,
+   "contract_version": 3,
+   "sha256": "090d26f4014333aa47dafd463c601269b96b69d9e779f99d666e2d73a321926d",
+   "sidecar_sha256_ok": true,
+   "fingerprint_sha256": "de971d498513174843349626535396adf747e55c09794bbabf4005e6b2dcfc38",
+   "fingerprint_current": true,
+   "critic": "slope_grandma.critic.onnx",
+   "gate": {
+    "source": "watch_gs15s_v1.jsonl",
+    "g1_2": "0/10",
+    "g1_2_falls": 0
+   }
+  },
+  {
+   "file": "slope_kim.onnx",
+   "body": "kim",
+   "role": "slope",
+   "events": [
+    14
+   ],
+   "name": "slope_kim",
+   "experiment": "kim_slope",
+   "run": "ks15s_v1",
+   "iteration": 799,
+   "contract_version": 3,
+   "sha256": "f87b36abcca409e2e64e77600caa7a66bfbed92c923971da6941a3c6b0302c32",
+   "sidecar_sha256_ok": true,
+   "fingerprint_sha256": "b1fa14afabbae823a66389734493e82b668d639f98105ff0f406aa6a59469d07",
+   "fingerprint_current": true,
+   "critic": "slope_kim.critic.onnx",
+   "gate": {
+    "source": "watch_ks15s_v1.jsonl",
+    "g1_2": "0/10",
+    "g1_2_falls": 0
+   }
+  },
+  {
+   "file": "slope_matt.onnx",
+   "body": "matt",
+   "role": "slope",
+   "events": [
+    14
+   ],
+   "name": "slope_matt",
+   "experiment": "matt_slope",
+   "run": "ms15c_v1",
+   "iteration": 200,
+   "contract_version": 3,
+   "sha256": "64146d6d9d1f8c1034fbccc2bb97f9e6be9813314dc3d93f6a7c602e97a036c7",
+   "sidecar_sha256_ok": true,
+   "fingerprint_sha256": "bfd287b0ce43147ad430d90787f724d9ef7a25a4cc281730278aa3ed0bb024e8",
+   "fingerprint_current": true,
+   "critic": "slope_matt.critic.onnx",
+   "gate": {
+    "source": "watch_ms15c_v1.jsonl",
+    "g1_2": "0/10",
+    "g1_2_falls": 0
+   }
+  },
+  {
+   "file": "slope_zombie.onnx",
+   "body": "zombie",
+   "role": "slope",
+   "events": [
+    14
+   ],
+   "name": "slope_zombie",
+   "experiment": "zombie_slope",
+   "run": "zs15s_v1",
+   "iteration": 799,
+   "contract_version": 3,
+   "sha256": "030b8802d57e1e6997252848c61a59dd1df0171d01849ca6656e6825bf12fdca",
+   "sidecar_sha256_ok": true,
+   "fingerprint_sha256": "5521551798c3942cb235d40a8daab9ef10151ef407fa1815d9c9f9cc80a2b379",
+   "fingerprint_current": true,
+   "critic": "slope_zombie.critic.onnx",
+   "gate": {
+    "source": "watch_zs15s_v1.jsonl",
+    "g1_2": "0/10",
+    "g1_2_falls": 0
+   }
+  },
+  {
    "file": "zero_brain.onnx",
    "body": "matt",
    "role": "test",
