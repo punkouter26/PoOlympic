@@ -1622,3 +1622,17 @@ All on 4096 envs, 0 falls at every gate. G1 Rung 2, 10 seeds (bar 0.157 m/s = 0.
   sprinter's 10-24 m detour, stance events MATT-only, zombie G1 8/10, torso 7/10 and reach 0-1/10 (joint range / reach
   radius: user decisions).
 
+
+## 2026-10-13 (afternoon) · Crowd2 bump fine-tunes: trained, gates hold, no gain in mixed heats (nothing deployed)
+
+- **Runs (400 its each, ~15 min, Balanced plan, GPU 86-88 C):** G1 Rung 2 pass rate, 0 falls everywhere. MATT r2c_v3
+  10/10 at it 100 / 200 / 300 / 399. KIM k2c_v2 10 / 10 / 9 / 7 of 10. GRANDMA g2c_v2 10 / 10 / 10 / 9 of 10 (g2c_v1: 4
+  of 10 by it 300). Zombie z2c_v2 9/10 at it 50, then 3 / 3 / 7 / 5 / 8 / 4 / 4 of 10: unstable.
+- **Event 19 heats, contact on, 12 heats (`crowd_heats.py`, `parity/crowd_heats_base.json`, `_crowd2*.json`), falls per
+  heat (finish of 8):** all-MATT 3.25 (8.00) -> **1.08** (8.00) with r2c_v3 it 399. Mixed mzgkmzgk, deployed 1.83 (7.92):
+  all four candidates 3.17 (7.33); MATT's only **3.25 (6.83)**; KIM it 200 only 1.50 (7.83); GRANDMA it 300 only 1.42
+  (7.92); zombie it 50 only 1.25 (7.75); KIM + GRANDMA + zombie 1.75 (7.75).
+- **Reading:** the MATT candidate helps among MATTs and hurts the mixed race: matt-matt contact 2.2 -> 7.7 pair-s,
+  grandma-matt 0 -> 2.6, MATT falls 0 -> 6, GRANDMA 9 -> 14 (speeds not checked; guess: the slower brain stays in the
+  pack). The other three are within noise of the deployed brains. **Not deployed.** The forearm / chest impulse proxy
+  does not carry over to mixed packs: next would be true multi-athlete envs, not a third bump recipe.
