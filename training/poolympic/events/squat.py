@@ -102,12 +102,13 @@ class _SquatJudge:
     def mark_feet(self, d):
         self.start = np.array([d.xpos[b][:2] for b in self.feet])
 
-    def out(self, m, d, target: float) -> str | None:
+    def out(self, m, d, target: float, tilt_extra: float = 0.0) -> str | None:
+        """tilt_extra (deg): a commanded forward lean (events 2 / 4, targets.py) the tilt line gives way by."""
         ln = self.ln
         r = ln.ath.root_qposadr
         if d.qpos[r + 2] < ln.fall_z + min(0.0, target) - (0.10 if target < 0 else 0.0):
             return "FELL"
-        if math.degrees(math.acos(max(-1.0, min(1.0, d.xmat[ln.torso][8])))) > FALL_TILT_DEG:
+        if math.degrees(math.acos(max(-1.0, min(1.0, d.xmat[ln.torso][8])))) > FALL_TILT_DEG + tilt_extra:
             return "FELL"
         for c in d.contact[: d.ncon]:
             g1, g2 = int(c.geom1), int(c.geom2)

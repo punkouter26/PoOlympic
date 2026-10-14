@@ -35,7 +35,7 @@ namespace PoOlympic
     /// </summary>
     public class TrackRaceEvent : MonoBehaviour, IBroadcastBoard, ILaneRoster
     {
-        public enum Mode { Dash, Terminal, Brake, Inverted, AllFours, Steeplechase, Resurrection }
+        public enum Mode { Dash, Terminal, Brake, Inverted, AllFours, Steeplechase, Resurrection, Ramp }
         public enum Phase { Ready, Live, Result }
 
         [Serializable]
@@ -78,6 +78,8 @@ namespace PoOlympic
         [Header("All fours (= all_fours.py)")]
         public float standDqSeconds = 1f;
         public Vector2 crawlBand = new(0.25f, 0.8f);   // pelvis height band (m) × λ
+        [Header("Ramp (= track.py ramp): the flat track with gravity tilted by the slope, uphill = +x")]
+        public float slopeDeg = 15f;
         [Header("Fall recovery (= track.py recover)")]
         public bool recoverFromFalls = true;
         public bool autoRestart = true, randomTraits = true;
@@ -104,6 +106,7 @@ namespace PoOlympic
             Mode.AllFours => (30f, 1.2f, 60f),
             Mode.Steeplechase => (50f, 3.5f, 30f),
             Mode.Resurrection => (5f, 3.8f, 20f),
+            Mode.Ramp => (10f, 2.0f, 30f),
             _ => (30f, 3.0f, 25f),
         };
 
@@ -163,6 +166,11 @@ namespace PoOlympic
                 }
             }
             if (_traitsPending) { DrawTraits(); _traitsPending = false; }
+            if (mode == Mode.Ramp)
+            {
+                double a = slopeDeg * Math.PI / 180.0;
+                m->opt.gravity[0] = -9.81 * Math.Sin(a); m->opt.gravity[1] = 0; m->opt.gravity[2] = -9.81 * Math.Cos(a);
+            }
             if (mode == Mode.Steeplechase && !_stepHooked) { MjScene.Instance.postUpdateEvent += OnPostStep; _stepHooked = true; }
             PhaseTime += Time.deltaTime;
             var lead = runners[0].runner;
@@ -284,6 +292,7 @@ namespace PoOlympic
             Mode.AllFours => $"{distance:0} m on hands and feet",
             Mode.Steeplechase => $"{distance:0} m · ground time = finish − air",
             Mode.Resurrection => $"get up, sprint {distance:0} m",
+            Mode.Ramp => $"{distance:0} m up a {slopeDeg:0}° ramp",
             _ => $"{distance:0} m",
         };
         public string ClockLine => $"{LiveTime:0.00} s";
@@ -375,7 +384,7 @@ namespace PoOlympic
                 foreach (var r in runners.Where(r => r.status == "FINISHED")) r.scoreS = r.finishS - (float)r.gait.Hang;
             IEnumerable<Runner> order = mode switch
             {
-                Mode.Dash or Mode.Inverted or Mode.Resurrection => runners.OrderBy(r => r.status == "FINISHED" ? 0 : 1).ThenBy(r => r.finishS),
+                Mode.Dash or Mode.Inverted or Mode.Resurrection or Mode.Ramp => runners.OrderBy(r => r.status == "FINISHED" ? 0 : 1).ThenBy(r => r.finishS),
                 Mode.AllFours => runners.OrderBy(r => r.status == "FINISHED" ? 0 : r.status == "DNF" ? 1 : 2).ThenBy(r => r.finishS)
                                         .ThenByDescending(r => r.status == "DNF" ? Mathf.Min(r.x, distance) : 0f),
                 Mode.Steeplechase => runners.OrderBy(r => r.status == "FINISHED" ? 0 : 1).ThenBy(r => r.status == "FINISHED" ? r.scoreS : 0f).ThenBy(r => r.finishS),
@@ -394,7 +403,7 @@ namespace PoOlympic
 
         string Mark(Runner r) => mode switch
         {
-            Mode.Dash or Mode.Resurrection => r.status == "FINISHED" ? $"{r.finishS:0.00} s" : r.status,
+            Mode.Dash or Mode.Resurrection or Mode.Ramp => r.status == "FINISHED" ? $"{r.finishS:0.00} s" : r.status,
             Mode.Inverted => r.status == "FINISHED" ? $"{r.finishS:0.00} s" : r.status == "DQ" ? "DQ (left lane)" : r.status,
             Mode.AllFours => (r.status == "FINISHED" ? $"{r.finishS:0.00} s" : r.status == "DQ" ? "DQ (stood up)"
                               : r.status == "DNF" ? $"DNF · {Mathf.Min(r.x, distance):0.0} m" : r.status)

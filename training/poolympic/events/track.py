@@ -19,6 +19,9 @@
                                        TIME = finish time - hang time (total of the flights, both feet off the ground
                                        for >= MIN_FLIGHT): the clock only runs while a foot touches the track; a fall =
                                        out; rank by ground time, then finish time
+  ramp      (14 The Alpine Ramp)       10 m up a 15 deg ramp with the slope brain (Rung4-Slope15); the ramp is the flat
+                                       track with gravity tilted by 15 deg (x = distance along the ramp; Unity draws the
+                                       scene tilted); a fall = out; rank by finish time
 Runners steer with the contract's lane keeping (contract.steer_yaw_rate); traits as in the Iron Pedestal heat.
 
 Fall recovery (opt-in, `recover` = body -> get-up brain; Unity TrackRaceEvent.recoverFromFalls): a runner whose body has
@@ -54,6 +57,8 @@ MODES = {
     "inverted": {"distance": 20.0, "vx": -1.5, "max_s": 30.0},   # vx = the Rung 2 envelope's backward limit
     "steeple": {"distance": 50.0, "vx": 3.5, "max_s": 30.0},
     "resurrection": {"distance": 5.0, "vx": 3.8, "max_s": 20.0},
+    # the stadium's ramp (venue E14) is 10 m of run = 10.35 m of slope; vx = the slope brains' top command (half the flat envelope)
+    "ramp": {"distance": 10.0, "vx": 2.0, "max_s": 30.0, "slope_deg": 15.0},
 }
 SUPINE_Z = 0.22       # m x the body's height scale — resurrection: pelvis height lying on the back (tools/getup_probe.py)
 BREAK_X = 15.0        # m — terminal: the green lane-break line
@@ -209,6 +214,9 @@ def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = Non
              recover: dict | None = None) -> RaceResult:
     cfg = MODES[mode]
     m = mujoco.MjModel.from_xml_path(str(scene or SCENE))
+    if "slope_deg" in cfg:       # the ramp = the flat track with gravity tilted by the slope (tasks/matt_env.add_slope), uphill = +x
+        a = math.radians(cfg["slope_deg"])
+        m.opt.gravity[:] = (-9.81 * math.sin(a), 0.0, -9.81 * math.cos(a))
     d = mujoco.MjData(m)
     layout = json.loads(Path(layout_path or LAYOUT).read_text())
     rng = np.random.default_rng(seed)
@@ -297,7 +305,7 @@ def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = Non
             if mode == "inverted" and abs(d.qpos[ra + 1] - ln.origin[1]) > LANE_HALF:
                 r.status = "DQ"
                 continue
-            if mode in ("dash", "terminal", "inverted", "steeple", "resurrection") and x >= cfg["distance"]:
+            if mode in ("dash", "terminal", "inverted", "steeple", "resurrection", "ramp") and x >= cfg["distance"]:
                 r.status, r.finish_s = "FINISHED", t
             if mode == "brake":
                 toe = x + TOE_AHEAD
@@ -317,7 +325,7 @@ def run_race(onnx: Path, mode: str, seed: int, traits: list[Traits] | None = Non
             if r.status == "FINISHED":
                 r.score_s = round(r.finish_s - g.hang, 3)
     # ranking
-    if mode in ("dash", "inverted", "resurrection"):
+    if mode in ("dash", "inverted", "resurrection", "ramp"):
         key = lambda r: (0, r.finish_s) if r.status == "FINISHED" else (1, 0)
     elif mode == "steeple":
         key = lambda r: (0, r.score_s, r.finish_s) if r.status == "FINISHED" else (1, 0)

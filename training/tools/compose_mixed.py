@@ -51,7 +51,9 @@ SCENES = {  # scene -> the build_mjcf.compose_meet arguments of that event scene
     "squat8": dict(event=3, park_offset=(0.0, -30.0, 0.0), crowd=True, roster=[]),   # Event 3 runs all-mattbio (Rung S brain): no roster scene
     # Events 6 and 7 run all-mattbio like Event 3; composed here only (no build_mjcf scene, no roster scene)
     "flamingo8": dict(event=6, park_offset=(0.0, -30.0, 0.0), crowd=True, roster=[]),
-    "march8": dict(event=7, park_offset=(0.0, -30.0, 0.0), props=march_props, crowd=True, roster=[]),
+    "archer8": dict(event=2, park_offset=(0.0, -30.0, 0.0), crowd=True, roster=[]),    # Events 2 and 4: same grid, all-mattbio
+    "reach8": dict(event=4, park_offset=(0.0, -30.0, 0.0), crowd=True, roster=[]),
+    "march8": dict(event=7,park_offset=(0.0, -30.0, 0.0), props=march_props, crowd=True, roster=[]),
     "crab8": dict(event=10, yaw=90.0, park_offset=(0.0, -30.0, 0.0), props=B.crab_rails, crowd=True),
     "shaker8": dict(event=5, park_offset=(0.0, -30.0, 0.0), shaker=B.shaker_floor, crowd=True),
     "slalom8": dict(event=11, park_offset=(0.0, -30.0, 0.0), props=B.slalom_poles, crowd=True),

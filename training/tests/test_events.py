@@ -155,6 +155,38 @@ def test_deep_squat_heat():
     assert all(a.points >= b.points for a, b in zip(by_place, by_place[1:]))
 
 
+TARGET_BRAINS = {"archer": C.ROOT.parent / "parity" / "brains" / "rs_v8_it1199.onnx",
+                 "reach": C.ROOT.parent / "parity" / "brains" / "rs_reach_v1_it1199.onnx"}
+
+
+@pytest.mark.parametrize("kind", ["archer", "reach"])
+def test_target_heat(kind):
+    from poolympic.events import targets
+    if not TARGET_BRAINS[kind].exists():
+        pytest.skip("Rung S brain not exported")
+    res = targets.run_heat(TARGET_BRAINS[kind], seed=1, kind=kind)
+    assert sorted(l.place for l in res.lanes) == list(range(1, 9))
+    assert res.duration_s == pytest.approx(targets.START_S + targets.total_s(), abs=0.03)
+    assert [l.status for l in res.lanes] == ["DONE"] * 8          # the targets stay inside what the body can reach
+    for l in res.lanes:
+        assert len(l.rounds) == targets.ROUNDS
+        assert l.points == pytest.approx(sum(l.rounds) + targets.BALANCE_BONUS, abs=1e-2)
+        assert l.points > 0.5 * targets.ROUNDS * targets.ROUND_POINTS   # archer 71-80, reach 94-107 of 130
+    by_place = sorted(res.lanes, key=lambda l: l.place)
+    assert all(a.points >= b.points for a, b in zip(by_place, by_place[1:]))
+
+
+def test_target_schedules_stay_reachable():
+    import numpy as np
+    from poolympic.events import targets
+    rng = np.random.default_rng(3)
+    aims = targets.archer_aims(rng)
+    assert len(aims) == targets.ROUNDS + 1 and all(abs(y) <= targets.ARCHER_YAW for y, _ in aims)
+    assert targets.archer_target(aims, 0, 0.0) == aims[0] and targets.archer_target(aims, 0, 1.0) == aims[1]
+    dirs = targets.reach_dirs(rng)
+    assert [a for a, *_ in dirs[:2]] in ([-1, 1], [1, -1]) and dirs[-1][3] == pytest.approx(targets.REACH_FRAC[1])
+
+
 FLAMINGO_BRAIN = C.ROOT.parent / "parity" / "brains" / "rs_v6_it2550.onnx"
 
 

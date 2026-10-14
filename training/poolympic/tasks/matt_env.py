@@ -792,3 +792,22 @@ def add_crowd_bumps(cfg: ManagerBasedRlEnvCfg, mass_scale: float = 1.0, force: f
             params={"force_range": (-f, f), "torque_range": (0.0, 0.0), "duration_s": (0.03, 0.25), "cooldown_s": cooldown_s,
                     "asset_cfg": SceneEntityCfg("robot", body_names=(body,))})
     return cfg
+
+
+def add_slope(cfg: ManagerBasedRlEnvCfg, slope_deg: float) -> ManagerBasedRlEnvCfg:
+    """Rung 4 slope (event 14 The Alpine Ramp): a Rung 2 recipe on an endless ramp of `slope_deg`, uphill = +x. The ramp
+    is the flat training plane with gravity tilted by the slope angle — the same physics in the ramp's own frame, so
+    the terrain, the contact bits and every observation (height above the surface, tilt against its normal) stay as
+    they are and the event scene uses the same tilted gravity (Unity draws it tilted). Athletes start facing uphill
+    (±0.5 rad) and are asked for forward speeds up to half the flat envelope, small side steps and turns; the staged
+    command curriculum of the base recipe is dropped (it would restore the flat envelope)."""
+    a = math.radians(slope_deg)
+    cfg.sim.mujoco.gravity = (-9.81 * math.sin(a), 0.0, -9.81 * math.cos(a))
+    cfg.events["reset_base"].params["pose_range"]["yaw"] = (-0.5, 0.5)
+    cmd = cfg.commands["athlete"]
+    r = cmd.ranges
+    cmd.ranges = mdp.AthleteCommandCfg.Ranges(lin_vel_x=(0.0, 0.5 * r.lin_vel_x[1]), lin_vel_y=(0.4 * r.lin_vel_y[0], 0.4 * r.lin_vel_y[1]),
+                                              ang_vel_z=(0.4 * r.ang_vel_z[0], 0.4 * r.ang_vel_z[1]), heading=None)
+    if cfg.curriculum:
+        cfg.curriculum.pop("command_vel", None)
+    return cfg

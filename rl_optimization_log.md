@@ -1636,3 +1636,25 @@ All on 4096 envs, 0 falls at every gate. G1 Rung 2, 10 seeds (bar 0.157 m/s = 0.
   grandma-matt 0 -> 2.6, MATT falls 0 -> 6, GRANDMA 9 -> 14 (speeds not checked; guess: the slower brain stays in the
   pack). The other three are within noise of the deployed brains. **Not deployed.** The forearm / chest impulse proxy
   does not carry over to mixed packs: next would be true multi-athlete envs, not a third bump recipe.
+
+## 2026-10-13 (night) · Events 2 and 4 playable (no training); Rung 4 slope tasks for Event 14
+
+- **User: "create a playable scene from the missing numbers", then 8 hours unattended.** 13 of the 15 missing events need a
+  skill that no brain has; Events 2 and 4 had brains and two open range questions. Decided in the event, not the
+  contract: the targets stay inside what the body reaches.
+- **Probes (solo mattbio, CPU):** rs_v8 it 1199 holds every torso aim within 2 deg for yaw up to 45 deg at every pitch
+  (-20 .. 40 deg), settles in < 1.2 s; at 50 deg it is 5 deg short, at 60 deg 12-15 deg (the spine's 45 deg twist).
+  rs_reach_v1 it 1199 (restored from git c8ed003; removed in the 12aad03 clean-up): hand error 1-9 cm for targets up
+  to 0.78 of the reach radius and elevation <= 45 deg, 10-29 cm beyond (0.82-0.95, or az > 60 deg with el > 30 deg).
+- **`events/targets.py` = Unity `TargetEvent`** (one module, kind archer / reach; scenes `scene_archer8` / `reach8_mattbio`
+  = the venues' 2 x 4 station grids via compose_mixed): 12 rounds, 2.0 -> 1.0 s. Archer: the aim flies to a new one
+  (yaw +-45, pitch -15 .. 35 deg, >= 30 deg apart) over 60 % of the round, error over the whole round, zero points at
+  0.25 rad. Reach: alternating arms, 0.50 -> 0.78 of the radius, error over the last 40 %, zero points at 15 cm. Out =
+  FELL / STEPPED (20 cm), balance bonus 10. CPU heats (3 seeds): archer 8 of 8 DONE, 71-80 of 130; reach 8 of 8 DONE,
+  94-107. Unity play-through: archer winner 71.4, reach 104.3, 8 of 8 DONE each; menu 17 events, hub venues 2 / 4 set.
+  The reach spread is ~2 points per heat: traits barely separate the field (open: tighter tolerance or shorter holds).
+- **Event 14 The Alpine Ramp, plan:** the ramp = the flat plane with gravity tilted by the slope (`matt_env.add_slope`,
+  tasks `PoOlympic-<Body>-Rung4-Slope8` / `-Slope15`, each body's deployed Rung 2 recipe, forward commands to half the
+  flat envelope, start facing uphill). Same physics in the ramp's frame, no terrain, no observation change; the event
+  (`track.py` mode `ramp`, 10 m = the venue's ramp, `tools/ramp_heats.py`) and Unity use the same tilted gravity.
+  Baseline, deployed flat-ground brains on 15 deg: 0 of 24 finish (MATT / KIM / GRANDMA fall, the zombie stands still).

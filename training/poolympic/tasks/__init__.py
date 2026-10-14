@@ -769,6 +769,29 @@ if bodies.current().name in ("matt", "zombie", "grandma", "kim"):
                             play_env_cfg=base(play=True), rl_cfg=rl, runner_cls=SymmetricRunner)
     _crowd()
 
+    # 2026-10-13 Rung 4 slope (event 14 The Alpine Ramp, 15 deg): each roster body's deployed Rung 2 recipe on a tilted-
+    # gravity ramp (matt_env.add_slope). Two steps from the walking brain: Slope8 (8 deg), then Slope15 from it.
+    def _slope():
+        from .matt_env import add_slope, matt_ppo_cfg
+        from .symmetry import SymmetricRunner
+        body = bodies.current()
+        if body.name == "matt":
+            from .matt_env import matt_rung2_sym5_env_cfg as base
+        elif body.name == "zombie":
+            from .zombie_env import zombie_rung2_polish_env_cfg as base
+        elif body.name == "grandma":
+            from .grandma_env import grandma_rung2_bands_env_cfg as base
+        else:
+            from .kim_env import kim_rung2_bands2_env_cfg as base
+        for deg, its in ((8, 400), (15, 1000)):
+            rl = matt_ppo_cfg(f"{body.name}_slope", max_iterations=its)
+            rl.algorithm.entropy_coef, rl.save_interval = 0.001, 100
+            cfg = add_slope(base(), deg)
+            cfg.scene.num_envs = 4096
+            register_mjlab_task(task_id=f"PoOlympic-{body.name.capitalize()}-Rung4-Slope{deg}", env_cfg=cfg,
+                                play_env_cfg=add_slope(base(play=True), deg), rl_cfg=rl, runner_cls=SymmetricRunner)
+    _slope()
+
 if bodies.current().name in ("matt", "grandma"):
     # 2026-10-13 crawl in a pack. Events 8 / 23 (12 heats each, mixed lineups): MATT does not finish 11 of 72 crawls and
     # GRANDMA 3 of 20 trench crawls — they tumble against the neighbour (lanes 1.1 m) and do not come back; with

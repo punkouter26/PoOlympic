@@ -3987,7 +3987,7 @@ MonoBehaviour:
   skill: Arm Extension
   brain: stance skills
   rules: Single-arm extension toward dynamic targets at maximum reach while keeping stance anchored.
-  eventScene: 
+  eventScene: Event_JavelinReach
   lanes:
   - {fileID: 1856659964}
   - {fileID: 1856659963}
@@ -4855,7 +4855,7 @@ MonoBehaviour:
   skill: Upper-Body Tracking
   brain: stance skills
   rules: Athletes plant feet and track rapid overhead flight targets with upper bodies. Scored on angular accuracy and zero foot slippage.
-  eventScene: 
+  eventScene: Event_TorsoArcher
   lanes:
   - {fileID: 1856659980}
   - {fileID: 1856659979}

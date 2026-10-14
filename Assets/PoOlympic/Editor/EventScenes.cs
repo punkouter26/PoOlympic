@@ -420,6 +420,67 @@ namespace PoOlympic.Editor
             return $"{SquatScene}: {ev.squatters.Count} athletes, {ev.reps} reps, brain {brainFile}";
         }
 
+        public const string ArcherScene = "Assets/PoOlympic/Scenes/Event_TorsoArcher.unity";
+        public const string ReachScene = "Assets/PoOlympic/Scenes/Event_JavelinReach.unity";
+        // Events 2 / 4: Rung S brains on the all-mattbio scenes of venues 2 / 4 (tools/compose_mixed.py archer8 / reach8: the
+        // 2 x 4 station grid, no props). Torso: rs_v8 it 1199 (every aim inside the spine's ±45° within 2°); reach:
+        // rs_reach_v1 it 1199 (targets to 0.78 of the reach radius within 9 cm).
+        public const string ArcherBrain = "rs_v8_it1199.onnx";
+        public const string ReachBrain = "rs_reach_v1_it1199.onnx";
+        public const string TargetMaterial = "Assets/PoOlympic/Materials/TargetMarker.mat";
+
+        [MenuItem("PoOlympic/Events/Build Event 2 — Torso Archer")]
+        public static string BuildTorsoArcher() => BuildTargetEvent(TargetEvent.Kind.Archer, 2, "archer8", ArcherBrain, ArcherScene, "TORSO ARCHER", 0.22f);
+
+        [MenuItem("PoOlympic/Events/Build Event 4 — Precision Javelin Reach")]
+        public static string BuildJavelinReach() => BuildTargetEvent(TargetEvent.Kind.Reach, 4, "reach8", ReachBrain, ReachScene, "JAVELIN REACH", 0.10f);
+
+        /// <summary>Events 2 / 4: 8 mattbio athletes on the venue's 2 x 4 station grid, TargetEvent + HUD, one target marker
+        /// per lane (a glowing ball the event moves; hidden until GO).</summary>
+        static string BuildTargetEvent(TargetEvent.Kind kind, int number, string model, string brainFile, string scenePath, string title, float markerSize)
+        {
+            var meet = BuildMeetScene($"training/assets/scene_{model}_mattbio.xml", $"training/assets/{model}_mattbio_layout.json", number,
+                                      AthleteLane, 0f, brainFile, new System.Collections.Generic.Dictionary<string, string> { { "mattbio", brainFile } });
+            var ev = new GameObject("TargetEvent").AddComponent<TargetEvent>();
+            ev.kind = kind;
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(TargetMaterial);
+            if (mat == null)
+            {
+                mat = new Material(Shader.Find("Universal Render Pipeline/Unlit")) { name = "TargetMarker" };
+                mat.SetColor("_BaseColor", new Color(1f, 0.72f, 0.1f));
+                AssetDatabase.CreateAsset(mat, TargetMaterial);
+            }
+            var markers = new GameObject("Targets");
+            foreach (var (k, r) in meet.Lanes)
+            {
+                var ball = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                ball.name = $"Target_Lane{k + 1}";
+                UnityEngine.Object.DestroyImmediate(ball.GetComponent<Collider>());   // display only (no PhysX in the scenes)
+                ball.transform.SetParent(markers.transform);
+                ball.transform.localScale = Vector3.one * markerSize;
+                var rend = ball.GetComponent<Renderer>();
+                rend.sharedMaterial = mat;
+                rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                ball.SetActive(false);
+                ev.aimers.Add(new TargetEvent.Aimer { runner = r, name = $"S{k + 1}", marker = ball.transform });
+            }
+            meet.Pool.runner = ev.aimers[0].runner;
+
+            var bc = meet.Camera.GetComponent<BroadcastCamera>();
+            bc.target = meet.FocusPelvis;
+            bc.focusOffset = new Vector3(-4.5f, 0f, -2f);    // grid centre (station S4 is the origin; rows at y = 0 / -4 m)
+            bc.offset = new Vector3(8.5f, 4.0f, -5.0f);      // front three-quarter: the athletes face +x
+            AddBroadcast(ev, title, $"Event {number}", number, $"v0 · {Path.GetFileNameWithoutExtension(brainFile)}", meet.Camera,
+                         BroadcastDirector.Kind.Arena, Vector3.right);
+            // rs_reach_v1's checkpoint is gone (only the ONNX is in git), so its critic cannot be exported: the reach lanes
+            // read the general stance brain's critic (same observations and rewards; uncalibrated like every stance brain)
+            var standIn = AssetDatabase.LoadAssetAtPath<ModelAsset>($"{ParityHarness.ModelsFolder}/Brains/{Path.ChangeExtension(ArcherBrain, null)}.critic.onnx");
+            foreach (var a in ev.aimers)
+                if (a.runner.critic == null) { a.runner.critic = standIn; EditorUtility.SetDirty(a.runner); }
+            EditorSceneManager.SaveScene(meet.Scene, scenePath);
+            return $"{scenePath}: {ev.aimers.Count} athletes, {ev.rounds} rounds, brain {brainFile}";
+        }
+
         public const string FlamingoScene = "Assets/PoOlympic/Scenes/Event_FlamingoClassic.unity";
         // Event 6: Rung S brain rs_v6 it 2550 (the one checkpoint that passes the G1 flamingo drill 10/10; per-event stance
         // brains, user decision 2026-10-01) on the all-mattbio scene of venue 6 (tools/compose_mixed.py flamingo8: the
@@ -714,7 +775,9 @@ namespace PoOlympic.Editor
         public static readonly System.Collections.Generic.Dictionary<int, string> EventScenePaths = new()
         {
             { 1, IronPedestalHeatScene },   // official 8-runner heat (solo practice: Event_IronPedestal.unity)
+            { 2, ArcherScene },
             { 3, SquatScene },
+            { 4, ReachScene },
             { 5, GauntletScene },
             { 6, FlamingoScene },
             { 7, MarchScene },

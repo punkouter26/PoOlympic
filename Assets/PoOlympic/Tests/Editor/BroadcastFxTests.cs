@@ -121,7 +121,8 @@ namespace PoOlympic.Tests
                     // athlete fill lights: on the athletes' rendering layer only, and every athlete mesh carries it
                     var fill = GameObject.Find("AthleteFill");
                     Assert.IsNotNull(fill, $"{path}: AthleteFill rig");
-                    foreach (var l in fill.GetComponentsInChildren<Light>())
+                    // (Arena_* in the same rig light the whole arena on purpose: StadiumLook.AthleteFill, 2026-10-13)
+                    foreach (var l in fill.GetComponentsInChildren<Light>().Where(l => !l.name.StartsWith("Arena_")))
                         Assert.AreEqual((int)Editor.StadiumLook.AthleteLayer, l.renderingLayerMask, $"{path}: {l.name} must not light the stadium");
                     foreach (var r in Object.FindObjectsByType<SkinnedMeshRenderer>(FindObjectsInactive.Include))
                         Assert.AreNotEqual(0u, r.renderingLayerMask & Editor.StadiumLook.AthleteLayer, $"{path}: {r.name} not on the athlete light layer");
