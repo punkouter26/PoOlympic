@@ -1,0 +1,11 @@
+{
+ "name": "gs11_v1_it200",
+ "contract_version": "3",
+ "fingerprint_sha256": "de971d498513174843349626535396adf747e55c09794bbabf4005e6b2dcfc38",
+ "mujoco_version": "3.11.0",
+ "timestep": "0.005",
+ "decimation": "4",
+ "actuators": "[\"abdomen_flex\", \"abdomen_lat\", \"abdomen_twist\", \"shoulder_elev_l\", \"shoulder_flex_l\", \"shoulder_twist_l\", \"elbow_l\", \"shoulder_elev_r\", \"shoulder_flex_r\", \"shoulder_twist_r\", \"elbow_r\", \"hip_flex_l\", \"hip_abd_l\", \"hip_rot_l\", \"knee_l\", \"ankle_dorsi_l\", \"ankle_inv_l\", \"hip_flex_r\", \"hip_abd_r\", \"hip_rot_r\", \"knee_r\", \"ankle_dorsi_r\", \"ankle_inv_r\"]",
+ "checkpoint": "training/runs/grandma_slope/2026-10-14_01-57-35_gs11_v1/model_200.pt",
+ "onnx_sha256": "f00c4bdd245938fa9abe2eca391888b9c7f1b72fe270f5cd9d98f17fc6d9c23f"
+}
